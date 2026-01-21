@@ -86,7 +86,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             background: white;
             border-radius: 12px;
             border: 2px solid transparent;
-            overflow: hidden;
+            overflow: visible;
             transition: border-color 0.2s;
         }
         .sortable-section:hover { border-color: #94a3b8; }
@@ -226,6 +226,65 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Custom Select Styles for Customer */
+        .custom-select-container { position: relative; }
+        .custom-select-display {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            min-height: 42px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .custom-select-display:hover { border-color: #94a3b8; }
+        .custom-select-display.open { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .custom-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 9999;
+            margin-top: 4px;
+            max-height: 300px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .custom-select-search {
+            padding: 10px 12px;
+            border: none;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            outline: none;
+        }
+        .custom-select-options {
+            overflow-y: auto;
+            max-height: 250px;
+        }
+        .custom-select-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
+        }
+        .custom-select-option:hover { background: #f1f5f9; }
+        .custom-select-option.selected { background: #eff6ff; color: #3b82f6; }
+        .custom-select-option .option-name { font-weight: 500; }
+        .custom-select-option .option-details { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .custom-select-option .option-status { font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 8px; }
+        .custom-select-option .status-buyer { background: #dcfce7; color: #166534; }
+        .custom-option-hint { padding: 15px; text-align: center; color: #94a3b8; font-size: 13px; }
+        .custom-option-loading { padding: 15px; text-align: center; color: #64748b; }
+        .custom-option-loading i { animation: spin 1s linear infinite; margin-left: 8px; }
     </style>
 </head>
 <body>
@@ -254,9 +313,20 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         <div class="form-grid">
                             <div class="form-group span-2">
                                 <label>נפטר/ת <span class="required">*</span></label>
-                                <select name="clientId" id="clientId" class="form-control" required>
-                                    <option value="">טוען לקוחות...</option>
-                                </select>
+                                <input type="hidden" name="clientId" id="clientId" value="<?= htmlspecialchars($burial['clientId'] ?? '') ?>">
+                                <div class="custom-select-container" id="customerSelectContainer">
+                                    <div class="custom-select-display" onclick="toggleCustomerDropdown()">
+                                        <span id="customerDisplayText">טוען...</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    <div class="custom-select-dropdown" id="customerDropdown" style="display: none;">
+                                        <input type="text" id="customerSearch" class="custom-select-search"
+                                               placeholder="חפש לפי שם, ת.ז או טלפון..." oninput="filterCustomerOptions()">
+                                        <div class="custom-select-options" id="customerOptions">
+                                            <div class="custom-option-hint">הקלד לחיפוש לקוח...</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <?php if ($isEditMode && !empty($burial['serialBurialId'])): ?>
                             <div class="form-group">
@@ -495,64 +565,171 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 PopupAPI.setTitle('<?= addslashes($pageTitle) ?>');
             }
 
-            loadCustomers();
+            loadCustomerDisplay();
             loadCemeteries();
+
+            // סגירת dropdown בלחיצה מחוץ
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#customerSelectContainer')) {
+                    closeCustomerDropdown();
+                }
+            });
         });
 
         function toggleSection(btn) {
             btn.closest('.sortable-section').classList.toggle('collapsed');
         }
 
-        // טעינת לקוחות - לא לקוחות שכבר נפטרו (סטטוס 3)
-        async function loadCustomers() {
+        // טעינת תצוגת לקוח נבחר (עם חיפוש בצד השרת)
+        async function loadCustomerDisplay() {
+            const displayText = document.getElementById('customerDisplayText');
+
+            // אם יש לקוח נוכחי (מצב עריכה) - טען את הפרטים שלו
+            if (burialClientId) {
+                try {
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${burialClientId}`);
+                    const result = await response.json();
+
+                    if (result.success && result.data) {
+                        const customer = result.data;
+                        const status = parseInt(customer.statusCustomer) || 1;
+                        let statusText = '';
+                        if (status === 3) {
+                            statusText = ' [כבר נקבר/ה]';
+                        } else if (status === 2) {
+                            statusText = ' [יש רכישה]';
+                        }
+                        displayText.textContent = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})${statusText}`;
+                        onCustomerSelected(result.data);
+                    }
+                } catch (error) {
+                    console.error('Error loading customer:', error);
+                    displayText.textContent = '-- בחר נפטר/ת --';
+                }
+            } else {
+                displayText.textContent = '-- בחר נפטר/ת --';
+            }
+        }
+
+        // פתיחה/סגירה של dropdown
+        function toggleCustomerDropdown() {
+            const dropdown = document.getElementById('customerDropdown');
+            const display = document.querySelector('.custom-select-display');
+            const searchInput = document.getElementById('customerSearch');
+
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'flex';
+                display.classList.add('open');
+                searchInput.focus();
+            } else {
+                closeCustomerDropdown();
+            }
+        }
+
+        function closeCustomerDropdown() {
+            const dropdown = document.getElementById('customerDropdown');
+            const display = document.querySelector('.custom-select-display');
+            dropdown.style.display = 'none';
+            display.classList.remove('open');
+        }
+
+        // Debounce לחיפוש
+        let customerSearchTimeout = null;
+
+        function filterCustomerOptions() {
+            const searchInput = document.getElementById('customerSearch');
+            const searchValue = searchInput.value.trim();
+
+            // Debounce - המתן 300ms לפני חיפוש
+            clearTimeout(customerSearchTimeout);
+            customerSearchTimeout = setTimeout(() => {
+                searchCustomers(searchValue);
+            }, 300);
+        }
+
+        // חיפוש לקוחות מהשרת
+        async function searchCustomers(searchValue) {
+            const optionsContainer = document.getElementById('customerOptions');
+
+            if (searchValue.length < 2) {
+                optionsContainer.innerHTML = '<div class="custom-option-hint">הקלד לפחות 2 תווים לחיפוש...</div>';
+                return;
+            }
+
+            optionsContainer.innerHTML = '<div class="custom-option-loading"><i class="fas fa-spinner"></i> מחפש...</div>';
+
             try {
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list');
+                const params = new URLSearchParams({
+                    action: 'search_customers_for_burial',
+                    search: searchValue,
+                    limit: 50
+                });
+
+                // במצב עריכה - הוסף את הלקוח הנוכחי
+                if (burialClientId) {
+                    params.append('currentClient', burialClientId);
+                }
+
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?${params}`);
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    const select = document.getElementById('clientId');
-                    select.innerHTML = '<option value="">-- בחר נפטר/ת --</option>';
+                    if (result.data.length === 0) {
+                        optionsContainer.innerHTML = '<div class="custom-option-hint">לא נמצאו לקוחות תואמים</div>';
+                        return;
+                    }
 
-                    // סטטוסים: 1=פעיל, 2=רוכש, 3=נפטר (כבר נקבר)
-                    const statusLabels = { 1: 'פעיל', 2: 'רוכש', 3: 'נפטר' };
+                    optionsContainer.innerHTML = '';
+                    const currentValue = document.getElementById('clientId').value;
 
                     result.data.forEach(customer => {
+                        const div = document.createElement('div');
+                        div.className = 'custom-select-option' + (customer.unicId === currentValue ? ' selected' : '');
+                        div.dataset.value = customer.unicId;
+
                         const status = parseInt(customer.statusCustomer) || 1;
-
-                        // במצב עריכה - הצג את הלקוח הנוכחי גם אם הסטטוס השתנה
-                        // במצב חדש - לא להציג לקוחות עם סטטוס 3 (כבר נקברו)
-                        if (!isEditMode && status === 3) {
-                            return; // דלג על לקוחות שכבר נקברו
+                        let statusHtml = '';
+                        if (status === 2) {
+                            statusHtml = '<span class="option-status status-buyer">יש רכישה</span>';
                         }
 
-                        const option = document.createElement('option');
-                        option.value = customer.unicId;
+                        div.innerHTML = `
+                            <div class="option-name">${statusHtml}${customer.firstName} ${customer.lastName}</div>
+                            <div class="option-details">ת.ז: ${customer.numId || '-'} | טל: ${customer.phoneMobile || customer.phone || '-'}</div>
+                        `;
 
-                        // הוסף אינדיקציה לסטטוס
-                        let displayText = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})`;
-                        if (status === 3) {
-                            displayText += ' [כבר נקבר/ה]';
-                            option.style.color = '#dc2626';
-                        } else if (status === 2) {
-                            displayText += ' [יש רכישה]';
-                            option.style.color = '#059669'; // ירוק - מוכן לקבורה
-                        }
-                        option.textContent = displayText;
-
-                        if (customer.unicId === burialClientId) {
-                            option.selected = true;
-                        }
-                        select.appendChild(option);
+                        div.onclick = () => selectCustomer(customer);
+                        optionsContainer.appendChild(div);
                     });
-
-                    // בדיקה אם יש לקוחות זמינים
-                    if (select.options.length === 1 && !isEditMode) {
-                        select.innerHTML = '<option value="">אין לקוחות זמינים לקבורה</option>';
-                    }
                 }
             } catch (error) {
-                console.error('Error loading customers:', error);
+                console.error('Error searching customers:', error);
+                optionsContainer.innerHTML = '<div class="custom-option-hint">שגיאה בחיפוש</div>';
             }
+        }
+
+        // בחירת לקוח
+        function selectCustomer(customer) {
+            const clientIdInput = document.getElementById('clientId');
+            const displayText = document.getElementById('customerDisplayText');
+
+            clientIdInput.value = customer.unicId;
+
+            const status = parseInt(customer.statusCustomer) || 1;
+            let statusText = '';
+            if (status === 2) {
+                statusText = ' [יש רכישה]';
+            }
+            displayText.textContent = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})${statusText}`;
+
+            closeCustomerDropdown();
+            onCustomerSelected(customer);
+        }
+
+        // פעולות לאחר בחירת לקוח
+        function onCustomerSelected(customerData) {
+            // כאן אפשר להוסיף לוגיקה נוספת לאחר בחירת לקוח
+            console.log('Customer selected:', customerData?.unicId);
         }
 
         // טעינת בתי עלמין
@@ -821,14 +998,19 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         document.getElementById('burialForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const clientId = this.querySelector('[name="clientId"]').value;
+            const clientId = document.getElementById('clientId').value;
             const graveId = this.querySelector('[name="graveId"]').value;
             const dateDeath = this.querySelector('[name="dateDeath"]').value;
             const dateBurial = this.querySelector('[name="dateBurial"]').value;
             const placeDeath = this.querySelector('[name="placeDeath"]').value;
             const timeBurial = this.querySelector('[name="timeBurial"]').value;
 
-            if (!clientId || !graveId || !dateDeath || !dateBurial || !placeDeath || !timeBurial) {
+            if (!clientId) {
+                showAlert('יש לבחור נפטר/ת', 'error');
+                return;
+            }
+
+            if (!graveId || !dateDeath || !dateBurial || !placeDeath || !timeBurial) {
                 showAlert('יש למלא את כל שדות החובה', 'error');
                 return;
             }

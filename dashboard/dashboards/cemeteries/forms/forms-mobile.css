@@ -66,10 +66,12 @@
         padding: var(--mobile-padding);
     }
 
-    /* כותרת סקשן - ביטול גרירה */
+    /* כותרת סקשן - ביטול גרירה והגדלת גובה */
     .section-drag-handle {
         cursor: default !important;
-        padding: 12px var(--mobile-padding);
+        height: 40px;
+        min-height: 40px;
+        padding: 0 var(--mobile-padding);
     }
 
     /* הסתר אייקון גרירה במובייל */
@@ -77,11 +79,17 @@
         display: none !important;
     }
 
-    /* כפתור toggle גדול יותר */
+    /* כפתור toggle - גדילת אזור מגע בלי להגדיל ויזואלית */
     .section-toggle-btn {
-        width: var(--touch-target-min);
-        height: var(--touch-target-min);
-        min-width: var(--touch-target-min);
+        /* שמירה על גודל ויזואלי קטן */
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        /* הגדלת אזור המגע מסביב לכפתור */
+        padding: 0;
+        margin: -8px; /* שלילי להגדלת אזור הלחיצה */
+        border: 8px solid transparent; /* אזור מגע שקוף */
+        box-sizing: content-box;
     }
 
     /* שדות טופס */
@@ -417,12 +425,17 @@
 @media (pointer: coarse) {
     /* מכשירי מגע */
     .btn,
-    .section-toggle-btn,
     .modal-close,
     input,
     select,
     textarea {
         min-height: var(--touch-target-min);
+    }
+
+    /* כפתור toggle - אזור מגע מורחב בלי להגדיל ויזואלית */
+    .section-toggle-btn {
+        /* אזור המגע כולל הגבול השקוף */
+        touch-action: manipulation;
     }
 
     /* מרווחים גדולים יותר בין אלמנטים לחיצים */

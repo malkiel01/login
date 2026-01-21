@@ -475,7 +475,7 @@ try {
             $fields = [
                 'plotType', 'graveType', 'resident', 'buyerStatus', 'price',
                 'priceDefinition', 'cemeteryId', 'blockId', 'plotId', 'lineId',
-                'startPayment', 'unicId'
+                'startPayment', 'unicId', 'mandatory'
             ];
             
             $insertFields = ['isActive', 'createDate'];

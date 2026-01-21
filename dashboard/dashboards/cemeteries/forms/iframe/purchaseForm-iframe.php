@@ -778,8 +778,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 if (result.success && result.data) {
                     hierarchyCache[config.cache] = result.data;
 
+                    // עבור חלקות - סנן רק את אלה עם קברים פנויים
+                    if (level === 'block') {
+                        await filterPlotsWithAvailableGraves(result.data, nextSelect);
+                    }
                     // עבור שורות - סנן רק את אלה עם קברים פנויים
-                    if (level === 'plot') {
+                    else if (level === 'plot') {
                         await filterRowsWithAvailableGraves(result.data, nextSelect);
                     }
                     // עבור אחוזות קבר - סנן רק את אלה עם קברים פנויים
@@ -896,6 +900,55 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             if (!hasAvailable) {
                 selectElement.innerHTML = '<option value="">אין קברים פנויים בשורה זו</option>';
+            }
+        }
+
+        // סינון חלקות - רק אלה שיש להן קברים פנויים
+        async function filterPlotsWithAvailableGraves(plots, selectElement) {
+            selectElement.innerHTML = '<option value="">טוען חלקות...</option>';
+            selectElement.disabled = true;
+
+            if (plots.length === 0) {
+                selectElement.innerHTML = '<option value="">אין חלקות בגוש זה</option>';
+                return;
+            }
+
+            // קריאות מקבילות לכל החלקות
+            const results = await Promise.all(
+                plots.map(async (plot) => {
+                    try {
+                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=countAvailable&type=purchase&plotId=${plot.unicId}`);
+                        const result = await response.json();
+                        return {
+                            plot,
+                            availableCount: result.success ? (result.count || 0) : 0
+                        };
+                    } catch (e) {
+                        console.error('Error checking plot availability:', e);
+                        return { plot, availableCount: 0 };
+                    }
+                })
+            );
+
+            // בניית ה-options - רק חלקות עם קברים פנויים
+            selectElement.innerHTML = '<option value="">-- בחר חלקה --</option>';
+            let hasAvailable = false;
+
+            results.forEach(({ plot, availableCount }) => {
+                // רק חלקות עם קברים פנויים יופיעו
+                if (availableCount > 0) {
+                    const option = document.createElement('option');
+                    option.value = plot.unicId;
+                    option.textContent = `${plot.plotNameHe || '-'} (${availableCount} פנויים)`;
+                    selectElement.appendChild(option);
+                    hasAvailable = true;
+                }
+            });
+
+            selectElement.disabled = !hasAvailable;
+
+            if (!hasAvailable) {
+                selectElement.innerHTML = '<option value="">אין קברים פנויים בגוש זה</option>';
             }
         }
 

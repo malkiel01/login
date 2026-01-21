@@ -342,12 +342,13 @@ try {
             echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
             break;
         case 'countAvailable':
-            // ספירת קברים פנויים לפי שורה (lineId)
+            // ספירת קברים פנויים לפי שורה או חלקה
             $lineId = $_GET['lineId'] ?? null;
+            $plotId = $_GET['plotId'] ?? null;
             $formType = $_GET['type'] ?? 'purchase';
 
-            if (!$lineId) {
-                throw new Exception('מזהה שורה חסר');
+            if (!$lineId && !$plotId) {
+                throw new Exception('חסר מזהה שורה או חלקה');
             }
 
             // קבע את סטטוס הקברים המותרים
@@ -359,19 +360,37 @@ try {
                 $allowedStatuses = '(1)';
             }
 
-            // ספור קברים פנויים בכל אחוזות הקבר של השורה
-            $sql = "
-                SELECT COUNT(*)
-                FROM graves g
-                INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                WHERE ag.lineId = :lineId
-                AND ag.isActive = 1
-                AND g.isActive = 1
-                AND g.graveStatus IN $allowedStatuses
-            ";
+            // בנה שאילתה לפי הפרמטר שהתקבל
+            if ($plotId) {
+                // ספור קברים פנויים בחלקה (דרך כל השורות ואחוזות הקבר שלה)
+                $sql = "
+                    SELECT COUNT(*)
+                    FROM graves g
+                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    INNER JOIN \`lines\` l ON ag.lineId = l.unicId
+                    WHERE l.plotId = :plotId
+                    AND l.isActive = 1
+                    AND ag.isActive = 1
+                    AND g.isActive = 1
+                    AND g.graveStatus IN $allowedStatuses
+                ";
+                $params = ['plotId' => $plotId];
+            } else {
+                // ספור קברים פנויים בשורה
+                $sql = "
+                    SELECT COUNT(*)
+                    FROM graves g
+                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    WHERE ag.lineId = :lineId
+                    AND ag.isActive = 1
+                    AND g.isActive = 1
+                    AND g.graveStatus IN $allowedStatuses
+                ";
+                $params = ['lineId' => $lineId];
+            }
 
             $stmt = $pdo->prepare($sql);
-            $stmt->execute(['lineId' => $lineId]);
+            $stmt->execute($params);
             $count = $stmt->fetchColumn();
 
             echo json_encode([

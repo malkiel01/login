@@ -71,10 +71,12 @@ try {
         $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // טען היררכיה אם יש parentId
+    // טען היררכיה אם יש parentId - ואמת שהוא קיים בטבלת rows
+    $validatedLineId = null;
     if ($parentId) {
         $stmt = $conn->prepare("
             SELECT
+                r.unicId,
                 r.lineNameHe,
                 r.plotId,
                 p.plotNameHe,
@@ -84,10 +86,15 @@ try {
             LEFT JOIN plots p ON r.plotId = p.unicId
             LEFT JOIN blocks b ON p.blockId = b.unicId
             LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
-            WHERE r.unicId = ?
+            WHERE r.unicId = ? AND r.isActive = 1
         ");
         $stmt->execute([$parentId]);
         $hierarchyPath = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // אם נמצא - ה-parentId תקין
+        if ($hierarchyPath) {
+            $validatedLineId = $parentId;
+        }
 
         // טען שורות מאותה חלקה
         if ($hierarchyPath && $hierarchyPath['plotId']) {
@@ -102,6 +109,11 @@ try {
                 $rows[$row['unicId']] = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
             }
         }
+    }
+
+    // במצב הוספה - חובה שיהיה parentId תקין
+    if (!$isEditMode && !$validatedLineId) {
+        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: לא ניתן להוסיף אחוזת קבר ללא שורה תקינה. יש לבחור שורה מתוך הטבלה.</body></html>');
     }
 
 } catch (Exception $e) {
@@ -432,7 +444,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
 
         <form id="areaGraveForm" novalidate>
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($areaGrave['unicId'] ?? '') ?>">
-            <input type="hidden" name="lineId" id="lineId" value="<?= htmlspecialchars($parentId ?? $areaGrave['lineId'] ?? '') ?>">
+            <input type="hidden" name="lineId" id="lineId" value="<?= htmlspecialchars($validatedLineId ?? $areaGrave['lineId'] ?? '') ?>">
 
             <div class="sortable-sections">
                 <!-- סקשן 1: פרטי אחוזת קבר -->
@@ -471,7 +483,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
                                 <label><span class="required">*</span> שורה</label>
                                 <select name="lineId" id="lineIdSelect" class="form-control" required>
                                     <?php foreach ($rows as $id => $name): ?>
-                                        <option value="<?= htmlspecialchars($id) ?>" <?= ($parentId == $id) ? 'selected' : '' ?>>
+                                        <option value="<?= htmlspecialchars($id) ?>" <?= ($validatedLineId == $id) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($name) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -577,7 +589,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
     <script>
         const isEditMode = <?= $isEditMode ? 'true' : 'false' ?>;
         const areaGraveId = '<?= addslashes($itemId ?? '') ?>';
-        const parentLineId = '<?= addslashes($parentId ?? '') ?>';
+        const parentLineId = '<?= addslashes($validatedLineId ?? $areaGrave['lineId'] ?? '') ?>';
         const existingGraves = <?= $gravesJson ?>;
         const plotTypes = <?= json_encode($plotTypes, JSON_UNESCAPED_UNICODE) ?>;
         const graveStatuses = <?= json_encode($graveStatuses, JSON_UNESCAPED_UNICODE) ?>;

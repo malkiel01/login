@@ -80,9 +80,13 @@
     /* כותרת סקשן - ביטול גרירה והגדלת גובה */
     .section-drag-handle {
         cursor: default !important;
-        height: 40px;
-        min-height: 40px;
+        height: 44px;
+        min-height: 44px;
         padding: 0 var(--mobile-padding);
+        padding-right: 50px; /* מקום לכפתור */
+        position: relative;
+        display: flex;
+        align-items: center;
     }
 
     /* הסתר אייקון גרירה במובייל */
@@ -90,17 +94,35 @@
         display: none !important;
     }
 
-    /* כפתור toggle - גדילת אזור מגע בלי להגדיל ויזואלית */
+    /* כפתור toggle - נקי ומרוכז */
     .section-toggle-btn {
-        /* שמירה על גודל ויזואלי קטן */
-        width: 28px;
-        height: 28px;
-        min-width: 28px;
-        /* הגדלת אזור המגע מסביב לכפתור */
+        /* ביטול רקע */
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        /* גודל מינימלי למגע */
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
         padding: 0;
-        margin: -8px; /* שלילי להגדלת אזור הלחיצה */
-        border: 8px solid transparent; /* אזור מגע שקוף */
-        box-sizing: content-box;
+        margin: 0;
+        /* מיקום מרכזי בכותרת */
+        position: absolute;
+        left: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        /* סטייל */
+        color: #64748b;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .section-toggle-btn:active {
+        background: rgba(0,0,0,0.1) !important;
+        border-radius: 50%;
     }
 
     /* שדות טופס */

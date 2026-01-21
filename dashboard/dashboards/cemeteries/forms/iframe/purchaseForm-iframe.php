@@ -278,8 +278,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             margin-top: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 9999;
             max-height: 350px;
             overflow: hidden;
             display: flex;

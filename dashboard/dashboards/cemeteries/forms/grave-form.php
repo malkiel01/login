@@ -1,10 +1,11 @@
 <?php
 /*
  * File: dashboard/dashboards/cemeteries/forms/grave-form.php
- * Version: 1.0.2
- * Updated: 2025-12-30
+ * Version: 1.0.3
+ * Updated: 2026-01-21
  * Author: Malkiel
  * Change Summary:
+ * - v1.0.3: הוספת הצגת נתיב היררכיה מלא כולל אחוזת קבר (ההורה הישיר)
  * - v1.0.2: הוספת error handling משופר
  * - v1.0.1: תיקון SQL והוספת error handling
  * - v1.0.0: יצירת טופס הוספה/עריכה של קבר בודד
@@ -35,6 +36,7 @@ $parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? null; // areaGraveId
 
 $grave = null;
 $areaGraves = [];
+$hierarchyPath = null; // נתיב היררכיה מלא
 
 try {
     $conn = getDBConnection();
@@ -66,6 +68,24 @@ try {
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $areaGraves[$row['unicId']] = $row['areaGraveNameHe'];
         }
+
+        // טען נתיב היררכיה מלא כולל ההורה הישיר (אחוזת קבר)
+        $stmt = $conn->prepare("
+            SELECT
+                ag.areaGraveNameHe,
+                l.lineNameHe,
+                p.plotNameHe,
+                b.blockNameHe,
+                c.cemeteryNameHe
+            FROM areaGraves ag
+            LEFT JOIN `lines` l ON ag.lineId = l.unicId
+            LEFT JOIN plots p ON l.plotId = p.unicId
+            LEFT JOIN blocks b ON p.blockId = b.unicId
+            LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
+            WHERE ag.unicId = ?
+        ");
+        $stmt->execute([$parentId]);
+        $hierarchyPath = $stmt->fetch(PDO::FETCH_ASSOC);
     } else {
         // טען את כל האחוזות - שאילתה פשוטה יותר
         $stmt = $conn->query("
@@ -87,6 +107,34 @@ try {
 try {
     // יצירת FormBuilder
     $formBuilder = new FormBuilder('grave', $itemId, $parentId);
+
+    // הצגת נתיב היררכיה מלא (אם קיים parentId)
+    if ($hierarchyPath) {
+        $breadcrumbParts = [];
+        if (!empty($hierarchyPath['cemeteryNameHe'])) {
+            $breadcrumbParts[] = htmlspecialchars($hierarchyPath['cemeteryNameHe']);
+        }
+        if (!empty($hierarchyPath['blockNameHe'])) {
+            $breadcrumbParts[] = htmlspecialchars($hierarchyPath['blockNameHe']);
+        }
+        if (!empty($hierarchyPath['plotNameHe'])) {
+            $breadcrumbParts[] = htmlspecialchars($hierarchyPath['plotNameHe']);
+        }
+        if (!empty($hierarchyPath['lineNameHe'])) {
+            $breadcrumbParts[] = htmlspecialchars($hierarchyPath['lineNameHe']);
+        }
+        if (!empty($hierarchyPath['areaGraveNameHe'])) {
+            $breadcrumbParts[] = '<strong>' . htmlspecialchars($hierarchyPath['areaGraveNameHe']) . '</strong>';
+        }
+
+        if (!empty($breadcrumbParts)) {
+            $breadcrumbHtml = '<div class="hierarchy-breadcrumb" style="background: #f8f9fa; padding: 10px 15px; border-radius: 5px; margin-bottom: 15px; border-right: 4px solid #007bff; font-size: 14px;">'
+                . '<span style="color: #6c757d; margin-left: 8px;">📍 מיקום:</span>'
+                . implode(' ← ', $breadcrumbParts)
+                . '</div>';
+            $formBuilder->addCustomHTML($breadcrumbHtml);
+        }
+    }
 
     // שדה אחוזת קבר
     $formBuilder->addField('areaGraveId', 'אחוזת קבר', 'select', [

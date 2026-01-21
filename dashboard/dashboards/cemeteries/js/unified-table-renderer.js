@@ -313,7 +313,7 @@ class UnifiedTableRenderer {
         
 
         // לקוחות ורכישות לא צריכים הורה
-        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country', 'city'];
 
         if (!type) {
             console.error('No type defined');
@@ -501,7 +501,7 @@ class UnifiedTableRenderer {
         
 
         // לקוחות ורכישות לא צריכים הורה
-        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country', 'city'];
 
         
         if (typesWithoutParent.includes(type)) {
@@ -807,7 +807,11 @@ class UnifiedTableRenderer {
             'purchase_': 'purchase',
             'burial_': 'burial',
             'residency_': 'residency',
-            'payment_': 'payment'
+            'payment_': 'payment',
+            'country_': 'country',
+            'city_': 'city',
+            'COUNTRY_': 'country',
+            'CITY_': 'city'
         };
         
         // בדיקה לפי prefix
@@ -835,9 +839,11 @@ class UnifiedTableRenderer {
         'purchase': '/dashboard/dashboards/cemeteries/api/purchases-api.php',
         'burial': '/dashboard/dashboards/cemeteries/api/burials-api.php',
         'residency': '/dashboard/dashboards/cemeteries/api/residency-api.php',
-        'payment': '/dashboard/dashboards/cemeteries/api/payments-api.php'
+        'payment': '/dashboard/dashboards/cemeteries/api/payments-api.php',
+        'country': '/dashboard/dashboards/cemeteries/api/countries-api.php',
+        'city': '/dashboard/dashboards/cemeteries/api/cities-api.php'
     };
-    
+
     return apiMap[type] || null;
 }
 

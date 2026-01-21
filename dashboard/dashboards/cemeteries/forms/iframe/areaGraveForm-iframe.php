@@ -745,6 +745,11 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
         const plotTypes = <?= json_encode($plotTypes, JSON_UNESCAPED_UNICODE) ?>;
         const graveStatuses = <?= json_encode($graveStatuses, JSON_UNESCAPED_UNICODE) ?>;
 
+        // ערכים נבחרים מ-PHP (לאתחול בטעינת הדף)
+        const preSelectedCemeteryId = '<?= addslashes($selectedCemeteryId ?? '') ?>';
+        const preSelectedBlockId = '<?= addslashes($selectedBlockId ?? '') ?>';
+        const preSelectedPlotId = '<?= addslashes($selectedPlotId ?? '') ?>';
+
         const MAX_GRAVES = 5;
         const MIN_GRAVES = 1;
 
@@ -1097,6 +1102,16 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
         const plotSelect = document.getElementById('plotSelect');
         const lineSelect = document.getElementById('lineIdSelect');
         const btnAddRow = document.getElementById('btnAddRow');
+
+        // אתחול בטעינת הדף - הפעל כפתור "הוסף שורה" אם יש חלקה נבחרת
+        if (!isEditMode && preSelectedPlotId && btnAddRow) {
+            btnAddRow.disabled = false;
+            console.log('✅ Pre-selected hierarchy:', {
+                cemetery: preSelectedCemeteryId,
+                block: preSelectedBlockId,
+                plot: preSelectedPlotId
+            });
+        }
 
         // בחירת בית עלמין - טען גושים
         if (cemeterySelect && !isEditMode) {

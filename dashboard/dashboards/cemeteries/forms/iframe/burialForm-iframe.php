@@ -784,40 +784,21 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // טעינת היררכיה לפי קבר
+        // טעינת היררכיה לפי קבר - ללא סינון (מכיל קבר ספציפי)
         async function loadGraveHierarchy(graveId) {
+            console.log('loadGraveHierarchy started for:', graveId);
             try {
                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=get&id=${graveId}`);
                 const result = await response.json();
 
                 if (result.success && result.data) {
                     const grave = result.data;
+                    console.log('Grave data:', grave);
+
+                    // טעינת ההיררכיה ללא סינון - כי אנחנו יודעים שהקבר קיים
                     if (grave.cemeteryId) {
                         document.getElementById('cemeterySelect').value = grave.cemeteryId;
-                        await filterHierarchy('cemetery');
-                    }
-                    if (grave.blockId) {
-                        document.getElementById('blockSelect').value = grave.blockId;
-                        await filterHierarchy('block');
-                    }
-                    if (grave.plotId) {
-                        document.getElementById('plotSelect').value = grave.plotId;
-                        await filterHierarchy('plot');
-                    }
-                    if (grave.lineId) {
-                        document.getElementById('rowSelect').value = grave.lineId;
-                        await filterHierarchy('row');
-                    }
-                    if (grave.areaGraveId) {
-                        document.getElementById('areaGraveSelect').value = grave.areaGraveId;
-                        await filterHierarchy('areaGrave');
-                    }
-                    document.getElementById('graveSelect').value = graveId;
-
-                    // בדיקת רכישה וטעינת purchaseId
-                    if (!isEditMode) {
-                        // רק במצב חדש - בדוק אם יש רכישה לקבר
-                        await onGraveSelected(graveId);
+                        await loadHierarchyLevel('cemetery', grave.cemeteryId, grave);
                     }
                 }
             } catch (error) {
@@ -825,23 +806,120 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
+        // טעינת רמה בהיררכיה ללא סינון (לטעינת קבר ספציפי)
+        async function loadHierarchyLevel(level, parentId, targetGrave) {
+            const configs = {
+                cemetery: {
+                    next: 'block',
+                    selectId: 'blockSelect',
+                    api: 'blocks-api.php',
+                    param: 'cemeteryId',
+                    nameField: 'blockNameHe',
+                    targetField: 'blockId'
+                },
+                block: {
+                    next: 'plot',
+                    selectId: 'plotSelect',
+                    api: 'plots-api.php',
+                    param: 'blockId',
+                    nameField: 'plotNameHe',
+                    targetField: 'plotId'
+                },
+                plot: {
+                    next: 'row',
+                    selectId: 'rowSelect',
+                    api: 'rows-api.php',
+                    param: 'plotId',
+                    nameField: 'lineNameHe',
+                    targetField: 'lineId'
+                },
+                row: {
+                    next: 'areaGrave',
+                    selectId: 'areaGraveSelect',
+                    api: 'areaGraves-api.php',
+                    param: 'lineId',
+                    nameField: 'areaGraveNameHe',
+                    targetField: 'areaGraveId'
+                },
+                areaGrave: {
+                    next: 'grave',
+                    selectId: 'graveSelect',
+                    api: 'graves-api.php',
+                    param: 'areaGraveId',
+                    nameField: 'graveNameHe',
+                    targetField: 'unicId'
+                }
+            };
+
+            const config = configs[level];
+            if (!config) return;
+
+            const nextSelect = document.getElementById(config.selectId);
+
+            try {
+                // טעינת כל האופציות (ללא סינון) - כי אנחנו יודעים שהקבר קיים
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/${config.api}?action=list&${config.param}=${parentId}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    nextSelect.innerHTML = `<option value="">-- בחר ${config.nameField.replace('NameHe', '')} --</option>`;
+
+                    result.data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.unicId;
+                        option.textContent = item[config.nameField] || item.name || '-';
+                        nextSelect.appendChild(option);
+                    });
+
+                    nextSelect.disabled = false;
+
+                    // בחר את הערך המתאים מהקבר המטרה
+                    const targetValue = targetGrave[config.targetField];
+                    if (targetValue) {
+                        nextSelect.value = targetValue;
+                        console.log(`Set ${config.selectId} to:`, targetValue);
+
+                        // המשך לרמה הבאה
+                        if (config.next !== 'grave') {
+                            await loadHierarchyLevel(config.next, targetValue, targetGrave);
+                        } else {
+                            // הגענו לקבר - בחר אותו ובדוק רכישה
+                            nextSelect.value = targetGrave.unicId;
+                            console.log('Set graveSelect to:', targetGrave.unicId);
+
+                            if (!isEditMode) {
+                                await onGraveSelected(targetGrave.unicId);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`Error loading ${level} hierarchy:`, error);
+            }
+        }
+
         // בחירת קבר - בדיקה אם יש רכישה ומילוי אוטומטי של לקוח
         async function onGraveSelected(graveId) {
             if (!graveId) return;
+
+            console.log('onGraveSelected:', graveId);
 
             try {
                 // בדוק אם יש רכישה לקבר זה
                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&graveId=${graveId}`);
                 const result = await response.json();
 
+                console.log('Purchase check result:', result);
+
                 if (result.success && result.data && result.data.length > 0) {
                     const purchase = result.data[0];
 
                     // שמור את ה-purchaseId
                     document.getElementById('purchaseId').value = purchase.unicId;
+                    console.log('Set purchaseId:', purchase.unicId);
 
-                    // טען את הלקוח מהרכישה
-                    if (purchase.clientId && !document.getElementById('clientId').value) {
+                    // טען את הלקוח מהרכישה - תמיד עדכן (לא רק אם ריק)
+                    if (purchase.clientId) {
                         const customerResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${purchase.clientId}`);
                         const customerResult = await customerResponse.json();
 
@@ -861,6 +939,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 } else {
                     // אין רכישה - נקה את השדה
                     document.getElementById('purchaseId').value = '';
+                    console.log('No purchase found for grave');
                 }
             } catch (error) {
                 console.error('Error checking grave purchase:', error);

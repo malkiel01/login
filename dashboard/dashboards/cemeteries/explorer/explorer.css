@@ -698,12 +698,52 @@
 }
 
 /* ========================================
-   Responsive
+   Responsive - Mobile (768px ומטה)
    ======================================== */
-@media (max-width: 600px) {
+@media screen and (max-width: 768px) {
+    /* גובה מותאם למובייל */
+    .file-explorer {
+        height: auto;
+        min-height: 250px;
+        max-height: 350px;
+    }
+
+    /* סרגל כלים - עמודה */
+    .explorer-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .explorer-breadcrumb {
+        min-width: 100%;
+        font-size: 12px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .explorer-actions {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    /* כפתורים גדולים יותר למגע */
+    .explorer-btn {
+        min-height: 40px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    /* Grid - 3 עמודות במובייל */
     .explorer-grid {
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    /* פריטים קטנים יותר */
+    .explorer-item {
+        padding: 8px 4px;
     }
 
     .explorer-item-icon {
@@ -712,20 +752,151 @@
     }
 
     .explorer-item-icon i {
+        font-size: 32px !important;
+    }
+
+    .explorer-item-name {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+
+    /* כפתור מחיקה - תמיד נראה במובייל */
+    .explorer-item .explorer-item-delete {
+        display: flex;
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+    }
+
+    /* תפריטים נפתחים - רוחב מלא */
+    .explorer-dropdown-menu {
+        position: fixed;
+        left: 10px !important;
+        right: 10px !important;
+        top: auto !important;
+        bottom: 10px !important;
+        min-width: auto;
+        border-radius: 12px;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    }
+
+    .explorer-dropdown-menu a {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+
+    /* Context menu - מותאם למובייל */
+    .explorer-context-menu {
+        position: fixed;
+        left: 10px !important;
+        right: 10px !important;
+        top: auto !important;
+        bottom: 10px !important;
+        min-width: auto;
+        border-radius: 12px;
+    }
+
+    .explorer-context-menu a {
+        padding: 14px 15px;
+        font-size: 15px;
+    }
+
+    /* תצוגת רשימה - מותאמת */
+    .explorer-content.view-list .explorer-item {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .explorer-content.view-list .explorer-item-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+
+    .explorer-content.view-list .explorer-item-icon i {
+        font-size: 24px !important;
+    }
+
+    .explorer-content.view-list .explorer-item-name {
+        font-size: 13px;
+    }
+
+    /* הסתר תאריך וגודל ברשימה במובייל */
+    .explorer-content.view-list .explorer-item-date,
+    .explorer-content.view-list .explorer-item-size {
+        display: none;
+    }
+
+    /* מצב ריק */
+    .explorer-empty i {
         font-size: 36px;
     }
 
-    .explorer-toolbar {
-        flex-direction: column;
-        align-items: stretch;
+    .explorer-empty p {
+        font-size: 13px;
     }
 
-    .explorer-actions {
-        justify-content: flex-end;
+    /* תצוגה מקדימה */
+    .explorer-preview-content {
+        max-width: 95%;
+        max-height: 80%;
     }
 
-    /* רשימה מותאמת למובייל */
-    .explorer-content.view-list .explorer-item-date {
+    .explorer-preview-close {
+        top: -50px;
+        font-size: 28px;
+    }
+
+    /* טעינה/העלאה */
+    .explorer-upload-indicator {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    /* תוכן הסייר - padding מותאם */
+    .explorer-content {
+        padding: 10px;
+    }
+}
+
+/* ========================================
+   Responsive - מובייל קטן (480px ומטה)
+   ======================================== */
+@media screen and (max-width: 480px) {
+    .file-explorer {
+        max-height: 300px;
+    }
+
+    /* Grid - 2 עמודות במובייל קטן */
+    .explorer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+
+    .explorer-item-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .explorer-item-icon i {
+        font-size: 28px !important;
+    }
+
+    .explorer-item-name {
+        font-size: 10px;
+    }
+
+    .explorer-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    /* הסתר טקסט בכפתורים, השאר אייקון */
+    .explorer-btn span {
         display: none;
+    }
+
+    .explorer-btn i {
+        margin: 0;
     }
 }

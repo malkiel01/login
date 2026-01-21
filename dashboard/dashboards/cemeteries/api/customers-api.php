@@ -428,13 +428,15 @@
                         WHERE isActive = 1";
                 $params = [];
 
-                // תנאי בסיס: רק לקוחות ללא בן זוג מקושר (spouse ריק)
-                // או בן הזוג הנוכחי (תמיד להציג)
+                // תנאי בסיס:
+                // 1. spouse ריק (אין בן זוג מקושר)
+                // 2. וגם לא נשוי (maritalStatus != 2) - כי נשוי בלי spouse זו בעיית נתונים
+                // 3. או בן הזוג הנוכחי (תמיד להציג)
                 if ($currentSpouse) {
-                    $sql .= " AND ((spouse IS NULL OR spouse = '') OR unicId = :currentSpouse)";
+                    $sql .= " AND (((spouse IS NULL OR spouse = '') AND (maritalStatus IS NULL OR maritalStatus != '2')) OR unicId = :currentSpouse)";
                     $params['currentSpouse'] = $currentSpouse;
                 } else {
-                    $sql .= " AND (spouse IS NULL OR spouse = '')";
+                    $sql .= " AND (spouse IS NULL OR spouse = '') AND (maritalStatus IS NULL OR maritalStatus != '2')";
                 }
 
                 // הסר את הלקוח הנוכחי

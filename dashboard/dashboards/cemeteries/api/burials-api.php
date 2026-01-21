@@ -231,7 +231,6 @@ try {
             $placeDeath = $data['placeDeath'] ?? '';
             $nationalInsurance = $data['nationalInsuranceBurial'] ?? 'לא';
             $deathAbroad = $data['deathAbroad'] ?? 'לא';
-            $burialLicense = $data['burialLicense'] ?? '';
             $comment = $data['comment'] ?? '';
             $timeDeath = $data['timeDeath'] ?? null;
             
@@ -242,14 +241,14 @@ try {
                     dateDeath, timeDeath, dateBurial, timeBurial,
                     placeDeath, nationalInsuranceBurial, deathAbroad,
                     savedGravesList, documentsList, historyList,
-                    burialLicense, comment,
+                    comment,
                     createDate, updateDate, isActive
                 ) VALUES (
                     :unicId, :clientId, :graveId, :purchaseId, :serialBurialId,
                     :dateDeath, :timeDeath, :dateBurial, :timeBurial,
                     :placeDeath, :nationalInsurance, :deathAbroad,
                     '[]', '[]', '[]',
-                    :burialLicense, :comment,
+                    :comment,
                     NOW(), NOW(), 1
                 )
             ");
@@ -267,7 +266,6 @@ try {
                 'placeDeath' => $placeDeath,
                 'nationalInsurance' => $nationalInsurance,
                 'deathAbroad' => $deathAbroad,
-                'burialLicense' => $burialLicense,
                 'comment' => $comment
             ]);
             
@@ -310,7 +308,7 @@ try {
             $allowedFields = [
                 'dateDeath', 'timeDeath', 'dateBurial', 'timeBurial',
                 'placeDeath', 'nationalInsuranceBurial', 'deathAbroad',
-                'burialLicense', 'comment'
+                'comment'
             ];
             
             foreach ($allowedFields as $field) {

@@ -1039,69 +1039,31 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             99: { name: 'אחר', icon: '📝' }
         };
 
-        // שמירת מצב התשלומים בין פתיחות המודל - משתמש ב-localStorage לשמירה מתמדת
-        const PAYMENT_STORAGE_KEY = 'purchasePaymentSelections';
-
-        // שליפת בחירות מ-localStorage
-        function loadSavedPaymentSelections() {
-            try {
-                const saved = localStorage.getItem(PAYMENT_STORAGE_KEY);
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    return {
-                        context: data.context || null,
-                        optionalSelections: new Set(data.optionalSelections || []),
-                        customPayments: data.customPayments || []
-                    };
-                }
-            } catch (e) {
-                console.error('Error loading payment selections:', e);
-            }
-            return { context: null, optionalSelections: new Set(), customPayments: [] };
-        }
-
-        // שמירת בחירות ל-localStorage
-        function savePaymentSelections(context, optionalSelections, customPaymentsArr) {
-            try {
-                localStorage.setItem(PAYMENT_STORAGE_KEY, JSON.stringify({
-                    context: context,
-                    optionalSelections: Array.from(optionalSelections),
-                    customPayments: customPaymentsArr,
-                    savedAt: Date.now()
-                }));
-            } catch (e) {
-                console.error('Error saving payment selections:', e);
-            }
-        }
-
-        // בדיקה אם הקונטקסט השתנה (לקוח/קבר אחר)
-        function getPaymentContext() {
-            return JSON.stringify({
-                customerId: selectedCustomerData?.unicId || null,
-                graveId: selectedGraveData?.unicId || null,
-                plotType: selectedGraveData?.plotType || null,
-                graveType: selectedGraveData?.graveType || null,
-                resident: selectedCustomerData?.resident || null
-            });
-        }
-
-        // משתנים גלובליים לשמירת מצב התשלומים
-        let savedOptionalSelections = new Set();
+        // ============================================================
+        // שמירת מצב התשלומים - פשוט וברור
+        // ============================================================
+        // משתנים גלובליים - נשמרים בזיכרון כל עוד הטופס פתוח
+        let savedOptionalSelections = new Set();  // תשלומים אופציונליים שנבחרו
+        let savedCustomPayments = [];              // תשלומים מותאמים אישית
+        let lastCustomerId = null;                 // לזיהוי שינוי לקוח
+        let lastGraveId = null;                    // לזיהוי שינוי קבר
 
         // פתיחת מודל תשלומים
         function openPaymentsModal(availablePayments) {
-            const currentContext = getPaymentContext();
-            const saved = loadSavedPaymentSelections();
+            // בדיקה אם הלקוח או הקבר השתנו
+            const currentCustomerId = selectedCustomerData?.unicId || null;
+            const currentGraveId = selectedGraveData?.unicId || null;
 
-            // אם הקונטקסט השתנה - איפוס הכל
-            if (saved.context !== currentContext) {
-                customPayments = [];
+            if (lastCustomerId !== currentCustomerId || lastGraveId !== currentGraveId) {
+                // לקוח או קבר חדש - איפוס הכל
                 savedOptionalSelections = new Set();
-                savePaymentSelections(currentContext, savedOptionalSelections, customPayments);
+                savedCustomPayments = [];
+                customPayments = [];
+                lastCustomerId = currentCustomerId;
+                lastGraveId = currentGraveId;
             } else {
-                // אם אותו קונטקסט - שחזר את הבחירות הקודמות
-                customPayments = saved.customPayments || [];
-                savedOptionalSelections = saved.optionalSelections || new Set();
+                // אותו לקוח וקבר - שחזר את הבחירות
+                customPayments = [...savedCustomPayments];
             }
 
             const mandatoryPayments = availablePayments.filter(p => p.mandatory);
@@ -1209,7 +1171,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 cb.addEventListener('change', updateModalTotal);
             });
 
-            // מאזין מיוחד לתשלומים אופציונליים - שמירת הבחירות ל-localStorage
+            // מאזין מיוחד לתשלומים אופציונליים - שמירת הבחירות בזיכרון
             modal.querySelectorAll('.optional-payment').forEach(cb => {
                 cb.addEventListener('change', function() {
                     const type = this.dataset.type;
@@ -1218,8 +1180,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     } else {
                         savedOptionalSelections.delete(type);
                     }
-                    // שמירה מיידית ל-localStorage
-                    savePaymentSelections(getPaymentContext(), savedOptionalSelections, customPayments);
+                    // הבחירות נשמרות אוטומטית ב-Set
                 });
             });
 
@@ -1265,8 +1226,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             renderCustomPayments();
             updateModalTotal();
 
-            // שמירה ל-localStorage
-            savePaymentSelections(getPaymentContext(), savedOptionalSelections, customPayments);
+            // שמירה לזיכרון
+            savedCustomPayments = [...customPayments];
 
             // איפוס השדות
             typeSelect.value = '';
@@ -1279,8 +1240,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             renderCustomPayments();
             updateModalTotal();
 
-            // שמירה ל-localStorage
-            savePaymentSelections(getPaymentContext(), savedOptionalSelections, customPayments);
+            // שמירה לזיכרון
+            savedCustomPayments = [...customPayments];
         }
 
         // רינדור תשלומים מותאמים אישית

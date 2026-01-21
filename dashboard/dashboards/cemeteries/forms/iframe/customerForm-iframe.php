@@ -785,7 +785,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 // טעינת כל הלקוחות בצורה דינמית
                 let allCustomers = [];
                 let page = 1;
-                const limit = 1000;
+                const limit = 2000;
                 let hasMore = true;
 
                 while (hasMore) {

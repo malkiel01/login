@@ -87,8 +87,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             background: white;
             border-radius: 12px;
             border: 2px solid transparent;
-            overflow: hidden;
+            overflow: visible;
             transition: border-color 0.2s;
+        }
+        .sortable-section .section-content {
+            border-radius: 0 0 10px 10px;
         }
         .sortable-section:hover { border-color: #94a3b8; }
 

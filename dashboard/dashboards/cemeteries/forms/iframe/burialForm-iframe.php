@@ -908,12 +908,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             console.log('onGraveSelected:', graveId, 'updateCustomer:', updateCustomer, 'isLoadingHierarchyFromCustomer:', isLoadingHierarchyFromCustomer);
 
-            // קודם כל - נקה את הלקוח (אם מותר לעדכן)
-            if (updateCustomer) {
-                document.getElementById('clientId').value = '';
-                document.getElementById('customerDisplayText').textContent = '-- בחר נפטר/ת --';
-                console.log('Cleared customer field');
-            }
+            // לא מנקים את הלקוח מראש - רק מחליפים אותו אם לקבר יש רכישה קיימת
 
             try {
                 // בדוק אם יש רכישה לקבר זה
@@ -962,9 +957,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         console.log('Skipping customer update (came from customer selection)');
                     }
                 } else {
-                    // אין רכישה - נקה את השדה purchaseId
+                    // אין רכישה - נקה את השדה purchaseId, הלקוח הנוכחי נשאר
                     document.getElementById('purchaseId').value = '';
-                    console.log('No purchase found for grave (customer already cleared above)');
+                    console.log('No purchase found for grave - keeping current customer');
                 }
             } catch (error) {
                 console.error('Error checking grave purchase:', error);
@@ -1004,11 +999,10 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             document.getElementById('graveSelect').innerHTML = '<option value="">--</option>';
             document.getElementById('graveSelect').disabled = true;
 
-            // כשמשנים את ההיררכיה - הקבר מתאפס, לכן גם הלקוח והרכישה מתאפסים
-            document.getElementById('clientId').value = '';
-            document.getElementById('customerDisplayText').textContent = '-- בחר נפטר/ת --';
+            // כשמשנים את ההיררכיה - הקבר מתאפס, לכן רק הרכישה מתאפסת
+            // הלקוח לא מתאפס - הוא יוחלף רק אם נבחר קבר עם רכישה קיימת
             document.getElementById('purchaseId').value = '';
-            console.log('Hierarchy changed - cleared customer and purchase');
+            console.log('Hierarchy changed - cleared purchase (customer kept)');
 
             if (!selectedValue) return;
 

@@ -27,7 +27,7 @@ if ($isEditMode) {
             SELECT p.*,
                    c.firstName as customerFirstName,
                    c.lastName as customerLastName,
-                   g.graveNumber
+                   g.graveNameHe
             FROM purchases p
             LEFT JOIN customers c ON p.clientId = c.unicId
             LEFT JOIN graves g ON p.graveId = g.unicId

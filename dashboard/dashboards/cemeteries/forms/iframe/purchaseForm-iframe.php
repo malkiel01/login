@@ -246,6 +246,95 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             padding: 15px;
             min-height: 80px;
         }
+
+        /* Custom Select Dropdown for Customer */
+        .custom-select-container {
+            position: relative;
+        }
+        .custom-select-display {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .custom-select-display:hover {
+            border-color: #94a3b8;
+        }
+        .custom-select-display.open {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .custom-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            max-height: 350px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .custom-select-search {
+            padding: 10px 12px;
+            border: none;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            outline: none;
+        }
+        .custom-select-options {
+            overflow-y: auto;
+            max-height: 280px;
+        }
+        .custom-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .custom-option:hover {
+            background: #eff6ff;
+        }
+        .custom-option.selected {
+            background: #dbeafe;
+            font-weight: 500;
+        }
+        .custom-option-name {
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .custom-option-details {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .custom-option-hint {
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .custom-option-loading {
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+        }
+        .custom-option-empty {
+            padding: 20px;
+            text-align: center;
+            color: #ef4444;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -274,9 +363,23 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         <div class="form-grid">
                             <div class="form-group span-2">
                                 <label>לקוח <span class="required">*</span></label>
-                                <select name="clientId" id="clientId" class="form-control" required>
-                                    <option value="">טוען לקוחות...</option>
-                                </select>
+                                <input type="hidden" name="clientId" id="clientId" value="<?= htmlspecialchars($purchase['clientId'] ?? '') ?>">
+                                <div class="custom-select-container" id="customerSelectContainer">
+                                    <div class="custom-select-display" onclick="toggleCustomerDropdown()">
+                                        <span id="customerDisplayText">טוען...</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    <div class="custom-select-dropdown" id="customerDropdown" style="display: none;">
+                                        <input type="text"
+                                               id="customerSearch"
+                                               class="custom-select-search"
+                                               placeholder="חפש לפי שם, ת.ז או טלפון..."
+                                               oninput="filterCustomerOptions()">
+                                        <div class="custom-select-options" id="customerOptions">
+                                            <div class="custom-option-hint">הקלד לחיפוש לקוח...</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>סטטוס רוכש</label>
@@ -468,16 +571,25 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         let selectedGraveData = null;
         let purchasePayments = [];
 
+        // משתנים לחיפוש לקוחות
+        let customerSearchTimeout = null;
+        let customerDropdownOpen = false;
+
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof PopupAPI !== 'undefined') {
                 PopupAPI.setTitle('<?= addslashes($pageTitle) ?>');
             }
 
-            loadCustomers();
+            loadCustomerDisplay();
             loadCemeteries();
 
-            // האזנה לשינוי לקוח
-            document.getElementById('clientId').addEventListener('change', onCustomerSelected);
+            // סגירת dropdown בלחיצה מחוץ
+            document.addEventListener('click', function(e) {
+                const container = document.getElementById('customerSelectContainer');
+                if (container && !container.contains(e.target)) {
+                    closeCustomerDropdown();
+                }
+            });
 
             // האזנה לשינוי קבר
             document.getElementById('graveSelect').addEventListener('change', onGraveSelected);
@@ -495,91 +607,176 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             btn.closest('.sortable-section').classList.toggle('collapsed');
         }
 
-        // טעינת לקוחות - רק לקוחות פעילים (סטטוס 1)
-        async function loadCustomers() {
-            try {
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list');
-                const result = await response.json();
+        // טעינת תצוגת לקוח - רק הלקוח הנוכחי במצב עריכה
+        async function loadCustomerDisplay() {
+            const displayText = document.getElementById('customerDisplayText');
+            const optionsContainer = document.getElementById('customerOptions');
 
-                if (result.success && result.data) {
-                    const select = document.getElementById('clientId');
-                    select.innerHTML = '<option value="">-- בחר לקוח --</option>';
+            if (isEditMode && purchaseClientId) {
+                // במצב עריכה - טען את הלקוח הנוכחי
+                try {
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${purchaseClientId}`);
+                    const result = await response.json();
 
-                    // סטטוסים: 1=פעיל, 2=רוכש (כבר רכש), 3=נפטר
-                    const statusLabels = { 1: 'פעיל', 2: 'רוכש', 3: 'נפטר' };
+                    if (result.success && result.data) {
+                        const customer = result.data;
+                        const name = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
+                        displayText.textContent = name || 'לקוח נבחר';
 
-                    result.data.forEach(customer => {
-                        const status = parseInt(customer.statusCustomer) || 1;
+                        // שמירת נתוני הלקוח לחישובים
+                        let calculatedResident = parseInt(customer.resident) || 3;
 
-                        // במצב עריכה - הצג את הלקוח הנוכחי גם אם הסטטוס השתנה
-                        // במצב חדש - הצג רק לקוחות פעילים (סטטוס 1)
-                        if (!isEditMode && status !== 1) {
-                            return; // דלג על לקוחות שכבר רכשו או נפטרו
-                        }
+                        // חישוב תושבות בזמן אמת
+                        if (customer.countryId || customer.cityId) {
+                            try {
+                                const residencyParams = new URLSearchParams({
+                                    typeId: customer.typeId || 1,
+                                    countryId: customer.countryId || '',
+                                    cityId: customer.cityId || ''
+                                });
+                                const residencyResponse = await fetch(`/dashboard/dashboards/cemeteries/api/calculate-residency.php?${residencyParams}`);
+                                const residencyResult = await residencyResponse.json();
 
-                        const option = document.createElement('option');
-                        option.value = customer.unicId;
-
-                        // הוסף אינדיקציה לסטטוס
-                        let displayText = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})`;
-                        if (status !== 1) {
-                            displayText += ` [${statusLabels[status] || 'לא ידוע'}]`;
-                            option.style.color = status === 3 ? '#dc2626' : '#f59e0b';
-                        }
-                        option.textContent = displayText;
-
-                        if (customer.unicId === purchaseClientId) {
-                            option.selected = true;
-                        }
-                        select.appendChild(option);
-                    });
-
-                    // בדיקה אם יש לקוחות זמינים
-                    if (select.options.length === 1 && !isEditMode) {
-                        select.innerHTML = '<option value="">אין לקוחות פעילים לרכישה</option>';
-                    }
-
-                    // אם במצב עריכה - טען נתוני לקוח נבחר עם חישוב תושבות בזמן אמת
-                    if (isEditMode && purchaseClientId) {
-                        const selectedCustomer = result.data.find(c => c.unicId === purchaseClientId);
-                        if (selectedCustomer) {
-                            let calculatedResident = parseInt(selectedCustomer.resident) || 3;
-
-                            // חישוב תושבות בזמן אמת
-                            if (selectedCustomer.countryId || selectedCustomer.cityId) {
-                                try {
-                                    const residencyParams = new URLSearchParams({
-                                        typeId: selectedCustomer.typeId || 1,
-                                        countryId: selectedCustomer.countryId || '',
-                                        cityId: selectedCustomer.cityId || ''
-                                    });
-                                    const residencyResponse = await fetch(`/dashboard/dashboards/cemeteries/api/calculate-residency.php?${residencyParams}`);
-                                    const residencyResult = await residencyResponse.json();
-
-                                    if (residencyResult.success) {
-                                        calculatedResident = residencyResult.residency;
-                                    }
-                                } catch (e) {
-                                    console.error('Error calculating residency:', e);
+                                if (residencyResult.success) {
+                                    calculatedResident = residencyResult.residency;
                                 }
+                            } catch (e) {
+                                console.error('Error calculating residency:', e);
                             }
-
-                            selectedCustomerData = {
-                                unicId: selectedCustomer.unicId,
-                                resident: calculatedResident,
-                                name: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`
-                            };
                         }
+
+                        selectedCustomerData = {
+                            unicId: customer.unicId,
+                            resident: calculatedResident,
+                            name: name
+                        };
                     }
+                } catch (error) {
+                    console.error('Error loading current customer:', error);
+                    displayText.textContent = 'שגיאה בטעינה';
                 }
-            } catch (error) {
-                console.error('Error loading customers:', error);
+            } else {
+                // במצב הוספה - הצג הודעה לבחירה
+                displayText.textContent = '-- בחר לקוח --';
+            }
+
+            // הצג הודעה לחיפוש
+            optionsContainer.innerHTML = '<div class="custom-option-hint">הקלד לחיפוש לקוח...</div>';
+        }
+
+        // פתיחה/סגירה של dropdown לקוחות
+        function toggleCustomerDropdown() {
+            const dropdown = document.getElementById('customerDropdown');
+            const display = document.querySelector('.custom-select-display');
+
+            if (customerDropdownOpen) {
+                closeCustomerDropdown();
+            } else {
+                dropdown.style.display = 'flex';
+                display.classList.add('open');
+                customerDropdownOpen = true;
+                document.getElementById('customerSearch').focus();
             }
         }
 
+        function closeCustomerDropdown() {
+            const dropdown = document.getElementById('customerDropdown');
+            const display = document.querySelector('.custom-select-display');
+
+            dropdown.style.display = 'none';
+            display.classList.remove('open');
+            customerDropdownOpen = false;
+        }
+
+        // סינון לקוחות עם debounce
+        function filterCustomerOptions() {
+            if (customerSearchTimeout) {
+                clearTimeout(customerSearchTimeout);
+            }
+
+            customerSearchTimeout = setTimeout(() => {
+                const searchTerm = document.getElementById('customerSearch').value.trim();
+                searchCustomers(searchTerm);
+            }, 300);
+        }
+
+        // חיפוש לקוחות מהשרת
+        async function searchCustomers(searchTerm) {
+            const optionsContainer = document.getElementById('customerOptions');
+
+            if (!searchTerm || searchTerm.length < 2) {
+                optionsContainer.innerHTML = '<div class="custom-option-hint">הקלד לפחות 2 תווים לחיפוש...</div>';
+                return;
+            }
+
+            // הצג טעינה
+            optionsContainer.innerHTML = '<div class="custom-option-loading"><i class="fas fa-spinner fa-spin"></i> מחפש...</div>';
+
+            try {
+                const params = new URLSearchParams({
+                    action: 'search_customers_for_purchase',
+                    search: searchTerm,
+                    currentClient: purchaseClientId || '',
+                    limit: 50
+                });
+
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?${params}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    if (result.data.length === 0) {
+                        optionsContainer.innerHTML = '<div class="custom-option-empty">לא נמצאו לקוחות זמינים</div>';
+                        return;
+                    }
+
+                    const currentClientId = document.getElementById('clientId').value;
+
+                    optionsContainer.innerHTML = result.data.map(customer => {
+                        const isSelected = customer.unicId === currentClientId;
+                        const name = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
+                        const details = [];
+                        if (customer.numId) details.push(`ת.ז: ${customer.numId}`);
+                        if (customer.phone) details.push(`טל: ${customer.phone}`);
+                        if (customer.phoneMobile) details.push(`נייד: ${customer.phoneMobile}`);
+
+                        return `
+                            <div class="custom-option ${isSelected ? 'selected' : ''}"
+                                 onclick="selectCustomer('${customer.unicId}', '${name.replace(/'/g, "\\'")}', ${customer.resident || 3})">
+                                <div class="custom-option-name">${name}</div>
+                                <div class="custom-option-details">${details.join(' | ')}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    optionsContainer.innerHTML = '<div class="custom-option-empty">שגיאה בחיפוש</div>';
+                }
+            } catch (error) {
+                console.error('Error searching customers:', error);
+                optionsContainer.innerHTML = '<div class="custom-option-empty">שגיאה בחיפוש</div>';
+            }
+        }
+
+        // בחירת לקוח
+        async function selectCustomer(unicId, name, resident) {
+            // עדכון הערכים
+            document.getElementById('clientId').value = unicId;
+            document.getElementById('customerDisplayText').textContent = name;
+
+            // סגירת dropdown
+            closeCustomerDropdown();
+
+            // איפוס חיפוש
+            document.getElementById('customerSearch').value = '';
+
+            // טעינת נתוני הלקוח המלאים
+            await onCustomerSelected(unicId);
+        }
+
         // טיפול בבחירת לקוח
-        async function onCustomerSelected() {
-            const customerId = document.getElementById('clientId').value;
+        async function onCustomerSelected(customerId = null) {
+            if (!customerId) {
+                customerId = document.getElementById('clientId').value;
+            }
             if (!customerId) {
                 selectedCustomerData = null;
                 return;
@@ -672,6 +869,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     // אם יש קבר נבחר, טען את ההיררכיה
                     if (purchaseGraveId) {
                         loadGraveHierarchy(purchaseGraveId);
+                    }
+                    // אוטו-בחירה: אם יש רק בית עלמין אחד - בחר אותו אוטומטית
+                    else if (result.data.length === 1) {
+                        select.value = result.data[0].unicId;
+                        await filterHierarchy('cemetery');
                     }
                 }
             } catch (error) {
@@ -803,6 +1005,18 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             nextSelect.appendChild(option);
                         });
                         nextSelect.disabled = false;
+
+                        // אוטו-בחירה: אם יש רק אופציה אחת - בחר אותה אוטומטית
+                        if (result.data.length === 1) {
+                            nextSelect.value = result.data[0].unicId;
+                            // הפעל את הרמה הבאה
+                            if (level === 'cemetery') {
+                                await filterHierarchy('block');
+                            } else if (level === 'areaGrave') {
+                                // קברים - הפעל onGraveSelected
+                                onGraveSelected();
+                            }
+                        }
                     }
                 }
             } catch (error) {
@@ -839,7 +1053,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // בניית ה-options - רק שורות עם קברים פנויים
             selectElement.innerHTML = '<option value="">-- בחר שורה --</option>';
-            let hasAvailable = false;
+            const availableRows = [];
 
             results.forEach(({ row, availableCount }) => {
                 // רק שורות עם קברים פנויים יופיעו
@@ -848,14 +1062,19 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     option.value = row.unicId;
                     option.textContent = `${row.lineNameHe || '-'} (${availableCount} פנויים)`;
                     selectElement.appendChild(option);
-                    hasAvailable = true;
+                    availableRows.push(row);
                 }
             });
 
-            selectElement.disabled = !hasAvailable;
+            selectElement.disabled = availableRows.length === 0;
 
-            if (!hasAvailable) {
+            if (availableRows.length === 0) {
                 selectElement.innerHTML = '<option value="">אין קברים פנויים בחלקה זו</option>';
+            }
+            // אוטו-בחירה: אם יש רק שורה אחת עם קברים פנויים - בחר אותה אוטומטית
+            else if (availableRows.length === 1) {
+                selectElement.value = availableRows[0].unicId;
+                await filterHierarchy('row');
             }
         }
 
@@ -888,7 +1107,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // בניית ה-options - רק אחוזות קבר עם קברים פנויים
             selectElement.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
-            let hasAvailable = false;
+            const availableAreaGraves = [];
 
             results.forEach(({ areaGrave, availableCount }) => {
                 // רק אחוזות קבר עם קברים פנויים יופיעו
@@ -897,14 +1116,19 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     option.value = areaGrave.unicId;
                     option.textContent = `${areaGrave.areaGraveNameHe || '-'} (${availableCount} פנויים)`;
                     selectElement.appendChild(option);
-                    hasAvailable = true;
+                    availableAreaGraves.push(areaGrave);
                 }
             });
 
-            selectElement.disabled = !hasAvailable;
+            selectElement.disabled = availableAreaGraves.length === 0;
 
-            if (!hasAvailable) {
+            if (availableAreaGraves.length === 0) {
                 selectElement.innerHTML = '<option value="">אין קברים פנויים בשורה זו</option>';
+            }
+            // אוטו-בחירה: אם יש רק אחוזת קבר אחת עם קברים פנויים - בחר אותה אוטומטית
+            else if (availableAreaGraves.length === 1) {
+                selectElement.value = availableAreaGraves[0].unicId;
+                await filterHierarchy('areaGrave');
             }
         }
 
@@ -937,7 +1161,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // בניית ה-options - כל החלקות, disabled לאלה ללא קברים
             selectElement.innerHTML = '<option value="">-- בחר חלקה --</option>';
-            let hasAvailable = false;
+            const availablePlots = [];
 
             results.forEach(({ plot, availableCount }) => {
                 const option = document.createElement('option');
@@ -945,7 +1169,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 if (availableCount > 0) {
                     option.textContent = `${plot.plotNameHe || '-'} (${availableCount} פנויים)`;
-                    hasAvailable = true;
+                    availablePlots.push(plot);
                 } else {
                     option.textContent = `${plot.plotNameHe || '-'} (אין פנויים)`;
                     option.disabled = true;
@@ -955,6 +1179,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             });
 
             selectElement.disabled = false;
+
+            // אוטו-בחירה: אם יש רק חלקה אחת עם קברים פנויים - בחר אותה אוטומטית
+            if (availablePlots.length === 1) {
+                selectElement.value = availablePlots[0].unicId;
+                await filterHierarchy('plot');
+            }
         }
 
         // ניסיון לחשב תשלומים אוטומטית

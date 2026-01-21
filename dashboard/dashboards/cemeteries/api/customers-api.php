@@ -479,6 +479,87 @@
                 ]);
                 break;
 
+            // חיפוש לקוחות זמינים לרכישה - חיפוש בצד השרת
+            case 'search_customers_for_purchase':
+                $search = $_GET['search'] ?? '';
+                $currentClient = $_GET['currentClient'] ?? ''; // unicId של הלקוח הנוכחי (במצב עריכה)
+                $limit = isset($_GET['limit']) ? min((int)$_GET['limit'], 100) : 50;
+
+                // בסיס השאילתה: לקוחות פעילים שאין להם רכישה ואין להם קבורה
+                $sql = "SELECT unicId, firstName, lastName, numId, phone, phoneMobile, resident
+                        FROM customers
+                        WHERE isActive = 1";
+                $params = [];
+
+                // תנאי: לקוחות ללא רכישה וללא קבורה (או הלקוח הנוכחי)
+                if ($currentClient) {
+                    $sql .= " AND (
+                        (
+                            NOT EXISTS (
+                                SELECT 1 FROM purchases p
+                                WHERE p.clientId = customers.unicId
+                                AND p.isActive = 1
+                            )
+                            AND NOT EXISTS (
+                                SELECT 1 FROM burials b
+                                WHERE b.clientId = customers.unicId
+                                AND b.isActive = 1
+                            )
+                        )
+                        OR unicId = :currentClient
+                    )";
+                    $params['currentClient'] = $currentClient;
+                } else {
+                    $sql .= " AND NOT EXISTS (
+                        SELECT 1 FROM purchases p
+                        WHERE p.clientId = customers.unicId
+                        AND p.isActive = 1
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1 FROM burials b
+                        WHERE b.clientId = customers.unicId
+                        AND b.isActive = 1
+                    )";
+                }
+
+                // חיפוש לפי טקסט
+                if ($search) {
+                    $sql .= " AND (
+                        firstName LIKE :search1 OR
+                        lastName LIKE :search2 OR
+                        numId LIKE :search3 OR
+                        phone LIKE :search4 OR
+                        phoneMobile LIKE :search5 OR
+                        CONCAT(firstName, ' ', lastName) LIKE :search6 OR
+                        CONCAT(lastName, ' ', firstName) LIKE :search7
+                    )";
+                    $searchTerm = '%' . $search . '%';
+                    $params['search1'] = $searchTerm;
+                    $params['search2'] = $searchTerm;
+                    $params['search3'] = $searchTerm;
+                    $params['search4'] = $searchTerm;
+                    $params['search5'] = $searchTerm;
+                    $params['search6'] = $searchTerm;
+                    $params['search7'] = $searchTerm;
+                }
+
+                $sql .= " ORDER BY lastName, firstName LIMIT :limit";
+
+                $stmt = $pdo->prepare($sql);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue(':' . $key, $value);
+                }
+                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+                $stmt->execute();
+
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                echo json_encode([
+                    'success' => true,
+                    'data' => $customers
+                ]);
+                break;
+
             // קבלת לקוח בודד
             case 'get':
                 if (!$id) {

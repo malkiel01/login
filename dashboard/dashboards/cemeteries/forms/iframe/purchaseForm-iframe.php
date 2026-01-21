@@ -47,7 +47,7 @@ if ($isEditMode) {
 $pageTitle = $isEditMode ? 'עריכת רכישה #' . ($purchase['serialPurchaseId'] ?? $itemId) : 'רכישה חדשה';
 
 // מיפויים
-$buyerStatusOptions = [1 => 'רכישה בחיים', 2 => 'רכישה לאחר פטירה'];
+$buyerStatusOptions = [1 => 'רכישה בחיים', 2 => 'רכישה לאחר פטירה', 3 => 'בן/בת זוג נפטר'];
 $purchaseStatusOptions = [1 => 'פתוח', 2 => 'שולם', 3 => 'סגור', 4 => 'בוטל'];
 
 function renderSelect($name, $options, $value = '', $required = false, $disabled = false) {

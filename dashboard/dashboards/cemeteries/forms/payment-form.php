@@ -100,7 +100,7 @@ $formBuilder->addField('buyerStatus', 'סטטוס רוכש', 'select', [
         -1 => '-- כל הסוגים --',
         1 => 'בחיים',
         2 => 'לאחר פטירה',
-        3 => 'בן זוג נפטר'
+        3 => 'בן/בת זוג נפטר'
     ],
     'value' => $payment['buyerStatus'] ?? -1
 ]);

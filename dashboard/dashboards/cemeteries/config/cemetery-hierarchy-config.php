@@ -1996,7 +1996,8 @@ return [
             ['name' => 'buyerStatus', 'label' => 'סוג רכישה', 'type' => 'select', 'matchType' => ['exact'],
                 'options' => [
                     ['value' => 1, 'label' => 'רכישה בחיים'],
-                    ['value' => 2, 'label' => 'רכישה לאחר פטירה']
+                    ['value' => 2, 'label' => 'רכישה לאחר פטירה'],
+                    ['value' => 3, 'label' => 'בן/בת זוג נפטר']
                 ]
             ],
             ['name' => 'cemeteryNameHe', 'label' => 'בית עלמין', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
@@ -2014,7 +2015,8 @@ return [
         
         'buyerStatuses' => [
             1 => ['text' => 'רכישה בחיים', 'color' => '#10b981', 'class' => 'badge-success'],
-            2 => ['text' => 'רכישה לאחר פטירה', 'color' => '#3b82f6', 'class' => 'badge-info']
+            2 => ['text' => 'רכישה לאחר פטירה', 'color' => '#3b82f6', 'class' => 'badge-info'],
+            3 => ['text' => 'בן/בת זוג נפטר', 'color' => '#8b5cf6', 'class' => 'badge-purple']
         ],
         
         'api' => [

@@ -83,7 +83,7 @@ if (!defined('PAYMENT_BUYER_STATUS')) {
     define('PAYMENT_BUYER_STATUS', [
         1 => ['name' => 'בחיים', 'color' => '#10b981'],
         2 => ['name' => 'לאחר פטירה', 'color' => '#6b7280'],
-        3 => ['name' => 'בן זוג נפטר', 'color' => '#3b82f6']
+        3 => ['name' => 'בן/בת זוג נפטר', 'color' => '#3b82f6']
     ]);
 }
 

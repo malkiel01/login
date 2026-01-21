@@ -903,7 +903,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // סינון חלקות - רק אלה שיש להן קברים פנויים
+        // סינון חלקות - הצגת כולן, disabled לאלה ללא קברים פנויים
         async function filterPlotsWithAvailableGraves(plots, selectElement) {
             selectElement.innerHTML = '<option value="">טוען חלקות...</option>';
             selectElement.disabled = true;
@@ -930,26 +930,26 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 })
             );
 
-            // בניית ה-options - רק חלקות עם קברים פנויים
+            // בניית ה-options - כל החלקות, disabled לאלה ללא קברים
             selectElement.innerHTML = '<option value="">-- בחר חלקה --</option>';
             let hasAvailable = false;
 
             results.forEach(({ plot, availableCount }) => {
-                // רק חלקות עם קברים פנויים יופיעו
+                const option = document.createElement('option');
+                option.value = plot.unicId;
+
                 if (availableCount > 0) {
-                    const option = document.createElement('option');
-                    option.value = plot.unicId;
                     option.textContent = `${plot.plotNameHe || '-'} (${availableCount} פנויים)`;
-                    selectElement.appendChild(option);
                     hasAvailable = true;
+                } else {
+                    option.textContent = `${plot.plotNameHe || '-'} (אין פנויים)`;
+                    option.disabled = true;
+                    option.style.color = '#999';
                 }
+                selectElement.appendChild(option);
             });
 
-            selectElement.disabled = !hasAvailable;
-
-            if (!hasAvailable) {
-                selectElement.innerHTML = '<option value="">אין קברים פנויים בגוש זה</option>';
-            }
+            selectElement.disabled = false;
         }
 
         // ניסיון לחשב תשלומים אוטומטית

@@ -367,9 +367,9 @@ try {
                     SELECT COUNT(*)
                     FROM graves g
                     INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                    INNER JOIN \`lines\` l ON ag.lineId = l.unicId
-                    WHERE l.plotId = :plotId
-                    AND l.isActive = 1
+                    INNER JOIN `rows` r ON ag.lineId = r.unicId
+                    WHERE r.plotId = :plotId
+                    AND r.isActive = 1
                     AND ag.isActive = 1
                     AND g.isActive = 1
                     AND g.graveStatus IN $allowedStatuses

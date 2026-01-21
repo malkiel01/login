@@ -881,7 +881,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             // קודם כל - נקה את הלקוח (אם מותר לעדכן)
             if (updateCustomer) {
                 document.getElementById('clientId').value = '';
-                document.getElementById('customerDisplayText').textContent = '';
+                document.getElementById('customerDisplayText').textContent = '-- בחר נפטר/ת --';
                 console.log('Cleared customer field');
             }
 
@@ -964,7 +964,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // כשמשנים את ההיררכיה - הקבר מתאפס, לכן גם הלקוח והרכישה מתאפסים
             document.getElementById('clientId').value = '';
-            document.getElementById('customerDisplayText').textContent = '';
+            document.getElementById('customerDisplayText').textContent = '-- בחר נפטר/ת --';
             document.getElementById('purchaseId').value = '';
             console.log('Hierarchy changed - cleared customer and purchase');
 

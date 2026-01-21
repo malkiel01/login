@@ -27,7 +27,7 @@ if ($isEditMode) {
             SELECT b.*,
                    c.firstName as deceasedFirstName,
                    c.lastName as deceasedLastName,
-                   g.graveNumber
+                   g.graveNameHe
             FROM burials b
             LEFT JOIN customers c ON b.clientId = c.unicId
             LEFT JOIN graves g ON b.graveId = g.unicId
@@ -389,14 +389,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             </div>
                         </div>
 
-                        <div class="form-grid" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #a7f3d0;">
-                            <div class="form-group">
-                                <label>רכישה קשורה</label>
-                                <select name="purchaseId" id="purchaseId" class="form-control">
-                                    <option value="">-- ללא רכישה --</option>
-                                </select>
-                            </div>
-                        </div>
+                        <input type="hidden" name="purchaseId" id="purchaseId" value="<?= htmlspecialchars($burial['purchaseId'] ?? '') ?>">
                     </div>
                 </div>
 
@@ -574,6 +567,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     closeCustomerDropdown();
                 }
             });
+
+            // האזנה לשינוי קבר - בדיקת רכישה ומילוי לקוח
+            document.getElementById('graveSelect').addEventListener('change', function() {
+                onGraveSelected(this.value);
+            });
         });
 
         function toggleSection(btn) {
@@ -726,10 +724,32 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             onCustomerSelected(customer);
         }
 
-        // פעולות לאחר בחירת לקוח
-        function onCustomerSelected(customerData) {
-            // כאן אפשר להוסיף לוגיקה נוספת לאחר בחירת לקוח
+        // פעולות לאחר בחירת לקוח - בדיקה אם יש רכישה וטעינת מיקום
+        async function onCustomerSelected(customerData) {
             console.log('Customer selected:', customerData?.unicId);
+
+            if (!customerData?.unicId) return;
+
+            // בדוק אם ללקוח יש רכישה
+            try {
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&clientId=${customerData.unicId}`);
+                const result = await response.json();
+
+                if (result.success && result.data && result.data.length > 0) {
+                    // יש רכישה - טען את מיקום הקבר
+                    const purchase = result.data[0]; // הרכישה הראשונה
+
+                    if (purchase.graveId) {
+                        console.log('Customer has purchase with grave:', purchase.graveId);
+                        // שמור את ה-purchaseId
+                        document.getElementById('purchaseId').value = purchase.unicId;
+                        // טען את ההיררכיה של הקבר
+                        await loadGraveHierarchy(purchase.graveId);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking customer purchase:', error);
+            }
         }
 
         // טעינת בתי עלמין
@@ -752,6 +772,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                     if (burialGraveId) {
                         loadGraveHierarchy(burialGraveId);
+                    }
+                    // אוטו-בחירה: אם יש רק בית עלמין אחד - בחר אותו אוטומטית
+                    else if (result.data.length === 1) {
+                        select.value = result.data[0].unicId;
+                        await filterHierarchy('cemetery');
                     }
                 }
             } catch (error) {
@@ -789,36 +814,56 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     }
                     document.getElementById('graveSelect').value = graveId;
 
-                    // טעינת רכישות לקבר זה
-                    loadPurchasesForGrave(graveId);
+                    // בדיקת רכישה וטעינת purchaseId
+                    if (!isEditMode) {
+                        // רק במצב חדש - בדוק אם יש רכישה לקבר
+                        await onGraveSelected(graveId);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading grave hierarchy:', error);
             }
         }
 
-        // טעינת רכישות לקבר
-        async function loadPurchasesForGrave(graveId) {
+        // בחירת קבר - בדיקה אם יש רכישה ומילוי אוטומטי של לקוח
+        async function onGraveSelected(graveId) {
+            if (!graveId) return;
+
             try {
+                // בדוק אם יש רכישה לקבר זה
                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&graveId=${graveId}`);
                 const result = await response.json();
 
-                const select = document.getElementById('purchaseId');
-                select.innerHTML = '<option value="">-- ללא רכישה --</option>';
+                if (result.success && result.data && result.data.length > 0) {
+                    const purchase = result.data[0];
 
-                if (result.success && result.data) {
-                    result.data.forEach(purchase => {
-                        const option = document.createElement('option');
-                        option.value = purchase.unicId;
-                        option.textContent = `רכישה #${purchase.serialPurchaseId || purchase.unicId}`;
-                        if (purchase.unicId === burialPurchaseId) {
-                            option.selected = true;
+                    // שמור את ה-purchaseId
+                    document.getElementById('purchaseId').value = purchase.unicId;
+
+                    // טען את הלקוח מהרכישה
+                    if (purchase.clientId && !document.getElementById('clientId').value) {
+                        const customerResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${purchase.clientId}`);
+                        const customerResult = await customerResponse.json();
+
+                        if (customerResult.success && customerResult.data) {
+                            const customer = customerResult.data;
+                            document.getElementById('clientId').value = customer.unicId;
+
+                            const status = parseInt(customer.statusCustomer) || 1;
+                            let statusText = '';
+                            if (status === 2) statusText = ' [יש רכישה]';
+                            document.getElementById('customerDisplayText').textContent =
+                                `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})${statusText}`;
+
+                            console.log('Auto-filled customer from purchase:', customer.unicId);
                         }
-                        select.appendChild(option);
-                    });
+                    }
+                } else {
+                    // אין רכישה - נקה את השדה
+                    document.getElementById('purchaseId').value = '';
                 }
             } catch (error) {
-                console.error('Error loading purchases:', error);
+                console.error('Error checking grave purchase:', error);
             }
         }
 
@@ -875,15 +920,24 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 const result = await response.json();
 
                 if (result.success && result.data) {
+                    // עבור גושים - סנן לפי חלקות עם קברים זמינים
+                    if (level === 'cemetery') {
+                        await filterBlocksWithAvailableGraves(result.data, nextSelect);
+                    }
+                    // עבור חלקות - סנן לפי זמינות קברים
+                    else if (level === 'block') {
+                        await filterPlotsWithAvailableGraves(result.data, nextSelect);
+                    }
                     // עבור שורות - סנן רק את אלה עם קברים זמינים
-                    if (level === 'plot') {
+                    else if (level === 'plot') {
                         await filterRowsWithAvailableGraves(result.data, nextSelect);
                     }
                     // עבור אחוזות קבר - סנן רק את אלה עם קברים זמינים
                     else if (level === 'row') {
                         await filterAreaGravesWithAvailableGraves(result.data, nextSelect, selectedValue);
                     } else {
-                        nextSelect.innerHTML = '<option value="">-- בחר --</option>';
+                        // קברים
+                        nextSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
                         result.data.forEach(item => {
                             const option = document.createElement('option');
                             option.value = item.unicId;
@@ -891,10 +945,124 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             nextSelect.appendChild(option);
                         });
                         nextSelect.disabled = false;
+
+                        // אוטו-בחירה לקבר יחיד
+                        if (result.data.length === 1) {
+                            nextSelect.value = result.data[0].unicId;
+                            onGraveSelected(result.data[0].unicId);
+                        }
                     }
                 }
             } catch (error) {
                 console.error('Error filtering hierarchy:', error);
+            }
+        }
+
+        // סינון גושים - הצגת כולם, disabled לאלה ללא קברים זמינים
+        async function filterBlocksWithAvailableGraves(blocks, selectElement) {
+            selectElement.innerHTML = '<option value="">טוען גושים...</option>';
+            selectElement.disabled = true;
+
+            if (blocks.length === 0) {
+                selectElement.innerHTML = '<option value="">אין גושים בבית עלמין זה</option>';
+                return;
+            }
+
+            // קריאות מקבילות לכל הגושים
+            const results = await Promise.all(
+                blocks.map(async (block) => {
+                    try {
+                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=countAvailable&type=burial&blockId=${block.unicId}`);
+                        const result = await response.json();
+                        return {
+                            block,
+                            availableCount: result.success ? (result.count || 0) : 0
+                        };
+                    } catch (e) {
+                        console.error('Error checking block availability:', e);
+                        return { block, availableCount: 0 };
+                    }
+                })
+            );
+
+            selectElement.innerHTML = '<option value="">-- בחר גוש --</option>';
+            const availableBlocks = [];
+
+            results.forEach(({ block, availableCount }) => {
+                const option = document.createElement('option');
+                option.value = block.unicId;
+
+                if (availableCount > 0) {
+                    option.textContent = `${block.blockNameHe || '-'} (${availableCount} זמינים)`;
+                    availableBlocks.push(block);
+                } else {
+                    option.textContent = `${block.blockNameHe || '-'} (אין זמינים)`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                }
+                selectElement.appendChild(option);
+            });
+
+            selectElement.disabled = false;
+
+            // אוטו-בחירה: אם יש רק גוש אחד עם קברים זמינים
+            if (availableBlocks.length === 1) {
+                selectElement.value = availableBlocks[0].unicId;
+                await filterHierarchy('block');
+            }
+        }
+
+        // סינון חלקות - הצגת כולן, disabled לאלה ללא קברים זמינים
+        async function filterPlotsWithAvailableGraves(plots, selectElement) {
+            selectElement.innerHTML = '<option value="">טוען חלקות...</option>';
+            selectElement.disabled = true;
+
+            if (plots.length === 0) {
+                selectElement.innerHTML = '<option value="">אין חלקות בגוש זה</option>';
+                return;
+            }
+
+            // קריאות מקבילות לכל החלקות
+            const results = await Promise.all(
+                plots.map(async (plot) => {
+                    try {
+                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=countAvailable&type=burial&plotId=${plot.unicId}`);
+                        const result = await response.json();
+                        return {
+                            plot,
+                            availableCount: result.success ? (result.count || 0) : 0
+                        };
+                    } catch (e) {
+                        console.error('Error checking plot availability:', e);
+                        return { plot, availableCount: 0 };
+                    }
+                })
+            );
+
+            selectElement.innerHTML = '<option value="">-- בחר חלקה --</option>';
+            const availablePlots = [];
+
+            results.forEach(({ plot, availableCount }) => {
+                const option = document.createElement('option');
+                option.value = plot.unicId;
+
+                if (availableCount > 0) {
+                    option.textContent = `${plot.plotNameHe || '-'} (${availableCount} זמינים)`;
+                    availablePlots.push(plot);
+                } else {
+                    option.textContent = `${plot.plotNameHe || '-'} (אין זמינים)`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                }
+                selectElement.appendChild(option);
+            });
+
+            selectElement.disabled = false;
+
+            // אוטו-בחירה: אם יש רק חלקה אחת עם קברים זמינים
+            if (availablePlots.length === 1) {
+                selectElement.value = availablePlots[0].unicId;
+                await filterHierarchy('plot');
             }
         }
 
@@ -927,7 +1095,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // בניית ה-options - רק שורות עם קברים זמינים
             selectElement.innerHTML = '<option value="">-- בחר שורה --</option>';
-            let hasAvailable = false;
+            const availableRows = [];
 
             results.forEach(({ row, availableCount }) => {
                 if (availableCount > 0) {
@@ -935,14 +1103,19 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     option.value = row.unicId;
                     option.textContent = `${row.lineNameHe || '-'} (${availableCount} זמינים)`;
                     selectElement.appendChild(option);
-                    hasAvailable = true;
+                    availableRows.push(row);
                 }
             });
 
-            selectElement.disabled = !hasAvailable;
+            selectElement.disabled = availableRows.length === 0;
 
-            if (!hasAvailable) {
+            if (availableRows.length === 0) {
                 selectElement.innerHTML = '<option value="">אין קברים זמינים בחלקה זו</option>';
+            }
+            // אוטו-בחירה: אם יש רק שורה אחת עם קברים זמינים
+            else if (availableRows.length === 1) {
+                selectElement.value = availableRows[0].unicId;
+                await filterHierarchy('row');
             }
         }
 
@@ -975,7 +1148,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // בניית ה-options - רק אחוזות קבר עם קברים זמינים
             selectElement.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
-            let hasAvailable = false;
+            const availableAreaGraves = [];
 
             results.forEach(({ areaGrave, availableCount }) => {
                 if (availableCount > 0) {
@@ -983,14 +1156,19 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     option.value = areaGrave.unicId;
                     option.textContent = `${areaGrave.areaGraveNameHe || '-'} (${availableCount} זמינים)`;
                     selectElement.appendChild(option);
-                    hasAvailable = true;
+                    availableAreaGraves.push(areaGrave);
                 }
             });
 
-            selectElement.disabled = !hasAvailable;
+            selectElement.disabled = availableAreaGraves.length === 0;
 
-            if (!hasAvailable) {
+            if (availableAreaGraves.length === 0) {
                 selectElement.innerHTML = '<option value="">אין קברים זמינים בשורה זו</option>';
+            }
+            // אוטו-בחירה: אם יש רק אחוזת קבר אחת עם קברים זמינים
+            else if (availableAreaGraves.length === 1) {
+                selectElement.value = availableAreaGraves[0].unicId;
+                await filterHierarchy('areaGrave');
             }
         }
 

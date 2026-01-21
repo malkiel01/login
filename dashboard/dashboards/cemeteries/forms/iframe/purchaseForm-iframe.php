@@ -1039,10 +1039,32 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             99: { name: 'אחר', icon: '📝' }
         };
 
+        // שמירת מצב התשלומים בין פתיחות המודל
+        let savedPaymentContext = null;
+        let savedOptionalSelections = new Set(); // סוגי תשלומים אופציונליים שנבחרו
+
+        // בדיקה אם הקונטקסט השתנה (לקוח/קבר אחר)
+        function getPaymentContext() {
+            return JSON.stringify({
+                customerId: selectedCustomerData?.unicId || null,
+                graveId: selectedGraveData?.unicId || null,
+                plotType: selectedGraveData?.plotType || null,
+                graveType: selectedGraveData?.graveType || null,
+                resident: selectedCustomerData?.resident || null
+            });
+        }
+
         // פתיחת מודל תשלומים
         function openPaymentsModal(availablePayments) {
-            // איפוס תשלומים מותאמים
-            customPayments = [];
+            const currentContext = getPaymentContext();
+
+            // אם הקונטקסט השתנה - איפוס הכל
+            if (savedPaymentContext !== currentContext) {
+                savedPaymentContext = currentContext;
+                savedOptionalSelections = new Set();
+                customPayments = [];
+            }
+            // אם אותו קונטקסט - שמור את הבחירות הקודמות
 
             const mandatoryPayments = availablePayments.filter(p => p.mandatory);
             const optionalPayments = availablePayments.filter(p => !p.mandatory);
@@ -1089,13 +1111,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         ${optionalPayments.length > 0 ? `
                             <h4 style="color: #059669; margin-bottom: 10px;">✓ תשלומים אופציונליים (מחירון)</h4>
                             <div style="margin-bottom: 20px;">
-                                ${optionalPayments.map((p, i) => `
+                                ${optionalPayments.map((p, i) => {
+                                    const isChecked = savedOptionalSelections.has(String(p.priceDefinition));
+                                    return `
                                     <label style="display: flex; align-items: center; padding: 10px; background: #f0fdf4; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
-                                        <input type="checkbox" class="optional-payment" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}" style="margin-left: 10px;">
+                                        <input type="checkbox" class="optional-payment" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}" ${isChecked ? 'checked' : ''} style="margin-left: 10px;">
                                         <span style="flex: 1;">${p.name}</span>
                                         <strong style="color: #059669;">₪${parseFloat(p.price).toLocaleString()}</strong>
                                     </label>
-                                `).join('')}
+                                `;}).join('')}
                             </div>
                         ` : ''}
 
@@ -1142,10 +1166,28 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             document.body.appendChild(modal);
 
-            // עדכון סה"כ בשינוי בחירה
+            // עדכון סה"כ בשינוי בחירה + שמירת הבחירות
             modal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                 cb.addEventListener('change', updateModalTotal);
             });
+
+            // מאזין מיוחד לתשלומים אופציונליים - שמירת הבחירות
+            modal.querySelectorAll('.optional-payment').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const type = this.dataset.type;
+                    if (this.checked) {
+                        savedOptionalSelections.add(type);
+                    } else {
+                        savedOptionalSelections.delete(type);
+                    }
+                });
+            });
+
+            // רינדור תשלומים מותאמים אישית (אם יש)
+            if (customPayments.length > 0) {
+                renderCustomPayments();
+            }
+
             updateModalTotal();
         }
 
@@ -1224,7 +1266,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
         function closePaymentsModal() {
             document.getElementById('paymentsModal')?.remove();
-            customPayments = []; // איפוס תשלומים מותאמים
+            // לא מאפסים את customPayments - שומרים את הבחירות לפתיחה הבאה
         }
 
         function updateModalTotal() {

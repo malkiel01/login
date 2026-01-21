@@ -1039,9 +1039,40 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             99: { name: 'אחר', icon: '📝' }
         };
 
-        // שמירת מצב התשלומים בין פתיחות המודל
-        let savedPaymentContext = null;
-        let savedOptionalSelections = new Set(); // סוגי תשלומים אופציונליים שנבחרו
+        // שמירת מצב התשלומים בין פתיחות המודל - משתמש ב-localStorage לשמירה מתמדת
+        const PAYMENT_STORAGE_KEY = 'purchasePaymentSelections';
+
+        // שליפת בחירות מ-localStorage
+        function loadSavedPaymentSelections() {
+            try {
+                const saved = localStorage.getItem(PAYMENT_STORAGE_KEY);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    return {
+                        context: data.context || null,
+                        optionalSelections: new Set(data.optionalSelections || []),
+                        customPayments: data.customPayments || []
+                    };
+                }
+            } catch (e) {
+                console.error('Error loading payment selections:', e);
+            }
+            return { context: null, optionalSelections: new Set(), customPayments: [] };
+        }
+
+        // שמירת בחירות ל-localStorage
+        function savePaymentSelections(context, optionalSelections, customPaymentsArr) {
+            try {
+                localStorage.setItem(PAYMENT_STORAGE_KEY, JSON.stringify({
+                    context: context,
+                    optionalSelections: Array.from(optionalSelections),
+                    customPayments: customPaymentsArr,
+                    savedAt: Date.now()
+                }));
+            } catch (e) {
+                console.error('Error saving payment selections:', e);
+            }
+        }
 
         // בדיקה אם הקונטקסט השתנה (לקוח/קבר אחר)
         function getPaymentContext() {
@@ -1054,17 +1085,24 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             });
         }
 
+        // משתנים גלובליים לשמירת מצב התשלומים
+        let savedOptionalSelections = new Set();
+
         // פתיחת מודל תשלומים
         function openPaymentsModal(availablePayments) {
             const currentContext = getPaymentContext();
+            const saved = loadSavedPaymentSelections();
 
             // אם הקונטקסט השתנה - איפוס הכל
-            if (savedPaymentContext !== currentContext) {
-                savedPaymentContext = currentContext;
-                savedOptionalSelections = new Set();
+            if (saved.context !== currentContext) {
                 customPayments = [];
+                savedOptionalSelections = new Set();
+                savePaymentSelections(currentContext, savedOptionalSelections, customPayments);
+            } else {
+                // אם אותו קונטקסט - שחזר את הבחירות הקודמות
+                customPayments = saved.customPayments || [];
+                savedOptionalSelections = saved.optionalSelections || new Set();
             }
-            // אם אותו קונטקסט - שמור את הבחירות הקודמות
 
             const mandatoryPayments = availablePayments.filter(p => p.mandatory);
             const optionalPayments = availablePayments.filter(p => !p.mandatory);
@@ -1171,7 +1209,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 cb.addEventListener('change', updateModalTotal);
             });
 
-            // מאזין מיוחד לתשלומים אופציונליים - שמירת הבחירות
+            // מאזין מיוחד לתשלומים אופציונליים - שמירת הבחירות ל-localStorage
             modal.querySelectorAll('.optional-payment').forEach(cb => {
                 cb.addEventListener('change', function() {
                     const type = this.dataset.type;
@@ -1180,6 +1218,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     } else {
                         savedOptionalSelections.delete(type);
                     }
+                    // שמירה מיידית ל-localStorage
+                    savePaymentSelections(getPaymentContext(), savedOptionalSelections, customPayments);
                 });
             });
 
@@ -1225,6 +1265,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             renderCustomPayments();
             updateModalTotal();
 
+            // שמירה ל-localStorage
+            savePaymentSelections(getPaymentContext(), savedOptionalSelections, customPayments);
+
             // איפוס השדות
             typeSelect.value = '';
             priceInput.value = '';
@@ -1235,6 +1278,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             customPayments.splice(index, 1);
             renderCustomPayments();
             updateModalTotal();
+
+            // שמירה ל-localStorage
+            savePaymentSelections(getPaymentContext(), savedOptionalSelections, customPayments);
         }
 
         // רינדור תשלומים מותאמים אישית

@@ -1054,8 +1054,19 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             const currentCustomerId = selectedCustomerData?.unicId || null;
             const currentGraveId = selectedGraveData?.unicId || null;
 
+            console.log('🔍 DEBUG openPaymentsModal:', {
+                currentCustomerId,
+                currentGraveId,
+                lastCustomerId,
+                lastGraveId,
+                savedOptionalSelections: Array.from(savedOptionalSelections),
+                savedCustomPayments: JSON.stringify(savedCustomPayments),
+                customPayments: JSON.stringify(customPayments)
+            });
+
             if (lastCustomerId !== currentCustomerId || lastGraveId !== currentGraveId) {
                 // לקוח או קבר חדש - איפוס הכל
+                console.log('⚠️ Context CHANGED - resetting all');
                 savedOptionalSelections = new Set();
                 savedCustomPayments = [];
                 customPayments = [];
@@ -1063,6 +1074,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 lastGraveId = currentGraveId;
             } else {
                 // אותו לקוח וקבר - שחזר את הבחירות
+                console.log('✅ Same context - restoring:', { savedOptionalSelections: Array.from(savedOptionalSelections), savedCustomPayments });
                 customPayments = [...savedCustomPayments];
             }
 
@@ -1177,10 +1189,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     const type = this.dataset.type;
                     if (this.checked) {
                         savedOptionalSelections.add(type);
+                        console.log('✅ Added optional payment:', type, 'Total:', Array.from(savedOptionalSelections));
                     } else {
                         savedOptionalSelections.delete(type);
+                        console.log('❌ Removed optional payment:', type, 'Total:', Array.from(savedOptionalSelections));
                     }
-                    // הבחירות נשמרות אוטומטית ב-Set
                 });
             });
 
@@ -1228,6 +1241,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // שמירה לזיכרון
             savedCustomPayments = [...customPayments];
+            console.log('💾 Saved custom payments:', JSON.stringify(savedCustomPayments));
 
             // איפוס השדות
             typeSelect.value = '';
@@ -1242,6 +1256,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // שמירה לזיכרון
             savedCustomPayments = [...customPayments];
+            console.log('💾 Updated custom payments after remove:', JSON.stringify(savedCustomPayments));
         }
 
         // רינדור תשלומים מותאמים אישית

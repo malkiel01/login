@@ -787,7 +787,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // טעינת היררכיה לפי קבר - ללא סינון (מכיל קבר ספציפי)
+        // טעינת היררכיה לפי קבר - טעינה מקבילית מהירה
         // updateCustomer: האם לעדכן את הלקוח מהרכישה (false כשבאים מבחירת לקוח)
         async function loadGraveHierarchy(graveId, updateCustomer = true) {
             console.log('loadGraveHierarchy started for:', graveId, 'updateCustomer:', updateCustomer);
@@ -806,12 +806,52 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     const grave = result.data;
                     console.log('Grave data with hierarchy:', grave);
 
-                    // טעינת ההיררכיה ללא סינון - כי אנחנו יודעים שהקבר קיים
-                    if (grave.cemeteryId) {
-                        document.getElementById('cemeterySelect').value = grave.cemeteryId;
-                        await loadHierarchyLevel('cemetery', grave.cemeteryId, grave, updateCustomer);
-                    } else {
+                    if (!grave.cemeteryId) {
                         console.error('Grave data missing cemeteryId:', grave);
+                        return;
+                    }
+
+                    // בחר את בית העלמין
+                    document.getElementById('cemeterySelect').value = grave.cemeteryId;
+
+                    // טעינה מקבילית של כל הרמות
+                    const [blocksRes, plotsRes, rowsRes, areaGravesRes, gravesRes] = await Promise.all([
+                        fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list&cemeteryId=${grave.cemeteryId}`).then(r => r.json()),
+                        fetch(`/dashboard/dashboards/cemeteries/api/plots-api.php?action=list&blockId=${grave.blockId}`).then(r => r.json()),
+                        fetch(`/dashboard/dashboards/cemeteries/api/rows-api.php?action=list&plotId=${grave.plotId}`).then(r => r.json()),
+                        fetch(`/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&lineId=${grave.lineId}`).then(r => r.json()),
+                        fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&areaGraveId=${grave.areaGraveId}`).then(r => r.json())
+                    ]);
+
+                    // מילוי כל הסלקטים
+                    const selects = [
+                        { el: 'blockSelect', data: blocksRes, nameField: 'blockNameHe', value: grave.blockId },
+                        { el: 'plotSelect', data: plotsRes, nameField: 'plotNameHe', value: grave.plotId },
+                        { el: 'rowSelect', data: rowsRes, nameField: 'lineNameHe', value: grave.lineId },
+                        { el: 'areaGraveSelect', data: areaGravesRes, nameField: 'areaGraveNameHe', value: grave.areaGraveId },
+                        { el: 'graveSelect', data: gravesRes, nameField: 'graveNameHe', value: grave.unicId }
+                    ];
+
+                    selects.forEach(({ el, data, nameField, value }) => {
+                        const select = document.getElementById(el);
+                        if (data.success && data.data) {
+                            select.innerHTML = '<option value="">-- בחר --</option>';
+                            data.data.forEach(item => {
+                                const option = document.createElement('option');
+                                option.value = item.unicId;
+                                option.textContent = item[nameField] || item.name || '-';
+                                select.appendChild(option);
+                            });
+                            select.value = value;
+                            select.disabled = false;
+                        }
+                    });
+
+                    console.log('All hierarchy loaded in parallel');
+
+                    // בדוק רכישה אם צריך
+                    if (!isEditMode) {
+                        await onGraveSelected(grave.unicId, updateCustomer);
                     }
                 } else {
                     console.error('Failed to load grave details:', result);
@@ -826,99 +866,6 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // טעינת רמה בהיררכיה ללא סינון (לטעינת קבר ספציפי)
-        // updateCustomer: האם לעדכן את הלקוח מהרכישה (false כשבאים מבחירת לקוח)
-        async function loadHierarchyLevel(level, parentId, targetGrave, updateCustomer = true) {
-            const configs = {
-                cemetery: {
-                    next: 'block',
-                    selectId: 'blockSelect',
-                    api: 'blocks-api.php',
-                    param: 'cemeteryId',
-                    nameField: 'blockNameHe',
-                    targetField: 'blockId'
-                },
-                block: {
-                    next: 'plot',
-                    selectId: 'plotSelect',
-                    api: 'plots-api.php',
-                    param: 'blockId',
-                    nameField: 'plotNameHe',
-                    targetField: 'plotId'
-                },
-                plot: {
-                    next: 'row',
-                    selectId: 'rowSelect',
-                    api: 'rows-api.php',
-                    param: 'plotId',
-                    nameField: 'lineNameHe',
-                    targetField: 'lineId'
-                },
-                row: {
-                    next: 'areaGrave',
-                    selectId: 'areaGraveSelect',
-                    api: 'areaGraves-api.php',
-                    param: 'lineId',
-                    nameField: 'areaGraveNameHe',
-                    targetField: 'areaGraveId'
-                },
-                areaGrave: {
-                    next: 'grave',
-                    selectId: 'graveSelect',
-                    api: 'graves-api.php',
-                    param: 'areaGraveId',
-                    nameField: 'graveNameHe',
-                    targetField: 'unicId'
-                }
-            };
-
-            const config = configs[level];
-            if (!config) return;
-
-            const nextSelect = document.getElementById(config.selectId);
-
-            try {
-                // טעינת כל האופציות (ללא סינון) - כי אנחנו יודעים שהקבר קיים
-                const response = await fetch(`/dashboard/dashboards/cemeteries/api/${config.api}?action=list&${config.param}=${parentId}`);
-                const result = await response.json();
-
-                if (result.success && result.data) {
-                    nextSelect.innerHTML = `<option value="">-- בחר ${config.nameField.replace('NameHe', '')} --</option>`;
-
-                    result.data.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.unicId;
-                        option.textContent = item[config.nameField] || item.name || '-';
-                        nextSelect.appendChild(option);
-                    });
-
-                    nextSelect.disabled = false;
-
-                    // בחר את הערך המתאים מהקבר המטרה
-                    const targetValue = targetGrave[config.targetField];
-                    if (targetValue) {
-                        nextSelect.value = targetValue;
-                        console.log(`Set ${config.selectId} to:`, targetValue);
-
-                        // המשך לרמה הבאה
-                        if (config.next !== 'grave') {
-                            await loadHierarchyLevel(config.next, targetValue, targetGrave, updateCustomer);
-                        } else {
-                            // הגענו לקבר - בחר אותו ובדוק רכישה
-                            nextSelect.value = targetGrave.unicId;
-                            console.log('Set graveSelect to:', targetGrave.unicId);
-
-                            if (!isEditMode) {
-                                await onGraveSelected(targetGrave.unicId, updateCustomer);
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error(`Error loading ${level} hierarchy:`, error);
-            }
-        }
-
         // בחירת קבר - בדיקה אם יש רכישה ומילוי אוטומטי של לקוח
         // updateCustomer: האם לעדכן את הלקוח מהרכישה (true ברירת מחדל, false כשבאים מבחירת לקוח)
         async function onGraveSelected(graveId, updateCustomer = true) {
@@ -930,6 +877,13 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
 
             console.log('onGraveSelected:', graveId, 'updateCustomer:', updateCustomer, 'isLoadingHierarchyFromCustomer:', isLoadingHierarchyFromCustomer);
+
+            // קודם כל - נקה את הלקוח (אם מותר לעדכן)
+            if (updateCustomer) {
+                document.getElementById('clientId').value = '';
+                document.getElementById('customerDisplayText').textContent = '';
+                console.log('Cleared customer field');
+            }
 
             try {
                 // בדוק אם יש רכישה לקבר זה
@@ -966,9 +920,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         console.log('Skipping customer update (came from customer selection)');
                     }
                 } else {
-                    // אין רכישה - נקה את השדה
+                    // אין רכישה - נקה את השדה purchaseId
                     document.getElementById('purchaseId').value = '';
-                    console.log('No purchase found for grave');
+                    console.log('No purchase found for grave (customer already cleared above)');
                 }
             } catch (error) {
                 console.error('Error checking grave purchase:', error);
@@ -1007,6 +961,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
             document.getElementById('graveSelect').innerHTML = '<option value="">--</option>';
             document.getElementById('graveSelect').disabled = true;
+
+            // כשמשנים את ההיררכיה - הקבר מתאפס, לכן גם הלקוח והרכישה מתאפסים
+            document.getElementById('clientId').value = '';
+            document.getElementById('customerDisplayText').textContent = '';
+            document.getElementById('purchaseId').value = '';
+            console.log('Hierarchy changed - cleared customer and purchase');
 
             if (!selectedValue) return;
 

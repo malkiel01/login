@@ -777,20 +777,23 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // טעינת אפשרויות בן/בת זוג (רק לא נשואים וללא הלקוח הנוכחי)
+        // טעינת אפשרויות בן/בת זוג (רק רווקים או ללא מצב משפחתי מוגדר)
         async function loadSpouseOptions() {
             try {
                 const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=1000');
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    // סינון: רק לא נשואים (maritalStatus != 2) ולא הלקוח הנוכחי
+                    // סינון: רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty)
                     allAvailableSpouses = result.data.filter(c => {
                         // לא הלקוח הנוכחי
                         if (customerId && c.unicId === customerId) return false;
-                        // רק לא נשואים (maritalStatus != 2) או שזה בן הזוג הנוכחי
-                        if (c.maritalStatus == 2 && c.unicId !== currentSpouseId) return false;
-                        return true;
+                        // אם זה בן הזוג הנוכחי - תמיד הצג
+                        if (c.unicId === currentSpouseId) return true;
+                        // רק רווקים (1) או ללא מצב משפחתי מוגדר
+                        const status = c.maritalStatus;
+                        if (status === null || status === '' || status == 1) return true;
+                        return false;
                     });
 
                     renderSpouseOptions(allAvailableSpouses);

@@ -440,10 +440,19 @@ try {
             $stmt = $pdo->prepare("UPDATE purchases SET isActive = 0, inactiveDate = :date WHERE id = :id");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
             
-            // עדכון סטטוס הקבר חזרה לפנוי
+            // עדכון סטטוס הקבר - בדוק אם יש קבורה פעילה
             if ($purchase['graveId']) {
-                $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 1 WHERE unicId = :id");
-                $stmt->execute(['id' => $purchase['graveId']]);
+                // בדוק אם יש קבורה פעילה לקבר זה
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM burials WHERE graveId = :graveId AND isActive = 1");
+                $stmt->execute(['graveId' => $purchase['graveId']]);
+                $hasBurial = $stmt->fetchColumn() > 0;
+
+                if (!$hasBurial) {
+                    // אין קבורה - חזרה לפנוי (1)
+                    $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 1 WHERE unicId = :id");
+                    $stmt->execute(['id' => $purchase['graveId']]);
+                }
+                // אם יש קבורה - הסטטוס נשאר קבור (3), לא משנים
             }
             
             // בדוק אם ללקוח יש רכישות אחרות

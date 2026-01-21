@@ -164,7 +164,8 @@ try {
             $data['createDate'] = date('Y-m-d H:i:s');
             $data['updateDate'] = date('Y-m-d H:i:s');
             $data['isActive'] = 1;
-            
+            $data['graveStatus'] = 1; // קבר חדש תמיד פנוי - סטטוס מנוהל אוטומטית
+
             $fields = [
                 'unicId', 'areaGraveId', 'graveNameHe', 'plotType', 'graveStatus',
                 'graveLocation', 'constructionCost', 'isSmallGrave',
@@ -205,8 +206,9 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
             $data['updateDate'] = date('Y-m-d H:i:s');
             
+            // graveStatus לא ברשימה - מנוהל אוטומטית ע"י רכישה/קבורה/ביטול
             $fields = [
-                'graveNameHe', 'plotType', 'graveStatus', 'graveLocation',
+                'graveNameHe', 'plotType', 'graveLocation',
                 'constructionCost', 'isSmallGrave', 'comments', 'documentsList', 'areaGraveId', 'updateDate'
             ];
             

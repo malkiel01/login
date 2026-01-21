@@ -118,17 +118,25 @@ try {
         'value' => $grave['plotType'] ?? ''
     ]);
 
-    // סטטוס קבר
-    $formBuilder->addField('graveStatus', 'סטטוס קבר', 'select', [
-        'required' => true,
-        'options' => [
+    // סטטוס קבר - לצפייה בלבד (מנוהל אוטומטית)
+    // ביצירה: פנוי, ברכישה: נרכש, בקבורה: קבור
+    if ($grave) {
+        // במצב עריכה - הצג את הסטטוס כשדה לקריאה בלבד
+        $statusLabels = [
             1 => 'פנוי',
             2 => 'נרכש',
             3 => 'קבור',
             4 => 'שמור'
-        ],
-        'value' => $grave['graveStatus'] ?? 1
-    ]);
+        ];
+        $currentStatus = $grave['graveStatus'] ?? 1;
+        $formBuilder->addField('graveStatusDisplay', 'סטטוס קבר', 'text', [
+            'value' => $statusLabels[$currentStatus] ?? 'לא ידוע',
+            'readonly' => true,
+            'disabled' => true,
+            'class' => 'status-display'
+        ]);
+    }
+    // ביצירה - לא מציגים את השדה, הסטטוס יהיה 1 (פנוי) אוטומטית
 
     // מיקום בשורה
     $formBuilder->addField('graveLocation', 'מיקום בשורה', 'select', [

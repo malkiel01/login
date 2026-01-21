@@ -354,10 +354,22 @@ try {
             $stmt = $pdo->prepare("UPDATE burials SET isActive = 0, inactiveDate = :date WHERE id = :id");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
             
-            // עדכון סטטוס הקבר חזרה לנרכש (2)
+            // עדכון סטטוס הקבר - בדוק אם יש רכישה פעילה
             if ($burial['graveId']) {
-                $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 2 WHERE unicId = :id");
-                $stmt->execute(['id' => $burial['graveId']]);
+                // בדוק אם יש רכישה פעילה לקבר זה
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM purchases WHERE graveId = :graveId AND isActive = 1");
+                $stmt->execute(['graveId' => $burial['graveId']]);
+                $hasPurchase = $stmt->fetchColumn() > 0;
+
+                if ($hasPurchase) {
+                    // יש רכישה - חזרה לנרכש (2)
+                    $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 2 WHERE unicId = :id");
+                    $stmt->execute(['id' => $burial['graveId']]);
+                } else {
+                    // אין רכישה - חזרה לפנוי (1)
+                    $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 1 WHERE unicId = :id");
+                    $stmt->execute(['id' => $burial['graveId']]);
+                }
             }
             
             // בדוק אם ללקוח יש קבורות אחרות

@@ -26,9 +26,21 @@ $areaGrave = null;
 $graves = [];
 $rows = [];
 $hierarchyPath = null;
+$cemeteries = [];
+$blocks = [];
+$plots = [];
+$selectedCemeteryId = null;
+$selectedBlockId = null;
+$selectedPlotId = null;
 
 try {
     $conn = getDBConnection();
+
+    // טען את כל בתי העלמין (תמיד נטען לבחירת היררכיה)
+    $stmt = $conn->query("SELECT unicId, cemeteryNameHe FROM cemeteries WHERE isActive = 1 ORDER BY cemeteryNameHe");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $cemeteries[$row['unicId']] = $row['cemeteryNameHe'];
+    }
 
     // טען אחוזת קבר קיימת אם בעריכה
     if ($isEditMode) {
@@ -37,7 +49,9 @@ try {
                    r.lineNameHe,
                    r.plotId,
                    p.plotNameHe,
+                   p.blockId,
                    b.blockNameHe,
+                   b.cemeteryId,
                    c.cemeteryNameHe
             FROM areaGraves ag
             LEFT JOIN `rows` r ON ag.lineId = r.unicId
@@ -57,6 +71,11 @@ try {
         if (!$parentId) {
             $parentId = $areaGrave['lineId'];
         }
+
+        // שמור את הערכים הנבחרים מהאחוזה הקיימת
+        $selectedCemeteryId = $areaGrave['cemeteryId'] ?? null;
+        $selectedBlockId = $areaGrave['blockId'] ?? null;
+        $selectedPlotId = $areaGrave['plotId'] ?? null;
 
         // טען קברים קיימים עם בדיקת רכישות וקבורות
         $stmt = $conn->prepare("
@@ -80,7 +99,9 @@ try {
                 r.lineNameHe,
                 r.plotId,
                 p.plotNameHe,
+                p.blockId,
                 b.blockNameHe,
+                b.cemeteryId,
                 c.cemeteryNameHe
             FROM `rows` r
             LEFT JOIN plots p ON r.plotId = p.unicId
@@ -94,6 +115,9 @@ try {
         // אם נמצא - ה-parentId תקין
         if ($hierarchyPath) {
             $validatedLineId = $parentId;
+            $selectedCemeteryId = $hierarchyPath['cemeteryId'];
+            $selectedBlockId = $hierarchyPath['blockId'];
+            $selectedPlotId = $hierarchyPath['plotId'];
         }
 
         // טען שורות מאותה חלקה
@@ -111,9 +135,20 @@ try {
         }
     }
 
-    // במצב הוספה - חובה שיהיה parentId תקין
-    if (!$isEditMode && !$validatedLineId) {
-        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: לא ניתן להוסיף אחוזת קבר ללא שורה תקינה. יש לבחור שורה מתוך הטבלה.</body></html>');
+    // טען גושים וחלקות אם יש בחירות קיימות
+    if ($selectedCemeteryId) {
+        $stmt = $conn->prepare("SELECT unicId, blockNameHe FROM blocks WHERE cemeteryId = ? AND isActive = 1 ORDER BY blockNameHe");
+        $stmt->execute([$selectedCemeteryId]);
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $blocks[$row['unicId']] = $row['blockNameHe'];
+        }
+    }
+    if ($selectedBlockId) {
+        $stmt = $conn->prepare("SELECT unicId, plotNameHe FROM plots WHERE blockId = ? AND isActive = 1 ORDER BY plotNameHe");
+        $stmt->execute([$selectedBlockId]);
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $plots[$row['unicId']] = $row['plotNameHe'];
+        }
     }
 
 } catch (Exception $e) {
@@ -432,6 +467,72 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
             color: #94a3b8;
         }
         .empty-graves i { font-size: 48px; margin-bottom: 10px; }
+
+        /* כפתור הוספת שורה */
+        .btn-add-row {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-add-row:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-1px);
+        }
+        .btn-add-row:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* מודאל הוספת שורה */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #1e40af;
+            font-size: 18px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .modal-close:hover { color: #ef4444; }
+        .modal-body { margin-bottom: 20px; }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
     </style>
 </head>
 <body>
@@ -459,37 +560,61 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
                     </div>
                     <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
                         <div class="form-grid">
-                            <?php if ($hierarchyPath): ?>
-                            <!-- תצוגת היררכיה -->
-                            <div class="form-group span-2">
-                                <label>מיקום</label>
-                                <div class="location-display">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <?php
-                                    $parts = [];
-                                    if (!empty($hierarchyPath['cemeteryNameHe'])) $parts[] = $hierarchyPath['cemeteryNameHe'];
-                                    if (!empty($hierarchyPath['blockNameHe'])) $parts[] = 'גוש ' . $hierarchyPath['blockNameHe'];
-                                    if (!empty($hierarchyPath['plotNameHe'])) $parts[] = 'חלקה ' . $hierarchyPath['plotNameHe'];
-                                    if (!empty($hierarchyPath['lineNameHe'])) $parts[] = '<strong>שורה ' . htmlspecialchars($hierarchyPath['lineNameHe']) . '</strong>';
-                                    echo implode(' &larr; ', $parts);
-                                    ?>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-
-                            <?php if (!$isEditMode && !empty($rows)): ?>
-                            <!-- בחירת שורה במצב הוספה -->
-                            <div class="form-group span-2">
-                                <label><span class="required">*</span> שורה</label>
-                                <select name="lineId" id="lineIdSelect" class="form-control" required>
-                                    <?php foreach ($rows as $id => $name): ?>
-                                        <option value="<?= htmlspecialchars($id) ?>" <?= ($validatedLineId == $id) ? 'selected' : '' ?>>
+                            <!-- בחירת היררכיה: בית עלמין ← גוש ← חלקה ← שורה -->
+                            <div class="form-group">
+                                <label><span class="required">*</span> בית עלמין</label>
+                                <select id="cemeterySelect" class="form-control" required <?= $isEditMode ? 'disabled' : '' ?>>
+                                    <option value="">-- בחר בית עלמין --</option>
+                                    <?php foreach ($cemeteries as $id => $name): ?>
+                                        <option value="<?= htmlspecialchars($id) ?>" <?= ($selectedCemeteryId == $id) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($name) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <?php endif; ?>
+
+                            <div class="form-group">
+                                <label><span class="required">*</span> גוש</label>
+                                <select id="blockSelect" class="form-control" required <?= $isEditMode ? 'disabled' : '' ?>>
+                                    <option value="">-- בחר גוש --</option>
+                                    <?php foreach ($blocks as $id => $name): ?>
+                                        <option value="<?= htmlspecialchars($id) ?>" <?= ($selectedBlockId == $id) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($name) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label><span class="required">*</span> חלקה</label>
+                                <select id="plotSelect" class="form-control" required <?= $isEditMode ? 'disabled' : '' ?>>
+                                    <option value="">-- בחר חלקה --</option>
+                                    <?php foreach ($plots as $id => $name): ?>
+                                        <option value="<?= htmlspecialchars($id) ?>" <?= ($selectedPlotId == $id) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($name) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label><span class="required">*</span> שורה</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <select id="lineIdSelect" class="form-control" style="flex: 1;" required <?= $isEditMode ? 'disabled' : '' ?>>
+                                        <option value="">-- בחר שורה --</option>
+                                        <?php foreach ($rows as $id => $name): ?>
+                                            <option value="<?= htmlspecialchars($id) ?>" <?= ($validatedLineId == $id) ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($name) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php if (!$isEditMode): ?>
+                                    <button type="button" id="btnAddRow" class="btn btn-add-row" onclick="showAddRowModal()" title="הוסף שורה חדשה" disabled>
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
 
                             <div class="form-group">
                                 <label><span class="required">*</span> שם אחוזת קבר</label>
@@ -936,6 +1061,207 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
                 PopupAPI.close();
             }
         }
+
+        // ========================================
+        // סלקטים משורשרים: בית עלמין ← גוש ← חלקה ← שורה
+        // ========================================
+
+        const cemeterySelect = document.getElementById('cemeterySelect');
+        const blockSelect = document.getElementById('blockSelect');
+        const plotSelect = document.getElementById('plotSelect');
+        const lineSelect = document.getElementById('lineIdSelect');
+        const btnAddRow = document.getElementById('btnAddRow');
+
+        // בחירת בית עלמין - טען גושים
+        if (cemeterySelect && !isEditMode) {
+            cemeterySelect.addEventListener('change', async function() {
+                const cemeteryId = this.value;
+                blockSelect.innerHTML = '<option value="">-- בחר גוש --</option>';
+                plotSelect.innerHTML = '<option value="">-- בחר חלקה --</option>';
+                lineSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+                document.getElementById('lineId').value = '';
+                if (btnAddRow) btnAddRow.disabled = true;
+
+                if (!cemeteryId) return;
+
+                try {
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list&cemeteryId=${cemeteryId}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        result.data.forEach(block => {
+                            const option = document.createElement('option');
+                            option.value = block.unicId;
+                            option.textContent = block.blockNameHe;
+                            blockSelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading blocks:', error);
+                }
+            });
+        }
+
+        // בחירת גוש - טען חלקות
+        if (blockSelect && !isEditMode) {
+            blockSelect.addEventListener('change', async function() {
+                const blockId = this.value;
+                plotSelect.innerHTML = '<option value="">-- בחר חלקה --</option>';
+                lineSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+                document.getElementById('lineId').value = '';
+                if (btnAddRow) btnAddRow.disabled = true;
+
+                if (!blockId) return;
+
+                try {
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/plots-api.php?action=list&blockId=${blockId}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        result.data.forEach(plot => {
+                            const option = document.createElement('option');
+                            option.value = plot.unicId;
+                            option.textContent = plot.plotNameHe;
+                            plotSelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading plots:', error);
+                }
+            });
+        }
+
+        // בחירת חלקה - טען שורות
+        if (plotSelect && !isEditMode) {
+            plotSelect.addEventListener('change', async function() {
+                const plotId = this.value;
+                lineSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+                document.getElementById('lineId').value = '';
+                if (btnAddRow) btnAddRow.disabled = !plotId;
+
+                if (!plotId) return;
+
+                try {
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/rows-api.php?action=list&plotId=${plotId}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        if (result.data.length === 0) {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = '-- אין שורות, הוסף שורה חדשה --';
+                            lineSelect.appendChild(option);
+                        } else {
+                            result.data.forEach(row => {
+                                const option = document.createElement('option');
+                                option.value = row.unicId;
+                                option.textContent = row.lineNameHe || `שורה ${row.serialNumber}`;
+                                lineSelect.appendChild(option);
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading rows:', error);
+                }
+            });
+        }
+
+        // בחירת שורה - עדכן lineId
+        if (lineSelect) {
+            lineSelect.addEventListener('change', function() {
+                document.getElementById('lineId').value = this.value;
+            });
+        }
+
+        // ========================================
+        // מודאל להוספת שורה חדשה
+        // ========================================
+
+        function showAddRowModal() {
+            const plotId = plotSelect?.value;
+            if (!plotId) {
+                showAlert('יש לבחור חלקה קודם', 'error');
+                return;
+            }
+            document.getElementById('addRowModal').classList.add('show');
+            document.getElementById('newRowName').value = '';
+            document.getElementById('newRowName').focus();
+        }
+
+        function hideAddRowModal() {
+            document.getElementById('addRowModal').classList.remove('show');
+        }
+
+        async function createNewRow() {
+            const plotId = plotSelect?.value;
+            const rowName = document.getElementById('newRowName').value.trim();
+
+            if (!plotId) {
+                showAlert('יש לבחור חלקה קודם', 'error');
+                return;
+            }
+
+            if (!rowName) {
+                showAlert('שם השורה הוא שדה חובה', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/rows-api.php?action=create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        plotId: plotId,
+                        lineNameHe: rowName
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // סגור מודאל
+                    hideAddRowModal();
+                    showAlert('השורה נוספה בהצלחה', 'success');
+
+                    // הוסף את השורה החדשה לסלקט ובחר אותה
+                    const option = document.createElement('option');
+                    option.value = result.unicId;
+                    option.textContent = rowName;
+                    option.selected = true;
+                    lineSelect.appendChild(option);
+
+                    // עדכן את ה-lineId הנסתר
+                    document.getElementById('lineId').value = result.unicId;
+                } else {
+                    showAlert(result.error || 'שגיאה ביצירת השורה', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating row:', error);
+                showAlert('שגיאה ביצירת השורה', 'error');
+            }
+        }
     </script>
+
+    <!-- מודאל הוספת שורה -->
+    <div class="modal-overlay" id="addRowModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> הוספת שורה חדשה</h3>
+                <button type="button" class="modal-close" onclick="hideAddRowModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label><span class="required">*</span> שם השורה</label>
+                    <input type="text" id="newRowName" class="form-control" placeholder="הזן שם לשורה"
+                           onkeypress="if(event.key==='Enter'){event.preventDefault();createNewRow();}">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="hideAddRowModal()">
+                    <i class="fas fa-times"></i> ביטול
+                </button>
+                <button type="button" class="btn btn-primary" onclick="createNewRow()">
+                    <i class="fas fa-plus"></i> הוסף שורה
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

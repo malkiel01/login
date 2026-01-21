@@ -553,6 +553,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         const burialGraveId = '<?= addslashes($parentId ?? $burial['graveId'] ?? '') ?>';
         const burialPurchaseId = '<?= addslashes($burial['purchaseId'] ?? '') ?>';
 
+        // דגל למניעת עדכון לקוח בזמן טעינת היררכיה מבחירת לקוח
+        let isLoadingHierarchyFromCustomer = false;
+
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof PopupAPI !== 'undefined') {
                 PopupAPI.setTitle('<?= addslashes($pageTitle) ?>');
@@ -788,6 +791,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         // updateCustomer: האם לעדכן את הלקוח מהרכישה (false כשבאים מבחירת לקוח)
         async function loadGraveHierarchy(graveId, updateCustomer = true) {
             console.log('loadGraveHierarchy started for:', graveId, 'updateCustomer:', updateCustomer);
+
+            // אם באים מבחירת לקוח - הגן על כל הטעינה
+            if (!updateCustomer) {
+                isLoadingHierarchyFromCustomer = true;
+            }
+
             try {
                 // שימוש ב-getDetails כדי לקבל את כל ההיררכיה (cemeteryId, blockId, plotId, lineId)
                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=getDetails&id=${graveId}`);
@@ -809,6 +818,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 }
             } catch (error) {
                 console.error('Error loading grave hierarchy:', error);
+            } finally {
+                // שחרר את הדגל בסיום
+                if (!updateCustomer) {
+                    isLoadingHierarchyFromCustomer = false;
+                }
             }
         }
 
@@ -910,7 +924,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         async function onGraveSelected(graveId, updateCustomer = true) {
             if (!graveId) return;
 
-            console.log('onGraveSelected:', graveId, 'updateCustomer:', updateCustomer);
+            // אם הדגל פעיל - מנע עדכון לקוח (אנחנו בזמן טעינת היררכיה מבחירת לקוח)
+            if (isLoadingHierarchyFromCustomer) {
+                updateCustomer = false;
+            }
+
+            console.log('onGraveSelected:', graveId, 'updateCustomer:', updateCustomer, 'isLoadingHierarchyFromCustomer:', isLoadingHierarchyFromCustomer);
 
             try {
                 // בדוק אם יש רכישה לקבר זה

@@ -1,8 +1,9 @@
 <?php
 /**
  * File: api/debug-customer.php
- * Description: Debug script to query customer by id (auto-increment) instead of unicId
- * Usage: ?id=19671
+ * Description: Debug script to compare customers by id (auto-increment)
+ * Usage: ?ids=3840,19671 (compare mode)
+ *        ?id=19671 (single mode)
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -13,42 +14,82 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 try {
     $pdo = getDBConnection();
 
-    $id = $_GET['id'] ?? null;
+    // Support multiple IDs for comparison
+    $ids = $_GET['ids'] ?? $_GET['id'] ?? null;
 
-    if (!$id) {
+    if (!$ids) {
         echo json_encode([
             'success' => false,
-            'error' => 'Missing id parameter',
-            'usage' => '?id=19671'
+            'error' => 'Missing id/ids parameter',
+            'usage' => [
+                'single' => '?id=19671',
+                'compare' => '?ids=3840,19671'
+            ]
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    // Query by id (auto-increment), not unicId
-    $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = :id");
-    $stmt->execute(['id' => $id]);
-    $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Parse IDs (comma-separated)
+    $idArray = array_map('trim', explode(',', $ids));
 
-    if ($customer) {
-        echo json_encode([
-            'success' => true,
-            'data' => $customer,
-            'debug' => [
-                'searched_by' => 'id (auto-increment)',
-                'id' => $id,
-                'unicId' => $customer['unicId'] ?? null,
-                'maritalStatus' => $customer['maritalStatus'] ?? null,
-                'maritalStatus_type' => gettype($customer['maritalStatus'] ?? null)
-            ]
-        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'error' => 'Customer not found',
-            'searched_by' => 'id (auto-increment)',
-            'id' => $id
-        ], JSON_UNESCAPED_UNICODE);
+    $customers = [];
+    $comparison = [];
+
+    foreach ($idArray as $id) {
+        $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($customer) {
+            $customers[$id] = $customer;
+
+            // Build comparison data
+            $comparison[$id] = [
+                'id' => $customer['id'],
+                'unicId' => $customer['unicId'],
+                'firstName' => $customer['firstName'],
+                'lastName' => $customer['lastName'],
+                'maritalStatus' => $customer['maritalStatus'],
+                'maritalStatus_type' => gettype($customer['maritalStatus']),
+                'maritalStatus_value' => var_export($customer['maritalStatus'], true),
+                'spouse' => $customer['spouse'],
+                'isActive' => $customer['isActive'],
+                'createDate' => $customer['createDate'],
+                'filter_check' => [
+                    '!status' => !$customer['maritalStatus'] ? 'true' : 'false',
+                    'status == 1' => ($customer['maritalStatus'] == 1) ? 'true' : 'false',
+                    'would_pass_filter' => (!$customer['maritalStatus'] || $customer['maritalStatus'] == 1) ? 'YES' : 'NO'
+                ]
+            ];
+        } else {
+            $customers[$id] = null;
+            $comparison[$id] = ['error' => 'Customer not found'];
+        }
     }
+
+    // If comparing multiple, highlight differences
+    $differences = [];
+    if (count($idArray) > 1 && count($customers) > 1) {
+        $keys = ['maritalStatus', 'spouse', 'isActive', 'statusCustomer'];
+        foreach ($keys as $key) {
+            $values = [];
+            foreach ($idArray as $id) {
+                if (isset($customers[$id])) {
+                    $values[$id] = $customers[$id][$key] ?? null;
+                }
+            }
+            if (count(array_unique($values)) > 1) {
+                $differences[$key] = $values;
+            }
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'comparison' => $comparison,
+        'differences' => $differences,
+        'full_data' => $customers
+    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
 } catch (Exception $e) {
     echo json_encode([

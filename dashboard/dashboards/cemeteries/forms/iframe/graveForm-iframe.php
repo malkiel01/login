@@ -1,10 +1,12 @@
 <?php
 /*
  * File: dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php
- * Version: 1.0.0
- * Updated: 2026-01-20
+ * Version: 1.0.1
+ * Updated: 2026-01-21
  * Author: Malkiel
  * Description: טופס הוספה/עריכה של קבר - דף עצמאי לטעינה ב-iframe (פופאפ גנרי)
+ * Changes:
+ * - v1.0.1: הוספת אחוזת קבר לתצוגת היררכיה + סטטוס קריאה בלבד
  */
 
 error_reporting(E_ALL);
@@ -318,7 +320,8 @@ $graveLocations = [
                                 if ($grave['blockNameHe']) $locationParts[] = 'גוש ' . $grave['blockNameHe'];
                                 if ($grave['plotNameHe']) $locationParts[] = 'חלקה ' . $grave['plotNameHe'];
                                 if ($grave['lineNameHe']) $locationParts[] = 'שורה ' . $grave['lineNameHe'];
-                                echo htmlspecialchars(implode(' / ', $locationParts));
+                                if ($grave['areaGraveNameHe']) $locationParts[] = '<strong>אחוזת קבר ' . htmlspecialchars($grave['areaGraveNameHe']) . '</strong>';
+                                echo implode(' ← ', $locationParts);
                                 ?>
                             </div>
                         </div>
@@ -343,17 +346,15 @@ $graveLocations = [
                             </select>
                         </div>
 
+                        <?php if ($isEdit): ?>
                         <div class="form-group">
-                            <label><span class="required">*</span> סטטוס קבר</label>
-                            <select name="graveStatus" id="graveStatus" required>
-                                <?php foreach ($graveStatuses as $value => $label): ?>
-                                    <option value="<?= htmlspecialchars($value) ?>"
-                                            <?= ($grave['graveStatus'] ?? 1) == $value ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($label) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label>סטטוס קבר</label>
+                            <input type="text" value="<?= htmlspecialchars($graveStatuses[$grave['graveStatus'] ?? 1] ?? 'לא ידוע') ?>" disabled readonly
+                                   style="background: #f1f5f9; color: #64748b;">
+                            <small style="color: #94a3b8; font-size: 11px;">מנוהל אוטומטית ע"י רכישה/קבורה</small>
                         </div>
+                        <?php endif; ?>
+                        <!-- ביצירה - הסטטוס יהיה פנוי (1) אוטומטית -->
 
                         <div class="form-group">
                             <label>מיקום בשורה</label>

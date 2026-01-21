@@ -396,11 +396,16 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     </div>
                     <div class="section-content" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
                         <div class="form-grid">
+                            <?php if ($isEditMode): ?>
                             <div class="form-group">
                                 <label>סטטוס רכישה</label>
                                 <?= renderSelect('purchaseStatus', $purchaseStatusOptions, $purchase['purchaseStatus'] ?? 1) ?>
                             </div>
-                            <div class="form-group span-2">
+                            <?php else: ?>
+                            <!-- ביצירה - סטטוס תמיד "פתוח" -->
+                            <input type="hidden" name="purchaseStatus" value="1">
+                            <?php endif; ?>
+                            <div class="form-group <?= $isEditMode ? 'span-2' : 'span-3' ?>">
                                 <label>הערות</label>
                                 <textarea name="comment" class="form-control" rows="3"><?= htmlspecialchars($purchase['comment'] ?? '') ?></textarea>
                             </div>

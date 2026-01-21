@@ -44,7 +44,10 @@ if ($postData && isset($postData['action'])) {
     $sort = $_GET['sort'] ?? 'createDate';
     $order = strtoupper($_GET['order'] ?? 'DESC');
     $status = $_GET['status'] ?? '';
-    $customer_id = $_GET['customer_id'] ?? '';
+    // תמיכה בשני שמות פרמטרים: customer_id ו-clientId
+    $customer_id = $_GET['customer_id'] ?? $_GET['clientId'] ?? '';
+    // תמיכה בסינון לפי קבר
+    $grave_id = $_GET['graveId'] ?? '';
 }
 
 // ⭐ $id תמיד מגיע רק מ-GET (גם בעריכה וגם במחיקה)
@@ -84,10 +87,11 @@ try {
                 LEFT JOIN graves_view gv ON p.graveId = gv.unicId
                 LEFT JOIN customers cust1 ON p.clientId = cust1.unicId
                 LEFT JOIN customers cust2 ON p.contactId = cust2.unicId
+                WHERE p.isActive = 1
             ";
 
             $params = [];
-            
+
             // חיפוש
             if ($query) {
                 $sql .= " AND (
@@ -111,6 +115,12 @@ try {
             if ($customer_id) {
                 $sql .= " AND p.clientId = :customer_id";
                 $params['customer_id'] = $customer_id;
+            }
+
+            // סינון לפי קבר
+            if ($grave_id) {
+                $sql .= " AND p.graveId = :grave_id";
+                $params['grave_id'] = $grave_id;
             }
             
             // ✅ ספירת סה"כ תוצאות

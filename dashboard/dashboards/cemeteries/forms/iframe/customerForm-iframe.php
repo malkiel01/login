@@ -784,15 +784,17 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    // סינון: רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty)
+                    // סינון: רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined)
                     allAvailableSpouses = result.data.filter(c => {
                         // לא הלקוח הנוכחי
                         if (customerId && c.unicId === customerId) return false;
                         // אם זה בן הזוג הנוכחי - תמיד הצג
                         if (c.unicId === currentSpouseId) return true;
-                        // רק רווקים (1) או ללא מצב משפחתי מוגדר
+                        // רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined/0)
                         const status = c.maritalStatus;
-                        if (status === null || status === '' || status == 1) return true;
+                        // !status תופס: null, undefined, '', 0
+                        // status == 1 תופס: 1, '1'
+                        if (!status || status == 1) return true;
                         return false;
                     });
 

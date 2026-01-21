@@ -1,0 +1,467 @@
+/**
+ * forms-mobile.css
+ * התאמות מובייל לטפסי iframe
+ *
+ * Breakpoints:
+ * - 1024px: טאבלט גדול
+ * - 768px: טאבלט
+ * - 480px: מובייל
+ * - 360px: מובייל קטן
+ */
+
+/* ====================================
+   1. משתנים ובסיס
+   ==================================== */
+:root {
+    --mobile-padding: 12px;
+    --mobile-gap: 10px;
+    --touch-target-min: 44px;
+    --mobile-font-size: 16px; /* מונע zoom באייפון */
+}
+
+/* ====================================
+   2. טאבלט (עד 1024px)
+   ==================================== */
+@media screen and (max-width: 1024px) {
+    .form-container {
+        padding: 15px;
+    }
+
+    .form-grid {
+        gap: 12px;
+    }
+}
+
+/* ====================================
+   3. טאבלט קטן (עד 768px)
+   ==================================== */
+@media screen and (max-width: 768px) {
+    /* פריסה - עמודה אחת */
+    .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--mobile-gap);
+    }
+
+    .form-grid .span-2,
+    .form-grid .span-3 {
+        grid-column: span 1 !important;
+    }
+
+    /* מיכל הטופס */
+    .form-container {
+        padding: var(--mobile-padding);
+        padding-bottom: 80px; /* מקום לכפתורים קבועים */
+    }
+
+    /* סקשנים */
+    .sortable-sections {
+        gap: var(--mobile-gap);
+    }
+
+    .sortable-section {
+        border-radius: 8px;
+    }
+
+    .section-content {
+        padding: var(--mobile-padding);
+    }
+
+    /* כותרת סקשן - ביטול גרירה */
+    .section-drag-handle {
+        cursor: default !important;
+        padding: 12px var(--mobile-padding);
+    }
+
+    /* הסתר אייקון גרירה במובייל */
+    .section-drag-handle::before {
+        display: none !important;
+    }
+
+    /* כפתור toggle גדול יותר */
+    .section-toggle-btn {
+        width: var(--touch-target-min);
+        height: var(--touch-target-min);
+        min-width: var(--touch-target-min);
+    }
+
+    /* שדות טופס */
+    .form-group label {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .form-control,
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: var(--mobile-font-size) !important; /* מונע zoom */
+        padding: 12px;
+        min-height: var(--touch-target-min);
+    }
+
+    /* כפתורים */
+    .btn {
+        min-height: var(--touch-target-min);
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    /* כפתורי שמירה/ביטול - קבועים בתחתית */
+    .form-actions {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 12px var(--mobile-padding);
+        margin: 0;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        z-index: 1000;
+        gap: 8px;
+        border-radius: 0;
+    }
+
+    .form-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    /* מודאלים */
+    .modal-content {
+        width: 95% !important;
+        max-width: none !important;
+        max-height: 90vh;
+        margin: auto;
+    }
+
+    .modal-header {
+        padding: var(--mobile-padding);
+    }
+
+    .modal-body {
+        padding: var(--mobile-padding);
+    }
+
+    .modal-footer {
+        padding: var(--mobile-padding);
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+
+    /* Info cards/grids */
+    .info-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px;
+    }
+
+    .info-card {
+        padding: 10px;
+    }
+}
+
+/* ====================================
+   4. מובייל (עד 480px)
+   ==================================== */
+@media screen and (max-width: 480px) {
+    .form-container {
+        padding: 8px;
+        padding-bottom: 85px;
+    }
+
+    .section-content {
+        padding: 10px;
+    }
+
+    .section-title {
+        font-size: 14px;
+    }
+
+    .section-title i {
+        font-size: 14px;
+    }
+
+    /* כפתורי פעולה בשורה */
+    .form-actions {
+        padding: 10px 8px;
+    }
+
+    .form-actions .btn {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    /* הסתר טקסט בכפתורים, השאר אייקון */
+    .form-actions .btn span,
+    .form-actions .btn-text {
+        display: none;
+    }
+
+    /* או לחילופין - כפתורים אחד מעל השני */
+    /*
+    .form-actions {
+        flex-direction: column;
+    }
+    */
+}
+
+/* ====================================
+   5. מובייל קטן (עד 360px)
+   ==================================== */
+@media screen and (max-width: 360px) {
+    :root {
+        --mobile-padding: 8px;
+        --mobile-gap: 8px;
+    }
+
+    .form-container {
+        padding: 6px;
+        padding-bottom: 80px;
+    }
+
+    .section-drag-handle {
+        padding: 10px 8px;
+    }
+
+    .section-title {
+        font-size: 13px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+    }
+
+    .form-control {
+        padding: 10px;
+    }
+}
+
+/* ====================================
+   6. טבלאות - הפיכה לכרטיסים
+   ==================================== */
+@media screen and (max-width: 768px) {
+    /* הסתר כותרות טבלה */
+    .data-table thead,
+    .graves-table thead,
+    table.responsive thead {
+        display: none;
+    }
+
+    /* הפוך שורות לכרטיסים */
+    .data-table tbody,
+    .graves-table tbody,
+    table.responsive tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .data-table tr,
+    .graves-table tr,
+    table.responsive tr {
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        position: relative;
+    }
+
+    .data-table td,
+    .graves-table td,
+    table.responsive td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .data-table td:last-child,
+    .graves-table td:last-child,
+    table.responsive td:last-child {
+        border-bottom: none;
+    }
+
+    /* הוסף תווית לפני כל תא */
+    .data-table td::before,
+    .graves-table td::before,
+    table.responsive td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        font-size: 12px;
+        flex-shrink: 0;
+        margin-left: 10px;
+    }
+
+    /* כפתור מחיקה בפינה */
+    .data-table td:last-child,
+    .graves-table td:last-child {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        padding: 0;
+        border: none;
+    }
+
+    /* inputs בתוך טבלה */
+    .data-table input,
+    .data-table select,
+    .graves-table input,
+    .graves-table select {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    /* כותרת טבלה (graves-header וכו') */
+    .graves-header,
+    .table-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 8px;
+    }
+
+    .graves-header h3,
+    .table-header h3 {
+        font-size: 14px;
+    }
+
+    /* כפתור הוספה */
+    .btn-add-grave,
+    #btnAddGrave {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ====================================
+   7. התאמות נוספות
+   ==================================== */
+
+/* Checkbox ו-Radio גדולים יותר למגע */
+@media screen and (max-width: 768px) {
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+    }
+
+    .checkbox-cell {
+        justify-content: center;
+    }
+}
+
+/* Status badges */
+@media screen and (max-width: 480px) {
+    .status-badge {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+}
+
+/* Alerts */
+@media screen and (max-width: 768px) {
+    .alert {
+        font-size: 14px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+    }
+}
+
+/* Loading overlay */
+@media screen and (max-width: 768px) {
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* ====================================
+   8. ביטול גרירה במובייל
+   ==================================== */
+@media screen and (max-width: 768px) {
+    /* ביטול סמן גרירה */
+    .sortable-section {
+        cursor: default !important;
+    }
+
+    .section-drag-handle {
+        cursor: default !important;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* הסתר אינדיקציית גרירה */
+    .sortable-ghost,
+    .sortable-chosen {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* ====================================
+   9. שיפורי נגישות למגע
+   ==================================== */
+@media (pointer: coarse) {
+    /* מכשירי מגע */
+    .btn,
+    .section-toggle-btn,
+    .modal-close,
+    input,
+    select,
+    textarea {
+        min-height: var(--touch-target-min);
+    }
+
+    /* מרווחים גדולים יותר בין אלמנטים לחיצים */
+    .form-group {
+        margin-bottom: 16px;
+    }
+}
+
+/* ====================================
+   10. Landscape mode
+   ==================================== */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .form-container {
+        padding-bottom: 70px;
+    }
+
+    .form-actions {
+        padding: 8px var(--mobile-padding);
+    }
+
+    .form-actions .btn {
+        min-height: 38px;
+        padding: 8px 12px;
+    }
+
+    .modal-content {
+        max-height: 85vh;
+    }
+}
+
+/* ====================================
+   11. Safe area (iPhone X+)
+   ==================================== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .form-actions {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .form-container {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    }
+}

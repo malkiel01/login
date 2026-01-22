@@ -890,12 +890,12 @@
         left: 50% !important;
         right: auto !important;
         top: auto !important;
-        bottom: 20px !important;
+        bottom: 100px !important; /* מעל כפתורי שמירה/ביטול של הטופס */
         transform: translateX(-50%);
         width: 280px;
         max-width: calc(100vw - 40px);
         min-width: auto;
-        max-height: 70vh;
+        max-height: 60vh; /* קטן יותר כדי לא לחרוג מהמסך */
         overflow-y: auto;
         border-radius: 16px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.25);

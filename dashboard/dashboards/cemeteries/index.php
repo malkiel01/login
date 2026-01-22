@@ -23,7 +23,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css?v=20260122">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">

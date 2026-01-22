@@ -27,9 +27,14 @@ class FileExplorer {
         this.clipboard = null; // לוח העתקה/גזירה
         this.viewMode = 'grid'; // grid או list
         this.iconSize = 'medium'; // small, medium, large
+        this.draggedItemPath = null; // נתיב הפריט הנגרר
+        this.draggedIsDir = false; // האם הפריט הנגרר הוא תיקייה
+        this.draggedItems = []; // מערך פריטים נגררים (לבחירה מרובה)
+        this.longPressTimer = null; // טיימר ללחיצה ארוכה במובייל
         this.render();
         this.loadFiles();
         this.setupDragDrop();
+        this.setupMobileDrag();
         this.setupBackgroundContextMenu();
         this.setupMobileDoubleTapUpload();
     }
@@ -399,11 +404,24 @@ class FileExplorer {
         // פורמט גודל
         const size = item.isDir ? '' : this.formatSize(item.size || 0);
 
+        // תכונות גרירה - קבצים ניתנים לגרירה, תיקיות הן יעד להשלכה
+        const dragAttrs = `draggable="true"
+                 ondragstart="window.explorer.handleDragStart(event, '${escapedPath}', ${item.isDir})"
+                 ondragend="window.explorer.handleDragEnd(event)"`;
+
+        // תיקיות יכולות לקבל קבצים
+        const dropAttrs = item.isDir ? `
+                 ondragover="window.explorer.handleDragOver(event, this)"
+                 ondragleave="window.explorer.handleDragLeave(event, this)"
+                 ondrop="window.explorer.handleDropOnFolder(event, '${escapedPath}')"` : '';
+
         return `
-            <div class="explorer-item"
+            <div class="explorer-item ${item.isDir ? 'is-folder' : 'is-file'}"
                  data-path="${item.path}"
                  data-name="${item.name}"
                  data-is-dir="${item.isDir}"
+                 ${dragAttrs}
+                 ${dropAttrs}
                  onclick="window.explorer.selectItem(event, this)"
                  ondblclick="window.explorer.openItem('${escapedPath}', ${item.isDir})"
                  oncontextmenu="window.explorer.showContextMenu(event, '${escapedPath}', '${escapedName}', ${item.isDir})">
@@ -725,6 +743,11 @@ class FileExplorer {
         });
 
         content.addEventListener('drop', async (e) => {
+            // בדוק אם זו גרירה פנימית (קובץ לתיקייה)
+            if (this.draggedItemPath) {
+                return; // הטיפול יהיה ב-handleDropOnFolder
+            }
+
             const files = Array.from(e.dataTransfer.files);
             if (!files.length) return;
 
@@ -738,6 +761,264 @@ class FileExplorer {
             // הסתר אינדיקטור וריענן
             this.hideUploadIndicator();
             this.refresh();
+        });
+    }
+
+    // ========================================
+    // גרירת קבצים לתיקיות (Desktop & Mobile)
+    // ========================================
+
+    handleDragStart(event, path, isDir) {
+        this.draggedItemPath = path;
+        this.draggedIsDir = isDir;
+
+        // סמן ויזואלית את הפריט הנגרר
+        const item = event.target.closest('.explorer-item');
+        if (item) {
+            item.classList.add('dragging');
+        }
+
+        // הגדר נתוני הגרירה
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', path);
+
+        // אם יש פריטים נבחרים, גרור את כולם
+        if (this.selectedItems.length > 1 && this.selectedItems.includes(path)) {
+            this.draggedItems = [...this.selectedItems];
+        } else {
+            this.draggedItems = [path];
+        }
+    }
+
+    handleDragEnd(event) {
+        this.draggedItemPath = null;
+        this.draggedIsDir = false;
+        this.draggedItems = [];
+
+        // הסר סימון גרירה מכל הפריטים
+        this.container.querySelectorAll('.explorer-item.dragging').forEach(item => {
+            item.classList.remove('dragging');
+        });
+
+        // הסר סימון drop-target מכל התיקיות
+        this.container.querySelectorAll('.explorer-item.drop-target').forEach(item => {
+            item.classList.remove('drop-target');
+        });
+    }
+
+    handleDragOver(event, folderEl) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // אל תאפשר לגרור תיקייה לתוך עצמה
+        const folderPath = folderEl.dataset.path;
+        if (this.draggedItems && this.draggedItems.includes(folderPath)) {
+            event.dataTransfer.dropEffect = 'none';
+            return;
+        }
+
+        event.dataTransfer.dropEffect = 'move';
+        folderEl.classList.add('drop-target');
+    }
+
+    handleDragLeave(event, folderEl) {
+        event.preventDefault();
+        event.stopPropagation();
+        folderEl.classList.remove('drop-target');
+    }
+
+    async handleDropOnFolder(event, targetFolderPath) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // הסר סימון drop-target
+        const folderEl = event.target.closest('.explorer-item');
+        if (folderEl) {
+            folderEl.classList.remove('drop-target');
+        }
+
+        // בדוק שיש פריטים לגרירה
+        if (!this.draggedItems || this.draggedItems.length === 0) {
+            return;
+        }
+
+        // אל תאפשר לגרור תיקייה לתוך עצמה
+        if (this.draggedItems.includes(targetFolderPath)) {
+            return;
+        }
+
+        // העבר את כל הפריטים לתיקייה
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const sourcePath of this.draggedItems) {
+            // אל תעביר פריט לתיקייה שהוא כבר נמצא בה
+            const sourceDir = sourcePath.substring(0, sourcePath.lastIndexOf('/')) || '';
+            if (sourceDir === targetFolderPath) {
+                continue;
+            }
+
+            try {
+                const response = await fetch(`${this.apiBase}?action=move&unicId=${this.unicId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sourcePath: sourcePath,
+                        destinationPath: targetFolderPath
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    console.error('Error moving:', sourcePath, result.error);
+                }
+            } catch (error) {
+                errorCount++;
+                console.error('Error moving:', sourcePath, error);
+            }
+        }
+
+        // נקה מצב גרירה
+        this.handleDragEnd(event);
+
+        // הודעה למשתמש
+        if (successCount > 0) {
+            const folderName = targetFolderPath.split('/').pop() || 'התיקייה';
+            if (errorCount > 0) {
+                alert(`הועברו ${successCount} פריטים ל-${folderName}, ${errorCount} נכשלו`);
+            }
+        } else if (errorCount > 0) {
+            alert('שגיאה בהעברת הפריטים');
+        }
+
+        // ריענן את התצוגה
+        this.refresh();
+    }
+
+    // ========================================
+    // גרירה במובייל (Touch Events)
+    // ========================================
+
+    setupMobileDrag() {
+        let touchStartTime = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let draggedEl = null;
+        let dragClone = null;
+        const LONG_PRESS_DURATION = 500; // מילישניות
+
+        this.contentEl.addEventListener('touchstart', (e) => {
+            const item = e.target.closest('.explorer-item');
+            if (!item) return;
+
+            touchStartTime = Date.now();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+
+            // טיימר ללחיצה ארוכה
+            this.longPressTimer = setTimeout(() => {
+                // התחל גרירה
+                draggedEl = item;
+                const path = item.dataset.path;
+                const isDir = item.dataset.isDir === 'true';
+
+                this.draggedItemPath = path;
+                this.draggedIsDir = isDir;
+                this.draggedItems = this.selectedItems.length > 1 && this.selectedItems.includes(path)
+                    ? [...this.selectedItems]
+                    : [path];
+
+                item.classList.add('dragging');
+
+                // צור clone לגרירה
+                dragClone = item.cloneNode(true);
+                dragClone.classList.add('drag-clone');
+                dragClone.style.position = 'fixed';
+                dragClone.style.pointerEvents = 'none';
+                dragClone.style.opacity = '0.8';
+                dragClone.style.zIndex = '10000';
+                dragClone.style.width = item.offsetWidth + 'px';
+                document.body.appendChild(dragClone);
+
+                // רטט (אם נתמך)
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }, LONG_PRESS_DURATION);
+        }, { passive: true });
+
+        this.contentEl.addEventListener('touchmove', (e) => {
+            // אם זז יותר מדי לפני לחיצה ארוכה - בטל
+            if (this.longPressTimer && !dragClone) {
+                const moveX = Math.abs(e.touches[0].clientX - touchStartX);
+                const moveY = Math.abs(e.touches[0].clientY - touchStartY);
+                if (moveX > 10 || moveY > 10) {
+                    clearTimeout(this.longPressTimer);
+                    this.longPressTimer = null;
+                }
+            }
+
+            // אם בגרירה - עדכן מיקום
+            if (dragClone) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                dragClone.style.left = (touch.clientX - 30) + 'px';
+                dragClone.style.top = (touch.clientY - 30) + 'px';
+
+                // בדוק אם מעל תיקייה
+                const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const folderBelow = elemBelow?.closest('.explorer-item.is-folder');
+
+                // הסר סימון מתיקיות קודמות
+                this.container.querySelectorAll('.explorer-item.drop-target').forEach(item => {
+                    if (item !== folderBelow) {
+                        item.classList.remove('drop-target');
+                    }
+                });
+
+                // סמן תיקייה נוכחית
+                if (folderBelow && !this.draggedItems.includes(folderBelow.dataset.path)) {
+                    folderBelow.classList.add('drop-target');
+                }
+            }
+        }, { passive: false });
+
+        this.contentEl.addEventListener('touchend', async (e) => {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+
+            if (dragClone) {
+                // בדוק אם שוחרר על תיקייה
+                const touch = e.changedTouches[0];
+                const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const folderBelow = elemBelow?.closest('.explorer-item.is-folder');
+
+                // הסר את ה-clone
+                dragClone.remove();
+                dragClone = null;
+
+                if (folderBelow && !this.draggedItems.includes(folderBelow.dataset.path)) {
+                    // העבר לתיקייה
+                    await this.handleDropOnFolder(e, folderBelow.dataset.path);
+                } else {
+                    // בטל גרירה
+                    this.handleDragEnd(e);
+                }
+            }
+        });
+
+        this.contentEl.addEventListener('touchcancel', () => {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+
+            if (dragClone) {
+                dragClone.remove();
+                dragClone = null;
+            }
+            this.handleDragEnd({});
         });
     }
 

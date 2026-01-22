@@ -254,9 +254,24 @@
         min-height: calc(100vh - 56px);
     }
 
-    /* הסתר כפתורי פעולה במובייל - אבל לא את כפתור הצג חיפוש */
+    /* כפתורי פעולה במובייל - עיגול עם אייקון בלבד */
     .entity-title-container .action-buttons .btn {
-        display: none;
+        display: inline-flex;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
+        align-items: center;
+        font-size: 0; /* הסתר טקסט */
+    }
+
+    .entity-title-container .action-buttons .btn svg,
+    .entity-title-container .action-buttons .btn .icon {
+        font-size: 18px;
+        width: 20px;
+        height: 20px;
     }
 
     .entity-title-container .action-buttons .btn-show-search {
@@ -264,7 +279,12 @@
     }
 
     .entity-title-container .action-buttons .btn-show-search.visible {
-        display: inline-flex; /* הצג רק כשיש לו visible */
+        display: inline-flex;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 0;
     }
 
     /* Entity items mobile optimization */

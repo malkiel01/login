@@ -698,9 +698,32 @@
 }
 
 /* ========================================
+   תצוגה מותנית - דסקטופ/מובייל
+   ======================================== */
+
+/* כפתור מובייל - מוסתר בברירת מחדל */
+.explorer-mobile-only {
+    display: none !important;
+}
+
+/* כפתורי דסקטופ - נראים בברירת מחדל */
+.explorer-desktop-only {
+    display: inline-flex;
+}
+
+/* ========================================
    Responsive - Mobile (768px ומטה)
    ======================================== */
 @media screen and (max-width: 768px) {
+    /* הצג כפתורי מובייל, הסתר דסקטופ */
+    .explorer-mobile-only {
+        display: inline-flex !important;
+    }
+
+    .explorer-desktop-only {
+        display: none !important;
+    }
+
     /* גובה ורוחב מותאמים למובייל - מניעת overflow */
     .file-explorer {
         height: auto;

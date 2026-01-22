@@ -31,6 +31,7 @@ class FileExplorer {
         this.loadFiles();
         this.setupDragDrop();
         this.setupBackgroundContextMenu();
+        this.setupMobileDoubleTapUpload();
     }
 
     render() {
@@ -46,8 +47,8 @@ class FileExplorer {
                             <i class="fas fa-sync-alt"></i>
                         </button>
 
-                        <!-- תפריט תצוגה -->
-                        <div class="explorer-dropdown">
+                        <!-- תפריט תצוגה (דסקטופ) -->
+                        <div class="explorer-dropdown explorer-desktop-only">
                             <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('viewMenu')" title="תצוגה">
                                 <i class="fas fa-th-large"></i> תצוגה <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
                             </button>
@@ -73,8 +74,8 @@ class FileExplorer {
                             </div>
                         </div>
 
-                        <!-- תפריט מיון -->
-                        <div class="explorer-dropdown">
+                        <!-- תפריט מיון (דסקטופ) -->
+                        <div class="explorer-dropdown explorer-desktop-only">
                             <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('sortMenu')" title="מיון">
                                 <i class="fas fa-sort"></i> מיון <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
                             </button>
@@ -102,8 +103,8 @@ class FileExplorer {
                             </div>
                         </div>
 
-                        <!-- תפריט חדש -->
-                        <div class="explorer-dropdown">
+                        <!-- תפריט חדש (דסקטופ) -->
+                        <div class="explorer-dropdown explorer-desktop-only">
                             <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('newMenu')" title="יצירה">
                                 <i class="fas fa-plus"></i> חדש <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
                             </button>
@@ -114,9 +115,45 @@ class FileExplorer {
                             </div>
                         </div>
 
-                        <button type="button" class="explorer-btn primary" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
+                        <!-- כפתור העלאה (דסקטופ) -->
+                        <button type="button" class="explorer-btn primary explorer-desktop-only" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
                             <i class="fas fa-upload"></i> העלאה
                         </button>
+
+                        <!-- תפריט 3 נקודות (מובייל) -->
+                        <div class="explorer-dropdown explorer-mobile-only">
+                            <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('mobileMenu')" title="אפשרויות">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="explorer-dropdown-menu" id="mobileMenu">
+                                <div class="menu-section-title">תצוגה</div>
+                                <a href="javascript:void(0)" onclick="window.explorer.setViewMode('grid')" class="view-option" data-view="grid">
+                                    <i class="fas fa-th-large"></i> רשת
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setViewMode('list')" class="view-option" data-view="list">
+                                    <i class="fas fa-list"></i> רשימה
+                                </a>
+                                <hr>
+                                <div class="menu-section-title">מיון</div>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('name', 'asc')">
+                                    <i class="fas fa-sort-alpha-down"></i> שם (א-ת)
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('date', 'desc')">
+                                    <i class="fas fa-clock"></i> חדש ביותר
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('size', 'desc')">
+                                    <i class="fas fa-weight"></i> גדול ביותר
+                                </a>
+                                <hr>
+                                <a href="javascript:void(0)" onclick="window.explorer.createFolder(); window.explorer.closeAllDropdowns();">
+                                    <i class="fas fa-folder-plus"></i> תיקייה חדשה
+                                </a>
+                                <a href="javascript:void(0)" onclick="document.getElementById('explorerFileInput').click(); window.explorer.closeAllDropdowns();">
+                                    <i class="fas fa-upload"></i> העלאת קובץ
+                                </a>
+                            </div>
+                        </div>
+
                         <input type="file" id="explorerFileInput" class="explorer-file-input" multiple onchange="window.explorer.handleFileSelect(event)">
                     </div>
                 </div>
@@ -865,6 +902,42 @@ class FileExplorer {
             document.addEventListener('click', this.hideContextMenu);
             document.addEventListener('contextmenu', this.hideContextMenu);
         }, 10);
+    }
+
+    // ========================================
+    // לחיצה כפולה על רקע להעלאת קבצים (מובייל)
+    // ========================================
+
+    setupMobileDoubleTapUpload() {
+        let lastTapTime = 0;
+        const doubleTapDelay = 300; // מילישניות
+
+        this.contentEl.addEventListener('touchend', (e) => {
+            // בדוק אם הלחיצה היא על פריט או על הרקע
+            const clickedItem = e.target.closest('.explorer-item');
+            if (clickedItem) return; // לחיצה על פריט - התעלם
+
+            // בדוק אם הלחיצה היא על אזור ריק
+            const clickedGrid = e.target.closest('.explorer-grid');
+            const clickedEmpty = e.target.closest('.explorer-empty');
+            const clickedContent = e.target.closest('.explorer-content');
+
+            if (!clickedContent || (!clickedGrid && !clickedEmpty && e.target !== clickedContent)) {
+                return;
+            }
+
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTapTime;
+
+            if (tapLength < doubleTapDelay && tapLength > 0) {
+                // לחיצה כפולה - פתח בורר קבצים
+                e.preventDefault();
+                document.getElementById('explorerFileInput').click();
+                lastTapTime = 0;
+            } else {
+                lastTapTime = currentTime;
+            }
+        });
     }
 }
 

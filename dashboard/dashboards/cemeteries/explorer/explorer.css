@@ -1000,6 +1000,7 @@
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        min-height: 220px; /* גובה מינימלי לתוכן בלבד */
         overflow-x: hidden;
         box-sizing: border-box;
     }
@@ -1035,6 +1036,10 @@
         min-height: 280px;
         max-height: 350px;
         min-width: 0 !important;
+    }
+
+    .explorer-content {
+        min-height: 180px;
     }
 
     .explorer-toolbar {

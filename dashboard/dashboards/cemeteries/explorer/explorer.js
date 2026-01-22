@@ -732,7 +732,10 @@ class FileExplorer {
 
         ['dragenter', 'dragover'].forEach(eventName => {
             content.addEventListener(eventName, () => {
-                content.classList.add('drag-over');
+                // סמן drag-over רק אם זו גרירה מבחוץ (לא גרירה פנימית)
+                if (!this.draggedItemPath) {
+                    content.classList.add('drag-over');
+                }
             });
         });
 

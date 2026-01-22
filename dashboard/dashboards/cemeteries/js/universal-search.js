@@ -782,11 +782,14 @@ class UniversalSearch {
      */
     openAdvancedPanel() {
         const panel = this.elements.advancedPanel;
-        panel.style.display = 'block';
+        const isMobile = window.innerWidth <= 768;
+
+        // במובייל צריך flex לתצוגה תקינה, בדסקטופ block
+        panel.style.display = isMobile ? 'flex' : 'block';
         this.elements.advancedToggle.classList.add('active');
 
         // הוסף overlay לסגירה בלחיצה מבחוץ (רק במובייל)
-        if (window.innerWidth <= 768) {
+        if (isMobile) {
             this.createOverlay();
         }
     }
@@ -799,6 +802,9 @@ class UniversalSearch {
         panel.style.display = 'none';
         this.elements.advancedToggle.classList.remove('active');
         this.removeOverlay();
+
+        // שחרר נעילת גלילה
+        document.body.style.overflow = '';
     }
 
     /**
@@ -814,6 +820,9 @@ class UniversalSearch {
             this.closeAdvancedPanel();
         });
         document.body.appendChild(overlay);
+
+        // נעל גלילת הרקע
+        document.body.style.overflow = 'hidden';
     }
 
     /**

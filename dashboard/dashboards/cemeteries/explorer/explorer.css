@@ -833,9 +833,15 @@
 
     .explorer-actions {
         display: flex !important;
-        justify-content: space-between;
+        justify-content: flex-start;
+        gap: 4px;
         width: 100%;
         flex-shrink: 0;
+    }
+
+    /* תפריט 3 נקודות - נדחף לצד שמאל */
+    .explorer-actions .explorer-dropdown.explorer-mobile-only {
+        margin-right: auto;
     }
 
     /* כפתורים גדולים יותר למגע */

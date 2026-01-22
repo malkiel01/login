@@ -299,14 +299,22 @@ mark {
         width: 100%;
     }
 
+    /* מרווח תחתון לתוכן שלא יחתך מתחת לכפתורים */
+    .us-filters-container {
+        padding-bottom: 10px;
+    }
+
     .us-actions {
         flex-direction: column;
         position: sticky;
         bottom: 0;
         background: white;
-        padding-top: 15px;
-        margin-top: 15px;
+        padding: 15px 0 5px 0;
+        margin: 0 -16px -30px -16px; /* מרחיב לרוחב הפאנל */
+        padding-left: 16px;
+        padding-right: 16px;
         border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -8px 16px rgba(255, 255, 255, 0.95);
     }
 
     .us-btn {

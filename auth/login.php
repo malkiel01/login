@@ -22,6 +22,7 @@ require_once '../config.php';  // תיקון: חזרה לתיקייה הראשי
 require_once 'redirect-handler.php';
 require_once '../permissions/init.php';
 require_once 'rate-limiter.php';  // Rate Limiting להגנה מ-brute force
+require_once 'csrf.php';          // CSRF Protection
 // require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
@@ -48,11 +49,15 @@ if ($rateLimiter->isBlacklisted($clientIP)) {
 
 // טיפול בהתחברות רגילה
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocked) {
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
+    // בדיקת CSRF
+    if (!validateCsrf()) {
+        $error = 'שגיאת אבטחה. אנא רענן את הדף ונסה שוב.';
+    } else {
+        $username = trim($_POST['username']);
+        $password = $_POST['password'];
 
-    // בדיקת Rate Limit לפני ניסיון
-    if (!$rateLimiter->canAttempt($clientIP, $username)) {
+        // בדיקת Rate Limit לפני ניסיון
+        if (!$rateLimiter->canAttempt($clientIP, $username)) {
         $waitTime = $rateLimiter->getWaitTime($clientIP, $username);
         $error = "יותר מדי ניסיונות התחברות. נסה שוב בעוד $waitTime דקות.";
         $isLocked = true;
@@ -151,19 +156,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocke
             }
         }
     }
+    } // סגירת else של CSRF
 }
 
 // טיפול בהרשמה
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLocked) {
-    $username = trim($_POST['reg_username']);
-    $email = trim($_POST['reg_email']);
-    $name = trim($_POST['reg_name']);
-    $password = $_POST['reg_password'];
-    $confirm_password = $_POST['reg_confirm_password'];
+    // בדיקת CSRF
+    if (!validateCsrf()) {
+        $error = 'שגיאת אבטחה. אנא רענן את הדף ונסה שוב.';
+    } else {
+        $username = trim($_POST['reg_username']);
+        $email = trim($_POST['reg_email']);
+        $name = trim($_POST['reg_name']);
+        $password = $_POST['reg_password'];
+        $confirm_password = $_POST['reg_confirm_password'];
 
-    // בדיקת Rate Limit גם להרשמות (הגנה מפני spam)
-    $registrationKey = 'register_' . $clientIP;
-    if (!$rateLimiter->canAttempt($clientIP, $registrationKey)) {
+        // בדיקת Rate Limit גם להרשמות (הגנה מפני spam)
+        $registrationKey = 'register_' . $clientIP;
+        if (!$rateLimiter->canAttempt($clientIP, $registrationKey)) {
         $waitTime = $rateLimiter->getWaitTime($clientIP, $registrationKey);
         $error = "יותר מדי ניסיונות הרשמה. נסה שוב בעוד $waitTime דקות.";
         $isLocked = true;
@@ -200,6 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
             }
         }
     }
+    } // סגירת else של CSRF
 }
 ?>
 <!DOCTYPE html>
@@ -216,7 +227,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
     <!-- בתוך ה-<head> -->
     <!-- ?php echo getPWAHeaders(['title' => 'התחברות']); ? -->
     <?php echo getPWAHeaders(); ?>
-    
+
+    <!-- CSRF Protection -->
+    <?php echo csrfMeta(); ?>
+    <?php echo csrfScript(); ?>
+
 </head>
 <body>
     <div class="login-container">
@@ -256,6 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
                 <?php endif; ?>
 
                 <form method="POST" action="" <?php echo $isLocked ? 'style="opacity: 0.5; pointer-events: none;"' : ''; ?>>
+                    <?php echo csrfField(); ?>
                     <div class="form-group">
                         <label for="username">שם משתמש או אימייל</label>
                         <div class="input-group">
@@ -309,6 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
             <!-- טאב הרשמה -->
             <div id="register-tab" class="tab-content">
                 <form method="POST" action="">
+                    <?php echo csrfField(); ?>
                     <div class="form-group">
                         <label for="reg_name">שם מלא</label>
                         <div class="input-group">
@@ -473,11 +490,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         
         // טיפול בתגובה מ-Google
         function handleGoogleResponse(response) {
-            // שלח את הטוקן לשרת
+            // שלח את הטוקן לשרת עם CSRF token
             fetch('google-auth.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF.token()
                 },
                 body: JSON.stringify({
                     credential: response.credential

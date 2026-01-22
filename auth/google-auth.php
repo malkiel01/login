@@ -3,6 +3,7 @@
 session_start();
 require_once '../config.php';
 require_once 'rate-limiter.php';
+require_once 'csrf.php';
 
 // הגדר כותרות JSON
 header('Content-Type: application/json');
@@ -37,6 +38,16 @@ if (!$rateLimiter->canAttempt($clientIP, $googleAuthKey)) {
     echo json_encode([
         'success' => false,
         'message' => "יותר מדי ניסיונות. נסה שוב בעוד $waitTime דקות"
+    ]);
+    exit;
+}
+
+// בדיקת CSRF
+if (!validateCsrf()) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'שגיאת אבטחה. אנא רענן את הדף ונסה שוב.'
     ]);
     exit;
 }

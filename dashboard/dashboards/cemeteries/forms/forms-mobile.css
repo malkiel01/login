@@ -71,10 +71,16 @@
 
     .sortable-section {
         border-radius: 8px;
+        overflow: hidden;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .section-content {
         padding: var(--mobile-padding);
+        overflow-x: hidden;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     /* כותרת סקשן - ביטול גרירה והגדלת גובה */

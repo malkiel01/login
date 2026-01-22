@@ -701,11 +701,17 @@
    Responsive - Mobile (768px ומטה)
    ======================================== */
 @media screen and (max-width: 768px) {
-    /* גובה מותאם למובייל */
+    /* גובה ורוחב מותאמים למובייל - מניעת overflow */
     .file-explorer {
         height: auto;
         min-height: 250px;
         max-height: 350px;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }
 
     /* סרגל כלים - עמודה */
@@ -714,13 +720,27 @@
         align-items: stretch;
         padding: 8px 10px;
         gap: 8px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
     .explorer-breadcrumb {
-        min-width: 100%;
+        min-width: 0 !important;
+        width: 100%;
+        max-width: 100%;
         font-size: 12px;
         overflow-x: auto;
+        overflow-y: hidden;
         padding-bottom: 4px;
+        box-sizing: border-box;
+    }
+
+    .breadcrumb-path {
+        min-width: 0;
+        max-width: 100%;
     }
 
     .explorer-actions {
@@ -853,9 +873,36 @@
         font-size: 12px;
     }
 
-    /* תוכן הסייר - padding מותאם */
+    /* תוכן הסייר - padding מותאם ומניעת overflow */
     .explorer-content {
         padding: 10px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
+    /* Grid - מניעת overflow */
+    .explorer-grid {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    /* פריט - מניעת overflow */
+    .explorer-item {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .explorer-item-name {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
@@ -865,12 +912,18 @@
 @media screen and (max-width: 480px) {
     .file-explorer {
         max-height: 300px;
+        min-width: 0 !important;
+    }
+
+    .explorer-toolbar {
+        padding: 6px 8px;
     }
 
     /* Grid - 2 עמודות במובייל קטן */
     .explorer-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 6px;
+        min-width: 0;
     }
 
     .explorer-item-icon {

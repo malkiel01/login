@@ -126,10 +126,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                             </svg>
                             <span>חיפוש</span>
                         </button>
-                        <button class="btn btn-secondary" onclick="refreshData()">
-                            <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
-                            רענון
-                        </button>
                         <button class="btn btn-primary" onclick="tableRenderer.openAddModal()">
                             <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
                             הוספה

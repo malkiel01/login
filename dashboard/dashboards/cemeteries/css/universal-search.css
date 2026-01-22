@@ -302,9 +302,22 @@ mark {
         box-sizing: border-box;
     }
 
-    /* הצג כותרת במובייל */
+    /* הצג כותרת במובייל - סטיקי */
     .us-advanced-header {
         display: block;
+        position: sticky;
+        top: 0;
+        background: white;
+        margin: -16px -16px 0 -16px;
+        padding: 16px 16px 0 16px;
+        z-index: 1;
+    }
+
+    .us-advanced-title {
+        margin: 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 12px;
     }
 
     .us-filters-container {

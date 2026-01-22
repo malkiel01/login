@@ -226,16 +226,12 @@
         </div>
     </div>
 
-    <!-- פעולות מהירות -->
+    <!-- כפתור התנתקות -->
     <div class="sidebar-footer">
-        <button class="btn btn-primary btn-block" onclick="tableRenderer.openAddModal()">
-            <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
-            הוספה חדשה
-        </button>
-        <button class="btn btn-secondary btn-block mt-2" onclick="exportData()">
-            <svg class="icon-sm"><use xlink:href="#icon-download"></use></svg>
-            יייצוא נתונים
-        </button>
+        <a href="/auth/logout.php" class="btn btn-logout btn-block" onclick="return confirmLogout()">
+            <svg class="icon-sm"><use xlink:href="#icon-logout"></use></svg>
+            התנתק
+        </a>
     </div>
 </aside>
 
@@ -255,6 +251,9 @@
     </symbol>
     <symbol id="icon-enter" viewBox="0 0 24 24">
         <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 10l5-5m0 0h-4m4 0v4m1 7H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
+    </symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14l5-5l-5-5m5 5H9"/>
     </symbol>
 </svg>
 
@@ -418,6 +417,41 @@
 .selected-item-container.active {
     display: block;
 }
+
+/* Logout Button */
+.btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-logout svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-footer {
+    padding: 15px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: auto;
+}
 </style>
 
 <script>
@@ -568,4 +602,11 @@ function wrapWithActiveState(originalFunc, itemId) {
 // window.loadCustomers = wrapWithActiveState(window.loadCustomers, 'customersItem');
 
 console.log('✨ מנגנון Sidebar Active State אותחל בהצלחה - גרסה 2.0.0');
+
+/**
+ * אישור התנתקות
+ */
+function confirmLogout() {
+    return confirm('האם אתה בטוח שברצונך להתנתק?');
+}
 </script>

@@ -8,6 +8,8 @@
     height: calc(100vh - 160px);
     overflow-y: auto;
     transition: var(--transition);
+    display: flex;
+    flex-direction: column;
 }
 
 .dashboard-sidebar.collapsed {
@@ -190,10 +192,22 @@
     color: var(--text-secondary);
 }
 
-/* Sidebar Footer */
+/* Sidebar Content - scrollable area */
+.hierarchy-levels,
+.management-section,
+.system-management-section {
+    flex-shrink: 0;
+}
+
+/* Sidebar Footer - sticky at bottom */
 .sidebar-footer {
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-color);
+    margin-top: auto;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    position: sticky;
+    bottom: 0;
 }
 
 .dashboard-sidebar.collapsed .sidebar-footer {
@@ -284,6 +298,7 @@
 
     .sidebar-header {
         padding: 1rem;
+        flex-shrink: 0;
     }
 
     .hierarchy-levels {
@@ -296,5 +311,21 @@
 
     .sidebar-footer {
         padding: 1rem;
+        position: sticky;
+        bottom: 0;
+        background: var(--bg-secondary);
+        z-index: 10;
+    }
+}
+
+/* Mobile - ensure logout button is always visible */
+@media (max-width: 480px) {
+    .sidebar-footer {
+        padding: 12px;
+    }
+
+    .btn-logout {
+        padding: 10px 14px;
+        font-size: 13px;
     }
 }

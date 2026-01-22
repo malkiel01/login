@@ -48,7 +48,7 @@ class FileExplorer {
                         </button>
 
                         <!-- כפתור העלאה מהיר (מובייל) -->
-                        <button type="button" class="explorer-btn primary explorer-mobile-only" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
+                        <button type="button" class="explorer-btn explorer-mobile-only" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
                             <i class="fas fa-plus"></i>
                         </button>
 

@@ -121,6 +121,21 @@
     border: 1px solid #e5e7eb;
 }
 
+/* Advanced Panel Header */
+.us-advanced-header {
+    display: none; /* מוסתר בדסקטופ */
+}
+
+.us-advanced-title {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
 /* Filters Container */
 .us-filters-container {
     display: grid;
@@ -285,6 +300,11 @@ mark {
         width: 100%;
         max-width: 100vw;
         box-sizing: border-box;
+    }
+
+    /* הצג כותרת במובייל */
+    .us-advanced-header {
+        display: block;
     }
 
     .us-filters-container {

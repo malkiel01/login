@@ -209,6 +209,9 @@ class UniversalSearch {
                 <!-- פילטרים מתקדמים -->
                 ${this.config.display.showAdvanced ? `
                 <div class="us-advanced-panel" style="display: none;">
+                    <div class="us-advanced-header">
+                        <h3 class="us-advanced-title">חיפוש מתקדם</h3>
+                    </div>
                     <div class="us-filters-container">
                         ${this.buildFiltersHTML()}
                     </div>

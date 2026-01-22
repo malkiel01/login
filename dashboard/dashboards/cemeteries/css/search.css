@@ -205,3 +205,86 @@
     transition: all 0.3s ease;
     max-height: 500px; /* גובה מקסימלי לאנימציה */
 }
+
+/* ====================================
+   Search Section - Mobile Styles
+   ==================================== */
+@media screen and (max-width: 768px) {
+    .search-section {
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 6px;
+    }
+
+    .search-section-header {
+        margin-bottom: 8px;
+    }
+
+    .search-section-title {
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    .search-section-title svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .btn-collapse-search {
+        padding: 4px 8px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .btn-collapse-search svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* הסתר טקסט בכפתור, השאר אייקון */
+    .btn-collapse-search span {
+        display: none;
+    }
+
+    .search-input {
+        padding: 10px 12px;
+        padding-right: 38px;
+        font-size: 14px;
+    }
+
+    .search-counter {
+        margin-top: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 6px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .search-section {
+        margin-bottom: 8px;
+        padding: 8px;
+        border-radius: 4px;
+    }
+
+    .search-section-header {
+        margin-bottom: 6px;
+    }
+
+    .search-section-title {
+        font-size: 12px;
+    }
+
+    .search-input {
+        padding: 8px 10px;
+        padding-right: 35px;
+        font-size: 14px;
+        border-radius: 6px;
+    }
+
+    .search-icon {
+        width: 16px;
+        height: 16px;
+        right: 10px;
+    }
+}

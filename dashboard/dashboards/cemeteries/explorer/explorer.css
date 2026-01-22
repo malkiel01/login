@@ -808,8 +808,8 @@
     /* גובה ורוחב מותאמים למובייל - מניעת overflow */
     .file-explorer {
         height: auto;
-        min-height: 250px;
-        max-height: 350px;
+        min-height: 320px;
+        max-height: 400px;
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
@@ -1032,7 +1032,8 @@
    ======================================== */
 @media screen and (max-width: 480px) {
     .file-explorer {
-        max-height: 300px;
+        min-height: 280px;
+        max-height: 350px;
         min-width: 0 !important;
     }
 

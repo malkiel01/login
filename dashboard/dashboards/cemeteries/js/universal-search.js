@@ -161,6 +161,22 @@ class UniversalSearch {
         
         // HTML Structure
         const html = `
+            <!-- כותרת סקשן חיפוש עם כפתור צימצום -->
+            <div class="search-section-header">
+                <div class="search-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <span>חיפוש מתקדם</span>
+                </div>
+                <button class="btn-collapse-search" onclick="UniversalSearch.toggleSearchSection(this)" title="צמצם חיפוש">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                    <span>צמצם</span>
+                </button>
+            </div>
             <div class="us-search-wrapper ${this.config.display.layout}">
                 <!-- שדה חיפוש ראשי -->
                 <div class="us-main-search">
@@ -851,10 +867,110 @@ UniversalSearch.prototype.loadNextPage = async function() {
     if (this.state.currentPage >= this.state.totalPages) {
         return false;
     }
-    
+
     this.state.currentPage++;
     await this.search();
     return true;
+};
+
+/**
+ * צמצום/הרחבה של סקשן החיפוש (static method)
+ * @param {HTMLElement} btn - הכפתור שנלחץ
+ */
+UniversalSearch.toggleSearchSection = function(btn) {
+    const searchSection = btn.closest('.search-section');
+    if (!searchSection) return;
+
+    const isCollapsed = searchSection.classList.toggle('collapsed');
+
+    // עדכון כפתור הצמצום
+    const btnText = btn.querySelector('span');
+    const btnIcon = btn.querySelector('svg');
+
+    if (isCollapsed) {
+        if (btnText) btnText.textContent = 'הרחב';
+        if (btnIcon) btnIcon.style.transform = 'rotate(180deg)';
+    } else {
+        if (btnText) btnText.textContent = 'צמצם';
+        if (btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+    }
+
+    // עדכון כפתור "הצג חיפוש" בשורת הפעולות
+    const showSearchBtn = document.querySelector('.btn-show-search');
+    if (showSearchBtn) {
+        showSearchBtn.classList.toggle('visible', isCollapsed);
+    }
+
+    // שמירה ב-localStorage
+    const entityType = searchSection.id.replace('SearchSection', '');
+    const storageKey = 'searchSectionCollapsed';
+    const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    collapsedSections[entityType] = isCollapsed;
+    localStorage.setItem(storageKey, JSON.stringify(collapsedSections));
+};
+
+/**
+ * הרחבת סקשן החיפוש (קריאה מכפתור "הצג חיפוש")
+ * @param {string} entityType - סוג היישות
+ */
+UniversalSearch.expandSearchSection = function(entityType) {
+    const searchSection = document.getElementById(entityType + 'SearchSection');
+    if (!searchSection) return;
+
+    // הרחב את הסקשן
+    searchSection.classList.remove('collapsed');
+
+    // עדכון כפתור הצמצום בתוך הסקשן
+    const collapseBtn = searchSection.querySelector('.btn-collapse-search');
+    if (collapseBtn) {
+        const btnText = collapseBtn.querySelector('span');
+        const btnIcon = collapseBtn.querySelector('svg');
+        if (btnText) btnText.textContent = 'צמצם';
+        if (btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+    }
+
+    // הסתר כפתור "הצג חיפוש"
+    const showSearchBtn = document.querySelector('.btn-show-search');
+    if (showSearchBtn) {
+        showSearchBtn.classList.remove('visible');
+    }
+
+    // עדכון localStorage
+    const storageKey = 'searchSectionCollapsed';
+    const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    collapsedSections[entityType] = false;
+    localStorage.setItem(storageKey, JSON.stringify(collapsedSections));
+};
+
+/**
+ * טעינת מצב שמור של סקשן החיפוש
+ * @param {string} entityType - סוג היישות
+ */
+UniversalSearch.loadSearchSectionState = function(entityType) {
+    const storageKey = 'searchSectionCollapsed';
+    const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+    if (collapsedSections[entityType]) {
+        const searchSection = document.getElementById(entityType + 'SearchSection');
+        if (searchSection) {
+            searchSection.classList.add('collapsed');
+
+            // עדכון כפתור הצמצום
+            const collapseBtn = searchSection.querySelector('.btn-collapse-search');
+            if (collapseBtn) {
+                const btnText = collapseBtn.querySelector('span');
+                const btnIcon = collapseBtn.querySelector('svg');
+                if (btnText) btnText.textContent = 'הרחב';
+                if (btnIcon) btnIcon.style.transform = 'rotate(180deg)';
+            }
+
+            // הצג כפתור "הצג חיפוש"
+            const showSearchBtn = document.querySelector('.btn-show-search');
+            if (showSearchBtn) {
+                showSearchBtn.classList.add('visible');
+            }
+        }
+    }
 };
 
 // הפוך לגלובלי

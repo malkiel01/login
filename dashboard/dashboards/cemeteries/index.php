@@ -119,6 +119,13 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                         <span class="entity-subtitle" id="entitySubtitle"></span>
                     </div>
                     <div class="action-buttons">
+                        <button class="btn-show-search" onclick="UniversalSearch.expandSearchSection(window.currentType || 'cemetery')" title="הצג חיפוש">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>חיפוש</span>
+                        </button>
                         <button class="btn btn-secondary" onclick="refreshData()">
                             <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
                             רענון

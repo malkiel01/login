@@ -439,10 +439,38 @@
 function handleSidebarClick(itemId, callbackFunction) {
     // קריאה לפונקציה שמעדכנת את המצב הויזואלי
     setActiveSidebarItem(itemId);
-    
+
     // קריאה לפונקציה המקורית
     if (typeof callbackFunction === 'function') {
         callbackFunction();
+    }
+
+    // סגירת הסיידבר במובייל/טאבלט אחרי לחיצה על פריט
+    closeSidebarOnMobile();
+}
+
+/**
+ * סוגר את הסיידבר במובייל/טאבלט
+ */
+function closeSidebarOnMobile() {
+    // בדוק אם אנחנו במסך קטן (768px ומטה)
+    if (window.innerWidth <= 768) {
+        const sidebar = document.getElementById('dashboardSidebar');
+        if (sidebar && sidebar.classList.contains('open')) {
+            // השתמש בפונקציה הגלובלית שסוגרת גם את ה-overlay
+            if (typeof closeSidebar === 'function') {
+                closeSidebar();
+            } else {
+                // fallback אם הפונקציה לא זמינה
+                sidebar.classList.remove('open');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (overlay) {
+                    overlay.classList.remove('active');
+                }
+                document.body.style.overflow = '';
+            }
+            console.log('📱 סיידבר נסגר אוטומטית במובייל');
+        }
     }
 }
 

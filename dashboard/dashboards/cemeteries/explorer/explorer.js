@@ -31,6 +31,7 @@ class FileExplorer {
         this.draggedIsDir = false; // האם הפריט הנגרר הוא תיקייה
         this.draggedItems = []; // מערך פריטים נגררים (לבחירה מרובה)
         this.longPressTimer = null; // טיימר ללחיצה ארוכה במובייל
+        this.isMobileDragging = false; // האם בגרירת touch במובייל
         this.render();
         this.loadFiles();
         this.setupDragDrop();
@@ -732,8 +733,8 @@ class FileExplorer {
 
         ['dragenter', 'dragover'].forEach(eventName => {
             content.addEventListener(eventName, () => {
-                // סמן drag-over רק אם זו גרירה מבחוץ (לא גרירה פנימית)
-                if (!this.draggedItemPath) {
+                // סמן drag-over רק אם זו גרירה מבחוץ (לא גרירה פנימית של דסקטופ או מובייל)
+                if (!this.draggedItemPath && !this.isMobileDragging) {
                     content.classList.add('drag-over');
                 }
             });
@@ -797,6 +798,7 @@ class FileExplorer {
         this.draggedItemPath = null;
         this.draggedIsDir = false;
         this.draggedItems = [];
+        this.isMobileDragging = false;
 
         // הסר סימון גרירה מכל הפריטים
         this.container.querySelectorAll('.explorer-item.dragging').forEach(item => {
@@ -909,64 +911,115 @@ class FileExplorer {
 
     // ========================================
     // גרירה במובייל (Touch Events)
+    // לחיצה ארוכה = תפריט קונטקסט
+    // לחיצה כפולה + המשך לחיצה = גרירה
     // ========================================
 
     setupMobileDrag() {
-        let touchStartTime = 0;
         let touchStartX = 0;
         let touchStartY = 0;
-        let draggedEl = null;
+        let lastTapTime = 0;
+        let lastTapItem = null;
         let dragClone = null;
-        const LONG_PRESS_DURATION = 500; // מילישניות
+        let isWaitingForSecondTap = false;
+        let currentTouchItem = null;
+        const LONG_PRESS_DURATION = 500; // מילישניות - לתפריט קונטקסט
+        const DOUBLE_TAP_DELAY = 300; // מילישניות - לזיהוי לחיצה כפולה
+        const DRAG_START_DELAY = 150; // מילישניות - להתחלת גרירה אחרי לחיצה כפולה
 
         this.contentEl.addEventListener('touchstart', (e) => {
             const item = e.target.closest('.explorer-item');
             if (!item) return;
 
-            touchStartTime = Date.now();
+            const currentTime = Date.now();
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
+            currentTouchItem = item;
 
-            // טיימר ללחיצה ארוכה
-            this.longPressTimer = setTimeout(() => {
-                // התחל גרירה
-                draggedEl = item;
-                const path = item.dataset.path;
-                const isDir = item.dataset.isDir === 'true';
+            // בדוק אם זו לחיצה כפולה על אותו פריט
+            const isDoubleTap = (currentTime - lastTapTime < DOUBLE_TAP_DELAY) && (lastTapItem === item);
 
-                this.draggedItemPath = path;
-                this.draggedIsDir = isDir;
-                this.draggedItems = this.selectedItems.length > 1 && this.selectedItems.includes(path)
-                    ? [...this.selectedItems]
-                    : [path];
+            if (isDoubleTap) {
+                // לחיצה כפולה - התכונן לגרירה אם ממשיכים ללחוץ
+                isWaitingForSecondTap = false;
 
-                item.classList.add('dragging');
+                this.longPressTimer = setTimeout(() => {
+                    // התחל גרירה (לחיצה כפולה + המשך לחיצה)
+                    const path = item.dataset.path;
+                    const isDir = item.dataset.isDir === 'true';
 
-                // צור clone לגרירה
-                dragClone = item.cloneNode(true);
-                dragClone.classList.add('drag-clone');
-                dragClone.style.position = 'fixed';
-                dragClone.style.pointerEvents = 'none';
-                dragClone.style.opacity = '0.8';
-                dragClone.style.zIndex = '10000';
-                dragClone.style.width = item.offsetWidth + 'px';
-                document.body.appendChild(dragClone);
+                    this.draggedItemPath = path;
+                    this.draggedIsDir = isDir;
+                    this.draggedItems = this.selectedItems.length > 1 && this.selectedItems.includes(path)
+                        ? [...this.selectedItems]
+                        : [path];
 
-                // רטט (אם נתמך)
-                if (navigator.vibrate) {
-                    navigator.vibrate(50);
-                }
-            }, LONG_PRESS_DURATION);
+                    item.classList.add('dragging');
+
+                    // צור clone לגרירה
+                    dragClone = item.cloneNode(true);
+                    dragClone.classList.add('drag-clone');
+                    dragClone.style.position = 'fixed';
+                    dragClone.style.pointerEvents = 'none';
+                    dragClone.style.opacity = '0.8';
+                    dragClone.style.zIndex = '10000';
+                    dragClone.style.width = item.offsetWidth + 'px';
+                    dragClone.style.left = (touchStartX - 30) + 'px';
+                    dragClone.style.top = (touchStartY - 30) + 'px';
+                    document.body.appendChild(dragClone);
+
+                    // סמן שאנחנו בגרירת מובייל
+                    this.isMobileDragging = true;
+
+                    // רטט (אם נתמך)
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                }, DRAG_START_DELAY);
+
+                lastTapTime = 0;
+                lastTapItem = null;
+            } else {
+                // לחיצה ראשונה - טיימר לתפריט קונטקסט
+                isWaitingForSecondTap = true;
+                lastTapTime = currentTime;
+                lastTapItem = item;
+
+                this.longPressTimer = setTimeout(() => {
+                    // לחיצה ארוכה - פתח תפריט קונטקסט
+                    if (isWaitingForSecondTap) {
+                        const path = item.dataset.path;
+                        const name = item.dataset.name;
+                        const isDir = item.dataset.isDir === 'true';
+
+                        // רטט קצר
+                        if (navigator.vibrate) {
+                            navigator.vibrate(30);
+                        }
+
+                        // הצג תפריט קונטקסט
+                        this.showContextMenu({
+                            preventDefault: () => {},
+                            stopPropagation: () => {},
+                            clientX: touchStartX,
+                            clientY: touchStartY
+                        }, path, name, isDir);
+
+                        isWaitingForSecondTap = false;
+                    }
+                }, LONG_PRESS_DURATION);
+            }
         }, { passive: true });
 
         this.contentEl.addEventListener('touchmove', (e) => {
-            // אם זז יותר מדי לפני לחיצה ארוכה - בטל
+            // אם זז יותר מדי - בטל טיימרים
             if (this.longPressTimer && !dragClone) {
                 const moveX = Math.abs(e.touches[0].clientX - touchStartX);
                 const moveY = Math.abs(e.touches[0].clientY - touchStartY);
                 if (moveX > 10 || moveY > 10) {
                     clearTimeout(this.longPressTimer);
                     this.longPressTimer = null;
+                    isWaitingForSecondTap = false;
                 }
             }
 
@@ -1005,9 +1058,10 @@ class FileExplorer {
                 const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
                 const folderBelow = elemBelow?.closest('.explorer-item.is-folder');
 
-                // הסר את ה-clone
+                // הסר את ה-clone וסמן שסיימנו גרירת מובייל
                 dragClone.remove();
                 dragClone = null;
+                this.isMobileDragging = false;
 
                 if (folderBelow && !this.draggedItems.includes(folderBelow.dataset.path)) {
                     // העבר לתיקייה
@@ -1017,16 +1071,20 @@ class FileExplorer {
                     this.handleDragEnd(e);
                 }
             }
+
+            isWaitingForSecondTap = false;
         });
 
         this.contentEl.addEventListener('touchcancel', () => {
             clearTimeout(this.longPressTimer);
             this.longPressTimer = null;
+            isWaitingForSecondTap = false;
 
             if (dragClone) {
                 dragClone.remove();
                 dragClone = null;
             }
+            this.isMobileDragging = false;
             this.handleDragEnd({});
         });
     }

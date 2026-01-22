@@ -442,10 +442,18 @@ class EntityManager {
         
         // ✅ יצירת instance
         const searchInstance = await window.initUniversalSearch(searchConfig);
-        
+
         // שמירה ב-state
         entityState.setSearchInstance(entityType, searchInstance);
-        
+
+        // ✅ טעינת מצב מכווץ שמור (למסכים גדולים)
+        if (typeof UniversalSearch.loadSearchSectionState === 'function') {
+            // המתן קצת כדי שה-DOM יסתיים
+            setTimeout(() => {
+                UniversalSearch.loadSearchSectionState(entityType);
+            }, 100);
+        }
+
         return searchInstance;
     }
 

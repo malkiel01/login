@@ -107,3 +107,110 @@
     color: #6b7280;
     font-size: 14px;
 }
+
+/* ====================================
+   Search Section Collapse Feature
+   ==================================== */
+
+/* כפתור צימצום בתוך סקשן החיפוש */
+.search-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.search-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-section-title svg {
+    width: 18px;
+    height: 18px;
+    color: #6b7280;
+}
+
+.btn-collapse-search {
+    display: none; /* ברירת מחדל - מוסתר */
+    padding: 6px 12px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #6b7280;
+    transition: all 0.2s ease;
+    gap: 6px;
+    align-items: center;
+}
+
+.btn-collapse-search:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-collapse-search svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+}
+
+/* הצג כפתור צימצום רק במסכים גדולים */
+@media screen and (min-width: 769px) {
+    .btn-collapse-search {
+        display: inline-flex;
+    }
+}
+
+/* מצב מכווץ של סקשן החיפוש */
+.search-section.collapsed {
+    max-height: 0;
+    padding: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+/* כפתור הצג חיפוש בשורת הפעולות */
+.btn-show-search {
+    display: none; /* ברירת מחדל - מוסתר */
+    padding: 8px 16px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+    transition: all 0.2s ease;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-show-search:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+}
+
+.btn-show-search svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* הצג כפתור "הצג חיפוש" כשהסקשן מכווץ - רק במסכים גדולים */
+@media screen and (min-width: 769px) {
+    .btn-show-search.visible {
+        display: inline-flex;
+    }
+}
+
+/* אנימציה לסקשן החיפוש */
+.search-section {
+    transition: all 0.3s ease;
+    max-height: 500px; /* גובה מקסימלי לאנימציה */
+}

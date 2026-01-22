@@ -4,18 +4,8 @@
  * Map Editor v2
  */
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-// Handle preflight
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
-require_once dirname(__DIR__) . '/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 // Entity type to table mapping
 $entityTables = [

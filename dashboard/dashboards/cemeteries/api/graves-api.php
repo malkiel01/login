@@ -1,10 +1,11 @@
 <?php
 /*
  * File: api/graves-api.php
- * Version: 1.0.1
- * Updated: 2025-10-29
+ * Version: 1.0.2
+ * Updated: 2026-01-22
  * Author: Malkiel
  * Change Summary:
+ * - v1.0.2: הוספת אימות והרשאות
  * - v1.0.1: התאמה למבנה הטבלה האמיתי
  *   - graveNameHe (לא graveNumber)
  *   - graveStatus (1=פנוי, 2=נרכש, 3=קבור, 4=שמור)
@@ -12,12 +13,8 @@
  * - v1.0.0: יצירת API עם pagination
  */
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
-
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 try {
     $pdo = getDBConnection();

@@ -6,10 +6,8 @@
  *        ?id=19671 (single mode)
  */
 
-header('Content-Type: application/json; charset=utf-8');
-
-// Load config and DB connection
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 try {
     $pdo = getDBConnection();

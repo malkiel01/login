@@ -4,13 +4,8 @@
  // API לניהול מדינות
  // ========================================
 
- header('Content-Type: application/json; charset=utf-8');
- header('Access-Control-Allow-Origin: *');
- header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
- header('Access-Control-Allow-Headers: Content-Type');
-
- // חיבור לבסיס נתונים
- require_once dirname(__DIR__) . '/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
  try {
      $pdo = getDBConnection();

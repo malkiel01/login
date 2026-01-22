@@ -4,10 +4,8 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/functions.php';
 
-// בדיקת הרשאות
-if (!checkPermission('view', 'cemetery')) {
-    die('אין לך הרשאה לצפות בעמוד זה');
-}
+// בדיקת הרשאות - רק cemetery_manager או admin יכולים לגשת
+requireDashboard(['cemetery_manager', 'admin']);
 ?>
 <?php
 // טען את הקונפיג תשלומים

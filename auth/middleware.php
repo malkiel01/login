@@ -1,0 +1,344 @@
+<?php
+/**
+ * Auth Middleware - מערכת הרשאות מרכזית
+ *
+ * שימוש:
+ * require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/middleware.php';
+ *
+ * // בדיקה בסיסית - רק שהמשתמש מחובר
+ * requireAuth();
+ *
+ * // בדיקה עם הרשאה ספציפית
+ * requireAuth('view_graves');
+ *
+ * // בדיקה עם סוג דשבורד מסוים
+ * requireDashboard('cemetery_manager');
+ *
+ * // בדיקה עם מספר סוגי דשבורד (OR)
+ * requireDashboard(['cemetery_manager', 'admin']);
+ *
+ * @version 1.0.0
+ * @author Malkiel
+ */
+
+// התחל session אם לא התחיל
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// טען את הקונפיג הראשי
+if (!function_exists('getDBConnection')) {
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+}
+
+// טען את הגדרות הדשבורדים
+if (!defined('DASHBOARD_TYPES')) {
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/config.php';
+}
+
+/**
+ * בדיקה האם המשתמש מחובר
+ * @return bool
+ */
+function isLoggedIn(): bool {
+    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+/**
+ * קבלת מזהה המשתמש הנוכחי
+ * @return int|null
+ */
+function getCurrentUserId(): ?int {
+    return $_SESSION['user_id'] ?? null;
+}
+
+/**
+ * קבלת סוג הדשבורד של המשתמש
+ * @param int|null $userId - אם לא צוין, ישתמש במשתמש הנוכחי
+ * @return string
+ */
+function getUserDashboardType(?int $userId = null): string {
+    // אם כבר שמור ב-session
+    if ($userId === null && isset($_SESSION['dashboard_type'])) {
+        return $_SESSION['dashboard_type'];
+    }
+
+    $userId = $userId ?? getCurrentUserId();
+    if (!$userId) {
+        return 'default';
+    }
+
+    try {
+        $pdo = getDBConnection();
+
+        // בדוק אם הטבלה קיימת
+        $stmt = $pdo->prepare("SHOW TABLES LIKE 'user_permissions'");
+        $stmt->execute();
+        if ($stmt->rowCount() === 0) {
+            return 'default';
+        }
+
+        $stmt = $pdo->prepare("
+            SELECT dashboard_type
+            FROM user_permissions
+            WHERE user_id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $dashboardType = $result['dashboard_type'] ?? 'default';
+
+        // שמור ב-session למהירות
+        if ($userId === getCurrentUserId()) {
+            $_SESSION['dashboard_type'] = $dashboardType;
+        }
+
+        return $dashboardType;
+
+    } catch (Exception $e) {
+        error_log("Auth middleware error: " . $e->getMessage());
+        return 'default';
+    }
+}
+
+/**
+ * קבלת רשימת ההרשאות של המשתמש
+ * @return array
+ */
+function getUserPermissions(): array {
+    $dashboardType = getUserDashboardType();
+    return DASHBOARD_TYPES[$dashboardType]['permissions'] ?? [];
+}
+
+/**
+ * בדיקה האם למשתמש יש הרשאה מסוימת
+ * @param string $permission
+ * @return bool
+ */
+function hasPermission(string $permission): bool {
+    if (!isLoggedIn()) {
+        return false;
+    }
+
+    $permissions = getUserPermissions();
+
+    // admin עם view_all/edit_all/delete_all מקבל הכל
+    if (in_array('view_all', $permissions) && strpos($permission, 'view') !== false) {
+        return true;
+    }
+    if (in_array('edit_all', $permissions) && strpos($permission, 'edit') !== false) {
+        return true;
+    }
+    if (in_array('delete_all', $permissions) && strpos($permission, 'delete') !== false) {
+        return true;
+    }
+
+    return in_array($permission, $permissions);
+}
+
+/**
+ * בדיקה האם המשתמש הוא מסוג דשבורד מסוים
+ * @param string|array $allowedTypes - סוג או רשימת סוגים
+ * @return bool
+ */
+function hasDashboardType($allowedTypes): bool {
+    if (!isLoggedIn()) {
+        return false;
+    }
+
+    $userType = getUserDashboardType();
+
+    // admin תמיד עובר
+    if ($userType === 'admin') {
+        return true;
+    }
+
+    if (is_array($allowedTypes)) {
+        return in_array($userType, $allowedTypes);
+    }
+
+    return $userType === $allowedTypes;
+}
+
+/**
+ * דרישת התחברות - מפנה ל-login אם לא מחובר
+ * @param string|null $requiredPermission - הרשאה נדרשת (אופציונלי)
+ * @param bool $isApi - האם זו קריאת API (מחזיר JSON במקום redirect)
+ */
+function requireAuth(?string $requiredPermission = null, bool $isApi = false): void {
+    // בדוק התחברות
+    if (!isLoggedIn()) {
+        if ($isApi) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Unauthorized',
+                'message' => 'נדרשת התחברות למערכת'
+            ]);
+            exit;
+        }
+
+        // שמור את ה-URL הנוכחי לחזרה אחרי login
+        $currentUrl = $_SERVER['REQUEST_URI'] ?? '/dashboard';
+        $_SESSION['redirect_after_login'] = $currentUrl;
+
+        header('Location: /auth/login.php');
+        exit;
+    }
+
+    // בדוק הרשאה ספציפית אם נדרשה
+    if ($requiredPermission !== null && !hasPermission($requiredPermission)) {
+        if ($isApi) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Forbidden',
+                'message' => 'אין לך הרשאה לפעולה זו'
+            ]);
+            exit;
+        }
+
+        http_response_code(403);
+        die('
+        <!DOCTYPE html>
+        <html dir="rtl" lang="he">
+        <head>
+            <meta charset="UTF-8">
+            <title>אין הרשאה</title>
+            <style>
+                body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f3f4f6; margin: 0; }
+                .box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+                h1 { color: #dc2626; margin-bottom: 10px; }
+                p { color: #6b7280; }
+                a { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; }
+                a:hover { background: #5a67d8; }
+            </style>
+        </head>
+        <body>
+            <div class="box">
+                <h1>🚫 אין הרשאה</h1>
+                <p>אין לך הרשאה לצפות בדף זה.</p>
+                <p>הרשאה נדרשת: <strong>' . htmlspecialchars($requiredPermission) . '</strong></p>
+                <a href="/dashboard">חזרה לדשבורד</a>
+            </div>
+        </body>
+        </html>
+        ');
+    }
+}
+
+/**
+ * דרישת סוג דשבורד מסוים
+ * @param string|array $allowedTypes - סוג או רשימת סוגים מותרים
+ * @param bool $isApi - האם זו קריאת API
+ */
+function requireDashboard($allowedTypes, bool $isApi = false): void {
+    requireAuth(null, $isApi);
+
+    if (!hasDashboardType($allowedTypes)) {
+        $allowedStr = is_array($allowedTypes) ? implode(', ', $allowedTypes) : $allowedTypes;
+
+        if ($isApi) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Forbidden',
+                'message' => 'אין לך הרשאה לדשבורד זה'
+            ]);
+            exit;
+        }
+
+        http_response_code(403);
+        die('
+        <!DOCTYPE html>
+        <html dir="rtl" lang="he">
+        <head>
+            <meta charset="UTF-8">
+            <title>אין הרשאה</title>
+            <style>
+                body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f3f4f6; margin: 0; }
+                .box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+                h1 { color: #dc2626; margin-bottom: 10px; }
+                p { color: #6b7280; }
+                a { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; }
+                a:hover { background: #5a67d8; }
+            </style>
+        </head>
+        <body>
+            <div class="box">
+                <h1>🚫 אין הרשאה</h1>
+                <p>אין לך הרשאה לדשבורד זה.</p>
+                <p>נדרש: <strong>' . htmlspecialchars($allowedStr) . '</strong></p>
+                <a href="/dashboard">חזרה לדשבורד</a>
+            </div>
+        </body>
+        </html>
+        ');
+    }
+}
+
+/**
+ * דרישת התחברות עבור API (קיצור)
+ * @param string|null $requiredPermission
+ */
+function requireApiAuth(?string $requiredPermission = null): void {
+    requireAuth($requiredPermission, true);
+}
+
+/**
+ * דרישת סוג דשבורד עבור API (קיצור)
+ * @param string|array $allowedTypes
+ */
+function requireApiDashboard($allowedTypes): void {
+    requireDashboard($allowedTypes, true);
+}
+
+/**
+ * בדיקת הרשאה עבור פעולה ומודול ספציפיים
+ * (פונקציה תואמת לקוד הקיים בדשבורד בתי עלמין)
+ * @param string $action - פעולה (view, edit, delete)
+ * @param string $module - מודול (cemetery, grave, customer, etc.)
+ * @return bool
+ */
+function checkPermission(string $action, string $module = 'cemetery'): bool {
+    if (!isLoggedIn()) {
+        return false;
+    }
+
+    // מיפוי פעולות להרשאות
+    $permissionMap = [
+        'view' => 'view_' . $module,
+        'edit' => 'edit_' . $module,
+        'delete' => 'delete_' . $module,
+        'manage' => 'manage_' . $module
+    ];
+
+    $permission = $permissionMap[$action] ?? $action . '_' . $module;
+
+    // בדוק הרשאה ספציפית
+    if (hasPermission($permission)) {
+        return true;
+    }
+
+    // בדוק הרשאות כלליות (view_graves, edit_graves וכו')
+    $generalPermissions = [
+        'view' => ['view_graves', 'view_all'],
+        'edit' => ['edit_graves', 'edit_all'],
+        'delete' => ['delete_all'],
+        'manage' => ['manage_burials', 'manage_families', 'manage_users']
+    ];
+
+    $userPermissions = getUserPermissions();
+
+    foreach ($generalPermissions[$action] ?? [] as $generalPerm) {
+        if (in_array($generalPerm, $userPermissions)) {
+            return true;
+        }
+    }
+
+    return false;
+}

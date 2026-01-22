@@ -2,12 +2,8 @@
 // dashboards/cemeteries/api/locations-api.php
 // API לניהול מדינות וערים
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
-header('Access-Control-Allow-Headers: Content-Type');
-
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 try {
     $pdo = getDBConnection();

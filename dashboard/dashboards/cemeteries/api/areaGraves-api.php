@@ -13,11 +13,8 @@
  * - v1.0.0: גרסה ראשונית - API בסיסי
  */
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
-
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 // =====================================
 // 1️⃣ קבלת נתוני POST/GET
@@ -46,11 +43,6 @@ if ($postData && isset($postData['action'])) {
 
 // ⭐ $id תמיד מגיע רק מ-GET (גם בעריכה וגם במחיקה)
 $id = $_GET['id'] ?? null;
-
-// =====================================
-// 2️⃣ חיבור למסד נתונים
-// =====================================
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 try {
     $pdo = getDBConnection();

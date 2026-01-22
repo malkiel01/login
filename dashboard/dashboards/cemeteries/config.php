@@ -5,6 +5,9 @@
 // טוען את הקונפיג הראשי של הפרויקט
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 
+// טוען את מערכת ההרשאות המרכזית
+require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/middleware.php';
+
 // הגדרות ספציפיות לדשבורד בתי העלמין
 define('DASHBOARD_NAME', 'ניהול בתי עלמין');
 define('DASHBOARD_VERSION', '1.0.0');
@@ -120,11 +123,8 @@ function formatGraveLocation($cemetery, $block, $plot, $row, $area, $grave) {
     return implode(' ← ', $parts);
 }
 
-// בדיקת הרשאות למשתמש (אם יש מערכת משתמשים)
-function checkPermission($action, $module = 'cemetery') {
-    // TODO: להוסיף בדיקת הרשאות אמיתית
-    return true;
-}
+// פונקציית checkPermission מוגדרת כעת ב-/auth/middleware.php
+// ומאפשרת בדיקת הרשאות אמיתית מול מסד הנתונים
 
 // לוג פעולות
 function logActivity($action, $module, $itemId, $details = []) {

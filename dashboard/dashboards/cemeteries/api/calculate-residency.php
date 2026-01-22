@@ -22,8 +22,8 @@
  * 3 = תושב חו"ל
  */
 
-header('Content-Type: application/json; charset=utf-8');
-require_once dirname(__DIR__) . '/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 /**
  * המרת ערך תושבות (טקסט או מספר) למספר

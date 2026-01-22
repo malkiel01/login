@@ -1,6 +1,6 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
-require_once dirname(__DIR__) . '/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 try {
     $countryId = $_GET['countryId'] ?? null;

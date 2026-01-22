@@ -2,10 +2,8 @@
 // dashboard/dashboards/cemeteries/api/residency-api.php
 // API לניהול הגדרות תושבות
 
-header('Content-Type: application/json; charset=utf-8');
-
-// כלול את קובץ ההגדרות
-require_once dirname(__DIR__) . '/config.php';
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 // פעולה מבוקשת
 $action = $_GET['action'] ?? '';

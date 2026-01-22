@@ -15,8 +15,8 @@
  * - v1.0.0: גרסה ראשונית
  */
 
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-cache, must-revalidate');
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
 // פונקציה לשליחת תשובת error
 function sendError($message, $code = 400, $details = null) {

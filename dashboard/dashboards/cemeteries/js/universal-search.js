@@ -942,10 +942,16 @@ UniversalSearch.prototype.loadNextPage = async function() {
  * @param {HTMLElement} btn - הכפתור שנלחץ
  */
 UniversalSearch.toggleSearchSection = function(btn) {
+    console.log('🔍 toggleSearchSection called');
+
     const searchSection = btn.closest('.search-section');
-    if (!searchSection) return;
+    if (!searchSection) {
+        console.error('❌ search-section not found!');
+        return;
+    }
 
     const isCollapsed = searchSection.classList.toggle('collapsed');
+    console.log('🔍 isCollapsed:', isCollapsed, 'searchSection id:', searchSection.id);
 
     // עדכון כפתור הצמצום
     const btnText = btn.querySelector('span');
@@ -961,8 +967,12 @@ UniversalSearch.toggleSearchSection = function(btn) {
 
     // עדכון כפתור "הצג חיפוש" בשורת הפעולות
     const showSearchBtn = document.querySelector('.btn-show-search');
+    console.log('🔍 showSearchBtn found:', !!showSearchBtn);
     if (showSearchBtn) {
         showSearchBtn.classList.toggle('visible', isCollapsed);
+        console.log('🔍 showSearchBtn classes:', showSearchBtn.className);
+    } else {
+        console.error('❌ btn-show-search not found in DOM!');
     }
 
     // שמירה ב-localStorage
@@ -1011,9 +1021,14 @@ UniversalSearch.expandSearchSection = function(entityType) {
  * @param {string} entityType - סוג היישות
  */
 UniversalSearch.loadSearchSectionState = function(entityType) {
+    console.log('📦 loadSearchSectionState called for:', entityType);
+
     const storageKey = 'searchSectionCollapsed';
     const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '{}');
     const isMobile = window.innerWidth <= 768;
+
+    console.log('📦 collapsedSections:', collapsedSections);
+    console.log('📦 isMobile:', isMobile);
 
     // במסכים קטנים - ברירת מחדל מכווץ (אלא אם נשמר אחרת)
     // במסכים גדולים - ברירת מחדל פתוח (אלא אם נשמר אחרת)
@@ -1021,8 +1036,15 @@ UniversalSearch.loadSearchSectionState = function(entityType) {
         ? collapsedSections[entityType]
         : isMobile; // ברירת מחדל: מכווץ במובייל, פתוח בדסקטופ
 
+    console.log('📦 shouldCollapse:', shouldCollapse);
+
+    const searchSection = document.getElementById(entityType + 'SearchSection');
+    const showSearchBtn = document.querySelector('.btn-show-search');
+
+    console.log('📦 searchSection found:', !!searchSection);
+    console.log('📦 showSearchBtn found:', !!showSearchBtn);
+
     if (shouldCollapse) {
-        const searchSection = document.getElementById(entityType + 'SearchSection');
         if (searchSection) {
             searchSection.classList.add('collapsed');
 
@@ -1036,10 +1058,30 @@ UniversalSearch.loadSearchSectionState = function(entityType) {
             }
 
             // הצג כפתור "הצג חיפוש"
-            const showSearchBtn = document.querySelector('.btn-show-search');
             if (showSearchBtn) {
                 showSearchBtn.classList.add('visible');
+                console.log('📦 Added visible class to showSearchBtn');
             }
+        }
+    } else {
+        // ⭐ אם לא צריך להיות מכווץ - הסר את המצב המכווץ והסתר כפתור
+        if (searchSection) {
+            searchSection.classList.remove('collapsed');
+
+            // עדכון כפתור הצמצום
+            const collapseBtn = searchSection.querySelector('.btn-collapse-search');
+            if (collapseBtn) {
+                const btnText = collapseBtn.querySelector('span');
+                const btnIcon = collapseBtn.querySelector('svg');
+                if (btnText) btnText.textContent = 'צמצם';
+                if (btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // הסתר כפתור "הצג חיפוש"
+        if (showSearchBtn) {
+            showSearchBtn.classList.remove('visible');
+            console.log('📦 Removed visible class from showSearchBtn');
         }
     }
 };

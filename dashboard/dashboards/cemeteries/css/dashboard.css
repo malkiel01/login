@@ -285,8 +285,8 @@
     }
 
     .entity-title-container .action-buttons .btn,
-    .entity-title-container .action-buttons .btn-search-toggle {
-        display: inline-flex;
+    .entity-title-container .action-buttons .btn-search-toggle,
+    .entity-title-container .action-buttons .btn-show-search {
         width: 42px;
         height: 42px;
         min-width: 42px;
@@ -298,27 +298,31 @@
 
     /* הסתר טקסט בכפתורים */
     .entity-title-container .action-buttons .btn span,
-    .entity-title-container .action-buttons .btn-search-toggle span {
+    .entity-title-container .action-buttons .btn-search-toggle span,
+    .entity-title-container .action-buttons .btn-show-search span {
         display: none;
     }
 
     /* אייקונים ממורכזים */
     .entity-title-container .action-buttons .btn svg,
     .entity-title-container .action-buttons .btn .icon,
-    .entity-title-container .action-buttons .btn-search-toggle svg {
+    .entity-title-container .action-buttons .btn-search-toggle svg,
+    .entity-title-container .action-buttons .btn-show-search svg {
         width: 20px;
         height: 20px;
         margin: 0;
     }
 
     /* כפתור חיפוש - רקע אפור */
-    .entity-title-container .action-buttons .btn-search-toggle {
+    .entity-title-container .action-buttons .btn-search-toggle,
+    .entity-title-container .action-buttons .btn-show-search {
         background: #f3f4f6;
         border: 1px solid #e5e7eb;
         color: #374151;
     }
 
-    .entity-title-container .action-buttons .btn-search-toggle:active {
+    .entity-title-container .action-buttons .btn-search-toggle:active,
+    .entity-title-container .action-buttons .btn-show-search:active {
         background: #e5e7eb;
     }
 

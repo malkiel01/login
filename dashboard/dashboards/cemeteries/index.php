@@ -23,7 +23,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css?v=20260122b">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css?v=20260122c">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
@@ -31,8 +31,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
 
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css?v=20260122">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122i">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css?v=20260122c">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122ci">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
@@ -119,6 +119,14 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                         <span class="entity-subtitle" id="entitySubtitle"></span>
                     </div>
                     <div class="action-buttons">
+                        <!-- כפתור הצג חיפוש - מופיע רק כשהחיפוש מכווץ -->
+                        <button class="btn-show-search" onclick="UniversalSearch.expandSearchSection(window.currentType || 'cemetery')" title="הצג חיפוש">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <span>הצג חיפוש</span>
+                        </button>
                         <button class="btn-search-toggle" onclick="UniversalSearch.toggleOrFocusSearch(window.currentType || 'cemetery')" title="חיפוש">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -159,7 +167,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- JavaScript Files - סדר קריטי! -->
 
     <!-- 1️⃣ בסיס -->
-    <script src="/dashboard/dashboards/cemeteries/js/universal-search.js?v=20260122e"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/universal-search.js?v=20260122g"></script>
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js?v=20260122"></script>
     <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>

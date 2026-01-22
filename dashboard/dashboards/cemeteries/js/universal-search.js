@@ -949,8 +949,15 @@ UniversalSearch.expandSearchSection = function(entityType) {
 UniversalSearch.loadSearchSectionState = function(entityType) {
     const storageKey = 'searchSectionCollapsed';
     const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const isMobile = window.innerWidth <= 768;
 
-    if (collapsedSections[entityType]) {
+    // במסכים קטנים - ברירת מחדל מכווץ (אלא אם נשמר אחרת)
+    // במסכים גדולים - ברירת מחדל פתוח (אלא אם נשמר אחרת)
+    const shouldCollapse = collapsedSections[entityType] !== undefined
+        ? collapsedSections[entityType]
+        : isMobile; // ברירת מחדל: מכווץ במובייל, פתוח בדסקטופ
+
+    if (shouldCollapse) {
         const searchSection = document.getElementById(entityType + 'SearchSection');
         if (searchSection) {
             searchSection.classList.add('collapsed');

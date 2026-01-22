@@ -224,10 +224,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         // הגדרת worker של PDF.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
-    <!-- Map Launcher v5.0 - clean version using modular components -->
-    <script src="/dashboard/dashboards/cemeteries/js/map-launcher.js"></script>
-    <!-- OLD: map-launcher-old.js (2,786 lines) kept as backup -->
-
     <!-- Map v2 Launcher -->
     <script src="/dashboard/dashboards/cemeteries/js/map-v2-launcher.js"></script>
 

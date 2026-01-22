@@ -864,7 +864,7 @@ class FileExplorer {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         sourcePath: sourcePath,
-                        destinationPath: targetFolderPath
+                        destPath: targetFolderPath
                     })
                 });
 
@@ -873,7 +873,13 @@ class FileExplorer {
                     successCount++;
                 } else {
                     errorCount++;
-                    console.error('Error moving:', sourcePath, result.error);
+                    // שגיאה ידידותית למשתמש
+                    const fileName = sourcePath.split('/').pop();
+                    if (result.error && result.error.includes('already exists')) {
+                        console.warn(`הקובץ ${fileName} כבר קיים בתיקייה`);
+                    } else {
+                        console.error('Error moving:', sourcePath, result.error);
+                    }
                 }
             } catch (error) {
                 errorCount++;
@@ -885,13 +891,13 @@ class FileExplorer {
         this.handleDragEnd(event);
 
         // הודעה למשתמש
-        if (successCount > 0) {
-            const folderName = targetFolderPath.split('/').pop() || 'התיקייה';
-            if (errorCount > 0) {
-                alert(`הועברו ${successCount} פריטים ל-${folderName}, ${errorCount} נכשלו`);
-            }
+        const folderName = targetFolderPath.split('/').pop() || 'התיקייה';
+        if (successCount > 0 && errorCount === 0) {
+            // הכל הצליח - אין צורך בהודעה, המשתמש יראה את התוצאה
+        } else if (successCount > 0 && errorCount > 0) {
+            alert(`הועברו ${successCount} פריטים ל-${folderName}.\n${errorCount} פריטים לא הועברו (כנראה כבר קיימים בתיקייה).`);
         } else if (errorCount > 0) {
-            alert('שגיאה בהעברת הפריטים');
+            alert(`לא ניתן להעביר - ייתכן שקבצים עם אותו שם כבר קיימים ב-${folderName}`);
         }
 
         // ריענן את התצוגה

@@ -830,7 +830,8 @@
         width: 100%;
         max-width: 100%;
         min-width: 0;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: visible;
         box-sizing: border-box;
     }
 
@@ -851,8 +852,10 @@
     }
 
     .explorer-actions {
+        display: flex !important;
         justify-content: space-between;
         width: 100%;
+        flex-shrink: 0;
     }
 
     /* כפתורים גדולים יותר למגע */

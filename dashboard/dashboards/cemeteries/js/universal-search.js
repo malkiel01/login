@@ -980,5 +980,30 @@ UniversalSearch.loadSearchSectionState = function(entityType) {
     }
 };
 
+/**
+ * טוגל או פוקוס בחיפוש - אם מכווץ יפתח, אם פתוח יתמקד בשדה
+ * @param {string} entityType - סוג היישות
+ */
+UniversalSearch.toggleOrFocusSearch = function(entityType) {
+    const searchSection = document.getElementById(entityType + 'SearchSection');
+    if (!searchSection) return;
+
+    const isCollapsed = searchSection.classList.contains('collapsed');
+
+    if (isCollapsed) {
+        // פתח את החיפוש
+        UniversalSearch.expandSearchSection(entityType);
+    }
+
+    // תמיד התמקד בשדה החיפוש
+    setTimeout(() => {
+        const searchInput = searchSection.querySelector('.us-search-input');
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+        }
+    }, isCollapsed ? 350 : 0); // המתן לאנימציה אם היה מכווץ
+};
+
 // הפוך לגלובלי
 window.UniversalSearch = UniversalSearch;

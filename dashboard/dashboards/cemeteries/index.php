@@ -23,7 +23,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css?v=20260122">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css?v=20260122b">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
@@ -119,16 +119,16 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                         <span class="entity-subtitle" id="entitySubtitle"></span>
                     </div>
                     <div class="action-buttons">
-                        <button class="btn-show-search" onclick="UniversalSearch.expandSearchSection(window.currentType || 'cemetery')" title="הצג חיפוש">
+                        <button class="btn-search-toggle" onclick="UniversalSearch.toggleOrFocusSearch(window.currentType || 'cemetery')" title="חיפוש">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.35-4.35"></path>
                             </svg>
                             <span>חיפוש</span>
                         </button>
-                        <button class="btn btn-primary" onclick="tableRenderer.openAddModal()">
+                        <button class="btn btn-primary btn-add" onclick="tableRenderer.openAddModal()">
                             <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
-                            הוספה
+                            <span>הוספה</span>
                         </button>
                     </div>
                 </div>
@@ -159,7 +159,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- JavaScript Files - סדר קריטי! -->
 
     <!-- 1️⃣ בסיס -->
-    <script src="/dashboard/dashboards/cemeteries/js/universal-search.js?v=20260122"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/universal-search.js?v=20260122b"></script>
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>

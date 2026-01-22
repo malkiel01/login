@@ -112,6 +112,31 @@
     flex-wrap: wrap;
 }
 
+/* כפתור חיפוש - בדסקטופ מוסתר */
+.btn-search-toggle {
+    display: none;
+    padding: 8px 16px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+    transition: all 0.2s ease;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-search-toggle:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+}
+
+.btn-search-toggle svg {
+    width: 18px;
+    height: 18px;
+}
+
 .entity-subtitle {
     font-size: 0.9rem;
     color: #64748b;
@@ -254,37 +279,47 @@
         min-height: calc(100vh - 56px);
     }
 
-    /* כפתורי פעולה במובייל - עיגול עם אייקון בלבד */
-    .entity-title-container .action-buttons .btn {
+    /* כפתורי פעולה במובייל - עיגולים עם אייקון ממורכז */
+    .entity-title-container .action-buttons {
+        gap: 8px;
+    }
+
+    .entity-title-container .action-buttons .btn,
+    .entity-title-container .action-buttons .btn-search-toggle {
         display: inline-flex;
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
         padding: 0;
         border-radius: 50%;
         justify-content: center;
         align-items: center;
-        font-size: 0; /* הסתר טקסט */
     }
 
+    /* הסתר טקסט בכפתורים */
+    .entity-title-container .action-buttons .btn span,
+    .entity-title-container .action-buttons .btn-search-toggle span {
+        display: none;
+    }
+
+    /* אייקונים ממורכזים */
     .entity-title-container .action-buttons .btn svg,
-    .entity-title-container .action-buttons .btn .icon {
-        font-size: 18px;
+    .entity-title-container .action-buttons .btn .icon,
+    .entity-title-container .action-buttons .btn-search-toggle svg {
         width: 20px;
         height: 20px;
+        margin: 0;
     }
 
-    .entity-title-container .action-buttons .btn-show-search {
-        display: none; /* ברירת מחדל - מוסתר */
+    /* כפתור חיפוש - רקע אפור */
+    .entity-title-container .action-buttons .btn-search-toggle {
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        color: #374151;
     }
 
-    .entity-title-container .action-buttons .btn-show-search.visible {
-        display: inline-flex;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        border-radius: 50%;
-        font-size: 0;
+    .entity-title-container .action-buttons .btn-search-toggle:active {
+        background: #e5e7eb;
     }
 
     /* Entity items mobile optimization */

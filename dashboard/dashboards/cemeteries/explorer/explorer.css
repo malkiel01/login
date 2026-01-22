@@ -808,16 +808,15 @@
         display: none !important;
     }
 
-    /* גובה ורוחב מותאמים למובייל - מניעת overflow */
+    /* גובה ורוחב מותאמים למובייל */
     .file-explorer {
         height: auto;
         min-height: 320px;
-        max-height: 400px;
+        max-height: none; /* ביטול הגבלת גובה - תן לתוכן לקבוע */
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        overflow: hidden !important;
-        overflow-x: hidden !important;
+        overflow: visible !important; /* לא לחתוך את הטולבר */
         box-sizing: border-box !important;
     }
 
@@ -1040,7 +1039,7 @@
 @media screen and (max-width: 480px) {
     .file-explorer {
         min-height: 280px;
-        max-height: 350px;
+        max-height: none; /* ביטול הגבלת גובה */
         min-width: 0 !important;
     }
 

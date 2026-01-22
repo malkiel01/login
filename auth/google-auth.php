@@ -4,6 +4,7 @@ session_start();
 require_once '../config.php';
 require_once 'rate-limiter.php';
 require_once 'csrf.php';
+require_once 'audit-logger.php';
 
 // הגדר כותרות JSON
 header('Content-Type: application/json');
@@ -193,6 +194,9 @@ try {
     // רישום התחברות מוצלחת
     $rateLimiter->recordSuccessfulLogin($clientIP, $googleAuthKey);
 
+    // Audit Log - רישום התחברות מוצלחת דרך Google
+    AuditLogger::logLogin($user_id, $username, 'google');
+
     // החזרת תגובה
     echo json_encode([
         'success' => true,
@@ -203,6 +207,9 @@ try {
 } catch (Exception $e) {
     // רישום ניסיון כושל
     $rateLimiter->recordFailedAttempt($clientIP, $googleAuthKey);
+
+    // Audit Log - רישום התחברות כושלת דרך Google
+    AuditLogger::logLoginFailed($data['credential'] ?? 'unknown', 'Google Auth: ' . $e->getMessage());
 
     error_log('Google Auth Error: ' . $e->getMessage());
     echo json_encode([

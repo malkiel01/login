@@ -23,6 +23,7 @@ require_once 'redirect-handler.php';
 require_once '../permissions/init.php';
 require_once 'rate-limiter.php';  // Rate Limiting להגנה מ-brute force
 require_once 'csrf.php';          // CSRF Protection
+require_once 'audit-logger.php';  // Audit Logging
 // require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
@@ -122,7 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocke
             $_SESSION['profile_picture'] = $user['profile_picture'];
             $_SESSION['is_pwa'] = $isPWA;
             $_SESSION['session_lifetime'] = $isPWA ? 2592000 : 7200;
-            
+
+            // Audit Log - רישום התחברות מוצלחת
+            AuditLogger::logLogin($user['id'], $user['username'], 'local');
+
             handleLoginRedirect();
             exit;
         }
@@ -146,6 +150,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocke
             // רישום ניסיון כושל
             $rateLimiter->recordFailedAttempt($clientIP, $username);
             $remainingAttempts = $rateLimiter->getRemainingAttempts($clientIP, $username);
+
+            // Audit Log - רישום התחברות כושלת
+            AuditLogger::logLoginFailed($username, 'Invalid credentials');
 
             if ($remainingAttempts > 0) {
                 $error = "שם משתמש או סיסמה שגויים. נותרו $remainingAttempts ניסיונות.";
@@ -203,6 +210,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
             if ($insertStmt->execute([$username, $email, $hashedPassword, $name])) {
                 // רישום הצלחה וניקוי ניסיונות
                 $rateLimiter->recordSuccessfulLogin($clientIP, $registrationKey);
+
+                // Audit Log - רישום הרשמה חדשה
+                $newUserId = $pdo->lastInsertId();
+                AuditLogger::logRegister($newUserId, $username, $email);
+
                 $success = 'ההרשמה הושלמה בהצלחה! כעת תוכל להתחבר';
             } else {
                 $rateLimiter->recordFailedAttempt($clientIP, $registrationKey);

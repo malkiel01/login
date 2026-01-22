@@ -126,24 +126,59 @@ class FileExplorer {
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <div class="explorer-dropdown-menu" id="mobileMenu">
-                                <div class="menu-section-title">תצוגה</div>
-                                <a href="javascript:void(0)" onclick="window.explorer.setViewMode('grid')" class="view-option" data-view="grid">
-                                    <i class="fas fa-th-large"></i> רשת
+                                <!-- תפריט משנה: תצוגה -->
+                                <a href="javascript:void(0)" class="submenu-toggle" onclick="window.explorer.toggleSubmenu(event, 'viewSubmenu')">
+                                    <i class="fas fa-th-large"></i> תצוגה
+                                    <i class="fas fa-chevron-left submenu-arrow"></i>
                                 </a>
-                                <a href="javascript:void(0)" onclick="window.explorer.setViewMode('list')" class="view-option" data-view="list">
-                                    <i class="fas fa-list"></i> רשימה
+                                <div class="submenu" id="viewSubmenu">
+                                    <a href="javascript:void(0)" onclick="window.explorer.setViewMode('grid')" class="view-option" data-view="grid">
+                                        <i class="fas fa-th-large"></i> רשת
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setViewMode('list')" class="view-option" data-view="list">
+                                        <i class="fas fa-list"></i> רשימה
+                                    </a>
+                                    <hr>
+                                    <div class="menu-section-title">גודל אייקונים</div>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setIconSize('small')" class="size-option" data-size="small">
+                                        <i class="fas fa-compress-alt"></i> קטן
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setIconSize('medium')" class="size-option" data-size="medium">
+                                        <i class="fas fa-expand-alt"></i> בינוני
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setIconSize('large')" class="size-option" data-size="large">
+                                        <i class="fas fa-expand"></i> גדול
+                                    </a>
+                                </div>
+
+                                <!-- תפריט משנה: מיון -->
+                                <a href="javascript:void(0)" class="submenu-toggle" onclick="window.explorer.toggleSubmenu(event, 'sortSubmenu')">
+                                    <i class="fas fa-sort"></i> מיון
+                                    <i class="fas fa-chevron-left submenu-arrow"></i>
                                 </a>
-                                <hr>
-                                <div class="menu-section-title">מיון</div>
-                                <a href="javascript:void(0)" onclick="window.explorer.setSort('name', 'asc')">
-                                    <i class="fas fa-sort-alpha-down"></i> שם (א-ת)
-                                </a>
-                                <a href="javascript:void(0)" onclick="window.explorer.setSort('date', 'desc')">
-                                    <i class="fas fa-clock"></i> חדש ביותר
-                                </a>
-                                <a href="javascript:void(0)" onclick="window.explorer.setSort('size', 'desc')">
-                                    <i class="fas fa-weight"></i> גדול ביותר
-                                </a>
+                                <div class="submenu" id="sortSubmenu">
+                                    <a href="javascript:void(0)" onclick="window.explorer.setSort('name', 'asc')">
+                                        <i class="fas fa-sort-alpha-down"></i> שם (א-ת)
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setSort('name', 'desc')">
+                                        <i class="fas fa-sort-alpha-up"></i> שם (ת-א)
+                                    </a>
+                                    <hr>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setSort('date', 'desc')">
+                                        <i class="fas fa-clock"></i> חדש ביותר
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setSort('date', 'asc')">
+                                        <i class="fas fa-history"></i> ישן ביותר
+                                    </a>
+                                    <hr>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setSort('size', 'desc')">
+                                        <i class="fas fa-weight"></i> גדול ביותר
+                                    </a>
+                                    <a href="javascript:void(0)" onclick="window.explorer.setSort('size', 'asc')">
+                                        <i class="fas fa-feather"></i> קטן ביותר
+                                    </a>
+                                </div>
+
                                 <hr>
                                 <a href="javascript:void(0)" onclick="window.explorer.createFolder(); window.explorer.closeAllDropdowns();">
                                     <i class="fas fa-folder-plus"></i> תיקייה חדשה
@@ -203,6 +238,39 @@ class FileExplorer {
         this.container.querySelectorAll('.explorer-dropdown-menu').forEach(menu => {
             menu.classList.remove('show');
         });
+        // סגור גם תפריטי משנה
+        this.container.querySelectorAll('.submenu').forEach(sub => {
+            sub.classList.remove('show');
+        });
+        this.container.querySelectorAll('.submenu-toggle').forEach(toggle => {
+            toggle.classList.remove('open');
+        });
+    }
+
+    toggleSubmenu(event, submenuId) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const submenu = document.getElementById(submenuId);
+        const toggle = event.currentTarget;
+
+        if (!submenu) return;
+
+        // סגור תפריטי משנה אחרים
+        this.container.querySelectorAll('.submenu').forEach(sub => {
+            if (sub.id !== submenuId) {
+                sub.classList.remove('show');
+            }
+        });
+        this.container.querySelectorAll('.submenu-toggle').forEach(t => {
+            if (t !== toggle) {
+                t.classList.remove('open');
+            }
+        });
+
+        // פתח/סגור את התפריט הנוכחי
+        submenu.classList.toggle('show');
+        toggle.classList.toggle('open');
     }
 
     setSort(sortBy, order) {

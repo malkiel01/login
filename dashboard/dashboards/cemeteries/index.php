@@ -32,7 +32,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css?v=20260122">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122f">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122h">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
@@ -159,7 +159,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- JavaScript Files - סדר קריטי! -->
 
     <!-- 1️⃣ בסיס -->
-    <script src="/dashboard/dashboards/cemeteries/js/universal-search.js?v=20260122c"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/universal-search.js?v=20260122d"></script>
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js?v=20260122"></script>
     <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>

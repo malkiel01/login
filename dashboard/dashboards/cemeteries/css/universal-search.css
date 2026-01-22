@@ -342,18 +342,27 @@ mark {
         position: sticky;
         bottom: 0;
         background: white;
-        padding: 15px 0 5px 0;
+        padding: 15px 16px 30px 16px;
         margin: 0 -16px -30px -16px; /* מרחיב לרוחב הפאנל */
-        padding-left: 16px;
-        padding-right: 16px;
         border-top: 1px solid #e5e7eb;
-        box-shadow: 0 -8px 16px rgba(255, 255, 255, 0.95);
+        box-shadow: 0 -16px 24px rgba(255, 255, 255, 1);
     }
 
     .us-btn {
         width: 100%;
         min-height: 44px;
     }
+}
+
+/* Overlay לסגירה בלחיצה מבחוץ */
+.us-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 9998;
 }
 
 /* RTL Support */

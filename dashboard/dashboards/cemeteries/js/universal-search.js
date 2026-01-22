@@ -769,9 +769,61 @@ class UniversalSearch {
     toggleAdvancedPanel() {
         const panel = this.elements.advancedPanel;
         const isVisible = panel.style.display !== 'none';
-        
-        panel.style.display = isVisible ? 'none' : 'block';
-        this.elements.advancedToggle.classList.toggle('active', !isVisible);
+
+        if (isVisible) {
+            this.closeAdvancedPanel();
+        } else {
+            this.openAdvancedPanel();
+        }
+    }
+
+    /**
+     * פתיחת פאנל מתקדם
+     */
+    openAdvancedPanel() {
+        const panel = this.elements.advancedPanel;
+        panel.style.display = 'block';
+        this.elements.advancedToggle.classList.add('active');
+
+        // הוסף overlay לסגירה בלחיצה מבחוץ (רק במובייל)
+        if (window.innerWidth <= 768) {
+            this.createOverlay();
+        }
+    }
+
+    /**
+     * סגירת פאנל מתקדם
+     */
+    closeAdvancedPanel() {
+        const panel = this.elements.advancedPanel;
+        panel.style.display = 'none';
+        this.elements.advancedToggle.classList.remove('active');
+        this.removeOverlay();
+    }
+
+    /**
+     * יצירת overlay לסגירה בלחיצה מבחוץ
+     */
+    createOverlay() {
+        // בדוק אם כבר קיים
+        if (document.querySelector('.us-overlay')) return;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'us-overlay';
+        overlay.addEventListener('click', () => {
+            this.closeAdvancedPanel();
+        });
+        document.body.appendChild(overlay);
+    }
+
+    /**
+     * הסרת overlay
+     */
+    removeOverlay() {
+        const overlay = document.querySelector('.us-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
     }
     
     /**

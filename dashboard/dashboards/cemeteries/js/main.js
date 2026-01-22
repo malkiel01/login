@@ -374,13 +374,13 @@ function updateAddButtonText() {
             button.style.display = 'none';
         } else if (shouldDisableAddButton()) {
             button.disabled = true;
-            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg><span>${buttonText}</span>`;
             button.style.opacity = '0.5';
             button.style.cursor = 'not-allowed';
         } else {
             button.style.display = '';
             button.disabled = false;
-            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg><span>${buttonText}</span>`;
             button.style.opacity = '1';
             button.style.cursor = 'pointer';
         }

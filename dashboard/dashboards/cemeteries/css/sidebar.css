@@ -291,9 +291,20 @@
 @media (max-width: 768px) {
     .dashboard-sidebar {
         top: 56px;
-        height: calc(100vh - 56px);
+        /* שימוש ב-dvh (dynamic viewport height) שמתחשב בכותרת הדפדפן */
+        height: calc(100dvh - 56px);
+        /* fallback לדפדפנים ישנים */
+        height: calc(100vh - 56px - env(safe-area-inset-bottom, 0px));
         width: 85%;
         max-width: 300px;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* תמיכה ב-dvh לדפדפנים מודרניים */
+    @supports (height: 100dvh) {
+        .dashboard-sidebar {
+            height: calc(100dvh - 56px);
+        }
     }
 
     .sidebar-header {
@@ -310,22 +321,36 @@
     }
 
     .sidebar-footer {
-        padding: 1rem;
+        padding: 10px 12px;
         position: sticky;
         bottom: 0;
         background: var(--bg-secondary);
         z-index: 10;
+        flex-shrink: 0;
     }
 }
 
 /* Mobile - ensure logout button is always visible */
 @media (max-width: 480px) {
+    .dashboard-sidebar {
+        /* הקטנת ה-top למסכים קטנים */
+        top: 50px;
+        height: calc(100dvh - 50px);
+        height: calc(100vh - 50px - env(safe-area-inset-bottom, 0px));
+    }
+
+    @supports (height: 100dvh) {
+        .dashboard-sidebar {
+            height: calc(100dvh - 50px);
+        }
+    }
+
     .sidebar-footer {
-        padding: 12px;
+        padding: 8px 10px;
     }
 
     .btn-logout {
-        padding: 10px 14px;
-        font-size: 13px;
+        padding: 8px 10px;
+        font-size: 12px;
     }
 }

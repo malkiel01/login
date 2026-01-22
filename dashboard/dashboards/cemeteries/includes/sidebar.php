@@ -418,37 +418,37 @@
     display: block;
 }
 
-/* Logout Button */
+/* Logout Button - עיצוב עדין */
 .btn-logout {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 13px;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .btn-logout:hover {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
 }
 
 .btn-logout svg {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
 }
 
 .sidebar-footer {
-    padding: 15px;
+    padding: 10px 15px;
     border-top: 1px solid #e5e7eb;
     margin-top: auto;
 }
@@ -609,4 +609,28 @@ console.log('✨ מנגנון Sidebar Active State אותחל בהצלחה - ג�
 function confirmLogout() {
     return confirm('האם אתה בטוח שברצונך להתנתק?');
 }
+
+/**
+ * תיקון גובה viewport למובייל (iOS Safari fix)
+ * מחשב את הגובה האמיתי של ה-viewport ללא כותרת הדפדפן
+ */
+function fixMobileViewportHeight() {
+    // חישוב הגובה האמיתי
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+    // עדכון גובה הסיידבר
+    const sidebar = document.getElementById('dashboardSidebar');
+    if (sidebar && window.innerWidth <= 768) {
+        const headerHeight = window.innerWidth <= 480 ? 50 : 56;
+        sidebar.style.height = `calc(${window.innerHeight}px - ${headerHeight}px)`;
+    }
+}
+
+// הפעלה ראשונית ובכל שינוי גודל/אוריינטציה
+fixMobileViewportHeight();
+window.addEventListener('resize', fixMobileViewportHeight);
+window.addEventListener('orientationchange', function() {
+    setTimeout(fixMobileViewportHeight, 100);
+});
 </script>

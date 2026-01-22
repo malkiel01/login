@@ -21,6 +21,7 @@ session_start();
 require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית
 require_once 'redirect-handler.php';
 require_once '../permissions/init.php';
+require_once 'rate-limiter.php';  // Rate Limiting להגנה מ-brute force
 // require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
@@ -31,22 +32,45 @@ if (isset($_SESSION['user_id'])) {
 
 $error = '';
 $success = '';
+$isLocked = false;
+$waitTime = 0;
+$remainingAttempts = 5;
+
+// בדיקת Rate Limit
+$rateLimiter = getRateLimiter();
+$clientIP = RateLimiter::getClientIP();
+
+// בדיקה אם ה-IP חסום לחלוטין
+if ($rateLimiter->isBlacklisted($clientIP)) {
+    $error = 'הגישה נחסמה עקב ניסיונות רבים מדי. אנא פנה למנהל המערכת.';
+    $isLocked = true;
+}
 
 // טיפול בהתחברות רגילה
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocked) {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
-    
-    if (empty($username) || empty($password)) {
+
+    // בדיקת Rate Limit לפני ניסיון
+    if (!$rateLimiter->canAttempt($clientIP, $username)) {
+        $waitTime = $rateLimiter->getWaitTime($clientIP, $username);
+        $error = "יותר מדי ניסיונות התחברות. נסה שוב בעוד $waitTime דקות.";
+        $isLocked = true;
+    } elseif (empty($username) || empty($password)) {
         $error = 'יש למלא את כל השדות';
     } else {
         $pdo = getDBConnection();
         $stmt = $pdo->prepare("SELECT * FROM users WHERE (username = ? OR email = ?) AND is_active = 1");
         $stmt->execute([$username, $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
+        // עדכון מספר הניסיונות שנותרו
+        $remainingAttempts = $rateLimiter->getRemainingAttempts($clientIP, $username);
+
         // אחרי אימות מוצלח של המשתמש
         if ($user && password_verify($password, $user['password'])) {
+            // רישום התחברות מוצלחת וניקוי ניסיונות
+            $rateLimiter->recordSuccessfulLogin($clientIP, $username);
             // בדיקה אם המשתמש סימן "זכור אותי" או שזו אפליקציית PWA
             $isPWA = isset($_SERVER['HTTP_X_REQUESTED_WITH']) || 
                     strpos($_SERVER['HTTP_USER_AGENT'], 'PWA') !== false ||
@@ -112,22 +136,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         //     // header('Location: ../dashboard/index.php');  // תיקון: חזרה לתיקייה הראשית
         //     handleLoginRedirect();
         //     exit;
-        // } 
+        // }
         else {
-            $error = 'שם משתמש או סיסמה שגויים';
+            // רישום ניסיון כושל
+            $rateLimiter->recordFailedAttempt($clientIP, $username);
+            $remainingAttempts = $rateLimiter->getRemainingAttempts($clientIP, $username);
+
+            if ($remainingAttempts > 0) {
+                $error = "שם משתמש או סיסמה שגויים. נותרו $remainingAttempts ניסיונות.";
+            } else {
+                $waitTime = $rateLimiter->getWaitTime($clientIP, $username);
+                $error = "יותר מדי ניסיונות. נסה שוב בעוד $waitTime דקות.";
+                $isLocked = true;
+            }
         }
     }
 }
 
 // טיפול בהרשמה
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLocked) {
     $username = trim($_POST['reg_username']);
     $email = trim($_POST['reg_email']);
     $name = trim($_POST['reg_name']);
     $password = $_POST['reg_password'];
     $confirm_password = $_POST['reg_confirm_password'];
-    
-    if (empty($username) || empty($email) || empty($name) || empty($password)) {
+
+    // בדיקת Rate Limit גם להרשמות (הגנה מפני spam)
+    $registrationKey = 'register_' . $clientIP;
+    if (!$rateLimiter->canAttempt($clientIP, $registrationKey)) {
+        $waitTime = $rateLimiter->getWaitTime($clientIP, $registrationKey);
+        $error = "יותר מדי ניסיונות הרשמה. נסה שוב בעוד $waitTime דקות.";
+        $isLocked = true;
+    } elseif (empty($username) || empty($email) || empty($name) || empty($password)) {
         $error = 'יש למלא את כל השדות';
     } elseif ($password !== $confirm_password) {
         $error = 'הסיסמאות אינן תואמות';
@@ -143,15 +183,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         $checkStmt->execute([$username, $email]);
         
         if ($checkStmt->fetch()) {
+            $rateLimiter->recordFailedAttempt($clientIP, $registrationKey);
             $error = 'שם המשתמש או המייל כבר קיימים במערכת';
         } else {
             // יצירת המשתמש
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             $insertStmt = $pdo->prepare("INSERT INTO users (username, email, password, name, auth_type) VALUES (?, ?, ?, ?, 'local')");
-            
+
             if ($insertStmt->execute([$username, $email, $hashedPassword, $name])) {
+                // רישום הצלחה וניקוי ניסיונות
+                $rateLimiter->recordSuccessfulLogin($clientIP, $registrationKey);
                 $success = 'ההרשמה הושלמה בהצלחה! כעת תוכל להתחבר';
             } else {
+                $rateLimiter->recordFailedAttempt($clientIP, $registrationKey);
                 $error = 'אירעה שגיאה בהרשמה, אנא נסה שוב';
             }
         }
@@ -200,29 +244,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             
             <!-- טאב התחברות -->
             <div id="login-tab" class="tab-content active">
-                <form method="POST" action="">
+                <?php if ($isLocked): ?>
+                <div class="lockout-notice">
+                    <i class="fas fa-lock"></i>
+                    <h3>החשבון נעול זמנית</h3>
+                    <p>בשל ניסיונות התחברות רבים מדי, החשבון נעול.</p>
+                    <?php if ($waitTime > 0): ?>
+                    <p class="wait-time">נסה שוב בעוד <strong id="countdown"><?php echo $waitTime; ?></strong> דקות</p>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
+                <form method="POST" action="" <?php echo $isLocked ? 'style="opacity: 0.5; pointer-events: none;"' : ''; ?>>
                     <div class="form-group">
                         <label for="username">שם משתמש או אימייל</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <input type="text" class="form-control" id="username" name="username" required <?php echo $isLocked ? 'disabled' : ''; ?>>
                             <i class="fas fa-user"></i>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="password">סיסמה</label>
                         <div class="input-group">
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <input type="password" class="form-control" id="password" name="password" required <?php echo $isLocked ? 'disabled' : ''; ?>>
                             <i class="fas fa-lock"></i>
                         </div>
                     </div>
-                    
+
                     <div class="remember-me">
-                        <input type="checkbox" id="remember" name="remember">
+                        <input type="checkbox" id="remember" name="remember" <?php echo $isLocked ? 'disabled' : ''; ?>>
                         <label for="remember">זכור אותי</label>
                     </div>
-                    
-                    <button type="submit" name="login" class="btn-primary">
+
+                    <button type="submit" name="login" class="btn-primary" <?php echo $isLocked ? 'disabled' : ''; ?>>
                         <i class="fas fa-sign-in-alt"></i> התחבר
                     </button>
                 </form>
@@ -363,6 +418,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         }, 2000); // 2 שניות
     </script>
     
+    <?php if ($isLocked && $waitTime > 0): ?>
+    <script>
+        // Countdown timer for lockout
+        (function() {
+            let minutes = <?php echo $waitTime; ?>;
+            let seconds = 0;
+            const countdownEl = document.getElementById('countdown');
+
+            if (countdownEl) {
+                const timer = setInterval(function() {
+                    if (seconds > 0) {
+                        seconds--;
+                    } else if (minutes > 0) {
+                        minutes--;
+                        seconds = 59;
+                    }
+
+                    if (minutes === 0 && seconds === 0) {
+                        clearInterval(timer);
+                        // Reload the page when countdown ends
+                        location.reload();
+                    } else {
+                        countdownEl.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+                    }
+                }, 1000);
+
+                // Initial display
+                countdownEl.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            }
+        })();
+    </script>
+    <?php endif; ?>
+
     <script>
         function switchTab(tab) {
             // הסתרת כל הטאבים

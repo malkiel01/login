@@ -2,6 +2,7 @@
 // auth/google-auth.php - טיפול באימות Google
 session_start();
 require_once '../config.php';
+require_once 'rate-limiter.php';
 
 // הגדר כותרות JSON
 header('Content-Type: application/json');
@@ -11,6 +12,32 @@ header('Cache-Control: no-cache, must-revalidate');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+// Rate Limiting
+$rateLimiter = getRateLimiter();
+$clientIP = RateLimiter::getClientIP();
+
+// בדיקת blacklist
+if ($rateLimiter->isBlacklisted($clientIP)) {
+    http_response_code(429);
+    echo json_encode([
+        'success' => false,
+        'message' => 'הגישה נחסמה עקב ניסיונות רבים מדי'
+    ]);
+    exit;
+}
+
+// בדיקת rate limit
+$googleAuthKey = 'google_auth_' . $clientIP;
+if (!$rateLimiter->canAttempt($clientIP, $googleAuthKey)) {
+    $waitTime = $rateLimiter->getWaitTime($clientIP, $googleAuthKey);
+    http_response_code(429);
+    echo json_encode([
+        'success' => false,
+        'message' => "יותר מדי ניסיונות. נסה שוב בעוד $waitTime דקות"
+    ]);
     exit;
 }
 
@@ -152,14 +179,20 @@ try {
         true
     );
 
+    // רישום התחברות מוצלחת
+    $rateLimiter->recordSuccessfulLogin($clientIP, $googleAuthKey);
+
     // החזרת תגובה
     echo json_encode([
         'success' => true,
         'redirect' => '../dashboard/index.php',
         'message' => 'התחברת בהצלחה'
     ]);
-    
+
 } catch (Exception $e) {
+    // רישום ניסיון כושל
+    $rateLimiter->recordFailedAttempt($clientIP, $googleAuthKey);
+
     error_log('Google Auth Error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,

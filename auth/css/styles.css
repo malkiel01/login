@@ -433,3 +433,87 @@ body {
         padding-bottom: env(safe-area-inset-bottom);
     }
 }
+
+/* Rate Limiting - Lockout Notice */
+.lockout-notice {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 2px solid #f87171;
+    border-radius: 12px;
+    padding: 25px 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.lockout-notice i {
+    font-size: 40px;
+    color: #dc2626;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.lockout-notice h3 {
+    color: #dc2626;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.lockout-notice p {
+    color: #7f1d1d;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.lockout-notice .wait-time {
+    background: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 15px;
+    border: 1px solid #fca5a5;
+}
+
+.lockout-notice .wait-time strong {
+    color: #dc2626;
+    font-size: 20px;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.2);
+    }
+    50% {
+        transform: scale(1.01);
+        box-shadow: 0 0 20px 5px rgba(220, 38, 38, 0.15);
+    }
+}
+
+/* Form disabled state */
+form[style*="pointer-events: none"] .form-control {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+form[style*="pointer-events: none"] .btn-primary {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Warning for remaining attempts */
+.attempts-warning {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #92400e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.attempts-warning i {
+    color: #f59e0b;
+}

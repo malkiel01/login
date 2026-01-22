@@ -230,35 +230,7 @@ class FileExplorer {
         // פתח/סגור את התפריט הנוכחי
         const menu = document.getElementById(menuId);
         if (menu) {
-            const isOpen = menu.classList.toggle('show');
-
-            // במובייל - הוסף/הסר overlay
-            if (menuId === 'mobileMenu') {
-                this.toggleMobileOverlay(isOpen);
-            }
-        }
-    }
-
-    toggleMobileOverlay(show) {
-        let overlay = document.getElementById('explorerMobileOverlay');
-
-        if (show) {
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'explorerMobileOverlay';
-                overlay.className = 'explorer-mobile-overlay';
-                overlay.onclick = () => this.closeAllDropdowns();
-                document.body.appendChild(overlay);
-            }
-            // הצג עם animation
-            requestAnimationFrame(() => {
-                overlay.classList.add('show');
-            });
-        } else {
-            if (overlay) {
-                overlay.classList.remove('show');
-                setTimeout(() => overlay.remove(), 200);
-            }
+            menu.classList.toggle('show');
         }
     }
 
@@ -273,8 +245,6 @@ class FileExplorer {
         this.container.querySelectorAll('.submenu-toggle').forEach(toggle => {
             toggle.classList.remove('open');
         });
-        // סגור overlay במובייל
-        this.toggleMobileOverlay(false);
     }
 
     toggleSubmenu(event, submenuId) {

@@ -178,7 +178,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- 4️⃣ כרטיסים -->
     <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/responsive.js?v=20260122"></script>
     <script src="/dashboard/dashboards/cemeteries/js/unified-table-renderer.js"></script>
 
     <!-- 5️⃣ OperationManager ו-Utilities (קריטי - לפני המערכת החדשה!) -->
@@ -189,8 +189,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-config.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-state-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-loader.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-renderer.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-renderer.js?v=20260122"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js?v=20260122"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
 
     <!-- 7️⃣ הקבצים הישנים (יישארו כ-fallback) -->

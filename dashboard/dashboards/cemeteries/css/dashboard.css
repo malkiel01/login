@@ -254,9 +254,17 @@
         min-height: calc(100vh - 56px);
     }
 
-    /* הסתר כפתורי פעולה במובייל */
-    .entity-title-container .action-buttons {
+    /* הסתר כפתורי פעולה במובייל - אבל לא את כפתור הצג חיפוש */
+    .entity-title-container .action-buttons .btn {
         display: none;
+    }
+
+    .entity-title-container .action-buttons .btn-show-search {
+        display: none; /* ברירת מחדל - מוסתר */
+    }
+
+    .entity-title-container .action-buttons .btn-show-search.visible {
+        display: inline-flex; /* הצג רק כשיש לו visible */
     }
 
     /* Entity items mobile optimization */

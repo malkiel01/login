@@ -47,6 +47,11 @@ class FileExplorer {
                             <i class="fas fa-sync-alt"></i>
                         </button>
 
+                        <!-- כפתור העלאה מהיר (מובייל) -->
+                        <button type="button" class="explorer-btn primary explorer-mobile-only" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
+                            <i class="fas fa-plus"></i>
+                        </button>
+
                         <!-- תפריט תצוגה (דסקטופ) -->
                         <div class="explorer-dropdown explorer-desktop-only">
                             <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('viewMenu')" title="תצוגה">

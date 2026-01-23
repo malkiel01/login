@@ -225,7 +225,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     <!-- Map v2 Launcher -->
-    <script src="/dashboard/dashboards/cemeteries/js/map-v2-launcher.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/map-launcher.js"></script>
 
     <!-- 7️⃣ אתחול -->
     <script>

@@ -195,17 +195,9 @@
         </div>
         
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="mapItem" onclick="handleSidebarClick('mapItem', openMapLauncher)">
+            <div class="hierarchy-header" id="mapItem" onclick="handleSidebarClick('mapItem', openMap)">
                 <span class="hierarchy-icon">🗺️</span>
-                <span class="hierarchy-title">מפת בית עלמין</span>
-            </div>
-        </div>
-
-        <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="mapV2Item" onclick="handleSidebarClick('mapV2Item', openMapV2)">
-                <span class="hierarchy-icon">🗺️</span>
-                <span class="hierarchy-title">ניהול מפות v2</span>
-                <span class="badge" style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;">חדש</span>
+                <span class="hierarchy-title">ניהול מפות</span>
             </div>
         </div>
         

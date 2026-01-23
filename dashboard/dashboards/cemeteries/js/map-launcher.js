@@ -1,5 +1,5 @@
 /**
- * Map V2 Launcher - פותח עורך מפות v2
+ * Map Launcher - פותח עורך מפות
  * גרסה פשוטה עם 2 סלקטים
  */
 
@@ -20,7 +20,7 @@
     /**
      * Open the Map V2 selector
      */
-    window.openMapV2 = function() {
+    window.openMap = function() {
         createModal();
         showModal();
     };
@@ -39,7 +39,7 @@
             <div class="map-v2-modal">
                 <div class="map-v2-modal-header">
                     <h3>עורך מפות v2</h3>
-                    <button class="map-v2-close-btn" onclick="closeMapV2Modal()">&times;</button>
+                    <button class="map-v2-close-btn" onclick="closeMapModal()">&times;</button>
                 </div>
                 <div class="map-v2-modal-body">
                     <div class="map-v2-form-group">
@@ -57,7 +57,7 @@
                     </div>
                 </div>
                 <div class="map-v2-modal-footer">
-                    <button class="map-v2-btn map-v2-btn-secondary" onclick="closeMapV2Modal()">ביטול</button>
+                    <button class="map-v2-btn map-v2-btn-secondary" onclick="closeMapModal()">ביטול</button>
                     <button class="map-v2-btn map-v2-btn-primary" id="openMapBtn" disabled onclick="openMapEditor()">פתח עורך מפות</button>
                 </div>
             </div>
@@ -219,7 +219,7 @@
             }
 
             try {
-                const response = await fetch(`/dashboard/dashboards/cemeteries/map2/entity-selector.php?entityType=${type}`);
+                const response = await fetch(`/dashboard/dashboards/cemeteries/map/entity-selector.php?entityType=${type}`);
                 const data = await response.json();
 
                 entitySelect.innerHTML = '<option value="">-- בחר פריט --</option>';
@@ -249,7 +249,7 @@
         // Close on overlay click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                closeMapV2Modal();
+                closeMapModal();
             }
         });
 
@@ -259,7 +259,7 @@
 
     function handleEscape(e) {
         if (e.key === 'Escape' && modal) {
-            closeMapV2Modal();
+            closeMapModal();
         }
     }
 
@@ -273,7 +273,7 @@
     /**
      * Close the modal
      */
-    window.closeMapV2Modal = function() {
+    window.closeMapModal = function() {
         if (!modal) return;
 
         modal.classList.remove('show');
@@ -301,7 +301,7 @@
         const entityName = entitySelect.options[entitySelect.selectedIndex].text;
 
         // Build URL (absolute path)
-        const url = `/dashboard/dashboards/cemeteries/map2/index.php?type=${entityType}&id=${entityId}&name=${encodeURIComponent(entityName)}`;
+        const url = `/dashboard/dashboards/cemeteries/map/index.php?type=${entityType}&id=${entityId}&name=${encodeURIComponent(entityName)}`;
 
         // Open in popup using PopupManager if available
         if (window.PopupManager && window.PopupManager.create) {
@@ -327,7 +327,7 @@
             window.open(url, '_blank', 'width=1200,height=800');
         }
 
-        closeMapV2Modal();
+        closeMapModal();
     };
 
 })();

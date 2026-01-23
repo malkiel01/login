@@ -72,15 +72,33 @@ function getGraveBadge(graveName) {
 function openAddBurial() {
     window.currentType = 'burial';
     window.currentParentId = null;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('burial', null, null);
+
+    const formUrl = '/dashboard/dashboards/cemeteries/forms/iframe/burialForm-iframe.php';
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'הוספת קבורה חדשה',
+            type: 'iframe',
+            src: formUrl,
+            width: 900,
+            height: 700
+        });
     }
 }
 
 async function editBurial(id) {
     window.currentType = 'burial';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('burial', null, id);
+
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/burialForm-iframe.php?itemId=${id}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'עריכת קבורה',
+            type: 'iframe',
+            src: formUrl,
+            width: 900,
+            height: 700
+        });
     }
 }
 

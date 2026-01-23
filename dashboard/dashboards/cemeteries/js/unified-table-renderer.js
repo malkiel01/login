@@ -324,7 +324,9 @@ class UnifiedTableRenderer {
         const directPopupTypes = {
             'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
-            'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId)
+            'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId),
+            'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
+            'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase()
         };
 
         if (directPopupTypes[type]) {
@@ -519,7 +521,9 @@ class UnifiedTableRenderer {
         const directPopupTypes = {
             'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
-            'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId)
+            'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId),
+            'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
+            'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase()
         };
 
         if (directPopupTypes[type]) {
@@ -813,6 +817,12 @@ class UnifiedTableRenderer {
                 return;
             } else if (type === 'plot' && typeof editPlot === 'function') {
                 editPlot(itemId);
+                return;
+            } else if (type === 'burial' && typeof editBurial === 'function') {
+                editBurial(itemId);
+                return;
+            } else if (type === 'purchase' && typeof editPurchase === 'function') {
+                editPurchase(itemId);
                 return;
             }
 

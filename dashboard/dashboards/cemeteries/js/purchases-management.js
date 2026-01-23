@@ -82,15 +82,33 @@ function getPriceBadge(price) {
 function openAddPurchase() {
     window.currentType = 'purchase';
     window.currentParentId = null;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('purchase', null, null);
+
+    const formUrl = '/dashboard/dashboards/cemeteries/forms/iframe/purchaseForm-iframe.php';
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'הוספת רכישה חדשה',
+            type: 'iframe',
+            src: formUrl,
+            width: 900,
+            height: 700
+        });
     }
 }
 
 async function editPurchase(id) {
     window.currentType = 'purchase';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('purchase', null, id);
+
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/purchaseForm-iframe.php?itemId=${id}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'עריכת רכישה',
+            type: 'iframe',
+            src: formUrl,
+            width: 900,
+            height: 700
+        });
     }
 }
 

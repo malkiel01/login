@@ -312,8 +312,8 @@ class UnifiedTableRenderer {
         const parentId = window.currentParentId;
 
 
-        // לקוחות ורכישות לא צריכים הורה
-        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country', 'city'];
+        // לקוחות ורכישות לא צריכים הורה (עיר צריכה מדינה!)
+        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country'];
 
         if (!type) {
             console.error('No type defined');
@@ -466,7 +466,8 @@ class UnifiedTableRenderer {
             'plot': 'block',
             'row': 'plot',
             'areaGrave': 'row',
-            'grave': 'areaGrave'
+            'grave': 'areaGrave',
+            'city': 'country'
         };
         return hierarchy[type];
     }
@@ -478,7 +479,8 @@ class UnifiedTableRenderer {
             'block': 'גוש',
             'plot': 'חלקה',
             'row': 'שורה',
-            'areaGrave': 'אחוזת קבר'
+            'areaGrave': 'אחוזת קבר',
+            'country': 'מדינה'
         };
         return names[parentType] || 'פריט הורה';
     }
@@ -501,8 +503,8 @@ class UnifiedTableRenderer {
         const parentId = window.currentParentId;
 
 
-        // לקוחות ורכישות לא צריכים הורה
-        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country', 'city'];
+        // לקוחות ורכישות לא צריכים הורה (עיר צריכה מדינה!)
+        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country'];
 
         // שימוש בפונקציות ייעודיות ל-PopupManager עבור כל הישויות
         const directPopupTypes = {
@@ -553,7 +555,8 @@ class UnifiedTableRenderer {
                 'block': 'blockNameHe',
                 'plot': 'plotNameHe',
                 'row': 'lineNameHe',
-                'areaGrave': 'areaGraveNameHe'
+                'areaGrave': 'areaGraveNameHe',
+                'country': 'countryNameHe'
             };
             
             const nameField = nameFields[parentType] || 'name';

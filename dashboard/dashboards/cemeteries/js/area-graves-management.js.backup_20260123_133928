@@ -72,40 +72,24 @@ function getPlotBadge(plotName) {
 function openAddAreaGrave(plotId = null) {
     window.currentType = 'areaGrave';
     window.currentParentId = plotId || areaGravesFilterPlotId;
-
-    const parentId = plotId || areaGravesFilterPlotId;
-    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/areaGraveForm-iframe.php${parentId ? '?parentId=' + parentId : ''}`;
-
-    if (typeof PopupManager !== 'undefined') {
-        PopupManager.create({
-            title: 'הוספת אחוזת קבר חדשה',
-            type: 'iframe',
-            src: formUrl,
-            width: 700,
-            height: 550
-        });
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('areaGrave', plotId || areaGravesFilterPlotId, null);
     }
 }
 
 async function editAreaGrave(id) {
     window.currentType = 'areaGrave';
-
-    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/areaGraveForm-iframe.php?itemId=${id}`;
-
-    if (typeof PopupManager !== 'undefined') {
-        PopupManager.create({
-            title: 'עריכת אחוזת קבר',
-            type: 'iframe',
-            src: formUrl,
-            width: 700,
-            height: 550
-        });
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('areaGrave', null, id);
     }
 }
 
-// צפייה באחוזת קבר - פתיחת עריכה (אין כרטיס צפייה)
 async function viewAreaGrave(id) {
-    editAreaGrave(id);
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('areaGraveCard', null, id);
+    } else {
+        editAreaGrave(id);
+    }
 }
 
 // דאבל-קליק על שורת אחוזת קבר - מעבר לקברים

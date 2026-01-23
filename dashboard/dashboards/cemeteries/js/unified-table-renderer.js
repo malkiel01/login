@@ -325,18 +325,19 @@ class UnifiedTableRenderer {
             'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
             'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId),
+            'areaGrave': () => typeof openAddAreaGrave === 'function' && openAddAreaGrave(parentId),
+            'grave': () => typeof openAddGrave === 'function' && openAddGrave(parentId),
             'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
             'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase(),
             'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
             'country': () => typeof openAddCountry === 'function' && openAddCountry(),
             'residency': () => typeof openAddResidency === 'function' && openAddResidency(),
-            'payment': () => typeof openAddPayment === 'function' && openAddPayment(),
-            'grave': () => typeof openAddGrave === 'function' && openAddGrave(parentId)
+            'payment': () => typeof openAddPayment === 'function' && openAddPayment()
         };
 
         if (directPopupTypes[type]) {
-            // עבור block, plot, city, grave צריך הורה
-            if ((type === 'block' || type === 'plot' || type === 'city' || type === 'grave') && !parentId) {
+            // עבור block, plot, city, areaGrave, grave צריך הורה
+            if ((type === 'block' || type === 'plot' || type === 'city' || type === 'areaGrave' || type === 'grave') && !parentId) {
                 this.openParentSelectionDialog(type);
                 return;
             }
@@ -828,6 +829,9 @@ class UnifiedTableRenderer {
                 return;
             } else if (type === 'plot' && typeof editPlot === 'function') {
                 editPlot(itemId);
+                return;
+            } else if (type === 'areaGrave' && typeof editAreaGrave === 'function') {
+                editAreaGrave(itemId);
                 return;
             } else if (type === 'burial' && typeof editBurial === 'function') {
                 editBurial(itemId);

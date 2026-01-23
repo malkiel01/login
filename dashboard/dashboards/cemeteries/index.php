@@ -244,5 +244,44 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         window.PAYMENT_TYPES_CONFIG = <?php echo json_encode($paymentTypesConfig['payment_types']); ?>;
     </script>
     <script src="/dashboard/dashboards/cemeteries/js/smart-select.js"></script>
+
+    <!-- User Settings -->
+    <script src="/dashboard/dashboards/cemeteries/user-settings/js/user-settings-storage.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/user-settings/js/user-settings-core.js"></script>
+    <script>
+        // פתיחת הגדרות משתמש
+        function openUserSettings() {
+            if (typeof PopupManager !== 'undefined') {
+                PopupManager.create({
+                    id: 'user-settings-popup',
+                    type: 'iframe',
+                    src: '/dashboard/dashboards/cemeteries/user-settings/settings-page.php',
+                    title: 'הגדרות אישיות',
+                    width: 700,
+                    height: 600
+                });
+            }
+        }
+
+        // אתחול הגדרות משתמש בטעינת הדף
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof UserSettings !== 'undefined') {
+                UserSettings.init().then(() => {
+                    console.log('UserSettings initialized');
+                }).catch(err => {
+                    console.warn('UserSettings init failed (table may not exist yet):', err.message);
+                });
+            }
+        });
+
+        // האזנה לשינויי הגדרות מהפופאפ
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'userSettingChanged') {
+                if (typeof UserSettings !== 'undefined') {
+                    UserSettings.applyToUI();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

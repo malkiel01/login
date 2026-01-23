@@ -1,0 +1,457 @@
+/*
+ * File: user-settings/css/user-settings.css
+ * Version: 1.0.0
+ * Created: 2026-01-23
+ * Author: Malkiel
+ * Description: עיצוב עמוד הגדרות משתמש
+ */
+
+/* ===================================================================
+   משתנים
+   =================================================================== */
+:root {
+    --settings-bg: #f8fafc;
+    --settings-card-bg: #ffffff;
+    --settings-border: #e2e8f0;
+    --settings-text: #334155;
+    --settings-text-secondary: #64748b;
+    --settings-primary: #3b82f6;
+    --settings-primary-hover: #2563eb;
+    --settings-success: #10b981;
+    --settings-danger: #ef4444;
+    --settings-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --settings-radius: 12px;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+    --settings-bg: #1e293b;
+    --settings-card-bg: #334155;
+    --settings-border: #475569;
+    --settings-text: #f1f5f9;
+    --settings-text-secondary: #94a3b8;
+}
+
+/* ===================================================================
+   מבנה כללי
+   =================================================================== */
+.settings-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--settings-border);
+}
+
+.settings-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--settings-text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-header h1 i {
+    color: var(--settings-primary);
+}
+
+/* ===================================================================
+   קטגוריות
+   =================================================================== */
+.settings-category {
+    background: var(--settings-card-bg);
+    border-radius: var(--settings-radius);
+    border: 1px solid var(--settings-border);
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: var(--settings-shadow);
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border-bottom: 1px solid var(--settings-border);
+}
+
+[data-theme="dark"] .category-header {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+}
+
+.category-header i {
+    font-size: 18px;
+    color: var(--settings-primary);
+    width: 24px;
+    text-align: center;
+}
+
+.category-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--settings-text);
+    margin: 0;
+}
+
+.category-content {
+    padding: 8px 0;
+}
+
+/* ===================================================================
+   פריט הגדרה
+   =================================================================== */
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--settings-border);
+    transition: background 0.2s;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.setting-header {
+    flex: 1;
+    min-width: 0;
+}
+
+.setting-label {
+    display: block;
+    font-weight: 500;
+    color: var(--settings-text);
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.setting-description {
+    font-size: 12px;
+    color: var(--settings-text-secondary);
+    margin-top: 2px;
+}
+
+.setting-reset-btn {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    color: var(--settings-text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    opacity: 0.6;
+    transition: all 0.2s;
+    margin-right: 10px;
+}
+
+.setting-reset-btn:hover {
+    background: var(--settings-danger);
+    color: white;
+    opacity: 1;
+}
+
+.setting-reset-btn.hidden {
+    display: none;
+}
+
+.setting-input {
+    flex-shrink: 0;
+}
+
+/* ===================================================================
+   Toggle Switch
+   =================================================================== */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: 0.3s;
+    border-radius: 28px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--settings-success);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* ===================================================================
+   שדות קלט
+   =================================================================== */
+.setting-item .form-control {
+    width: 180px;
+    padding: 8px 12px;
+    border: 1px solid var(--settings-border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--settings-text);
+    background: var(--settings-card-bg);
+    transition: all 0.2s;
+}
+
+.setting-item .form-control:focus {
+    outline: none;
+    border-color: var(--settings-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.setting-item select.form-control {
+    cursor: pointer;
+}
+
+.setting-item input[type="number"] {
+    width: 100px;
+}
+
+/* ===================================================================
+   כפתורים
+   =================================================================== */
+.settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid var(--settings-border);
+    background: var(--settings-card-bg);
+    border-radius: 0 0 var(--settings-radius) var(--settings-radius);
+}
+
+.btn-settings {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-settings-primary {
+    background: var(--settings-primary);
+    color: white;
+}
+
+.btn-settings-primary:hover {
+    background: var(--settings-primary-hover);
+}
+
+.btn-settings-secondary {
+    background: #f1f5f9;
+    color: var(--settings-text);
+    border: 1px solid var(--settings-border);
+}
+
+.btn-settings-secondary:hover {
+    background: #e2e8f0;
+}
+
+.btn-settings-danger {
+    background: #fee2e2;
+    color: var(--settings-danger);
+}
+
+.btn-settings-danger:hover {
+    background: var(--settings-danger);
+    color: white;
+}
+
+/* ===================================================================
+   Tabs ניווט
+   =================================================================== */
+.settings-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.settings-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--settings-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.settings-tab:hover {
+    background: rgba(255,255,255,0.5);
+    color: var(--settings-text);
+}
+
+.settings-tab.active {
+    background: white;
+    color: var(--settings-primary);
+    box-shadow: var(--settings-shadow);
+}
+
+.settings-tab i {
+    font-size: 14px;
+}
+
+/* ===================================================================
+   הודעות
+   =================================================================== */
+.settings-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.settings-message.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.settings-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.settings-message.info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* ===================================================================
+   Responsive
+   =================================================================== */
+@media (max-width: 600px) {
+    .settings-container {
+        padding: 12px;
+    }
+
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .setting-input {
+        width: 100%;
+    }
+
+    .setting-item .form-control {
+        width: 100%;
+    }
+
+    .toggle-switch {
+        align-self: flex-end;
+    }
+
+    .settings-tabs {
+        flex-wrap: wrap;
+    }
+
+    .settings-tab {
+        flex: 0 0 calc(50% - 2px);
+    }
+}
+
+/* ===================================================================
+   אנימציות
+   =================================================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.settings-category {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.settings-category:nth-child(2) { animation-delay: 0.05s; }
+.settings-category:nth-child(3) { animation-delay: 0.1s; }
+.settings-category:nth-child(4) { animation-delay: 0.15s; }
+.settings-category:nth-child(5) { animation-delay: 0.2s; }
+
+/* ===================================================================
+   Loading State
+   =================================================================== */
+.settings-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--settings-text-secondary);
+}
+
+.settings-loading i {
+    font-size: 32px;
+    margin-bottom: 16px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

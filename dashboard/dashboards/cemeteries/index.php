@@ -33,6 +33,9 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122ci">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
+    <!-- Table Module - New Modular System with Dark Mode -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/table-module/css/table-core.css?v=20260123">
+
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
 
     <!-- User Preferences (Dark Mode, Compact, etc.) -->
@@ -175,6 +178,10 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/table-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script>
+
+    <!-- Table Module - New Modular System with Permissions -->
+    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-permissions.js?v=20260123"></script>
+    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-core.js?v=20260123"></script>
 
     <!-- 2️⃣ מערכת פופאפים -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-manager.js"></script>

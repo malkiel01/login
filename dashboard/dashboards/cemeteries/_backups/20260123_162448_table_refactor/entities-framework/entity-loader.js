@@ -40,13 +40,13 @@ class EntityLoader {
         });
         
         try {
-            // בניית URL עם קידוד נכון למניעת XSS
-            let apiUrl = `${config.apiEndpoint}?action=list&limit=${encodeURIComponent(config.defaultLimit)}&page=1`;
-            apiUrl += `&orderBy=${encodeURIComponent(config.defaultOrderBy)}&sortDirection=${encodeURIComponent(config.defaultSortDirection)}`;
-
-            // הוספת parent ID אם קיים - עם קידוד URL
+            // בניית URL
+            let apiUrl = `${config.apiEndpoint}?action=list&limit=${config.defaultLimit}&page=1`;
+            apiUrl += `&orderBy=${config.defaultOrderBy}&sortDirection=${config.defaultSortDirection}`;
+            
+            // הוספת parent ID אם קיים
             if (parentId && config.parentParam) {
-                apiUrl += `&${encodeURIComponent(config.parentParam)}=${encodeURIComponent(parentId)}`;
+                apiUrl += `&${config.parentParam}=${parentId}`;
             }
             
             // שליחת בקשה
@@ -119,13 +119,13 @@ class EntityLoader {
         const loadCounter = entityState.incrementLoadCounter(entityType);
         
         try {
-            // בניית URL לעמוד הבא - עם קידוד נכון למניעת XSS
-            let apiUrl = `${config.apiEndpoint}?action=list&limit=${encodeURIComponent(config.defaultLimit)}&page=${encodeURIComponent(nextPage)}`;
-            apiUrl += `&orderBy=${encodeURIComponent(config.defaultOrderBy)}&sortDirection=${encodeURIComponent(config.defaultSortDirection)}`;
-
-            // הוספת parent ID אם קיים - עם קידוד URL
+            // בניית URL לעמוד הבא
+            let apiUrl = `${config.apiEndpoint}?action=list&limit=${config.defaultLimit}&page=${nextPage}`;
+            apiUrl += `&orderBy=${config.defaultOrderBy}&sortDirection=${config.defaultSortDirection}`;
+            
+            // הוספת parent ID אם קיים
             if (parentId && config.parentParam) {
-                apiUrl += `&${encodeURIComponent(config.parentParam)}=${encodeURIComponent(parentId)}`;
+                apiUrl += `&${config.parentParam}=${parentId}`;
             }
             
             // שליחת בקשה

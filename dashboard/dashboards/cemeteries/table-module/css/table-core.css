@@ -1,0 +1,489 @@
+/*
+ * File: table-module/css/table-core.css
+ * Version: 3.0.0
+ * Created: 2026-01-23
+ * Author: Malkiel
+ * Description: סטיילים למודול טבלאות - תמיכה מלאה ב-Dark Mode ו-RTL
+ */
+
+/* ===================================================================
+   CSS Variables - Z-Index Scale
+   =================================================================== */
+:root {
+    --tm-z-header: 100;
+    --tm-z-dropdown: 200;
+    --tm-z-tooltip: 300;
+    --tm-z-modal: 400;
+    --tm-z-overlay: 500;
+}
+
+/* ===================================================================
+   Table Container
+   =================================================================== */
+.table-fixed-container {
+    box-sizing: border-box;
+}
+
+.table-wrapper {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary, #ffffff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-header-container {
+    flex-shrink: 0;
+    background: var(--bg-primary, #ffffff);
+    border-bottom: 2px solid var(--border-color, #e5e7eb);
+    position: relative;
+    z-index: var(--tm-z-header);
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.table-body-container {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+}
+
+/* ===================================================================
+   Table Base Styles
+   =================================================================== */
+.tm-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    direction: rtl;
+    text-align: right;
+}
+
+/* ===================================================================
+   Header Styles
+   =================================================================== */
+.tm-thead {
+    background: var(--bg-secondary, #f9fafb);
+}
+
+.tm-header-row {
+    height: 48px;
+}
+
+.tm-header-cell {
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary, #374151);
+    background: var(--bg-secondary, #f9fafb);
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    user-select: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.tm-header-cell:hover {
+    background: var(--bg-tertiary, #f3f4f6);
+}
+
+/* RTL Fix: Label alignment */
+.tm-header-label {
+    display: inline-block;
+    margin-left: 8px;
+}
+
+/* ===================================================================
+   Sort Icons - RTL Fixed
+   =================================================================== */
+.tm-sort-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    opacity: 0.3;
+    transition: opacity 0.15s ease;
+}
+
+.tm-header-cell:hover .tm-sort-icon {
+    opacity: 0.6;
+}
+
+.tm-sort-icon::after {
+    content: '⇅';
+    font-size: 12px;
+}
+
+.tm-sort-icon.asc::after {
+    content: '▲';
+    color: var(--primary-color, #667eea);
+}
+
+.tm-sort-icon.desc::after {
+    content: '▼';
+    color: var(--primary-color, #667eea);
+}
+
+.tm-sort-icon.asc,
+.tm-sort-icon.desc {
+    opacity: 1;
+}
+
+/* ===================================================================
+   Resize Handle - RTL Fixed
+   =================================================================== */
+.tm-resize-handle {
+    position: absolute;
+    left: 0;  /* RTL: שמאל */
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background: transparent;
+    transition: background-color 0.15s ease;
+}
+
+[dir="ltr"] .tm-resize-handle {
+    left: auto;
+    right: 0;
+}
+
+.tm-resize-handle:hover,
+.tm-resize-handle.active {
+    background: var(--primary-color, #667eea);
+}
+
+/* ===================================================================
+   Body Styles
+   =================================================================== */
+.tm-tbody {
+    background: var(--bg-primary, #ffffff);
+}
+
+.tm-row {
+    height: 44px;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.tm-row:hover {
+    background: var(--bg-secondary, #f9fafb);
+}
+
+.tm-row.tm-selected {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.tm-row.tm-selected:hover {
+    background: rgba(102, 126, 234, 0.15);
+}
+
+.tm-cell {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: var(--text-primary, #1f2937);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+/* ===================================================================
+   Checkbox Column
+   =================================================================== */
+.tm-checkbox-cell {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    text-align: center !important;
+    padding: 0 8px !important;
+}
+
+.tm-checkbox-cell input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-color, #667eea);
+}
+
+/* ===================================================================
+   Loading Indicator
+   =================================================================== */
+.tm-loading-indicator {
+    text-align: center;
+    padding: 20px;
+}
+
+.tm-loading-spinner {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color, #e5e7eb);
+    border-top-color: var(--primary-color, #667eea);
+    border-radius: 50%;
+    animation: tm-spin 0.8s linear infinite;
+}
+
+@keyframes tm-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===================================================================
+   Empty State
+   =================================================================== */
+.tm-empty-row {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted, #6b7280);
+}
+
+/* ===================================================================
+   Pagination Footer
+   =================================================================== */
+.tm-pagination-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--bg-secondary, #f9fafb);
+    border-top: 1px solid var(--border-color, #e5e7eb);
+    font-size: 14px;
+    color: var(--text-secondary, #6b7280);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.tm-pagination-info {
+    display: flex;
+    gap: 8px;
+}
+
+.tm-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tm-page-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 6px;
+    background: var(--bg-primary, #ffffff);
+    color: var(--text-primary, #374151);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.tm-page-btn:hover:not(:disabled) {
+    background: var(--bg-tertiary, #f3f4f6);
+    border-color: var(--primary-color, #667eea);
+}
+
+.tm-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.tm-page-info {
+    padding: 0 12px;
+    white-space: nowrap;
+}
+
+.tm-page-size {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 6px;
+    background: var(--bg-primary, #ffffff);
+    color: var(--text-primary, #374151);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.tm-page-size:focus {
+    outline: none;
+    border-color: var(--primary-color, #667eea);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* ===================================================================
+   Scrollbar Styling
+   =================================================================== */
+.table-body-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-body-container::-webkit-scrollbar-track {
+    background: var(--bg-secondary, #f1f5f9);
+    border-radius: 4px;
+}
+
+.table-body-container::-webkit-scrollbar-thumb {
+    background: var(--border-color, #cbd5e1);
+    border-radius: 4px;
+}
+
+.table-body-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted, #94a3b8);
+}
+
+/* ===================================================================
+   DARK MODE SUPPORT
+   =================================================================== */
+[data-theme="dark"] .table-wrapper,
+body.dark-theme .table-wrapper {
+    background: var(--bg-primary, #1e293b);
+    border-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .table-header-container,
+body.dark-theme .table-header-container {
+    background: var(--bg-primary, #1e293b);
+    border-bottom-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .tm-thead,
+[data-theme="dark"] .tm-header-cell,
+body.dark-theme .tm-thead,
+body.dark-theme .tm-header-cell {
+    background: var(--bg-secondary, #334155);
+    color: var(--text-primary, #f1f5f9);
+    border-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .tm-header-cell:hover,
+body.dark-theme .tm-header-cell:hover {
+    background: var(--bg-tertiary, #475569);
+}
+
+[data-theme="dark"] .tm-tbody,
+body.dark-theme .tm-tbody {
+    background: var(--bg-primary, #1e293b);
+}
+
+[data-theme="dark"] .tm-row,
+body.dark-theme .tm-row {
+    border-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .tm-row:hover,
+body.dark-theme .tm-row:hover {
+    background: var(--bg-secondary, #334155);
+}
+
+[data-theme="dark"] .tm-row.tm-selected,
+body.dark-theme .tm-row.tm-selected {
+    background: rgba(129, 140, 248, 0.15);
+}
+
+[data-theme="dark"] .tm-cell,
+body.dark-theme .tm-cell {
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .tm-pagination-footer,
+body.dark-theme .tm-pagination-footer {
+    background: var(--bg-secondary, #334155);
+    border-top-color: var(--border-color, #475569);
+    color: var(--text-secondary, #cbd5e1);
+}
+
+[data-theme="dark"] .tm-page-btn,
+body.dark-theme .tm-page-btn {
+    background: var(--bg-tertiary, #475569);
+    border-color: var(--border-color, #64748b);
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .tm-page-btn:hover:not(:disabled),
+body.dark-theme .tm-page-btn:hover:not(:disabled) {
+    background: var(--bg-primary, #1e293b);
+}
+
+[data-theme="dark"] .tm-page-size,
+body.dark-theme .tm-page-size {
+    background: var(--bg-tertiary, #475569);
+    border-color: var(--border-color, #64748b);
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .table-body-container::-webkit-scrollbar-track,
+body.dark-theme .table-body-container::-webkit-scrollbar-track {
+    background: var(--bg-secondary, #334155);
+}
+
+[data-theme="dark"] .table-body-container::-webkit-scrollbar-thumb,
+body.dark-theme .table-body-container::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary, #475569);
+}
+
+[data-theme="dark"] .tm-loading-spinner,
+body.dark-theme .tm-loading-spinner {
+    border-color: var(--border-color, #475569);
+    border-top-color: var(--primary-color, #818cf8);
+}
+
+/* ===================================================================
+   RESPONSIVE - Mobile
+   =================================================================== */
+@media (max-width: 768px) {
+    .tm-pagination-footer {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .tm-pagination-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tm-header-cell,
+    .tm-cell {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .tm-row {
+        height: auto;
+        min-height: 40px;
+    }
+}
+
+/* ===================================================================
+   PRINT
+   =================================================================== */
+@media print {
+    .table-wrapper {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .table-body-container {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .tm-pagination-footer {
+        display: none !important;
+    }
+
+    .tm-checkbox-cell {
+        display: none !important;
+    }
+
+    .tm-row {
+        page-break-inside: avoid;
+    }
+}

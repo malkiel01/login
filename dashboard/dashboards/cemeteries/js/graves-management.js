@@ -71,38 +71,33 @@ function openAddGrave(areaGraveId = null) {
     window.currentType = 'grave';
     window.currentParentId = areaGraveId || gravesFilterAreaGraveId;
 
-    if (typeof PopupManager !== 'undefined') {
-        let src = '/dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php';
-        const parentId = areaGraveId || gravesFilterAreaGraveId;
-        if (parentId) src += '?parentId=' + parentId;
+    const parentId = areaGraveId || gravesFilterAreaGraveId;
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php${parentId ? '?parentId=' + parentId : ''}`;
 
+    if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
-            id: 'graveForm-new-' + Date.now(),
-            type: 'iframe',
-            src: src,
             title: 'הוספת קבר חדש',
+            type: 'iframe',
+            src: formUrl,
             width: 900,
             height: 700
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('grave', areaGraveId || gravesFilterAreaGraveId, null);
     }
 }
 
 async function editGrave(id) {
     window.currentType = 'grave';
 
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php?itemId=${id}`;
+
     if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
-            id: 'graveForm-' + id,
-            type: 'iframe',
-            src: '/dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php?itemId=' + id,
             title: 'עריכת קבר',
+            type: 'iframe',
+            src: formUrl,
             width: 900,
             height: 700
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('grave', null, id);
     }
 }
 

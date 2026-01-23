@@ -330,12 +330,13 @@ class UnifiedTableRenderer {
             'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
             'country': () => typeof openAddCountry === 'function' && openAddCountry(),
             'residency': () => typeof openAddResidency === 'function' && openAddResidency(),
-            'payment': () => typeof openAddPayment === 'function' && openAddPayment()
+            'payment': () => typeof openAddPayment === 'function' && openAddPayment(),
+            'grave': () => typeof openAddGrave === 'function' && openAddGrave(parentId)
         };
 
         if (directPopupTypes[type]) {
-            // עבור block, plot, city צריך הורה
-            if ((type === 'block' || type === 'plot' || type === 'city') && !parentId) {
+            // עבור block, plot, city, grave צריך הורה
+            if ((type === 'block' || type === 'plot' || type === 'city' || type === 'grave') && !parentId) {
                 this.openParentSelectionDialog(type);
                 return;
             }
@@ -845,6 +846,9 @@ class UnifiedTableRenderer {
                 return;
             } else if (type === 'payment' && typeof editPayment === 'function') {
                 editPayment(itemId);
+                return;
+            } else if (type === 'grave' && typeof editGrave === 'function') {
+                editGrave(itemId);
                 return;
             }
 

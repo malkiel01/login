@@ -310,7 +310,7 @@ class UnifiedTableRenderer {
         // const type = this.currentType || window.currentType;
         const type = window.currentType || this.currentType;
         const parentId = window.currentParentId;
-        
+
 
         // לקוחות ורכישות לא צריכים הורה
         const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country', 'city'];
@@ -319,27 +319,39 @@ class UnifiedTableRenderer {
             console.error('No type defined');
             return;
         }
-        
+
+        // שימוש בפונקציות ייעודיות ל-PopupManager עבור cemetery, block, plot
+        const directPopupTypes = {
+            'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
+            'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
+            'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId)
+        };
+
+        if (directPopupTypes[type]) {
+            // עבור block ו-plot צריך הורה
+            if ((type === 'block' || type === 'plot') && !parentId) {
+                this.openParentSelectionDialog(type);
+                return;
+            }
+            directPopupTypes[type]();
+            return;
+        }
+
         if (typesWithoutParent.includes(type)) {
-            
+
             // בדוק אם FormHandler קיים
             if (typeof FormHandler === 'undefined') {
                 alert('ERROR: FormHandler is undefined!');
                 console.error('FormHandler not found!');
                 return;
             }
-            
+
             if (typeof FormHandler.openForm !== 'function') {
                 alert('ERROR: FormHandler.openForm is not a function!');
                 console.error('FormHandler.openForm is not a function!');
                 return;
             }
-            
-            FormHandler.openForm(type, null, null);
-            return;
-        }
 
-        if (typesWithoutParent.includes(type)) {
             FormHandler.openForm(type, null, null);
             return;
         }
@@ -498,24 +510,39 @@ class UnifiedTableRenderer {
     addItem() {
         const type = window.currentType || this.currentType;
         const parentId = window.currentParentId;
-        
+
 
         // לקוחות ורכישות לא צריכים הורה
         const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country', 'city'];
 
-        
+        // שימוש בפונקציות ייעודיות ל-PopupManager עבור cemetery, block, plot
+        const directPopupTypes = {
+            'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
+            'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
+            'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId)
+        };
+
+        if (directPopupTypes[type]) {
+            if ((type === 'block' || type === 'plot') && !parentId) {
+                this.openParentSelectionDialog(type);
+                return;
+            }
+            directPopupTypes[type]();
+            return;
+        }
+
         if (typesWithoutParent.includes(type)) {
             // פתח ישירות בלי הורה
             FormHandler.openForm(type, null, null);
             return;
         }
-        
+
         // בדוק אם צריך לבחור הורה קודם
         if (!parentId && !typesWithoutParent.includes(type)) {
             this.openParentSelectionDialog(type);
             return;
         }
-        
+
         FormHandler.openForm(type, parentId, null);
     }
 
@@ -693,7 +720,14 @@ class UnifiedTableRenderer {
                             const selected = document.getElementById('parentSelector').value;
                             if(selected) {
                                 window.currentParentId = selected;
-                                FormHandler.openForm('${type}', selected, null);
+                                const formType = '${type}';
+                                if (formType === 'block' && typeof openAddBlock === 'function') {
+                                    openAddBlock(selected);
+                                } else if (formType === 'plot' && typeof openAddPlot === 'function') {
+                                    openAddPlot(selected);
+                                } else {
+                                    FormHandler.openForm(formType, selected, null);
+                                }
                                 document.getElementById('parentSelectionModal').remove();
                             } else {
                                 alert('יש לבחור ${this.getParentTypeName(parentType)}');
@@ -770,12 +804,24 @@ class UnifiedTableRenderer {
             const parentName = this.extractParentName(item, type);
             
             
+            // שימוש בפונקציות ייעודיות ל-PopupManager עבור cemetery, block, plot
+            if (type === 'cemetery' && typeof editCemetery === 'function') {
+                editCemetery(itemId);
+                return;
+            } else if (type === 'block' && typeof editBlock === 'function') {
+                editBlock(itemId);
+                return;
+            } else if (type === 'plot' && typeof editPlot === 'function') {
+                editPlot(itemId);
+                return;
+            }
+
             if (typeof FormHandler?.openForm !== 'function') {
                 console.error('❌ ERROR: FormHandler.openForm is not available');
                 alert('שגיאה: FormHandler לא זמין');
                 return;
             }
-            
+
             FormHandler.openForm(type, parentId, itemId, parentName);    
         } catch (error) {
             console.error('❌ END editItem - ERROR');

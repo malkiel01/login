@@ -61,7 +61,7 @@ function openAddCemetery() {
         PopupManager.create({
             title: 'הוספת בית עלמין חדש',
             type: 'iframe',
-            url: formUrl,
+            src: formUrl,
             width: 650,
             height: 550
         });
@@ -78,7 +78,7 @@ async function editCemetery(id) {
         PopupManager.create({
             title: 'עריכת בית עלמין',
             type: 'iframe',
-            url: formUrl,
+            src: formUrl,
             width: 650,
             height: 550
         });

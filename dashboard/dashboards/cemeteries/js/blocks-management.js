@@ -71,7 +71,7 @@ function openAddBlock(cemeteryId = null) {
         PopupManager.create({
             title: 'הוספת גוש חדש',
             type: 'iframe',
-            url: formUrl,
+            src: formUrl,
             width: 600,
             height: 500
         });
@@ -88,7 +88,7 @@ async function editBlock(id) {
         PopupManager.create({
             title: 'עריכת גוש',
             type: 'iframe',
-            url: formUrl,
+            src: formUrl,
             width: 600,
             height: 500
         });

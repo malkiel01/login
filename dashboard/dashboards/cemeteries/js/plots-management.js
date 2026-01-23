@@ -80,7 +80,7 @@ function openAddPlot(blockId = null) {
         PopupManager.create({
             title: 'הוספת חלקה חדשה',
             type: 'iframe',
-            url: formUrl,
+            src: formUrl,
             width: 600,
             height: 500
         });
@@ -96,7 +96,7 @@ async function editPlot(id) {
         PopupManager.create({
             title: 'עריכת חלקה',
             type: 'iframe',
-            url: formUrl,
+            src: formUrl,
             width: 600,
             height: 500
         });

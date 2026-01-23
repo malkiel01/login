@@ -326,12 +326,14 @@ class UnifiedTableRenderer {
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
             'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId),
             'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
-            'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase()
+            'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase(),
+            'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
+            'country': () => typeof openAddCountry === 'function' && openAddCountry()
         };
 
         if (directPopupTypes[type]) {
-            // עבור block ו-plot צריך הורה
-            if ((type === 'block' || type === 'plot') && !parentId) {
+            // עבור block, plot, city צריך הורה
+            if ((type === 'block' || type === 'plot' || type === 'city') && !parentId) {
                 this.openParentSelectionDialog(type);
                 return;
             }
@@ -523,7 +525,9 @@ class UnifiedTableRenderer {
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
             'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId),
             'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
-            'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase()
+            'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase(),
+            'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
+            'country': () => typeof openAddCountry === 'function' && openAddCountry()
         };
 
         if (directPopupTypes[type]) {
@@ -729,6 +733,8 @@ class UnifiedTableRenderer {
                                     openAddBlock(selected);
                                 } else if (formType === 'plot' && typeof openAddPlot === 'function') {
                                     openAddPlot(selected);
+                                } else if (formType === 'city' && typeof openAddCity === 'function') {
+                                    openAddCity(selected);
                                 } else {
                                     FormHandler.openForm(formType, selected, null);
                                 }
@@ -823,6 +829,12 @@ class UnifiedTableRenderer {
                 return;
             } else if (type === 'purchase' && typeof editPurchase === 'function') {
                 editPurchase(itemId);
+                return;
+            } else if (type === 'city' && typeof editCity === 'function') {
+                editCity(itemId);
+                return;
+            } else if (type === 'country' && typeof editCountry === 'function') {
+                editCountry(itemId);
                 return;
             }
 

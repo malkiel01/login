@@ -56,35 +56,47 @@ function getCountryBadge(countryName) {
 function openAddCity(countryId = null) {
     window.currentType = 'city';
     window.currentParentId = countryId;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('city', countryId, null);
+
+    const parentId = countryId;
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/cityForm-iframe.php${parentId ? '?parentId=' + parentId : ''}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'הוספת עיר חדשה',
+            type: 'iframe',
+            src: formUrl,
+            width: 600,
+            height: 450
+        });
     }
 }
 
 // עריכת עיר
 async function editCity(id) {
     window.currentType = 'city';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('city', null, id);
+
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/cityForm-iframe.php?itemId=${id}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'עריכת עיר',
+            type: 'iframe',
+            src: formUrl,
+            width: 600,
+            height: 450
+        });
     }
 }
 
-// צפייה בעיר - פתיחת כרטיס
+// צפייה בעיר - פתיחת עריכה (אין כרטיס צפייה)
 async function viewCity(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('cityCard', null, id);
-    } else {
-        editCity(id);
-    }
+    editCity(id);
 }
 
 // דאבל-קליק על שורת עיר
 async function handleCityDoubleClick(city) {
     const cityId = typeof city === 'object' ? city.unicId : city;
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('cityCard', null, cityId);
-    }
+    editCity(cityId);
 }
 
 

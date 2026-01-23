@@ -54,35 +54,46 @@ function getCitiesCountBadge(count) {
 function openAddCountry() {
     window.currentType = 'country';
     window.currentParentId = null;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('country', null, null);
+
+    const formUrl = '/dashboard/dashboards/cemeteries/forms/iframe/countryForm-iframe.php';
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'הוספת מדינה חדשה',
+            type: 'iframe',
+            src: formUrl,
+            width: 600,
+            height: 400
+        });
     }
 }
 
 // עריכת מדינה
 async function editCountry(id) {
     window.currentType = 'country';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('country', null, id);
+
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/countryForm-iframe.php?itemId=${id}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'עריכת מדינה',
+            type: 'iframe',
+            src: formUrl,
+            width: 600,
+            height: 400
+        });
     }
 }
 
-// צפייה במדינה - פתיחת כרטיס
+// צפייה במדינה - פתיחת עריכה (אין כרטיס צפייה)
 async function viewCountry(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('countryCard', null, id);
-    } else {
-        editCountry(id);
-    }
+    editCountry(id);
 }
 
 // דאבל-קליק על שורת מדינה
 async function handleCountryDoubleClick(country) {
     const countryId = typeof country === 'object' ? country.unicId : country;
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('countryCard', null, countryId);
-    }
+    editCountry(countryId);
 }
 
 

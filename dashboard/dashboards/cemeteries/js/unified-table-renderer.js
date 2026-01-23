@@ -329,6 +329,7 @@ class UnifiedTableRenderer {
             'grave': () => typeof openAddGrave === 'function' && openAddGrave(parentId),
             'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
             'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase(),
+            'customer': () => typeof openAddCustomer === 'function' && openAddCustomer(),
             'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
             'country': () => typeof openAddCountry === 'function' && openAddCountry(),
             'residency': () => typeof openAddResidency === 'function' && openAddResidency(),
@@ -508,8 +509,11 @@ class UnifiedTableRenderer {
             'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
             'plot': () => typeof openAddPlot === 'function' && openAddPlot(parentId),
+            'areaGrave': () => typeof openAddAreaGrave === 'function' && openAddAreaGrave(parentId),
+            'grave': () => typeof openAddGrave === 'function' && openAddGrave(parentId),
             'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
             'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase(),
+            'customer': () => typeof openAddCustomer === 'function' && openAddCustomer(),
             'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
             'country': () => typeof openAddCountry === 'function' && openAddCountry(),
             'residency': () => typeof openAddResidency === 'function' && openAddResidency(),
@@ -831,6 +835,9 @@ class UnifiedTableRenderer {
                 return;
             } else if (type === 'grave' && typeof editGrave === 'function') {
                 editGrave(itemId);
+                return;
+            } else if (type === 'customer' && typeof editCustomer === 'function') {
+                editCustomer(itemId);
                 return;
             }
 

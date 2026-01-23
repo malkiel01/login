@@ -179,7 +179,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- 3️⃣ מערכת טפסים -->
     <script src="/dashboard/dashboards/cemeteries/forms/FormValidations.js"></script>
     <script src="/dashboard/dashboards/cemeteries/forms/payment-display-manager.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/forms/form-handler.js"></script>
+    <!-- FormHandler removed - migrated to PopupManager (2026-01-23) -->
 
     <!-- 4️⃣ כרטיסים -->
     <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>

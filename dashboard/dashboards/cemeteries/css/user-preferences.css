@@ -67,10 +67,9 @@ body.color-scheme-green a:hover {
     color: #047857;
 }
 
-/* Green Gradient Background */
-[data-color-scheme="green"] body,
+/* Green Gradient Background - עם !important לעקוף main.css */
 body.color-scheme-green {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
 }
 
 /* Badges and highlights */
@@ -99,7 +98,8 @@ body.color-scheme-green .form-control:focus {
 /* ===================================================================
    DARK MODE
    =================================================================== */
-[data-theme="dark"],
+html[data-theme="dark"],
+html[data-theme="dark"] body,
 body.dark-theme {
     /* רקעים */
     --bg-primary: #1e293b;
@@ -124,10 +124,14 @@ body.dark-theme {
     --primary-dark: #a78bfa;
 }
 
-/* רקע גוף בדארק */
-[data-theme="dark"] body,
+/* רקע גוף בדארק - עם !important לעקוף main.css */
 body.dark-theme {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+}
+
+/* Header בדארק */
+body.dark-theme .dashboard-header {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
 }
 
 /* כרטיסים ופאנלים */
@@ -216,10 +220,11 @@ body.dark-theme .btn-outline:hover {
     background: var(--bg-primary);
 }
 
-/* Header */
-[data-theme="dark"] .dashboard-header,
-body.dark-theme .dashboard-header {
-    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+/* Dashboard Container */
+body.dark-theme .dashboard-container,
+body.dark-theme .dashboard-content,
+body.dark-theme .main-content {
+    background: var(--bg-primary);
 }
 
 /* Sidebar */

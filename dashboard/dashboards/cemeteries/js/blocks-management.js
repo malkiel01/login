@@ -63,26 +63,42 @@ function getCemeteryBadge(cemeteryName) {
 function openAddBlock(cemeteryId = null) {
     window.currentType = 'block';
     window.currentParentId = cemeteryId || currentCemeteryId;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('block', cemeteryId || currentCemeteryId, null);
+
+    const parentId = cemeteryId || currentCemeteryId;
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/blockForm-iframe.php${parentId ? '?parentId=' + parentId : ''}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'הוספת גוש חדש',
+            type: 'iframe',
+            url: formUrl,
+            width: 600,
+            height: 500
+        });
     }
 }
 
 // עריכת גוש
 async function editBlock(id) {
     window.currentType = 'block';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('block', null, id);
+
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/blockForm-iframe.php?itemId=${id}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'עריכת גוש',
+            type: 'iframe',
+            url: formUrl,
+            width: 600,
+            height: 500
+        });
     }
 }
 
 // צפייה בגוש - פתיחת כרטיס
 async function viewBlock(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('blockCard', null, id);
-    } else {
-        editBlock(id);
-    }
+    // לעת עתה פותחים עריכה - אפשר להוסיף כרטיס צפייה בהמשך
+    editBlock(id);
 }
 
 // דאבל-קליק על שורת גוש - מעבר לחלקות

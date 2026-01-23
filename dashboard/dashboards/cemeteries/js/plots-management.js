@@ -72,24 +72,40 @@ function getBlockBadge(blockName) {
 function openAddPlot(blockId = null) {
     window.currentType = 'plot';
     window.currentParentId = blockId || plotsFilterBlockId;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('plot', blockId || plotsFilterBlockId, null);
+
+    const parentId = blockId || plotsFilterBlockId;
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/plotForm-iframe.php${parentId ? '?parentId=' + parentId : ''}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'הוספת חלקה חדשה',
+            type: 'iframe',
+            url: formUrl,
+            width: 600,
+            height: 500
+        });
     }
 }
 
 async function editPlot(id) {
     window.currentType = 'plot';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('plot', null, id);
+
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/plotForm-iframe.php?itemId=${id}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'עריכת חלקה',
+            type: 'iframe',
+            url: formUrl,
+            width: 600,
+            height: 500
+        });
     }
 }
 
 async function viewPlot(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('plotCard', null, id);
-    } else {
-        editPlot(id);
-    }
+    // לעת עתה פותחים עריכה - אפשר להוסיף כרטיס צפייה בהמשך
+    editPlot(id);
 }
 
 // דאבל-קליק על שורת חלקה - מעבר לאחוזות קבר

@@ -54,26 +54,41 @@ function getBlocksCountBadge(count) {
 function openAddCemetery() {
     window.currentType = 'cemetery';
     window.currentParentId = null;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('cemetery', null, null);
+
+    const formUrl = '/dashboard/dashboards/cemeteries/forms/iframe/cemeteryForm-iframe.php';
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'הוספת בית עלמין חדש',
+            type: 'iframe',
+            url: formUrl,
+            width: 650,
+            height: 550
+        });
     }
 }
 
 // עריכת בית עלמין
 async function editCemetery(id) {
     window.currentType = 'cemetery';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('cemetery', null, id);
+
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/cemeteryForm-iframe.php?itemId=${id}`;
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            title: 'עריכת בית עלמין',
+            type: 'iframe',
+            url: formUrl,
+            width: 650,
+            height: 550
+        });
     }
 }
 
 // צפייה בבית עלמין - פתיחת כרטיס
 async function viewCemetery(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('cemeteryCard', null, id);
-    } else {
-        editCemetery(id);
-    }
+    // לעת עתה פותחים עריכה - אפשר להוסיף כרטיס צפייה בהמשך
+    editCemetery(id);
 }
 
 // דאבל-קליק על שורת בית עלמין - מעבר לגושים

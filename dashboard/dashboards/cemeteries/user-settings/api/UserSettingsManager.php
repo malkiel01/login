@@ -11,10 +11,74 @@ class UserSettingsManager {
     private $conn;
     private $userId;
     private $cache = [];
+    private static $migrationDone = false;
 
     public function __construct($conn, $userId) {
         $this->conn = $conn;
         $this->userId = $userId;
+
+        // וידוא שההגדרות החדשות קיימות (מיגרציה אוטומטית)
+        if (!self::$migrationDone) {
+            $this->ensureV2Settings();
+            self::$migrationDone = true;
+        }
+    }
+
+    /**
+     * מיגרציה אוטומטית - וידוא שההגדרות החדשות קיימות
+     */
+    private function ensureV2Settings() {
+        try {
+            // בדיקה אם darkMode קיים
+            $stmt = $this->conn->prepare("
+                SELECT COUNT(*) FROM user_settings_defaults WHERE settingKey = 'darkMode'
+            ");
+            $stmt->execute();
+            $exists = $stmt->fetchColumn() > 0;
+
+            if (!$exists) {
+                // מחיקת theme הישן
+                $this->conn->exec("DELETE FROM user_settings_defaults WHERE settingKey = 'theme'");
+
+                // הוספת darkMode
+                $stmt = $this->conn->prepare("
+                    INSERT INTO user_settings_defaults
+                    (settingKey, defaultValue, settingType, category, label, description, options, sortOrder)
+                    VALUES ('darkMode', 'false', 'boolean', 'display', 'מצב כהה', 'הפעל מצב תצוגה כהה', NULL, 1)
+                ");
+                $stmt->execute();
+
+                // הוספת colorScheme
+                $stmt = $this->conn->prepare("
+                    INSERT INTO user_settings_defaults
+                    (settingKey, defaultValue, settingType, category, label, description, options, sortOrder)
+                    VALUES ('colorScheme', 'purple', 'string', 'display', 'סגנון צבע', 'בחר סגנון צבעים (במצב בהיר)', :options, 2)
+                ");
+                $stmt->execute(['options' => json_encode([
+                    ['value' => 'purple', 'label' => 'סגול'],
+                    ['value' => 'green', 'label' => 'ירוק מטאלי']
+                ])]);
+
+                // עדכון sortOrder של שאר ההגדרות
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 3 WHERE settingKey = 'fontSize'");
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 4 WHERE settingKey = 'tableRowsPerPage'");
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 5 WHERE settingKey = 'sidebarCollapsed'");
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 6 WHERE settingKey = 'compactMode'");
+
+                // המרת theme קיים של משתמשים ל-darkMode
+                $this->conn->exec("
+                    UPDATE user_settings
+                    SET settingKey = 'darkMode',
+                        settingValue = CASE WHEN settingValue = 'dark' THEN 'true' ELSE 'false' END,
+                        settingType = 'boolean'
+                    WHERE settingKey = 'theme'
+                ");
+
+                error_log("UserSettingsManager: V2 migration completed successfully");
+            }
+        } catch (Exception $e) {
+            error_log("UserSettingsManager: V2 migration error - " . $e->getMessage());
+        }
     }
 
     /**

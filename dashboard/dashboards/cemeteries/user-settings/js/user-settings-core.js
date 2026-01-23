@@ -297,11 +297,21 @@ const UserSettings = (function() {
      * החלת הגדרות על הממשק
      */
     function applyToUI() {
-        // ערכת נושא
-        const theme = get('theme', 'light');
+        // מצב כהה (toggle)
+        const darkMode = get('darkMode', false);
+        const isDark = darkMode === true || darkMode === 'true';
+        const theme = isDark ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', theme);
         document.body.classList.remove('dark-theme', 'light-theme');
         document.body.classList.add(theme + '-theme');
+
+        // סגנון צבע (רק במצב בהיר)
+        const colorScheme = get('colorScheme', 'purple');
+        document.documentElement.setAttribute('data-color-scheme', isDark ? '' : colorScheme);
+        document.body.classList.remove('color-scheme-purple', 'color-scheme-green');
+        if (!isDark) {
+            document.body.classList.add('color-scheme-' + colorScheme);
+        }
 
         // גודל גופן
         const fontSize = get('fontSize', 14);
@@ -320,7 +330,7 @@ const UserSettings = (function() {
         }
         document.body.classList.toggle('sidebar-collapsed', isCollapsed);
 
-        console.log('UserSettings applied:', { theme, fontSize, compactMode, sidebarCollapsed: isCollapsed });
+        console.log('UserSettings applied:', { darkMode: isDark, colorScheme, fontSize, compactMode, sidebarCollapsed: isCollapsed });
     }
 
     /**
@@ -333,7 +343,7 @@ const UserSettings = (function() {
 
             // האזנה לשינויים ועדכון UI
             onChange((key, value) => {
-                if (['theme', 'fontSize', 'compactMode', 'sidebarCollapsed'].includes(key)) {
+                if (['darkMode', 'colorScheme', 'fontSize', 'compactMode', 'sidebarCollapsed'].includes(key)) {
                     applyToUI();
                 }
             });

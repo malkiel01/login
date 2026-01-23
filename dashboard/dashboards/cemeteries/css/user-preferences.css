@@ -18,6 +18,85 @@ html {
 }
 
 /* ===================================================================
+   COLOR SCHEMES (Light Mode Styles)
+   =================================================================== */
+
+/* Purple (Default) - כבר מוגדר ב-main.css */
+[data-color-scheme="purple"],
+body.color-scheme-purple {
+    --primary-color: #667eea;
+    --primary-dark: #764ba2;
+}
+
+/* Metallic Green */
+[data-color-scheme="green"],
+body.color-scheme-green {
+    --primary-color: #059669;
+    --primary-dark: #047857;
+}
+
+[data-color-scheme="green"] .dashboard-header,
+body.color-scheme-green .dashboard-header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+[data-color-scheme="green"] .sidebar .sidebar-item.active,
+[data-color-scheme="green"] .nav-item.active,
+body.color-scheme-green .sidebar .sidebar-item.active,
+body.color-scheme-green .nav-item.active {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+[data-color-scheme="green"] .btn-primary,
+body.color-scheme-green .btn-primary {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+[data-color-scheme="green"] .btn-primary:hover,
+body.color-scheme-green .btn-primary:hover {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+[data-color-scheme="green"] a,
+body.color-scheme-green a {
+    color: #059669;
+}
+
+[data-color-scheme="green"] a:hover,
+body.color-scheme-green a:hover {
+    color: #047857;
+}
+
+/* Green Gradient Background */
+[data-color-scheme="green"] body,
+body.color-scheme-green {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Badges and highlights */
+[data-color-scheme="green"] .badge-primary,
+body.color-scheme-green .badge-primary {
+    background: #059669;
+}
+
+[data-color-scheme="green"] .hierarchy-card:hover,
+body.color-scheme-green .hierarchy-card:hover {
+    border-color: #059669;
+}
+
+[data-color-scheme="green"] .search-input:focus,
+body.color-scheme-green .search-input:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+}
+
+[data-color-scheme="green"] .form-control:focus,
+body.color-scheme-green .form-control:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+}
+
+/* ===================================================================
    DARK MODE
    =================================================================== */
 [data-theme="dark"],

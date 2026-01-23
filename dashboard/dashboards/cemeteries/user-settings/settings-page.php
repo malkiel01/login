@@ -191,6 +191,14 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             }, 3000);
         }
 
+        // הצג/הסתר colorScheme לפי darkMode
+        function updateColorSchemeVisibility(isDark) {
+            const colorSchemeItem = document.querySelector('.setting-item[data-key="colorScheme"]');
+            if (colorSchemeItem) {
+                colorSchemeItem.style.display = isDark ? 'none' : 'flex';
+            }
+        }
+
         // שמירת הגדרה
         async function saveSetting(key, value) {
             try {
@@ -221,6 +229,11 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                             key: key,
                             value: value
                         }, '*');
+                    }
+
+                    // אם שונה darkMode, עדכן את נראות colorScheme
+                    if (key === 'darkMode') {
+                        updateColorSchemeVisibility(value === true || value === 'true');
                     }
 
                     showMessage('נשמר בהצלחה');
@@ -293,6 +306,12 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             // עדכון כותרת הפופאפ
             if (typeof PopupAPI !== 'undefined') {
                 PopupAPI.setTitle('הגדרות אישיות');
+            }
+
+            // בדיקת מצב darkMode התחלתי והסתרת colorScheme אם צריך
+            const darkModeCheckbox = document.querySelector('.setting-item[data-key="darkMode"] input[type="checkbox"]');
+            if (darkModeCheckbox) {
+                updateColorSchemeVisibility(darkModeCheckbox.checked);
             }
         });
     </script>

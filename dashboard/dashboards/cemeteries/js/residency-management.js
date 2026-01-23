@@ -71,17 +71,16 @@ function openAddResidency() {
     window.currentType = 'residency';
     window.currentParentId = null;
 
+    const formUrl = '/dashboard/dashboards/cemeteries/forms/iframe/residencyForm-iframe.php';
+
     if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
-            id: 'residencyForm-new-' + Date.now(),
-            type: 'iframe',
-            src: '/dashboard/dashboards/cemeteries/forms/iframe/residencyForm-iframe.php',
             title: 'הוספת חוק תושבות',
+            type: 'iframe',
+            src: formUrl,
             width: 800,
             height: 600
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('residency', null, null);
     }
 }
 
@@ -89,17 +88,16 @@ function openAddResidency() {
 async function editResidency(id) {
     window.currentType = 'residency';
 
+    const formUrl = `/dashboard/dashboards/cemeteries/forms/iframe/residencyForm-iframe.php?itemId=${id}`;
+
     if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
-            id: 'residencyForm-' + id,
-            type: 'iframe',
-            src: '/dashboard/dashboards/cemeteries/forms/iframe/residencyForm-iframe.php?itemId=' + id,
             title: 'עריכת חוק תושבות',
+            type: 'iframe',
+            src: formUrl,
             width: 800,
             height: 600
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('residency', null, id);
     }
 }
 

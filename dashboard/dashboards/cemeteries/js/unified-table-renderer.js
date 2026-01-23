@@ -320,7 +320,7 @@ class UnifiedTableRenderer {
             return;
         }
 
-        // שימוש בפונקציות ייעודיות ל-PopupManager עבור cemetery, block, plot
+        // שימוש בפונקציות ייעודיות ל-PopupManager עבור כל הישויות
         const directPopupTypes = {
             'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
@@ -328,7 +328,9 @@ class UnifiedTableRenderer {
             'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
             'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase(),
             'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
-            'country': () => typeof openAddCountry === 'function' && openAddCountry()
+            'country': () => typeof openAddCountry === 'function' && openAddCountry(),
+            'residency': () => typeof openAddResidency === 'function' && openAddResidency(),
+            'payment': () => typeof openAddPayment === 'function' && openAddPayment()
         };
 
         if (directPopupTypes[type]) {
@@ -519,7 +521,7 @@ class UnifiedTableRenderer {
         // לקוחות ורכישות לא צריכים הורה
         const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial', 'country', 'city'];
 
-        // שימוש בפונקציות ייעודיות ל-PopupManager עבור cemetery, block, plot
+        // שימוש בפונקציות ייעודיות ל-PopupManager עבור כל הישויות
         const directPopupTypes = {
             'cemetery': () => typeof openAddCemetery === 'function' && openAddCemetery(),
             'block': () => typeof openAddBlock === 'function' && openAddBlock(parentId),
@@ -527,7 +529,9 @@ class UnifiedTableRenderer {
             'burial': () => typeof openAddBurial === 'function' && openAddBurial(),
             'purchase': () => typeof openAddPurchase === 'function' && openAddPurchase(),
             'city': () => typeof openAddCity === 'function' && openAddCity(parentId),
-            'country': () => typeof openAddCountry === 'function' && openAddCountry()
+            'country': () => typeof openAddCountry === 'function' && openAddCountry(),
+            'residency': () => typeof openAddResidency === 'function' && openAddResidency(),
+            'payment': () => typeof openAddPayment === 'function' && openAddPayment()
         };
 
         if (directPopupTypes[type]) {
@@ -814,7 +818,7 @@ class UnifiedTableRenderer {
             const parentName = this.extractParentName(item, type);
             
             
-            // שימוש בפונקציות ייעודיות ל-PopupManager עבור cemetery, block, plot
+            // שימוש בפונקציות ייעודיות ל-PopupManager עבור כל הישויות
             if (type === 'cemetery' && typeof editCemetery === 'function') {
                 editCemetery(itemId);
                 return;
@@ -835,6 +839,12 @@ class UnifiedTableRenderer {
                 return;
             } else if (type === 'country' && typeof editCountry === 'function') {
                 editCountry(itemId);
+                return;
+            } else if (type === 'residency' && typeof editResidency === 'function') {
+                editResidency(itemId);
+                return;
+            } else if (type === 'payment' && typeof editPayment === 'function') {
+                editPayment(itemId);
                 return;
             }
 

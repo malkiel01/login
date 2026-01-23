@@ -347,16 +347,16 @@ class EntityRenderer {
                             <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
                                 ${parentSingular} עדיין לא ${config.hasParent ? 'מכיל' : 'מכילה'} ${config.plural}. תוכל להוסיף ${config.singular} ${config.hasParent ? 'חדש' : 'חדשה'}
                             </div>
-                            <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('${config.entityType || Object.keys(ENTITY_CONFIG).find(k => ENTITY_CONFIG[k] === config)}', '${state.parentId}', null); } else { alert('FormHandler לא זמין'); }" 
-                                style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
-                                       color: white; 
-                                       border: none; 
-                                       padding: 12px 24px; 
-                                       border-radius: 8px; 
-                                       font-size: 15px; 
-                                       font-weight: 600; 
-                                       cursor: pointer; 
+                            <button
+                                onclick="(function() { const type='${config.entityType || Object.keys(ENTITY_CONFIG).find(k => ENTITY_CONFIG[k] === config)}'; const parentId='${state.parentId}'; const addFuncs = { cemetery: openAddCemetery, block: openAddBlock, plot: openAddPlot, areaGrave: openAddAreaGrave, grave: openAddGrave, burial: openAddBurial, purchase: openAddPurchase, city: openAddCity, country: openAddCountry, residency: openAddResidency, payment: openAddPayment }; if(addFuncs[type]) { addFuncs[type](parentId); } else { console.warn('No popup function for:', type); } })()"
+                                style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%);
+                                       color: white;
+                                       border: none;
+                                       padding: 12px 24px;
+                                       border-radius: 8px;
+                                       font-size: 15px;
+                                       font-weight: 600;
+                                       cursor: pointer;
                                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                                        transition: all 0.2s;"
                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"

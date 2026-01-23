@@ -276,21 +276,25 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
         }
 
         function toggleSection(btn) { btn.closest('.sortable-section').classList.toggle('collapsed'); }
-        function editBurial(id) { if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('burial', null, id); }
+        function editBurial(id) {
+            if (window.parent && window.parent.PopupManager) {
+                window.parent.PopupManager.create({ id: 'burialForm-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/burialForm-iframe.php?itemId=' + id, title: 'עריכת קבורה', width: 900, height: 700 });
+            }
+        }
         function viewCustomer(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'customerCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/customerCard-iframe.php?itemId=' + id, title: 'כרטיס לקוח', width: 1000, height: 700 });
-            } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('customerCard', null, id);
+            }
         }
         function viewGrave(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'graveCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/graveCard-iframe.php?itemId=' + id, title: 'כרטיס קבר', width: 1200, height: 700 });
-            } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('graveCard', null, id);
+            }
         }
         function viewPurchase(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'purchaseCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/purchaseCard-iframe.php?itemId=' + id, title: 'כרטיס רכישה', width: 1200, height: 700 });
-            } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('purchaseCard', null, id);
+            }
         }
     </script>
     <!-- סקריפט לגרירת סקשנים -->

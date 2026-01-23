@@ -362,8 +362,6 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
                     width: 800,
                     height: 600
                 });
-            } else if (window.parent && window.parent.FormHandler) {
-                window.parent.FormHandler.openForm('residency', null, id);
             }
         }
     </script>

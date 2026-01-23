@@ -303,20 +303,33 @@ function showParentSelectionModal(parents, parentInfo) {
 window.proceedWithParentSelection = function(parentType) {
     const select = document.getElementById('parentSelect');
     const parentId = select.value;
-    
+
     if (!parentId) {
         alert('יש לבחור ' + getTypeName(parentType));
         return;
     }
-    
+
     // סגור את המודל
     select.closest('div[style*=fixed]').remove();
-    
+
     // עדכן את ה-parent הנוכחי
     window.currentParentId = parentId;
-    
-    // פתח את הטופס
-    FormHandler.openForm(window.currentType, parentId, null);
+
+    // פתח את הטופס באמצעות פונקציות ייעודיות
+    const type = window.currentType;
+    if (type === 'block' && typeof openAddBlock === 'function') {
+        openAddBlock(parentId);
+    } else if (type === 'plot' && typeof openAddPlot === 'function') {
+        openAddPlot(parentId);
+    } else if (type === 'city' && typeof openAddCity === 'function') {
+        openAddCity(parentId);
+    } else if (type === 'areaGrave' && typeof openAddAreaGrave === 'function') {
+        openAddAreaGrave(parentId);
+    } else if (type === 'grave' && typeof openAddGrave === 'function') {
+        openAddGrave(parentId);
+    } else {
+        console.warn('No popup function found for type:', type);
+    }
 }
 
 // בדיקה אם יש שורות בחלקה
@@ -687,8 +700,11 @@ window.handleFormSubmit = function(event, type) {
     .then(data => {
         if (data.success) {
             showSuccess(data.message || 'הנתונים נשמרו בהצלחה');
-            FormHandler.closeForm(type);
-            
+            // סגור את הפופאפ הפעיל
+            if (typeof PopupManager !== 'undefined' && PopupManager.closeActive) {
+                PopupManager.closeActive();
+            }
+
             // רענן את התצוגה הנוכחית
             tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
         } else {

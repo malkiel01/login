@@ -595,11 +595,12 @@ function getGraveTypeName(type) {
 
 // פונקציות פעולה
 function addRowToPlot(plotId) {
-    // קרא ל-FormHandler עם הטיפוס הנכון
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('row', plotId, null);
+    // שורות מנוהלות דרך מודל ניהול שורות
+    if (typeof window.openRowsManagementModal === 'function') {
+        window.openRowsManagementModal(plotId, window.selectedItems.plot?.name);
     } else {
-        console.error('FormHandler not available');
+        console.warn('Row management modal not available');
+        alert('ניהול שורות לא זמין');
     }
 }
 

@@ -475,8 +475,6 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                     width: 1200,
                     height: 700
                 });
-            } else if (window.parent && window.parent.FormHandler) {
-                window.parent.FormHandler.openForm('purchaseCard', null, id);
             }
         }
 
@@ -490,8 +488,6 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                     width: 1200,
                     height: 700
                 });
-            } else if (window.parent && window.parent.FormHandler) {
-                window.parent.FormHandler.openForm('burialCard', null, id);
             }
         }
     </script>

@@ -252,18 +252,26 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
         }
 
         function toggleSection(btn) { btn.closest('.sortable-section').classList.toggle('collapsed'); }
-        function editPurchase(id) { if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('purchase', null, id); }
+        function editPurchase(id) {
+            if (window.parent && window.parent.PopupManager) {
+                window.parent.PopupManager.create({ id: 'purchaseForm-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/purchaseForm-iframe.php?itemId=' + id, title: 'עריכת רכישה', width: 900, height: 700 });
+            }
+        }
         function viewGrave(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'graveCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/graveCard-iframe.php?itemId=' + id, title: 'כרטיס קבר', width: 1200, height: 700 });
-            } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('graveCard', null, id);
+            }
         }
         function viewBurial(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'burialCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/burialCard-iframe.php?itemId=' + id, title: 'כרטיס קבורה', width: 1200, height: 700 });
-            } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('burialCard', null, id);
+            }
         }
-        function addBurial(purchaseId, graveId) { if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('burial', null, null); }
+        function addBurial(purchaseId, graveId) {
+            if (window.parent && window.parent.PopupManager) {
+                window.parent.PopupManager.create({ id: 'burialForm-new', type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/burialForm-iframe.php', title: 'הוספת קבורה חדשה', width: 900, height: 700 });
+            }
+        }
     </script>
     <!-- סקריפט לגרירת סקשנים -->
     <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>

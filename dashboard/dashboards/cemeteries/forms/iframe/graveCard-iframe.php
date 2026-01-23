@@ -290,19 +290,17 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                     width: 900,
                     height: 700
                 });
-            } else if (window.parent && window.parent.FormHandler) {
-                window.parent.FormHandler.openForm('grave', null, id);
             }
         }
         function viewPurchase(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'purchaseCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/purchaseCard-iframe.php?itemId=' + id, title: 'כרטיס רכישה', width: 1200, height: 700 });
-            } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('purchaseCard', null, id);
+            }
         }
         function viewBurial(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'burialCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/burialCard-iframe.php?itemId=' + id, title: 'כרטיס קבורה', width: 1200, height: 700 });
-            } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('burialCard', null, id);
+            }
         }
     </script>
     <!-- סקריפט לגרירת סקשנים -->

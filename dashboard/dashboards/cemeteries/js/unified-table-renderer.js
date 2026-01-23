@@ -345,33 +345,13 @@ class UnifiedTableRenderer {
             return;
         }
 
-        if (typesWithoutParent.includes(type)) {
-
-            // בדוק אם FormHandler קיים
-            if (typeof FormHandler === 'undefined') {
-                alert('ERROR: FormHandler is undefined!');
-                console.error('FormHandler not found!');
-                return;
-            }
-
-            if (typeof FormHandler.openForm !== 'function') {
-                alert('ERROR: FormHandler.openForm is not a function!');
-                console.error('FormHandler.openForm is not a function!');
-                return;
-            }
-
-            FormHandler.openForm(type, null, null);
-            return;
-        }
-
         // בדוק אם צריך לבחור הורה קודם
-        if (!parentId) {
+        if (!parentId && !typesWithoutParent.includes(type)) {
             this.openParentSelectionDialog(type);
             return;
         }
 
-        // פתח את הטופס ישירות
-        FormHandler.openForm(type, parentId, null);
+        console.warn('No popup function found for type:', type);
     }
 
     /**
@@ -537,17 +517,11 @@ class UnifiedTableRenderer {
         };
 
         if (directPopupTypes[type]) {
-            if ((type === 'block' || type === 'plot') && !parentId) {
+            if ((type === 'block' || type === 'plot' || type === 'city' || type === 'areaGrave' || type === 'grave') && !parentId) {
                 this.openParentSelectionDialog(type);
                 return;
             }
             directPopupTypes[type]();
-            return;
-        }
-
-        if (typesWithoutParent.includes(type)) {
-            // פתח ישירות בלי הורה
-            FormHandler.openForm(type, null, null);
             return;
         }
 
@@ -557,7 +531,7 @@ class UnifiedTableRenderer {
             return;
         }
 
-        FormHandler.openForm(type, parentId, null);
+        console.warn('No popup function found for type:', type);
     }
 
     async openParentSelectionDialog(type) {
@@ -741,8 +715,12 @@ class UnifiedTableRenderer {
                                     openAddPlot(selected);
                                 } else if (formType === 'city' && typeof openAddCity === 'function') {
                                     openAddCity(selected);
+                                } else if (formType === 'areaGrave' && typeof openAddAreaGrave === 'function') {
+                                    openAddAreaGrave(selected);
+                                } else if (formType === 'grave' && typeof openAddGrave === 'function') {
+                                    openAddGrave(selected);
                                 } else {
-                                    FormHandler.openForm(formType, selected, null);
+                                    console.warn('No popup function found for type:', formType);
                                 }
                                 document.getElementById('parentSelectionModal').remove();
                             } else {
@@ -856,13 +834,7 @@ class UnifiedTableRenderer {
                 return;
             }
 
-            if (typeof FormHandler?.openForm !== 'function') {
-                console.error('❌ ERROR: FormHandler.openForm is not available');
-                alert('שגיאה: FormHandler לא זמין');
-                return;
-            }
-
-            FormHandler.openForm(type, parentId, itemId, parentName);    
+            console.warn('No edit function found for type:', type);
         } catch (error) {
             console.error('❌ END editItem - ERROR');
             console.error('   Error:', error);

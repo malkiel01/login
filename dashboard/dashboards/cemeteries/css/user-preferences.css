@@ -1,0 +1,411 @@
+/*
+ * File: css/user-preferences.css
+ * Version: 1.0.0
+ * Created: 2026-01-23
+ * Author: Malkiel
+ * Description: תמיכה בהעדפות משתמש - Dark Mode, Font Size, Compact Mode
+ */
+
+/* ===================================================================
+   משתנה גודל גופן בסיסי
+   =================================================================== */
+:root {
+    --base-font-size: 14px;
+}
+
+html {
+    font-size: var(--base-font-size);
+}
+
+/* ===================================================================
+   DARK MODE
+   =================================================================== */
+[data-theme="dark"],
+body.dark-theme {
+    /* רקעים */
+    --bg-primary: #1e293b;
+    --bg-secondary: #334155;
+    --bg-tertiary: #475569;
+
+    /* טקסטים */
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    /* גבולות */
+    --border-color: #475569;
+
+    /* צלליות */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+
+    /* צבעים מותאמים */
+    --primary-color: #818cf8;
+    --primary-dark: #a78bfa;
+}
+
+/* רקע גוף בדארק */
+[data-theme="dark"] body,
+body.dark-theme {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* כרטיסים ופאנלים */
+[data-theme="dark"] .card,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .popup-content,
+body.dark-theme .card,
+body.dark-theme .panel,
+body.dark-theme .sidebar,
+body.dark-theme .modal-content,
+body.dark-theme .popup-content {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* טבלאות */
+[data-theme="dark"] .table,
+[data-theme="dark"] table,
+body.dark-theme .table,
+body.dark-theme table {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .table th,
+[data-theme="dark"] table th,
+body.dark-theme .table th,
+body.dark-theme table th {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table td,
+[data-theme="dark"] table td,
+body.dark-theme .table td,
+body.dark-theme table td {
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .table tr:hover,
+[data-theme="dark"] table tr:hover,
+body.dark-theme .table tr:hover,
+body.dark-theme table tr:hover {
+    background: var(--bg-tertiary);
+}
+
+/* שדות קלט */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] .form-control,
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea,
+body.dark-theme .form-control {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* כפתורים משניים */
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-outline,
+body.dark-theme .btn-secondary,
+body.dark-theme .btn-outline {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-secondary:hover,
+[data-theme="dark"] .btn-outline:hover,
+body.dark-theme .btn-secondary:hover,
+body.dark-theme .btn-outline:hover {
+    background: var(--bg-primary);
+}
+
+/* Header */
+[data-theme="dark"] .dashboard-header,
+body.dark-theme .dashboard-header {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
+
+/* Sidebar */
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .side-panel,
+body.dark-theme .sidebar,
+body.dark-theme .side-panel {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .sidebar-item:hover,
+[data-theme="dark"] .nav-item:hover,
+body.dark-theme .sidebar-item:hover,
+body.dark-theme .nav-item:hover {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .sidebar-item.active,
+[data-theme="dark"] .nav-item.active,
+body.dark-theme .sidebar-item.active,
+body.dark-theme .nav-item.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Breadcrumb */
+[data-theme="dark"] .breadcrumb,
+body.dark-theme .breadcrumb {
+    background: var(--bg-secondary);
+}
+
+/* Cards */
+[data-theme="dark"] .hierarchy-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .info-card,
+body.dark-theme .hierarchy-card,
+body.dark-theme .stat-card,
+body.dark-theme .info-card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* Dropdowns */
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .select-dropdown,
+body.dark-theme .dropdown-menu,
+body.dark-theme .select-dropdown {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+body.dark-theme .dropdown-item:hover {
+    background: var(--bg-tertiary);
+}
+
+/* Search */
+[data-theme="dark"] .search-container,
+[data-theme="dark"] .search-input,
+body.dark-theme .search-container,
+body.dark-theme .search-input {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Modals & Popups */
+[data-theme="dark"] .modal-overlay,
+[data-theme="dark"] .popup-overlay,
+body.dark-theme .modal-overlay,
+body.dark-theme .popup-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Badges */
+[data-theme="dark"] .badge,
+body.dark-theme .badge {
+    opacity: 0.9;
+}
+
+/* Scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar-track,
+body.dark-theme ::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+body.dark-theme ::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+body.dark-theme ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* ===================================================================
+   COMPACT MODE
+   =================================================================== */
+body.compact-mode {
+    --base-font-size: 13px;
+}
+
+body.compact-mode .card,
+body.compact-mode .panel {
+    padding: 12px;
+}
+
+body.compact-mode .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+}
+
+body.compact-mode .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+body.compact-mode h1 { font-size: 1.5rem; }
+body.compact-mode h2 { font-size: 1.3rem; }
+body.compact-mode h3 { font-size: 1.15rem; }
+body.compact-mode h4 { font-size: 1rem; }
+
+body.compact-mode .table th,
+body.compact-mode .table td,
+body.compact-mode table th,
+body.compact-mode table td {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+}
+
+body.compact-mode .sidebar {
+    width: 200px;
+}
+
+body.compact-mode .header-stats {
+    gap: 10px;
+}
+
+body.compact-mode .header-stat {
+    padding: 6px 12px;
+}
+
+body.compact-mode .stat-value {
+    font-size: 1.1rem;
+}
+
+body.compact-mode .form-group {
+    margin-bottom: 0.75rem;
+}
+
+body.compact-mode .form-control {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+body.compact-mode .modal-content,
+body.compact-mode .popup-content {
+    padding: 15px;
+}
+
+/* ===================================================================
+   SIDEBAR COLLAPSED
+   =================================================================== */
+.sidebar.collapsed,
+.side-panel.collapsed {
+    width: 60px !important;
+    min-width: 60px !important;
+}
+
+.sidebar.collapsed .sidebar-text,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .menu-text,
+.side-panel.collapsed .sidebar-text,
+.side-panel.collapsed .nav-text,
+.side-panel.collapsed .menu-text {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-item,
+.sidebar.collapsed .nav-item,
+.side-panel.collapsed .sidebar-item,
+.side-panel.collapsed .nav-item {
+    justify-content: center;
+    padding: 12px;
+}
+
+.sidebar.collapsed .sidebar-icon,
+.sidebar.collapsed .nav-icon,
+.side-panel.collapsed .sidebar-icon,
+.side-panel.collapsed .nav-icon {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.sidebar.collapsed .sidebar-header,
+.side-panel.collapsed .sidebar-header {
+    padding: 10px;
+    justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-logo-text,
+.side-panel.collapsed .sidebar-logo-text {
+    display: none;
+}
+
+/* התאמת התוכן הראשי */
+body.sidebar-collapsed .main-content,
+body.sidebar-collapsed .dashboard-content {
+    margin-right: 60px;
+}
+
+/* Tooltip on hover for collapsed sidebar */
+.sidebar.collapsed .sidebar-item:hover::after,
+.side-panel.collapsed .nav-item:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    margin-right: 10px;
+}
+
+/* ===================================================================
+   TRANSITIONS
+   =================================================================== */
+body,
+.sidebar,
+.side-panel,
+.card,
+.table,
+table,
+input,
+select,
+textarea,
+.btn {
+    transition: background-color 0.3s ease,
+                color 0.3s ease,
+                border-color 0.3s ease,
+                width 0.3s ease;
+}
+
+/* ===================================================================
+   PRINT - ביטול דארק מוד בהדפסה
+   =================================================================== */
+@media print {
+    [data-theme="dark"],
+    body.dark-theme {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-tertiary: #f1f5f9;
+        --text-primary: #1e293b;
+        --text-secondary: #475569;
+        --border-color: #e2e8f0;
+    }
+
+    body.compact-mode {
+        --base-font-size: 12px;
+    }
+}

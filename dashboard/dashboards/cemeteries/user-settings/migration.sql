@@ -43,9 +43,9 @@ CREATE TABLE IF NOT EXISTS user_settings_defaults (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- הכנסת ערכי ברירת מחדל
-INSERT INTO user_settings_defaults (settingKey, defaultValue, settingType, category, label, description, sortOrder) VALUES
+INSERT INTO user_settings_defaults (settingKey, defaultValue, settingType, category, label, description, options, sortOrder) VALUES
 -- הגדרות תצוגה
-('theme', 'light', 'string', 'display', 'ערכת נושא', 'בחר ערכת צבעים', 1),
+('theme', 'light', 'string', 'display', 'ערכת נושא', 'בחר ערכת צבעים', '[{"value":"light","label":"בהיר"},{"value":"dark","label":"כהה"}]', 1),
 ('fontSize', '14', 'number', 'display', 'גודל גופן', 'גודל הגופן בפיקסלים', 2),
 ('tableRowsPerPage', '25', 'number', 'display', 'שורות בטבלה', 'מספר שורות להצגה בכל עמוד', 3),
 ('sidebarCollapsed', 'false', 'boolean', 'display', 'סרגל צד מכווץ', 'האם לכווץ את סרגל הצד', 4),

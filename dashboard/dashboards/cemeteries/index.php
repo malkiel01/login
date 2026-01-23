@@ -35,6 +35,9 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
 
+    <!-- User Preferences (Dark Mode, Compact, etc.) -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
+
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->
@@ -277,7 +280,13 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         // האזנה לשינויי הגדרות מהפופאפ
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'userSettingChanged') {
+                const { key, value } = event.data;
+                console.log('Setting changed from popup:', key, value);
+
                 if (typeof UserSettings !== 'undefined') {
+                    // עדכון הערך בcache המקומי
+                    UserSettings.set(key, value).catch(() => {});
+                    // החלה מיידית על הממשק
                     UserSettings.applyToUI();
                 }
             }

@@ -300,7 +300,8 @@ const UserSettings = (function() {
         // ערכת נושא
         const theme = get('theme', 'light');
         document.documentElement.setAttribute('data-theme', theme);
-        document.body.classList.toggle('dark-theme', theme === 'dark');
+        document.body.classList.remove('dark-theme', 'light-theme');
+        document.body.classList.add(theme + '-theme');
 
         // גודל גופן
         const fontSize = get('fontSize', 14);
@@ -308,14 +309,18 @@ const UserSettings = (function() {
 
         // מצב קומפקטי
         const compactMode = get('compactMode', false);
-        document.body.classList.toggle('compact-mode', compactMode);
+        document.body.classList.toggle('compact-mode', compactMode === true || compactMode === 'true');
 
         // כיווץ sidebar
         const sidebarCollapsed = get('sidebarCollapsed', false);
+        const isCollapsed = sidebarCollapsed === true || sidebarCollapsed === 'true';
         const sidebar = document.querySelector('.sidebar, .side-panel');
         if (sidebar) {
-            sidebar.classList.toggle('collapsed', sidebarCollapsed);
+            sidebar.classList.toggle('collapsed', isCollapsed);
         }
+        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+
+        console.log('UserSettings applied:', { theme, fontSize, compactMode, sidebarCollapsed: isCollapsed });
     }
 
     /**

@@ -134,6 +134,8 @@ class TableManager {
             bodyContainer: null,
             headerTable: null,
             bodyTable: null,
+            headerColgroup: null,
+            bodyColgroup: null,
             paginationFooter: null
         };
 
@@ -409,8 +411,73 @@ class TableManager {
         this.elements.thead = thead;
         this.elements.tbody = tbody;
 
+        // יצירת colgroup לשתי הטבלאות (סנכרון רוחב עמודות)
+        this._createColgroups();
+
         // ציור כותרות
         this.renderHeaders();
+    }
+
+    /**
+     * יצירת colgroup לסנכרון רוחב עמודות
+     */
+    _createColgroups() {
+        // colgroup לטבלת כותרת
+        const headerColgroup = document.createElement('colgroup');
+        headerColgroup.className = 'tm-colgroup';
+        this.elements.headerTable.insertBefore(headerColgroup, this.elements.thead);
+        this.elements.headerColgroup = headerColgroup;
+
+        // colgroup לטבלת גוף
+        const bodyColgroup = document.createElement('colgroup');
+        bodyColgroup.className = 'tm-colgroup';
+        this.elements.bodyTable.insertBefore(bodyColgroup, this.elements.tbody);
+        this.elements.bodyColgroup = bodyColgroup;
+
+        // בניית col elements
+        this._syncColumnWidths();
+    }
+
+    /**
+     * סנכרון רוחב עמודות דרך colgroup
+     */
+    _syncColumnWidths() {
+        // ניקוי colgroups קיימים
+        if (this.elements.headerColgroup) {
+            this.elements.headerColgroup.innerHTML = '';
+        }
+        if (this.elements.bodyColgroup) {
+            this.elements.bodyColgroup.innerHTML = '';
+        }
+
+        // עמודת checkbox אם יש multiSelect
+        if (this.state.multiSelectEnabled) {
+            const headerCol = document.createElement('col');
+            headerCol.style.width = '40px';
+            this.elements.headerColgroup.appendChild(headerCol);
+
+            const bodyCol = document.createElement('col');
+            bodyCol.style.width = '40px';
+            this.elements.bodyColgroup.appendChild(bodyCol);
+        }
+
+        // עמודות רגילות
+        this.state.columnOrder.forEach(colIndex => {
+            if (!this.state.columnVisibility[colIndex]) return;
+
+            const width = this.state.columnWidths[colIndex];
+            const widthStr = typeof width === 'number' ? width + 'px' : width;
+
+            const headerCol = document.createElement('col');
+            headerCol.style.width = widthStr;
+            headerCol.setAttribute('data-col-index', colIndex);
+            this.elements.headerColgroup.appendChild(headerCol);
+
+            const bodyCol = document.createElement('col');
+            bodyCol.style.width = widthStr;
+            bodyCol.setAttribute('data-col-index', colIndex);
+            this.elements.bodyColgroup.appendChild(bodyCol);
+        });
     }
 
     /**
@@ -588,7 +655,7 @@ class TableManager {
         const th = document.createElement('th');
         th.className = 'tm-header-cell';
         th.setAttribute('data-col-index', colIndex);
-        th.style.width = this.state.columnWidths[colIndex];
+        // רוחב נקבע דרך colgroup - לא צריך להגדיר כאן
 
         // תוכן
         let content = `<span class="tm-header-label">${col.label || col.field}</span>`;
@@ -696,7 +763,7 @@ class TableManager {
     _createCell(col, rowData, colIndex) {
         const td = document.createElement('td');
         td.className = 'tm-cell';
-        td.style.width = this.state.columnWidths[colIndex];
+        // רוחב נקבע דרך colgroup - לא צריך להגדיר כאן
 
         let value = rowData[col.field];
         let content = '';
@@ -878,19 +945,16 @@ class TableManager {
             // עדכון state
             this.state.columnWidths[colIndex] = newWidth + 'px';
 
-            // עדכון כותרת
-            currentTh.style.width = newWidth + 'px';
-            currentTh.style.minWidth = newWidth + 'px';
+            // עדכון דרך colgroup (סנכרון אוטומטי בין header ו-body)
+            const headerCol = this.elements.headerColgroup?.querySelector(`col[data-col-index="${colIndex}"]`);
+            const bodyCol = this.elements.bodyColgroup?.querySelector(`col[data-col-index="${colIndex}"]`);
 
-            // עדכון כל התאים בעמודה בגוף הטבלה
-            // חישוב מיקום העמודה (כולל checkbox אם יש)
-            const visibleColIndex = this._getVisibleColumnIndex(colIndex);
-            const selector = `tr.tm-row td:nth-child(${visibleColIndex + 1})`;
-            const bodyCells = this.elements.tbody.querySelectorAll(selector);
-            bodyCells.forEach(cell => {
-                cell.style.width = newWidth + 'px';
-                cell.style.minWidth = newWidth + 'px';
-            });
+            if (headerCol) {
+                headerCol.style.width = newWidth + 'px';
+            }
+            if (bodyCol) {
+                bodyCol.style.width = newWidth + 'px';
+            }
 
             // עדכון רוחב הטבלאות
             this._updateTableWidths();
@@ -898,6 +962,8 @@ class TableManager {
 
         const onMouseUp = () => {
             isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
         };
@@ -910,6 +976,10 @@ class TableManager {
             colIndex = parseInt(currentTh.dataset.colIndex);
             startX = e.pageX;
             startWidth = currentTh.offsetWidth;
+
+            // מניעת בחירת טקסט בזמן גרירה
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
 
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
@@ -1266,6 +1336,7 @@ class TableManager {
      * רענון הטבלה
      */
     _refreshTable() {
+        this._syncColumnWidths();
         this.renderHeaders();
         this.renderRows(false);
         this._updateTableWidths();

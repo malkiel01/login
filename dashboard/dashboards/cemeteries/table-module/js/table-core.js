@@ -701,7 +701,8 @@ class TableManager {
         if (this.config.renderCell) {
             content = this.config.renderCell(col, rowData, value);
         } else if (col.render) {
-            content = col.render(value, rowData);
+            // תאימות לאחור: שלח את rowData כפרמטר ראשון (כמו table-manager.js הישן)
+            content = col.render(rowData);
         } else {
             // ערך ברירת מחדל עם בדיקת null
             content = value !== null && value !== undefined ? value : '';

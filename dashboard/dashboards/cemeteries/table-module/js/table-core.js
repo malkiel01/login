@@ -415,7 +415,6 @@ class TableManager {
             display: flex !important;
             flex-direction: column !important;
             width: 100% !important;
-            height: ${this.config.tableHeight} !important;
             min-height: ${this.config.tableMinHeight} !important;
             border: 1px solid var(--border-color, #e5e7eb) !important;
             border-radius: 8px !important;
@@ -424,6 +423,24 @@ class TableManager {
             position: relative !important;
             box-sizing: border-box !important;
         `;
+
+        // ⭐ גובה דינמי - 50px מתחתית הדף
+        this._setDynamicHeight = () => {
+            const rect = wrapper.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const dynamicHeight = viewportHeight - rect.top - 50;
+            wrapper.style.height = `${Math.max(dynamicHeight, parseInt(this.config.tableMinHeight) || 400)}px`;
+        };
+
+        // חישוב גובה לאחר הוספה ל-DOM
+        requestAnimationFrame(() => {
+            this._setDynamicHeight();
+        });
+
+        // עדכון גובה בשינוי גודל חלון
+        window.addEventListener('resize', this._setDynamicHeight, {
+            signal: this._abortController.signal
+        });
 
         const headerContainer = document.createElement('div');
         headerContainer.className = 'table-header-container';
@@ -1949,15 +1966,18 @@ class TableManager {
         menu.appendChild(header);
 
         // ===================================================================
-        // סקשן 1: מצב תצוגה (טעינה)
+        // סקשן 1: מצב תצוגה (טעינה) - מוסתר במצב כרטיסים במובייל
         // ===================================================================
-        const displayModeSection = document.createElement('div');
-        displayModeSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+        const isCardsMode = this._isMobileDevice() && this.state.mobileViewMode === 'cards';
 
-        const displayModeTitle = document.createElement('div');
-        displayModeTitle.style.cssText = `font-weight: 600; margin-bottom: 10px; color: var(--text-primary, #1f2937); font-size: 13px;`;
-        displayModeTitle.textContent = '📄 מצב תצוגה';
-        displayModeSection.appendChild(displayModeTitle);
+        if (!isCardsMode) {
+            const displayModeSection = document.createElement('div');
+            displayModeSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+
+            const displayModeTitle = document.createElement('div');
+            displayModeTitle.style.cssText = `font-weight: 600; margin-bottom: 10px; color: var(--text-primary, #1f2937); font-size: 13px;`;
+            displayModeTitle.textContent = '📄 מצב תצוגה';
+            displayModeSection.appendChild(displayModeTitle);
 
         // אופציה 1: דף אחד עם גלילה
         const infiniteOption = this._createRadioOption(
@@ -2014,7 +2034,8 @@ class TableManager {
             displayModeSection.appendChild(pageSizeContainer);
         }
 
-        menu.appendChild(displayModeSection);
+            menu.appendChild(displayModeSection);
+        } // סוף if (!isCardsMode)
 
         // ===================================================================
         // סקשן 2: בחירה מרובה
@@ -2215,6 +2236,17 @@ class TableManager {
     _setMobileViewMode(mode, menu) {
         const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
         this.state.mobileViewMode = mode;
+
+        // ⭐ במצב כרטיסים - כפה גלילה אינסופית (לא pagination)
+        if (mode === 'cards') {
+            this.config.showPagination = false;
+            this.config.itemsPerPage = 999999;
+            // הסר footer אם קיים
+            if (this.elements.paginationFooter) {
+                this.elements.paginationFooter.remove();
+                this.elements.paginationFooter = null;
+            }
+        }
 
         // שמירת העדפה
         this._saveUserPreference(`${storageKey}_mobileViewMode`, mode);

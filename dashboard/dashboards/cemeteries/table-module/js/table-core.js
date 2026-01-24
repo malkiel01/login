@@ -253,9 +253,13 @@ class TableManager {
         // יצירת טבלאות
         this._createTables(headerContainer, bodyContainer);
 
+        // בניית סרגל כלים
+        const toolbar = this._buildToolbar();
+
         // הכנסה ל-DOM
         parent.insertBefore(fixedContainer, this.elements.table);
         fixedContainer.appendChild(wrapper);
+        wrapper.appendChild(toolbar);
         wrapper.appendChild(headerContainer);
         wrapper.appendChild(bodyContainer);
 
@@ -940,6 +944,331 @@ class TableManager {
             this.elements.bodyTable.style.width = newWidth + 'px';
             this.elements.bodyTable.style.minWidth = newWidth + 'px';
         }
+    }
+
+    // ====================================
+    // סרגל כלים (Toolbar)
+    // ====================================
+
+    /**
+     * בניית סרגל כלים מעל הטבלה
+     */
+    _buildToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'table-toolbar';
+        toolbar.style.cssText = `
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 8px 16px !important;
+            background: var(--bg-secondary, #f9fafb) !important;
+            border-bottom: 1px solid var(--border-color, #e5e7eb) !important;
+            flex-shrink: 0 !important;
+            direction: rtl !important;
+        `;
+
+        // צד ימין - ריק לעת עתה
+        const rightSide = document.createElement('div');
+        rightSide.className = 'toolbar-right';
+
+        // צד שמאל - כפתורי פעולות
+        const leftSide = document.createElement('div');
+        leftSide.className = 'toolbar-left';
+        leftSide.style.cssText = `
+            display: flex !important;
+            gap: 8px !important;
+            align-items: center !important;
+        `;
+
+        // כפתור הגדרות
+        const settingsBtn = this._createToolbarButton('⚙️', 'הגדרות', (e) => this._toggleSettingsMenu(e));
+
+        // כפתור יצוא לאקסל
+        const excelBtn = this._createToolbarButton('📊', 'יצוא לאקסל', () => this._handleExportExcel());
+
+        // כפתור יצוא ל-PDF
+        const pdfBtn = this._createToolbarButton('📄', 'יצוא ל-PDF', () => this._handleExportPDF());
+
+        leftSide.appendChild(settingsBtn);
+        leftSide.appendChild(excelBtn);
+        leftSide.appendChild(pdfBtn);
+
+        toolbar.appendChild(rightSide);
+        toolbar.appendChild(leftSide);
+
+        this.elements.toolbar = toolbar;
+        return toolbar;
+    }
+
+    /**
+     * יצירת כפתור לסרגל כלים
+     */
+    _createToolbarButton(icon, title, onClick) {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `position: relative !important; display: inline-block !important;`;
+
+        const btn = document.createElement('button');
+        btn.className = 'toolbar-btn';
+        btn.innerHTML = icon;
+        btn.style.cssText = `
+            padding: 8px 12px !important;
+            border: 1px solid var(--border-color, #d1d5db) !important;
+            border-radius: 6px !important;
+            background: var(--bg-primary, white) !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        `;
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'toolbar-tooltip';
+        tooltip.textContent = title;
+        tooltip.style.cssText = `
+            position: absolute !important;
+            bottom: -35px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            background: #1f2937 !important;
+            color: white !important;
+            padding: 6px 10px !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            white-space: nowrap !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.15s, visibility 0.15s !important;
+            z-index: 1000 !important;
+            pointer-events: none !important;
+        `;
+
+        btn.onmouseover = () => {
+            btn.style.background = 'var(--bg-tertiary, #e5e7eb)';
+            tooltip.style.opacity = '1';
+            tooltip.style.visibility = 'visible';
+        };
+        btn.onmouseout = () => {
+            btn.style.background = 'var(--bg-primary, white)';
+            tooltip.style.opacity = '0';
+            tooltip.style.visibility = 'hidden';
+        };
+        btn.onclick = onClick;
+
+        wrapper.appendChild(btn);
+        wrapper.appendChild(tooltip);
+        return wrapper;
+    }
+
+    /**
+     * תפריט הגדרות
+     */
+    _toggleSettingsMenu(e) {
+        e.stopPropagation();
+
+        // סגור תפריט קיים
+        const existingMenu = document.querySelector('.tm-settings-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+            return;
+        }
+
+        const btn = e.currentTarget;
+        const rect = btn.getBoundingClientRect();
+
+        const menu = document.createElement('div');
+        menu.className = 'tm-settings-menu';
+        menu.style.cssText = `
+            position: fixed;
+            top: ${rect.bottom + 5}px;
+            left: ${rect.left}px;
+            background: var(--bg-primary, white);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 220px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            direction: rtl;
+        `;
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 12px 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            background: var(--bg-secondary, #f9fafb);
+            color: var(--text-primary, #1f2937);
+        `;
+        header.textContent = 'הגדרות טבלה';
+        menu.appendChild(header);
+
+        // אפשרות בחירה מרובה
+        const multiSelectSection = document.createElement('div');
+        multiSelectSection.style.cssText = `padding: 8px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+
+        const multiSelectLabel = document.createElement('label');
+        multiSelectLabel.style.cssText = `display: flex; align-items: center; gap: 10px; cursor: pointer;`;
+
+        const multiSelectCheckbox = document.createElement('input');
+        multiSelectCheckbox.type = 'checkbox';
+        multiSelectCheckbox.checked = this.state.multiSelectEnabled;
+        multiSelectCheckbox.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
+        multiSelectCheckbox.onchange = () => {
+            this.state.multiSelectEnabled = multiSelectCheckbox.checked;
+            this.state.selectedRows.clear();
+            this._refreshTable();
+            menu.remove();
+        };
+
+        const multiSelectText = document.createElement('span');
+        multiSelectText.textContent = 'בחירה מרובה';
+        multiSelectText.style.cssText = `font-weight: 500; color: var(--text-primary, #1f2937);`;
+
+        multiSelectLabel.appendChild(multiSelectCheckbox);
+        multiSelectLabel.appendChild(multiSelectText);
+        multiSelectSection.appendChild(multiSelectLabel);
+        menu.appendChild(multiSelectSection);
+
+        // כותרת עמודות
+        const columnsHeader = document.createElement('div');
+        columnsHeader.style.cssText = `padding: 8px 16px 4px; font-size: 12px; color: var(--text-muted, #6b7280); font-weight: 600;`;
+        columnsHeader.textContent = 'עמודות';
+        menu.appendChild(columnsHeader);
+
+        // רשימת עמודות
+        const list = document.createElement('div');
+        list.style.cssText = `padding: 0 0 8px 0;`;
+
+        this.config.columns.forEach((col, index) => {
+            const item = document.createElement('label');
+            item.style.cssText = `
+                display: flex; align-items: center; gap: 10px; padding: 8px 16px;
+                cursor: pointer; transition: background 0.2s; color: var(--text-primary, #1f2937);
+            `;
+            item.onmouseover = () => item.style.background = 'var(--bg-secondary, #f3f4f6)';
+            item.onmouseout = () => item.style.background = 'transparent';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = this.state.columnVisibility[index];
+            checkbox.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
+            checkbox.onchange = () => {
+                this.state.columnVisibility[index] = checkbox.checked;
+                this._refreshTable();
+            };
+
+            const label = document.createElement('span');
+            label.textContent = col.label || col.field;
+
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            list.appendChild(item);
+        });
+
+        menu.appendChild(list);
+
+        // כפתורי פעולה
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+            padding: 8px 16px; border-top: 1px solid var(--border-color, #e5e7eb);
+            display: flex; gap: 8px; justify-content: space-between;
+        `;
+
+        const showAllBtn = document.createElement('button');
+        showAllBtn.textContent = 'הצג הכל';
+        showAllBtn.style.cssText = `
+            padding: 6px 12px; border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 13px;
+        `;
+        showAllBtn.onclick = () => {
+            this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = true);
+            menu.remove();
+            this._refreshTable();
+        };
+
+        const hideAllBtn = document.createElement('button');
+        hideAllBtn.textContent = 'הסתר הכל';
+        hideAllBtn.style.cssText = `
+            padding: 6px 12px; border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 13px;
+        `;
+        hideAllBtn.onclick = () => {
+            this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = false);
+            menu.remove();
+            this._refreshTable();
+        };
+
+        actions.appendChild(showAllBtn);
+        actions.appendChild(hideAllBtn);
+        menu.appendChild(actions);
+
+        document.body.appendChild(menu);
+
+        // סגירה בלחיצה מחוץ לתפריט
+        const closeHandler = (event) => {
+            if (!menu.contains(event.target) && !btn.contains(event.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    }
+
+    /**
+     * יצוא לאקסל (CSV)
+     */
+    _handleExportExcel() {
+        const data = this.getFilteredData();
+        const columns = this.config.columns.filter((_, i) => this.state.columnVisibility[i]);
+
+        // יצירת CSV
+        let csv = '\ufeff'; // BOM for Hebrew support
+
+        // כותרות
+        csv += columns.map(col => `"${col.label || col.field}"`).join(',') + '\n';
+
+        // נתונים
+        data.forEach(row => {
+            csv += columns.map(col => {
+                let val = row[col.field] || '';
+                val = String(val).replace(/"/g, '""');
+                return `"${val}"`;
+            }).join(',') + '\n';
+        });
+
+        // הורדה
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `export_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+
+        if (typeof showToast === 'function') {
+            showToast('הקובץ יוצא בהצלחה', 'success');
+        }
+    }
+
+    /**
+     * יצוא ל-PDF (דרך הדפסה)
+     */
+    _handleExportPDF() {
+        if (typeof showToast === 'function') {
+            showToast('בחר "שמור כ-PDF" בחלון ההדפסה', 'info');
+        }
+        window.print();
+    }
+
+    /**
+     * רענון הטבלה
+     */
+    _refreshTable() {
+        this.renderHeaders();
+        this.renderRows(false);
+        this._updateTableWidths();
     }
 
     /**

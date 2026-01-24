@@ -176,12 +176,12 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/main.js?v=20260122"></script>
     <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/table-manager.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script>
 
-    <!-- Table Module - New Modular System with Permissions -->
-    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-permissions.js?v=20260123"></script>
-    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-core.js?v=20260123"></script>
+    <!-- Table Module v3.0.0 - מערכת טבלאות חדשה עם תמיכה בהעדפות משתמש -->
+    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-permissions.js?v=20260124"></script>
+    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-core.js?v=20260124"></script>
+
+    <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script>
 
     <!-- 2️⃣ מערכת פופאפים -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-manager.js"></script>

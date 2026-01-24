@@ -1,9 +1,13 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/entities-framework/entity-renderer.js
- * Version: 1.0.0
- * Updated: 2025-11-20
+ * Version: 1.1.0
+ * Updated: 2026-01-24
  * Author: Malkiel
  * Change Summary:
+ * - v1.1.0: 🆕 מעבר ל-TableManager v3.0.0
+ *   ✅ הוספת entityType לכל הטבלאות
+ *   ✅ הפעלת userPreferences - העדפות משתמש לכל entity
+ *   ✅ תמיכה בשמירת הגדרות טבלה (רוחב עמודות, מיון וכו')
  * - v1.0.0: 🆕 מנהל רינדור גנרי לטבלאות
  *   ✅ render() - רינדור כללי לכל היישויות
  *   ✅ buildContainer() - בניית HTML container
@@ -262,39 +266,48 @@ class EntityRenderer {
             return columnDef;
         });
         
-        // יצירת TableManager
+        // יצירת TableManager v3.0.0 - עם תמיכה בהעדפות משתמש
         const tableManager = new TableManager({
             tableSelector: '#mainTable',
             data: data,
             columns: columns,
-            
+
+            // === חדש v3.0.0 - סוג entity לשמירת העדפות ===
+            entityType: entityType,
+
             // הגדרות Infinite Scroll
             totalItems: totalItems,
             scrollLoadBatch: 100,
             itemsPerPage: 999999,
             showPagination: false,
-            
+
             // גובה טבלה
             tableHeight: 'calc(100vh - 650px)',
             tableMinHeight: '500px',
-            
+
+            // === חדש v3.0.0 - העדפות משתמש ===
+            userPreferences: {
+                enabled: true,
+                storageKey: `table_${entityType}`
+            },
+
             // callbacks
             onRowDoubleClick: (row) => {
                 this.handleDoubleClick(entityType, row);
             },
-            
+
             onLoadMore: async () => {
                 const state = entityState.getState(entityType);
                 const parentId = config.hasParent ? state.parentId : null;
                 return await EntityLoader.appendMoreData(entityType, parentId);
             },
-            
+
             onSort: (field, order) => {
                 if (typeof showToast === 'function') {
                     showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
                 }
             },
-            
+
             onFilter: (filters) => {
                 const state = entityState.getState(entityType);
                 if (state.tableInstance) {

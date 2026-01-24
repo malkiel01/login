@@ -159,10 +159,25 @@ class TableManager {
                 // ⭐ ברירת מחדל null - רק אם המשתמש בחר במפורש, נשנה את המצב
                 const tableRowsPerPage = await UserSettings.getAsync('tableRowsPerPage', null);
 
-                // החלת העדפות - רק אם המשתמש שמר העדפה במפורש
+                // החלת העדפות גלובלי - רק אם המשתמש שמר העדפה במפורש
                 if (tableRowsPerPage !== null && this.config.itemsPerPage === 999999) {
                     const rows = parseInt(tableRowsPerPage);
                     if (rows && rows < 999999) {
+                        this.config.itemsPerPage = rows;
+                        this.config.showPagination = true;
+                    }
+                }
+
+                // ⭐ טעינת מצב תצוגה לפי entity (עדיפות על גלובלי)
+                const savedDisplayMode = await UserSettings.getAsync(`${storageKey}_displayMode`, null);
+                if (savedDisplayMode !== null) {
+                    const rows = parseInt(savedDisplayMode);
+                    if (rows >= 999999) {
+                        // מצב infinite scroll
+                        this.config.itemsPerPage = 999999;
+                        this.config.showPagination = false;
+                    } else if (rows > 0) {
+                        // מצב pagination
                         this.config.itemsPerPage = rows;
                         this.config.showPagination = true;
                     }
@@ -1290,10 +1305,12 @@ class TableManager {
                 pageSizeSelect.appendChild(opt);
             });
             pageSizeSelect.onchange = () => {
+                const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
                 this.config.itemsPerPage = parseInt(pageSizeSelect.value);
                 this.calculateTotalPages();
                 this.goToPage(1);
-                this._saveUserPreference('tableRowsPerPage', this.config.itemsPerPage);
+                // ⭐ שמירה לפי entity
+                this._saveUserPreference(`${storageKey}_displayMode`, this.config.itemsPerPage);
             };
 
             pageSizeContainer.appendChild(pageSizeLabel);
@@ -1465,6 +1482,8 @@ class TableManager {
      * שינוי מצב תצוגה (infinite scroll / pagination)
      */
     _setDisplayMode(mode, menu) {
+        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+
         if (mode === 'infinite') {
             // מצב גלילה אינסופית
             this.config.showPagination = false;
@@ -1481,8 +1500,8 @@ class TableManager {
                 this.initInfiniteScroll();
             }
 
-            // שמור העדפה (null = infinite scroll)
-            this._saveUserPreference('tableRowsPerPage', null);
+            // ⭐ שמור העדפה לפי entity (999999 = infinite scroll)
+            this._saveUserPreference(`${storageKey}_displayMode`, 999999);
 
         } else if (mode === 'pagination') {
             // מצב עמודים
@@ -1494,8 +1513,8 @@ class TableManager {
                 this._buildPaginationFooter(this.elements.wrapper);
             }
 
-            // שמור העדפה
-            this._saveUserPreference('tableRowsPerPage', this.config.itemsPerPage);
+            // ⭐ שמור העדפה לפי entity
+            this._saveUserPreference(`${storageKey}_displayMode`, this.config.itemsPerPage);
         }
 
         // חישוב מחדש ורענון
@@ -1685,12 +1704,13 @@ class TableManager {
         footer.querySelector('.tm-last').addEventListener('click', () => this.goToPage(this.state.totalPages));
 
         footer.querySelector('.tm-page-size').addEventListener('change', (e) => {
+            const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
             this.config.itemsPerPage = parseInt(e.target.value);
             this.calculateTotalPages();
             this.goToPage(1);
 
-            // שמירת העדפה
-            this._saveUserPreference('tableRowsPerPage', this.config.itemsPerPage);
+            // ⭐ שמירת העדפה לפי entity
+            this._saveUserPreference(`${storageKey}_displayMode`, this.config.itemsPerPage);
         });
     }
 

@@ -1,9 +1,17 @@
 /*
  * File: table-module/js/table-core.js
- * Version: 3.0.0
+ * Version: 3.1.0
  * Created: 2026-01-23
+ * Updated: 2026-01-24
  * Author: Malkiel
  * Description: מנוע טבלאות מרכזי - גרסה מודולרית עם תיקוני באגים
+ *
+ * שינויים מ-v3.0.0:
+ * - ⭐ תפריט עמודה (⋮) עם מיון וסינון
+ * - ⭐ פילטרים מתקדמים: טקסט, מספר, תאריך, enum
+ * - ⭐ אינדיקטור פילטר פעיל בכותרת
+ * - ⭐ תמיכה בסינון "בין" לתאריכים ומספרים
+ * - ⭐ תמיכה בתאריך משוער (±2.5 שנים)
  *
  * שינויים מ-v2.1.0:
  * - תיקון Race Condition ב-infinite scroll
@@ -730,15 +738,85 @@ class TableManager {
         th.setAttribute('data-col-index', colIndex);
         // רוחב נקבע דרך colgroup - לא צריך להגדיר כאן
 
-        // תוכן
-        let content = `<span class="tm-header-label">${col.label || col.field}</span>`;
+        // wrapper לתוכן
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tm-header-wrapper';
+        wrapper.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            width: 100%;
+        `;
+
+        // תוכן הכותרת (שם + אייקון מיון)
+        const labelContainer = document.createElement('div');
+        labelContainer.className = 'tm-header-label-container';
+        labelContainer.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            overflow: hidden;
+        `;
+
+        const label = document.createElement('span');
+        label.className = 'tm-header-label';
+        label.textContent = col.label || col.field;
+        label.style.cssText = `overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
+        labelContainer.appendChild(label);
 
         // אייקון מיון
         if (this.config.sortable && col.sortable !== false) {
-            content += `<span class="tm-sort-icon"></span>`;
+            const sortIcon = document.createElement('span');
+            sortIcon.className = 'tm-sort-icon';
+            labelContainer.appendChild(sortIcon);
         }
 
-        th.innerHTML = content;
+        wrapper.appendChild(labelContainer);
+
+        // ⭐ כפתור תפריט עמודה (פילטר/מיון)
+        if (this.config.filterable || this.config.sortable) {
+            const menuBtn = document.createElement('button');
+            menuBtn.className = 'tm-column-menu-btn';
+            menuBtn.innerHTML = '⋮';
+            menuBtn.style.cssText = `
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 2px 6px;
+                font-size: 14px;
+                color: var(--text-muted, #6b7280);
+                opacity: 0.6;
+                transition: opacity 0.2s, color 0.2s;
+                border-radius: 4px;
+                flex-shrink: 0;
+            `;
+            menuBtn.onmouseover = () => {
+                menuBtn.style.opacity = '1';
+                menuBtn.style.background = 'var(--bg-tertiary, #e5e7eb)';
+            };
+            menuBtn.onmouseout = () => {
+                menuBtn.style.opacity = '0.6';
+                menuBtn.style.background = 'none';
+            };
+            menuBtn.onclick = (e) => {
+                e.stopPropagation();
+                this._showColumnMenu(colIndex, menuBtn, col);
+            };
+
+            // ⭐ אינדיקטור פילטר פעיל
+            const hasFilter = this.state.filters.has(col.field);
+            if (hasFilter) {
+                menuBtn.innerHTML = '🔍';
+                menuBtn.style.opacity = '1';
+                menuBtn.style.color = 'var(--primary-color, #3b82f6)';
+            }
+
+            wrapper.appendChild(menuBtn);
+        }
+
+        th.appendChild(wrapper);
 
         // Handle לשינוי גודל
         if (this.config.resizable && col.resizable !== false) {
@@ -748,6 +826,491 @@ class TableManager {
         }
 
         return th;
+    }
+
+    /**
+     * ⭐ הצגת תפריט עמודה (מיון/סינון)
+     */
+    _showColumnMenu(colIndex, button, column) {
+        // סגור תפריטים קיימים
+        document.querySelectorAll('.tm-column-menu').forEach(m => m.remove());
+
+        const rect = button.getBoundingClientRect();
+        const menu = document.createElement('div');
+        menu.className = 'tm-column-menu';
+        menu.style.cssText = `
+            position: fixed;
+            top: ${rect.bottom + 5}px;
+            right: ${window.innerWidth - rect.right}px;
+            background: var(--bg-primary, white);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            z-index: 1001;
+            direction: rtl;
+            overflow: hidden;
+        `;
+
+        // ⭐ אפשרויות מיון
+        if (this.config.sortable && column.sortable !== false) {
+            const sortAscItem = this._createMenuItem('▲ מיין עולה', () => {
+                this.state.sortColumn = colIndex;
+                this.state.sortOrder = 'asc';
+                this._applySorting();
+                menu.remove();
+            });
+            menu.appendChild(sortAscItem);
+
+            const sortDescItem = this._createMenuItem('▼ מיין יורד', () => {
+                this.state.sortColumn = colIndex;
+                this.state.sortOrder = 'desc';
+                this._applySorting();
+                menu.remove();
+            });
+            menu.appendChild(sortDescItem);
+
+            // מפריד
+            if (this.config.filterable) {
+                const divider = document.createElement('div');
+                divider.style.cssText = `height: 1px; background: var(--border-color, #e5e7eb); margin: 4px 0;`;
+                menu.appendChild(divider);
+            }
+        }
+
+        // ⭐ אפשרויות סינון
+        if (this.config.filterable) {
+            const filterItem = this._createMenuItem('🔍 סינון...', () => {
+                menu.remove();
+                this._showFilterDialog(colIndex, column);
+            });
+            menu.appendChild(filterItem);
+
+            // הצג "נקה סינון" רק אם יש פילטר פעיל
+            if (this.state.filters.has(column.field)) {
+                const clearFilterItem = this._createMenuItem('✕ נקה סינון', () => {
+                    this.state.filters.delete(column.field);
+                    this.state.currentPage = 1;
+                    this.loadInitialData();
+                    this.renderHeaders(); // רענן כותרות לעדכון אינדיקטור
+                    menu.remove();
+                });
+                clearFilterItem.style.color = 'var(--danger-color, #dc2626)';
+                menu.appendChild(clearFilterItem);
+            }
+        }
+
+        document.body.appendChild(menu);
+
+        // סגירה בלחיצה מחוץ לתפריט
+        const closeHandler = (e) => {
+            if (!menu.contains(e.target) && e.target !== button) {
+                menu.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 10);
+    }
+
+    /**
+     * יצירת פריט בתפריט
+     */
+    _createMenuItem(text, onClick) {
+        const item = document.createElement('div');
+        item.className = 'tm-menu-item';
+        item.textContent = text;
+        item.style.cssText = `
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+            color: var(--text-primary, #1f2937);
+        `;
+        item.onmouseover = () => item.style.background = 'var(--bg-secondary, #f3f4f6)';
+        item.onmouseout = () => item.style.background = 'transparent';
+        item.onclick = onClick;
+        return item;
+    }
+
+    /**
+     * ⭐ החלת מיון
+     */
+    _applySorting() {
+        const col = this.config.columns[this.state.sortColumn];
+        if (!col) return;
+
+        const field = col.field;
+
+        this.state.filteredData.sort((a, b) => {
+            let valA = a[field];
+            let valB = b[field];
+
+            if (valA == null) return this.state.sortOrder === 'asc' ? 1 : -1;
+            if (valB == null) return this.state.sortOrder === 'asc' ? -1 : 1;
+
+            // לפי סוג
+            if (col.type === 'number' || typeof valA === 'number') {
+                const numA = parseFloat(valA) || 0;
+                const numB = parseFloat(valB) || 0;
+                return this.state.sortOrder === 'asc' ? numA - numB : numB - numA;
+            }
+
+            if (col.type === 'date') {
+                const dateA = new Date(valA).getTime() || 0;
+                const dateB = new Date(valB).getTime() || 0;
+                return this.state.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            }
+
+            // טקסט
+            const strA = String(valA).toLowerCase();
+            const strB = String(valB).toLowerCase();
+            const cmp = strA.localeCompare(strB, 'he');
+            return this.state.sortOrder === 'asc' ? cmp : -cmp;
+        });
+
+        this._updateSortIcons();
+        this.state.currentPage = 1;
+        this.loadInitialData();
+
+        if (this.config.onSort) {
+            this.config.onSort(field, this.state.sortOrder);
+        }
+    }
+
+    /**
+     * ⭐ דיאלוג סינון מתקדם
+     */
+    _showFilterDialog(colIndex, column) {
+        // סגור דיאלוגים קיימים
+        document.querySelectorAll('.tm-filter-dialog, .tm-filter-overlay').forEach(d => d.remove());
+
+        const filterType = column.filterType || column.type || 'text';
+
+        // Overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'tm-filter-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1999;
+        `;
+
+        // דיאלוג
+        const dialog = document.createElement('div');
+        dialog.className = 'tm-filter-dialog';
+        dialog.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-primary, white);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            min-width: 320px;
+            max-width: 400px;
+            z-index: 2000;
+            direction: rtl;
+        `;
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-primary, #1f2937);
+        `;
+        header.innerHTML = `<span>🔍 סינון: ${column.label || column.field}</span>`;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '✕';
+        closeBtn.style.cssText = `
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-muted, #6b7280);
+            padding: 4px;
+        `;
+        closeBtn.onclick = () => { dialog.remove(); overlay.remove(); };
+        header.appendChild(closeBtn);
+        dialog.appendChild(header);
+
+        // תוכן לפי סוג
+        const content = document.createElement('div');
+        content.style.cssText = `padding: 20px;`;
+
+        switch (filterType) {
+            case 'number':
+                this._buildNumberFilterContent(content, column);
+                break;
+            case 'date':
+                this._buildDateFilterContent(content, column);
+                break;
+            case 'enum':
+            case 'select':
+                this._buildEnumFilterContent(content, column);
+                break;
+            default:
+                this._buildTextFilterContent(content, column);
+        }
+
+        dialog.appendChild(content);
+
+        // כפתורי פעולה
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color, #e5e7eb);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+        `;
+
+        const applyBtn = document.createElement('button');
+        applyBtn.textContent = 'החל סינון';
+        applyBtn.style.cssText = `
+            padding: 10px 20px;
+            background: var(--primary-color, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        `;
+        applyBtn.onclick = () => {
+            this._applyFilterFromDialog(column, filterType, dialog);
+            dialog.remove();
+            overlay.remove();
+        };
+
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'נקה';
+        clearBtn.style.cssText = `
+            padding: 10px 20px;
+            background: var(--bg-primary, white);
+            color: var(--text-primary, #374151);
+            border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 6px;
+            cursor: pointer;
+        `;
+        clearBtn.onclick = () => {
+            this.state.filters.delete(column.field);
+            this.state.currentPage = 1;
+            this.loadInitialData();
+            this.renderHeaders();
+            dialog.remove();
+            overlay.remove();
+        };
+
+        actions.appendChild(applyBtn);
+        actions.appendChild(clearBtn);
+        dialog.appendChild(actions);
+
+        overlay.onclick = () => { dialog.remove(); overlay.remove(); };
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(dialog);
+    }
+
+    /**
+     * בניית תוכן פילטר טקסט
+     */
+    _buildTextFilterContent(container, column) {
+        const currentFilter = this.state.filters.get(column.field) || {};
+
+        container.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">סוג סינון:</label>
+                <select class="filter-operator" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; background: var(--bg-primary, white);">
+                    <option value="contains" ${currentFilter.operator === 'contains' ? 'selected' : ''}>מכיל</option>
+                    <option value="exact" ${currentFilter.operator === 'exact' ? 'selected' : ''}>ערך מדויק</option>
+                    <option value="starts" ${currentFilter.operator === 'starts' ? 'selected' : ''}>מתחיל ב</option>
+                    <option value="ends" ${currentFilter.operator === 'ends' ? 'selected' : ''}>מסתיים ב</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">ערך:</label>
+                <input type="text" class="filter-value" value="${currentFilter.value || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; box-sizing: border-box;"
+                    placeholder="הזן ערך לסינון...">
+            </div>
+        `;
+    }
+
+    /**
+     * בניית תוכן פילטר מספרי
+     */
+    _buildNumberFilterContent(container, column) {
+        const currentFilter = this.state.filters.get(column.field) || {};
+
+        container.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">סוג סינון:</label>
+                <select class="filter-operator" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; background: var(--bg-primary, white);">
+                    <option value="equals" ${currentFilter.operator === 'equals' ? 'selected' : ''}>שווה ל</option>
+                    <option value="less" ${currentFilter.operator === 'less' ? 'selected' : ''}>קטן מ</option>
+                    <option value="greater" ${currentFilter.operator === 'greater' ? 'selected' : ''}>גדול מ</option>
+                    <option value="between" ${currentFilter.operator === 'between' ? 'selected' : ''}>בין ... לבין ...</option>
+                </select>
+            </div>
+            <div class="filter-value-container">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">ערך:</label>
+                <input type="number" class="filter-value" value="${currentFilter.value || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="filter-value2-container" style="margin-top: 15px; display: ${currentFilter.operator === 'between' ? 'block' : 'none'};">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">עד ערך:</label>
+                <input type="number" class="filter-value2" value="${currentFilter.value2 || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; box-sizing: border-box;">
+            </div>
+        `;
+
+        const operatorSelect = container.querySelector('.filter-operator');
+        const value2Container = container.querySelector('.filter-value2-container');
+        operatorSelect.onchange = () => {
+            value2Container.style.display = operatorSelect.value === 'between' ? 'block' : 'none';
+        };
+    }
+
+    /**
+     * בניית תוכן פילטר תאריך
+     */
+    _buildDateFilterContent(container, column) {
+        const currentFilter = this.state.filters.get(column.field) || {};
+
+        container.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">סוג סינון:</label>
+                <select class="filter-operator" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; background: var(--bg-primary, white);">
+                    <option value="exact" ${currentFilter.operator === 'exact' ? 'selected' : ''}>תאריך מדויק</option>
+                    <option value="approximate" ${currentFilter.operator === 'approximate' ? 'selected' : ''}>תאריך משוער (±2.5 שנים)</option>
+                    <option value="between" ${currentFilter.operator === 'between' ? 'selected' : ''}>בין תאריכים</option>
+                    <option value="before" ${currentFilter.operator === 'before' ? 'selected' : ''}>לפני תאריך</option>
+                    <option value="after" ${currentFilter.operator === 'after' ? 'selected' : ''}>אחרי תאריך</option>
+                </select>
+            </div>
+            <div class="filter-value-container">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">תאריך:</label>
+                <input type="date" class="filter-value" value="${currentFilter.value || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="filter-value2-container" style="margin-top: 15px; display: ${currentFilter.operator === 'between' ? 'block' : 'none'};">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary, #1f2937);">עד תאריך:</label>
+                <input type="date" class="filter-value2" value="${currentFilter.value2 || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; box-sizing: border-box;">
+            </div>
+        `;
+
+        const operatorSelect = container.querySelector('.filter-operator');
+        const value2Container = container.querySelector('.filter-value2-container');
+        operatorSelect.onchange = () => {
+            value2Container.style.display = operatorSelect.value === 'between' ? 'block' : 'none';
+        };
+    }
+
+    /**
+     * בניית תוכן פילטר enum (בחירה מרשימת ערכים)
+     */
+    _buildEnumFilterContent(container, column) {
+        const currentFilter = this.state.filters.get(column.field) || { selectedValues: [] };
+        const field = column.field;
+
+        // איסוף ערכים ייחודיים
+        const uniqueValues = new Set();
+        this.config.data.forEach(row => {
+            const val = row[field];
+            if (val !== null && val !== undefined && val !== '') {
+                uniqueValues.add(String(val));
+            }
+        });
+
+        const sortedValues = Array.from(uniqueValues).sort((a, b) => a.localeCompare(b, 'he'));
+
+        let checkboxesHtml = '';
+        sortedValues.forEach(val => {
+            const isChecked = currentFilter.selectedValues && currentFilter.selectedValues.includes(val);
+            checkboxesHtml += `
+                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 0; cursor: pointer; border-bottom: 1px solid var(--bg-secondary, #f3f4f6);">
+                    <input type="checkbox" class="enum-checkbox" value="${val}" ${isChecked ? 'checked' : ''}
+                        style="width: 18px; height: 18px;">
+                    <span style="color: var(--text-primary, #1f2937);">${val}</span>
+                </label>
+            `;
+        });
+
+        container.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding-bottom: 10px; border-bottom: 2px solid var(--border-color, #e5e7eb); font-weight: 600; color: var(--text-primary, #1f2937);">
+                    <input type="checkbox" class="select-all-enum" style="width: 18px; height: 18px;">
+                    <span>בחר הכל</span>
+                </label>
+            </div>
+            <div style="max-height: 250px; overflow-y: auto;">
+                ${checkboxesHtml || '<p style="color: var(--text-muted, #999); text-align: center;">אין ערכים זמינים</p>'}
+            </div>
+        `;
+
+        const selectAllCheckbox = container.querySelector('.select-all-enum');
+        const enumCheckboxes = container.querySelectorAll('.enum-checkbox');
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.onchange = () => {
+                enumCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+            };
+        }
+    }
+
+    /**
+     * החלת פילטר מהדיאלוג
+     */
+    _applyFilterFromDialog(column, filterType, dialog) {
+        let filterData = { type: filterType };
+
+        if (filterType === 'enum' || filterType === 'select') {
+            const checkboxes = dialog.querySelectorAll('.enum-checkbox:checked');
+            filterData.selectedValues = Array.from(checkboxes).map(cb => cb.value);
+            if (filterData.selectedValues.length === 0) {
+                this.state.filters.delete(column.field);
+                this.state.currentPage = 1;
+                this.loadInitialData();
+                this.renderHeaders();
+                return;
+            }
+        } else {
+            const operator = dialog.querySelector('.filter-operator')?.value;
+            const value = dialog.querySelector('.filter-value')?.value;
+            const value2 = dialog.querySelector('.filter-value2')?.value;
+
+            if (!value && !value2) {
+                this.state.filters.delete(column.field);
+                this.state.currentPage = 1;
+                this.loadInitialData();
+                this.renderHeaders();
+                return;
+            }
+
+            filterData.operator = operator;
+            filterData.value = value;
+            if (value2) filterData.value2 = value2;
+        }
+
+        this.state.filters.set(column.field, filterData);
+        this.state.currentPage = 1;
+        this.loadInitialData();
+        this.renderHeaders(); // עדכון אינדיקטורים
+
+        if (this.config.onFilter) {
+            this.config.onFilter(column.field, filterData);
+        }
     }
 
     /**
@@ -944,36 +1507,115 @@ class TableManager {
     }
 
     /**
-     * בדיקת התאמה לפילטר
+     * בדיקת התאמה לפילטר - תומך בכל סוגי הפילטרים
      */
     _matchesFilter(value, filterConfig) {
-        const { type, value: filterValue, operator } = filterConfig;
+        const { type, value: filterValue, value2: filterValue2, operator, selectedValues } = filterConfig;
 
-        if (filterValue === '' || filterValue === null) return true;
+        // פילטר enum
+        if (type === 'enum' || type === 'select') {
+            if (!selectedValues || selectedValues.length === 0) return true;
+            return selectedValues.includes(String(value || ''));
+        }
+
+        if (filterValue === '' || filterValue === null || filterValue === undefined) return true;
 
         switch (type) {
             case 'text':
-                return String(value || '').toLowerCase().includes(String(filterValue).toLowerCase());
+                return this._matchTextFilter(value, filterValue, operator);
 
             case 'number':
-                const numVal = parseFloat(value);
-                const numFilter = parseFloat(filterValue);
-                if (isNaN(numVal)) return false;
+                return this._matchNumberFilter(value, filterValue, filterValue2, operator);
 
-                switch (operator) {
-                    case 'eq': return numVal === numFilter;
-                    case 'gt': return numVal > numFilter;
-                    case 'lt': return numVal < numFilter;
-                    case 'gte': return numVal >= numFilter;
-                    case 'lte': return numVal <= numFilter;
-                    default: return numVal === numFilter;
-                }
-
-            case 'select':
-                return String(value) === String(filterValue);
+            case 'date':
+                return this._matchDateFilter(value, filterValue, filterValue2, operator);
 
             default:
-                return true;
+                // ברירת מחדל - חיפוש טקסט contains
+                return String(value || '').toLowerCase().includes(String(filterValue).toLowerCase());
+        }
+    }
+
+    /**
+     * התאמת פילטר טקסט
+     */
+    _matchTextFilter(value, filterValue, operator) {
+        const cellStr = String(value || '').toLowerCase();
+        const filterStr = String(filterValue).toLowerCase();
+
+        switch (operator) {
+            case 'exact':
+                return cellStr === filterStr;
+            case 'starts':
+                return cellStr.startsWith(filterStr);
+            case 'ends':
+                return cellStr.endsWith(filterStr);
+            case 'contains':
+            default:
+                return cellStr.includes(filterStr);
+        }
+    }
+
+    /**
+     * התאמת פילטר מספרי
+     */
+    _matchNumberFilter(value, filterValue, filterValue2, operator) {
+        const num = parseFloat(value);
+        const filterNum = parseFloat(filterValue);
+        const filterNum2 = parseFloat(filterValue2);
+
+        if (isNaN(num)) return false;
+
+        switch (operator) {
+            case 'equals':
+                return num === filterNum;
+            case 'less':
+                return num < filterNum;
+            case 'greater':
+                return num > filterNum;
+            case 'between':
+                if (isNaN(filterNum2)) return num >= filterNum;
+                return num >= filterNum && num <= filterNum2;
+            default:
+                return num === filterNum;
+        }
+    }
+
+    /**
+     * התאמת פילטר תאריך
+     */
+    _matchDateFilter(value, filterValue, filterValue2, operator) {
+        if (!value) return false;
+
+        const cellDate = new Date(value);
+        if (isNaN(cellDate.getTime())) return false;
+
+        const filterDate = new Date(filterValue);
+        const filterDate2 = filterValue2 ? new Date(filterValue2) : null;
+
+        switch (operator) {
+            case 'exact':
+                return cellDate.toDateString() === filterDate.toDateString();
+
+            case 'approximate':
+                // ±2.5 שנים
+                const yearsInMs = 2.5 * 365 * 24 * 60 * 60 * 1000;
+                const minDate = new Date(filterDate.getTime() - yearsInMs);
+                const maxDate = new Date(filterDate.getTime() + yearsInMs);
+                return cellDate >= minDate && cellDate <= maxDate;
+
+            case 'between':
+                if (!filterDate2) return cellDate >= filterDate;
+                return cellDate >= filterDate && cellDate <= filterDate2;
+
+            case 'before':
+                return cellDate < filterDate;
+
+            case 'after':
+                return cellDate > filterDate;
+
+            default:
+                return cellDate.toDateString() === filterDate.toDateString();
         }
     }
 
@@ -1587,7 +2229,7 @@ class TableManager {
     }
 
     /**
-     * מיון לפי עמודה
+     * מיון לפי עמודה (נקרא מלחיצה על הכותרת)
      */
     sortByColumn(colIndex) {
         const col = this.config.columns[colIndex];
@@ -1601,39 +2243,7 @@ class TableManager {
             this.state.sortOrder = 'asc';
         }
 
-        // מיון
-        const field = col.field;
-        this.state.filteredData.sort((a, b) => {
-            let valA = a[field];
-            let valB = b[field];
-
-            // טיפול ב-null/undefined
-            if (valA == null) return this.state.sortOrder === 'asc' ? 1 : -1;
-            if (valB == null) return this.state.sortOrder === 'asc' ? -1 : 1;
-
-            // השוואה
-            if (typeof valA === 'number' && typeof valB === 'number') {
-                return this.state.sortOrder === 'asc' ? valA - valB : valB - valA;
-            }
-
-            const strA = String(valA).toLowerCase();
-            const strB = String(valB).toLowerCase();
-            const cmp = strA.localeCompare(strB, 'he');
-
-            return this.state.sortOrder === 'asc' ? cmp : -cmp;
-        });
-
-        // עדכון אייקון מיון
-        this._updateSortIcons();
-
-        // טעינה מחדש
-        this.state.currentPage = 1;
-        this.loadInitialData();
-
-        // Callback
-        if (this.config.onSort) {
-            this.config.onSort(field, this.state.sortOrder);
-        }
+        this._applySorting();
     }
 
     /**

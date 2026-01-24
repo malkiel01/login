@@ -1,9 +1,15 @@
 /*
  * File: table-module/css/table-core.css
- * Version: 3.0.0
+ * Version: 3.1.0
  * Created: 2026-01-23
+ * Updated: 2026-01-24
  * Author: Malkiel
  * Description: סטיילים למודול טבלאות - תמיכה מלאה ב-Dark Mode ו-RTL
+ *
+ * v3.1.0:
+ * - סטיילים לתפריט עמודה (column menu)
+ * - סטיילים לדיאלוג סינון (filter dialog)
+ * - תמיכה ב-Dark Mode לרכיבים החדשים
  */
 
 /* ===================================================================
@@ -586,6 +592,177 @@ body.dark-theme.color-scheme-green .tm-loading-spinner {
 }
 
 /* ===================================================================
+   Column Menu Button
+   =================================================================== */
+.tm-header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
+}
+
+.tm-header-label-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.tm-column-menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 14px;
+    color: var(--text-muted, #6b7280);
+    opacity: 0.6;
+    transition: opacity 0.2s, color 0.2s, background 0.2s;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.tm-column-menu-btn:hover {
+    opacity: 1;
+    background: var(--bg-tertiary, #e5e7eb);
+}
+
+.tm-column-menu-btn.has-filter {
+    opacity: 1;
+    color: var(--primary-color, #3b82f6);
+}
+
+/* ===================================================================
+   Column Menu Dropdown
+   =================================================================== */
+.tm-column-menu {
+    position: fixed;
+    background: var(--bg-primary, white);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 1001;
+    direction: rtl;
+    overflow: hidden;
+}
+
+.tm-menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 14px;
+    color: var(--text-primary, #1f2937);
+}
+
+.tm-menu-item:hover {
+    background: var(--bg-secondary, #f3f4f6);
+}
+
+.tm-menu-divider {
+    height: 1px;
+    background: var(--border-color, #e5e7eb);
+    margin: 4px 0;
+}
+
+/* ===================================================================
+   Filter Dialog
+   =================================================================== */
+.tm-filter-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1999;
+}
+
+.tm-filter-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-primary, white);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    min-width: 320px;
+    max-width: 400px;
+    z-index: 2000;
+    direction: rtl;
+}
+
+.tm-filter-dialog input[type="text"],
+.tm-filter-dialog input[type="number"],
+.tm-filter-dialog input[type="date"],
+.tm-filter-dialog select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: 6px;
+    background: var(--bg-primary, white);
+    color: var(--text-primary, #1f2937);
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.tm-filter-dialog input:focus,
+.tm-filter-dialog select:focus {
+    outline: none;
+    border-color: var(--primary-color, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* ===================================================================
+   Dark Mode - Column Menu & Filter
+   =================================================================== */
+[data-theme="dark"] .tm-column-menu,
+body.dark-theme .tm-column-menu {
+    background: var(--bg-secondary, #334155);
+    border-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .tm-menu-item,
+body.dark-theme .tm-menu-item {
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .tm-menu-item:hover,
+body.dark-theme .tm-menu-item:hover {
+    background: var(--bg-tertiary, #475569);
+}
+
+[data-theme="dark"] .tm-menu-divider,
+body.dark-theme .tm-menu-divider {
+    background: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .tm-filter-overlay,
+body.dark-theme .tm-filter-overlay {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .tm-filter-dialog,
+body.dark-theme .tm-filter-dialog {
+    background: var(--bg-secondary, #334155);
+}
+
+[data-theme="dark"] .tm-filter-dialog input,
+[data-theme="dark"] .tm-filter-dialog select,
+body.dark-theme .tm-filter-dialog input,
+body.dark-theme .tm-filter-dialog select {
+    background: var(--bg-tertiary, #475569);
+    border-color: var(--border-color, #64748b);
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .tm-column-menu-btn:hover,
+body.dark-theme .tm-column-menu-btn:hover {
+    background: var(--bg-tertiary, #475569);
+}
+
+/* ===================================================================
    PRINT
    =================================================================== */
 @media print {
@@ -610,5 +787,9 @@ body.dark-theme.color-scheme-green .tm-loading-spinner {
 
     .tm-row {
         page-break-inside: avoid;
+    }
+
+    .tm-column-menu-btn {
+        display: none !important;
     }
 }

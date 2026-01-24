@@ -156,12 +156,14 @@ class TableManager {
         try {
             if (typeof UserSettings !== 'undefined') {
                 // שימוש בהגדרות המשתמש הגלובליות
-                const tableRowsPerPage = await UserSettings.getAsync('tableRowsPerPage', 25);
+                // ⭐ ברירת מחדל null - רק אם המשתמש בחר במפורש, נשנה את המצב
+                const tableRowsPerPage = await UserSettings.getAsync('tableRowsPerPage', null);
 
-                // החלת העדפות
-                if (tableRowsPerPage && this.config.itemsPerPage === 999999) {
-                    this.config.itemsPerPage = parseInt(tableRowsPerPage) || 25;
-                    if (this.config.itemsPerPage < 999999) {
+                // החלת העדפות - רק אם המשתמש שמר העדפה במפורש
+                if (tableRowsPerPage !== null && this.config.itemsPerPage === 999999) {
+                    const rows = parseInt(tableRowsPerPage);
+                    if (rows && rows < 999999) {
+                        this.config.itemsPerPage = rows;
                         this.config.showPagination = true;
                     }
                 }
@@ -214,12 +216,15 @@ class TableManager {
         // קישור אירועים
         this.bindEvents();
 
-        // אתחול Infinite Scroll
-        if (this.config.scrollLoadBatch > 0) {
+        // אתחול Infinite Scroll - רק אם לא במצב pagination!
+        if (this.config.scrollLoadBatch > 0 && !this.config.showPagination) {
             this.initInfiniteScroll();
         }
 
-        console.log(`TableManager [${this.instanceId}]: Initialized`);
+        console.log(`TableManager [${this.instanceId}]: Initialized`, {
+            mode: this.config.showPagination ? 'pagination' : 'infinite-scroll',
+            itemsPerPage: this.config.itemsPerPage
+        });
     }
 
     /**
@@ -1213,8 +1218,8 @@ class TableManager {
             border: 1px solid var(--border-color, #e5e7eb);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            min-width: 220px;
-            max-height: 400px;
+            min-width: 260px;
+            max-height: 500px;
             overflow-y: auto;
             z-index: 1000;
             direction: rtl;
@@ -1232,9 +1237,77 @@ class TableManager {
         header.textContent = 'הגדרות טבלה';
         menu.appendChild(header);
 
-        // אפשרות בחירה מרובה
+        // ===================================================================
+        // סקשן 1: מצב תצוגה (טעינה)
+        // ===================================================================
+        const displayModeSection = document.createElement('div');
+        displayModeSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+
+        const displayModeTitle = document.createElement('div');
+        displayModeTitle.style.cssText = `font-weight: 600; margin-bottom: 10px; color: var(--text-primary, #1f2937); font-size: 13px;`;
+        displayModeTitle.textContent = '📄 מצב תצוגה';
+        displayModeSection.appendChild(displayModeTitle);
+
+        // אופציה 1: דף אחד עם גלילה
+        const infiniteOption = this._createRadioOption(
+            'displayMode',
+            'infinite',
+            'הכל בדף אחד (גלילה)',
+            !this.config.showPagination,
+            () => this._setDisplayMode('infinite', menu)
+        );
+        displayModeSection.appendChild(infiniteOption);
+
+        // אופציה 2: עמודים
+        const paginationOption = this._createRadioOption(
+            'displayMode',
+            'pagination',
+            'חלוקה לעמודים',
+            this.config.showPagination,
+            () => this._setDisplayMode('pagination', menu)
+        );
+        displayModeSection.appendChild(paginationOption);
+
+        // בחירת כמות לעמוד (מוצג רק במצב עמודים)
+        if (this.config.showPagination) {
+            const pageSizeContainer = document.createElement('div');
+            pageSizeContainer.style.cssText = `margin-top: 10px; padding-right: 24px;`;
+
+            const pageSizeLabel = document.createElement('span');
+            pageSizeLabel.textContent = 'שורות בעמוד: ';
+            pageSizeLabel.style.cssText = `font-size: 13px; color: var(--text-secondary, #4b5563);`;
+
+            const pageSizeSelect = document.createElement('select');
+            pageSizeSelect.style.cssText = `
+                padding: 4px 8px; border: 1px solid var(--border-color, #d1d5db);
+                border-radius: 4px; font-size: 13px; cursor: pointer;
+            `;
+            [25, 50, 100, 200, 500].forEach(num => {
+                const opt = document.createElement('option');
+                opt.value = num;
+                opt.textContent = num;
+                opt.selected = this.config.itemsPerPage === num;
+                pageSizeSelect.appendChild(opt);
+            });
+            pageSizeSelect.onchange = () => {
+                this.config.itemsPerPage = parseInt(pageSizeSelect.value);
+                this.calculateTotalPages();
+                this.goToPage(1);
+                this._saveUserPreference('tableRowsPerPage', this.config.itemsPerPage);
+            };
+
+            pageSizeContainer.appendChild(pageSizeLabel);
+            pageSizeContainer.appendChild(pageSizeSelect);
+            displayModeSection.appendChild(pageSizeContainer);
+        }
+
+        menu.appendChild(displayModeSection);
+
+        // ===================================================================
+        // סקשן 2: בחירה מרובה
+        // ===================================================================
         const multiSelectSection = document.createElement('div');
-        multiSelectSection.style.cssText = `padding: 8px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+        multiSelectSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
 
         const multiSelectLabel = document.createElement('label');
         multiSelectLabel.style.cssText = `display: flex; align-items: center; gap: 10px; cursor: pointer;`;
@@ -1247,33 +1320,42 @@ class TableManager {
             this.state.multiSelectEnabled = multiSelectCheckbox.checked;
             this.state.selectedRows.clear();
             this._refreshTable();
-            menu.remove();
         };
 
         const multiSelectText = document.createElement('span');
-        multiSelectText.textContent = 'בחירה מרובה';
-        multiSelectText.style.cssText = `font-weight: 500; color: var(--text-primary, #1f2937);`;
+        multiSelectText.textContent = '☑️ בחירה מרובה';
+        multiSelectText.style.cssText = `font-weight: 500; color: var(--text-primary, #1f2937); font-size: 13px;`;
 
         multiSelectLabel.appendChild(multiSelectCheckbox);
         multiSelectLabel.appendChild(multiSelectText);
         multiSelectSection.appendChild(multiSelectLabel);
         menu.appendChild(multiSelectSection);
 
-        // כותרת עמודות
+        // ===================================================================
+        // סקשן 3: עמודות (מתקפל)
+        // ===================================================================
+        const columnsSection = document.createElement('div');
+        columnsSection.style.cssText = `border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+
+        // כותרת מתקפלת
         const columnsHeader = document.createElement('div');
-        columnsHeader.style.cssText = `padding: 8px 16px 4px; font-size: 12px; color: var(--text-muted, #6b7280); font-weight: 600;`;
-        columnsHeader.textContent = 'עמודות';
-        menu.appendChild(columnsHeader);
+        columnsHeader.style.cssText = `
+            padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between;
+            align-items: center; font-weight: 600; color: var(--text-primary, #1f2937); font-size: 13px;
+        `;
+        columnsHeader.innerHTML = `<span>📊 עמודות</span><span class="tm-toggle-arrow">▼</span>`;
+
+        // תוכן מתקפל
+        const columnsContent = document.createElement('div');
+        columnsContent.className = 'tm-columns-content';
+        columnsContent.style.cssText = `display: none; padding: 0 0 8px 0;`;
 
         // רשימת עמודות
-        const list = document.createElement('div');
-        list.style.cssText = `padding: 0 0 8px 0;`;
-
         this.config.columns.forEach((col, index) => {
             const item = document.createElement('label');
             item.style.cssText = `
-                display: flex; align-items: center; gap: 10px; padding: 8px 16px;
-                cursor: pointer; transition: background 0.2s; color: var(--text-primary, #1f2937);
+                display: flex; align-items: center; gap: 10px; padding: 6px 16px;
+                cursor: pointer; transition: background 0.2s; color: var(--text-primary, #1f2937); font-size: 13px;
             `;
             item.onmouseover = () => item.style.background = 'var(--bg-secondary, #f3f4f6)';
             item.onmouseout = () => item.style.background = 'transparent';
@@ -1281,11 +1363,11 @@ class TableManager {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = this.state.columnVisibility[index];
-            checkbox.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
+            checkbox.style.cssText = `width: 14px; height: 14px; cursor: pointer;`;
             checkbox.onchange = () => {
                 this.state.columnVisibility[index] = checkbox.checked;
                 this._refreshTable();
-                this._saveColumnVisibility(); // ⭐ שמירה אוטומטית
+                this._saveColumnVisibility();
             };
 
             const label = document.createElement('span');
@@ -1293,47 +1375,53 @@ class TableManager {
 
             item.appendChild(checkbox);
             item.appendChild(label);
-            list.appendChild(item);
+            columnsContent.appendChild(item);
         });
 
-        menu.appendChild(list);
-
-        // כפתורי פעולה
+        // כפתורי הצג/הסתר הכל
         const actions = document.createElement('div');
-        actions.style.cssText = `
-            padding: 8px 16px; border-top: 1px solid var(--border-color, #e5e7eb);
-            display: flex; gap: 8px; justify-content: space-between;
-        `;
+        actions.style.cssText = `padding: 8px 16px; display: flex; gap: 8px; justify-content: center;`;
 
         const showAllBtn = document.createElement('button');
         showAllBtn.textContent = 'הצג הכל';
         showAllBtn.style.cssText = `
-            padding: 6px 12px; border: 1px solid var(--border-color, #d1d5db);
-            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 13px;
+            padding: 4px 10px; border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 12px;
         `;
         showAllBtn.onclick = () => {
             this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = true);
-            menu.remove();
             this._refreshTable();
-            this._saveColumnVisibility(); // ⭐ שמירה אוטומטית
+            this._saveColumnVisibility();
+            columnsContent.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
         };
 
         const hideAllBtn = document.createElement('button');
         hideAllBtn.textContent = 'הסתר הכל';
         hideAllBtn.style.cssText = `
-            padding: 6px 12px; border: 1px solid var(--border-color, #d1d5db);
-            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 13px;
+            padding: 4px 10px; border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 12px;
         `;
         hideAllBtn.onclick = () => {
             this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = false);
-            menu.remove();
             this._refreshTable();
-            this._saveColumnVisibility(); // ⭐ שמירה אוטומטית
+            this._saveColumnVisibility();
+            columnsContent.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         };
 
         actions.appendChild(showAllBtn);
         actions.appendChild(hideAllBtn);
-        menu.appendChild(actions);
+        columnsContent.appendChild(actions);
+
+        // Toggle עמודות
+        columnsHeader.onclick = () => {
+            const isVisible = columnsContent.style.display !== 'none';
+            columnsContent.style.display = isVisible ? 'none' : 'block';
+            columnsHeader.querySelector('.tm-toggle-arrow').textContent = isVisible ? '▼' : '▲';
+        };
+
+        columnsSection.appendChild(columnsHeader);
+        columnsSection.appendChild(columnsContent);
+        menu.appendChild(columnsSection);
 
         document.body.appendChild(menu);
 
@@ -1345,6 +1433,84 @@ class TableManager {
             }
         };
         setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    }
+
+    /**
+     * יצירת אופציית רדיו
+     */
+    _createRadioOption(name, value, label, checked, onChange) {
+        const container = document.createElement('label');
+        container.style.cssText = `
+            display: flex; align-items: center; gap: 8px; padding: 6px 0;
+            cursor: pointer; font-size: 13px; color: var(--text-primary, #1f2937);
+        `;
+
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = name;
+        radio.value = value;
+        radio.checked = checked;
+        radio.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
+        radio.onchange = onChange;
+
+        const text = document.createElement('span');
+        text.textContent = label;
+
+        container.appendChild(radio);
+        container.appendChild(text);
+        return container;
+    }
+
+    /**
+     * שינוי מצב תצוגה (infinite scroll / pagination)
+     */
+    _setDisplayMode(mode, menu) {
+        if (mode === 'infinite') {
+            // מצב גלילה אינסופית
+            this.config.showPagination = false;
+            this.config.itemsPerPage = 999999;
+
+            // הסר footer אם קיים
+            if (this.elements.paginationFooter) {
+                this.elements.paginationFooter.remove();
+                this.elements.paginationFooter = null;
+            }
+
+            // אתחל infinite scroll אם לא פעיל
+            if (this.config.scrollLoadBatch > 0) {
+                this.initInfiniteScroll();
+            }
+
+            // שמור העדפה (null = infinite scroll)
+            this._saveUserPreference('tableRowsPerPage', null);
+
+        } else if (mode === 'pagination') {
+            // מצב עמודים
+            this.config.showPagination = true;
+            this.config.itemsPerPage = 25; // ברירת מחדל
+
+            // בנה footer אם לא קיים
+            if (!this.elements.paginationFooter) {
+                this._buildPaginationFooter(this.elements.wrapper);
+            }
+
+            // שמור העדפה
+            this._saveUserPreference('tableRowsPerPage', this.config.itemsPerPage);
+        }
+
+        // חישוב מחדש ורענון
+        this.calculateTotalPages();
+        this.state.hasMoreData = true;
+        this.loadInitialData();
+
+        // סגור תפריט
+        if (menu) menu.remove();
+
+        // הודעה למשתמש
+        if (typeof showToast === 'function') {
+            const msg = mode === 'infinite' ? 'מצב גלילה - כל הנתונים בדף אחד' : 'מצב עמודים - 25 שורות לעמוד';
+            showToast(msg, 'info');
+        }
     }
 
     /**
@@ -1498,12 +1664,13 @@ class TableManager {
                 <button class="tm-page-btn tm-next" title="הבא">▶</button>
                 <button class="tm-page-btn tm-last" title="אחרון">⏭</button>
                 <select class="tm-page-size">
-                    ${this.config.paginationOptions.map(opt =>
-                        `<option value="${opt === 'all' ? 999999 : opt}"
-                                 ${opt === this.config.itemsPerPage ? 'selected' : ''}>
+                    ${this.config.paginationOptions.map(opt => {
+                        const optValue = opt === 'all' ? 999999 : opt;
+                        const isSelected = optValue === this.config.itemsPerPage;
+                        return `<option value="${optValue}" ${isSelected ? 'selected' : ''}>
                             ${opt === 'all' ? 'הכל' : opt}
-                        </option>`
-                    ).join('')}
+                        </option>`;
+                    }).join('')}
                 </select>
             </div>
         `;

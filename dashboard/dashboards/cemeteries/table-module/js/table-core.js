@@ -862,22 +862,34 @@ class TableManager {
         let currentTh = null;
         let startX = 0;
         let startWidth = 0;
+        let colIndex = null;
 
         const onMouseMove = (e) => {
             if (!isResizing) return;
 
+            // RTL: כיוון הפוך - גרירה שמאלה מגדילה, ימינה מקטינה
             const diff = e.pageX - startX;
-            const newWidth = Math.max(50, startWidth + diff);
+            const newWidth = Math.max(80, startWidth - diff);
 
-            const colIndex = currentTh.dataset.colIndex;
+            // עדכון state
             this.state.columnWidths[colIndex] = newWidth + 'px';
-            currentTh.style.width = newWidth + 'px';
 
-            // עדכון עמודה מקבילה בגוף
-            const bodyCell = this.elements.tbody.querySelector(`td[data-col-index="${colIndex}"]`);
-            if (bodyCell) {
-                bodyCell.style.width = newWidth + 'px';
-            }
+            // עדכון כותרת
+            currentTh.style.width = newWidth + 'px';
+            currentTh.style.minWidth = newWidth + 'px';
+
+            // עדכון כל התאים בעמודה בגוף הטבלה
+            // חישוב מיקום העמודה (כולל checkbox אם יש)
+            const visibleColIndex = this._getVisibleColumnIndex(colIndex);
+            const selector = `tr.tm-row td:nth-child(${visibleColIndex + 1})`;
+            const bodyCells = this.elements.tbody.querySelectorAll(selector);
+            bodyCells.forEach(cell => {
+                cell.style.width = newWidth + 'px';
+                cell.style.minWidth = newWidth + 'px';
+            });
+
+            // עדכון רוחב הטבלאות
+            this._updateTableWidths();
         };
 
         const onMouseUp = () => {
@@ -891,12 +903,43 @@ class TableManager {
 
             isResizing = true;
             currentTh = e.target.closest('.tm-header-cell');
+            colIndex = parseInt(currentTh.dataset.colIndex);
             startX = e.pageX;
             startWidth = currentTh.offsetWidth;
 
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         }, { signal: this._abortController.signal });
+    }
+
+    /**
+     * קבלת אינדקס העמודה הנראית (כולל checkbox)
+     */
+    _getVisibleColumnIndex(colIndex) {
+        let visibleIndex = this.state.multiSelectEnabled ? 1 : 0;
+        for (let i = 0; i < this.state.columnOrder.length; i++) {
+            const idx = this.state.columnOrder[i];
+            if (idx === colIndex) break;
+            if (this.state.columnVisibility[idx]) {
+                visibleIndex++;
+            }
+        }
+        return visibleIndex;
+    }
+
+    /**
+     * עדכון רוחב הטבלאות
+     */
+    _updateTableWidths() {
+        const newWidth = this._calculateTableWidth();
+        if (this.elements.headerTable) {
+            this.elements.headerTable.style.width = newWidth + 'px';
+            this.elements.headerTable.style.minWidth = newWidth + 'px';
+        }
+        if (this.elements.bodyTable) {
+            this.elements.bodyTable.style.width = newWidth + 'px';
+            this.elements.bodyTable.style.minWidth = newWidth + 'px';
+        }
     }
 
     /**

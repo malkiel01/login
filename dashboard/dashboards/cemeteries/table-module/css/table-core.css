@@ -17,7 +17,7 @@
  */
 
 /* ===================================================================
-   CSS Variables - Z-Index Scale
+   CSS Variables - Z-Index Scale & Color Fallbacks
    =================================================================== */
 :root {
     --tm-z-header: 100;
@@ -25,6 +25,29 @@
     --tm-z-tooltip: 300;
     --tm-z-modal: 400;
     --tm-z-overlay: 500;
+
+    /* צבעי ברירת מחדל (נדרסים על ידי user-preferences.css) */
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --border-color: #e2e8f0;
+    --primary-color: #667eea;
+}
+
+/* Dark mode - צבעי טקסט בהירים */
+html[data-theme="dark"],
+body.dark-theme {
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --bg-primary: #1e293b;
+    --bg-secondary: #334155;
+    --bg-tertiary: #475569;
+    --border-color: #475569;
+    --primary-color: #818cf8;
 }
 
 /* ===================================================================

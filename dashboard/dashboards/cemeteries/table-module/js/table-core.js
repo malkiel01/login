@@ -442,6 +442,20 @@ class TableManager {
             signal: this._abortController.signal
         });
 
+        // ⭐ עדכון גובה כשמשתנים אלמנטים בדף (פתיחת חיפוש גלובלי וכו')
+        this._heightObserver = new MutationObserver(() => {
+            // עיכוב קטן לאפשר לאנימציות להסתיים
+            setTimeout(() => this._setDynamicHeight(), 100);
+        });
+
+        // צפה בשינויים ב-body (הוספה/הסרה של אלמנטים)
+        this._heightObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style', 'class']
+        });
+
         const headerContainer = document.createElement('div');
         headerContainer.className = 'table-header-container';
         headerContainer.style.cssText = `
@@ -2921,6 +2935,12 @@ class TableManager {
 
         // ביטול כל ה-event listeners
         this._abortController.abort();
+
+        // ⭐ ניקוי MutationObserver
+        if (this._heightObserver) {
+            this._heightObserver.disconnect();
+            this._heightObserver = null;
+        }
 
         // ניקוי DOM
         if (this.elements.wrapper) {

@@ -74,3 +74,18 @@ INSERT INTO user_settings_defaults (settingKey, defaultValue, settingType, categ
 ('currency', 'ILS', 'string', 'locale', 'מטבע', 'מטבע ברירת מחדל', 4)
 
 ON DUPLICATE KEY UPDATE updateDate = CURRENT_TIMESTAMP;
+
+
+CREATE TABLE IF NOT EXISTS table_permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,
+    entityType VARCHAR(50) NOT NULL,
+    canView TINYINT(1) DEFAULT 1,
+    canEdit TINYINT(1) DEFAULT 0,
+    canDelete TINYINT(1) DEFAULT 0,
+    canExport TINYINT(1) DEFAULT 0,
+    canCreate TINYINT(1) DEFAULT 0,
+    visibleColumns JSON DEFAULT NULL,
+    editableColumns JSON DEFAULT NULL,
+    UNIQUE KEY unique_user_entity (userId, entityType)
+);

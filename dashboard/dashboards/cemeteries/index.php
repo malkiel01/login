@@ -31,10 +31,10 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css?v=20260122c">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122ci">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css?v=20260124">
 
-    <!-- Table Module - New Modular System with Dark Mode -->
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/table-module/css/table-core.css?v=20260123">
+    <!-- Table Module - New Modular System with Theme Support -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/table-module/css/table-core.css?v=20260124">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
 

@@ -241,13 +241,145 @@
     .entity-card {
         padding: 0.75rem;
     }
-    
+
     .entity-card-title {
         font-size: 0.9rem;
     }
-    
+
     .entity-card-label,
     .entity-card-value {
         font-size: 0.75rem;
     }
+}
+
+/* ===================================================================
+   DARK MODE SUPPORT
+   =================================================================== */
+[data-theme="dark"] .data-table,
+body.dark-theme .data-table {
+    background: var(--bg-primary, #1e293b);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .data-table thead,
+body.dark-theme .data-table thead {
+    background: linear-gradient(135deg, var(--bg-secondary, #334155) 0%, var(--bg-tertiary, #475569) 100%);
+}
+
+[data-theme="dark"] .data-table th,
+body.dark-theme .data-table th {
+    color: var(--text-primary, #f1f5f9);
+    border-bottom-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .data-table td,
+body.dark-theme .data-table td {
+    color: var(--text-primary, #f1f5f9);
+    border-bottom-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover,
+body.dark-theme .data-table tbody tr:hover {
+    background: var(--bg-secondary, #334155);
+}
+
+[data-theme="dark"] .table-responsive::-webkit-scrollbar-track,
+body.dark-theme .table-responsive::-webkit-scrollbar-track {
+    background: var(--bg-secondary, #334155);
+}
+
+[data-theme="dark"] .table-responsive::-webkit-scrollbar-thumb,
+body.dark-theme .table-responsive::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary, #475569);
+}
+
+[data-theme="dark"] .table-responsive::-webkit-scrollbar-thumb:hover,
+body.dark-theme .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Entity Cards - Dark Mode */
+[data-theme="dark"] .entity-card,
+body.dark-theme .entity-card {
+    background: var(--bg-secondary, #334155);
+    border-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .entity-card-header,
+body.dark-theme .entity-card-header {
+    border-bottom-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .entity-card-title,
+body.dark-theme .entity-card-title {
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .entity-card-label,
+body.dark-theme .entity-card-label {
+    color: var(--text-muted, #94a3b8);
+}
+
+[data-theme="dark"] .entity-card-value,
+body.dark-theme .entity-card-value {
+    color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .entity-card.expanded .entity-card-details,
+body.dark-theme .entity-card.expanded .entity-card-details {
+    border-top-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .entity-card-actions,
+body.dark-theme .entity-card-actions {
+    border-top-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .table-sticky-header thead,
+body.dark-theme .table-sticky-header thead {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ===================================================================
+   COLOR SCHEMES - Green
+   =================================================================== */
+[data-color-scheme="green"] .entity-card-toggle,
+body.color-scheme-green .entity-card-toggle {
+    background: #059669;
+}
+
+[data-color-scheme="green"] .data-table thead,
+body.color-scheme-green .data-table thead {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+/* ===================================================================
+   COMPACT MODE
+   =================================================================== */
+body.compact-mode .data-table th,
+body.compact-mode .data-table td {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+body.compact-mode .entity-card {
+    padding: 0.75rem;
+}
+
+body.compact-mode .entity-card-title {
+    font-size: 0.9rem;
+}
+
+body.compact-mode .entity-card-body {
+    gap: 0.375rem;
+}
+
+body.compact-mode .entity-card-label,
+body.compact-mode .entity-card-value {
+    font-size: 0.75rem;
+}
+
+body.compact-mode .entity-card-toggle {
+    width: 20px;
+    height: 20px;
 }

@@ -434,6 +434,131 @@ body.dark-theme .tm-loading-spinner {
 }
 
 /* ===================================================================
+   COLOR SCHEMES - Green
+   =================================================================== */
+[data-color-scheme="green"] .tm-sort-icon.asc::after,
+[data-color-scheme="green"] .tm-sort-icon.desc::after,
+body.color-scheme-green .tm-sort-icon.asc::after,
+body.color-scheme-green .tm-sort-icon.desc::after {
+    color: #059669;
+}
+
+[data-color-scheme="green"] .tm-resize-handle:hover,
+[data-color-scheme="green"] .tm-resize-handle.active,
+body.color-scheme-green .tm-resize-handle:hover,
+body.color-scheme-green .tm-resize-handle.active {
+    background: #059669;
+}
+
+[data-color-scheme="green"] .tm-row.tm-selected,
+body.color-scheme-green .tm-row.tm-selected {
+    background: rgba(5, 150, 105, 0.1);
+}
+
+[data-color-scheme="green"] .tm-row.tm-selected:hover,
+body.color-scheme-green .tm-row.tm-selected:hover {
+    background: rgba(5, 150, 105, 0.15);
+}
+
+[data-color-scheme="green"] .tm-checkbox-cell input[type="checkbox"],
+body.color-scheme-green .tm-checkbox-cell input[type="checkbox"] {
+    accent-color: #059669;
+}
+
+[data-color-scheme="green"] .tm-loading-spinner,
+body.color-scheme-green .tm-loading-spinner {
+    border-top-color: #059669;
+}
+
+[data-color-scheme="green"] .tm-page-btn:hover:not(:disabled),
+body.color-scheme-green .tm-page-btn:hover:not(:disabled) {
+    border-color: #059669;
+}
+
+[data-color-scheme="green"] .tm-page-size:focus,
+body.color-scheme-green .tm-page-size:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+}
+
+/* ===================================================================
+   COMPACT MODE
+   =================================================================== */
+body.compact-mode .tm-header-row {
+    height: 40px;
+}
+
+body.compact-mode .tm-header-cell {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+body.compact-mode .tm-row {
+    height: 36px;
+}
+
+body.compact-mode .tm-cell {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+body.compact-mode .tm-checkbox-cell {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    padding: 0 6px !important;
+}
+
+body.compact-mode .tm-checkbox-cell input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+body.compact-mode .tm-pagination-footer {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+body.compact-mode .tm-page-btn {
+    width: 28px;
+    height: 28px;
+}
+
+body.compact-mode .tm-page-size {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+body.compact-mode .tm-loading-spinner {
+    width: 24px;
+    height: 24px;
+}
+
+body.compact-mode .tm-empty-row {
+    padding: 24px;
+}
+
+/* ===================================================================
+   DARK MODE + GREEN COLOR SCHEME (Combined)
+   =================================================================== */
+[data-theme="dark"][data-color-scheme="green"] .tm-sort-icon.asc::after,
+[data-theme="dark"][data-color-scheme="green"] .tm-sort-icon.desc::after,
+body.dark-theme.color-scheme-green .tm-sort-icon.asc::after,
+body.dark-theme.color-scheme-green .tm-sort-icon.desc::after {
+    color: #34d399;
+}
+
+[data-theme="dark"][data-color-scheme="green"] .tm-row.tm-selected,
+body.dark-theme.color-scheme-green .tm-row.tm-selected {
+    background: rgba(52, 211, 153, 0.15);
+}
+
+[data-theme="dark"][data-color-scheme="green"] .tm-loading-spinner,
+body.dark-theme.color-scheme-green .tm-loading-spinner {
+    border-top-color: #34d399;
+}
+
+/* ===================================================================
    RESPONSIVE - Mobile
    =================================================================== */
 @media (max-width: 768px) {

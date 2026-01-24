@@ -1,4 +1,4 @@
-/* dashboard.css - מתוקן */
+/* dashboard.css - עיצוב דשבורד עם תמיכה בערכות נושא */
 
 .dashboard-wrapper {
     min-height: 100vh;
@@ -18,7 +18,7 @@
 .main-content {
     flex: 1;
     padding: 2rem;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
     min-height: calc(100vh - 160px);
     margin-right: 280px;
     transition: margin-right 0.3s ease;
@@ -32,7 +32,7 @@
     width: 280px;
     height: calc(100vh - 160px);
     overflow-y: auto;
-    background: #fff;
+    background: var(--bg-primary);
     box-shadow: -2px 0 5px rgba(0,0,0,0.05);
     z-index: 999;
     transition: transform 0.3s ease, width 0.3s ease;
@@ -71,7 +71,7 @@
     gap: 0.5rem;
     align-items: center;
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     flex-wrap: wrap;
     margin-bottom: 0.5rem;
 }
@@ -83,7 +83,7 @@
     align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-color);
     gap: 1rem;
 }
 
@@ -95,7 +95,7 @@
 .entity-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--text-primary);
     margin: 0 0 0.25rem 0;
     display: flex;
     align-items: center;
@@ -116,20 +116,20 @@
 .btn-search-toggle {
     display: none;
     padding: 8px 16px;
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    color: #374151;
+    color: var(--text-primary);
     transition: all 0.2s ease;
     gap: 8px;
     align-items: center;
 }
 
 .btn-search-toggle:hover {
-    background: #e5e7eb;
-    border-color: #d1d5db;
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
 }
 
 .btn-search-toggle svg {
@@ -139,13 +139,13 @@
 
 .entity-subtitle {
     font-size: 0.9rem;
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 /* Entity Items - תיקון תצוגה */
 .entity-item {
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 0.5rem;
@@ -168,7 +168,7 @@
 .entity-item-title {
     font-weight: 600;
     font-size: 1rem;
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .entity-item-expand {
@@ -176,7 +176,7 @@
     border: none;
     cursor: pointer;
     padding: 0.25rem;
-    color: #667eea;
+    color: var(--primary-color);
     transition: transform 0.3s ease;
 }
 
@@ -199,13 +199,13 @@
 
 .entity-item-label {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
 .entity-item-value {
     font-size: 0.875rem;
-    color: #475569;
+    color: var(--text-secondary);
 }
 
 /* Collapsible content for mobile */
@@ -313,17 +313,17 @@
         margin: 0;
     }
 
-    /* כפתור חיפוש - רקע אפור */
+    /* כפתור חיפוש - רקע מותאם לתמה */
     .entity-title-container .action-buttons .btn-search-toggle,
     .entity-title-container .action-buttons .btn-show-search {
-        background: #f3f4f6;
-        border: 1px solid #e5e7eb;
-        color: #374151;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
     }
 
     .entity-title-container .action-buttons .btn-search-toggle:active,
     .entity-title-container .action-buttons .btn-show-search:active {
-        background: #e5e7eb;
+        background: var(--bg-secondary);
     }
 
     /* Entity items mobile optimization */
@@ -358,16 +358,16 @@
     .dashboard-header h1 {
         font-size: 1.25rem;
     }
-    
+
     .header-stats {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     .btn {
         padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
     }
-    
+
     .breadcrumb {
         font-size: 12px;
     }

@@ -1,43 +1,7 @@
 /**
  * Search Section Styles
- * v1.1.0 - תמיכה בערכות נושא (Theme Support)
+ * v1.2.0 - שימוש במשתני CSS גלובליים מ-user-preferences.css
  */
-
-/* ===================================================================
-   CSS Variables - ברירות מחדל (Light Theme)
-   =================================================================== */
-:root {
-    --search-text-primary: var(--text-primary, #374151);
-    --search-text-secondary: var(--text-secondary, #6b7280);
-    --search-text-muted: var(--text-muted, #9ca3af);
-    --search-bg-primary: var(--bg-primary, #ffffff);
-    --search-bg-secondary: var(--bg-secondary, #f9fafb);
-    --search-bg-tertiary: var(--bg-tertiary, #f3f4f6);
-    --search-border-color: var(--border-color, #e5e7eb);
-    --search-primary-color: var(--primary-color, #667eea);
-    --search-primary-hover: var(--primary-hover, #5568d3);
-    --search-primary-light: var(--primary-light, #dbeafe);
-    --search-primary-text: var(--primary-text, #1e40af);
-}
-
-/* ===================================================================
-   Dark Theme Support
-   =================================================================== */
-html[data-theme="dark"],
-body.dark-theme,
-[data-theme="dark"] {
-    --search-text-primary: var(--text-primary, #f1f5f9);
-    --search-text-secondary: var(--text-secondary, #cbd5e1);
-    --search-text-muted: var(--text-muted, #94a3b8);
-    --search-bg-primary: var(--bg-primary, #1e293b);
-    --search-bg-secondary: var(--bg-secondary, #334155);
-    --search-bg-tertiary: var(--bg-tertiary, #475569);
-    --search-border-color: var(--border-color, #475569);
-    --search-primary-color: var(--primary-color, #818cf8);
-    --search-primary-hover: var(--primary-hover, #6366f1);
-    --search-primary-light: var(--primary-light, #312e81);
-    --search-primary-text: var(--primary-text, #c7d2fe);
-}
 
 /* ===================================================================
    Search Section
@@ -45,7 +9,7 @@ body.dark-theme,
 .search-section {
     margin-bottom: 20px;
     padding: 20px;
-    background: var(--search-bg-secondary);
+    background: var(--bg-secondary);
     border-radius: 8px;
     transition: all 0.3s ease;
     max-height: 500px; /* גובה מקסימלי לאנימציה */
@@ -59,22 +23,22 @@ body.dark-theme,
     width: 100%;
     padding: 12px 16px;
     padding-right: 45px;
-    border: 2px solid var(--search-border-color);
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 16px;
     transition: all 0.2s ease;
     direction: rtl;
-    background: var(--search-bg-primary);
-    color: var(--search-text-primary);
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .search-input::placeholder {
-    color: var(--search-text-muted);
+    color: var(--text-muted);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: var(--search-primary-color);
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -85,39 +49,39 @@ body.dark-theme,
     transform: translateY(-50%);
     width: 20px;
     height: 20px;
-    color: var(--search-text-muted);
+    color: var(--text-muted);
     pointer-events: none;
 }
 
 .search-counter {
     margin-top: 10px;
     padding: 8px 16px;
-    background: var(--search-bg-primary);
+    background: var(--bg-primary);
     border-radius: 6px;
     font-size: 14px;
     display: flex;
     align-items: center;
     gap: 10px;
     direction: rtl;
-    border: 1px solid var(--search-border-color);
+    border: 1px solid var(--border-color);
 }
 
 .search-counter.active {
-    background: var(--search-primary-light);
-    border-color: var(--search-primary-color);
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
 }
 
 .counter-filtered {
-    color: var(--search-primary-text);
+    color: var(--primary-color);
     font-weight: 600;
 }
 
 .counter-separator {
-    color: var(--search-text-secondary);
+    color: var(--text-secondary);
 }
 
 .counter-total {
-    color: var(--search-text-primary);
+    color: var(--text-primary);
 }
 
 /* ===================================================================
@@ -135,7 +99,7 @@ body.dark-theme,
 
 .btn-pagination {
     padding: 8px 16px;
-    background: var(--search-primary-color);
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 6px;
@@ -145,19 +109,19 @@ body.dark-theme,
 }
 
 .btn-pagination:hover {
-    background: var(--search-primary-hover);
+    filter: brightness(0.9);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-pagination:disabled {
-    background: var(--search-text-muted);
+    background: var(--text-muted);
     cursor: not-allowed;
     transform: none;
 }
 
 .pagination-info {
-    color: var(--search-text-secondary);
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
@@ -176,7 +140,7 @@ body.dark-theme,
 .search-section-title {
     font-size: 14px;
     font-weight: 600;
-    color: var(--search-text-primary);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -185,26 +149,26 @@ body.dark-theme,
 .search-section-title svg {
     width: 18px;
     height: 18px;
-    color: var(--search-text-secondary);
+    color: var(--text-secondary);
 }
 
 .btn-collapse-search {
     display: inline-flex; /* מוצג בכל המסכים */
     padding: 6px 12px;
-    background: var(--search-bg-tertiary);
-    border: 1px solid var(--search-border-color);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
-    color: var(--search-text-secondary);
+    color: var(--text-secondary);
     transition: all 0.2s ease;
     gap: 6px;
     align-items: center;
 }
 
 .btn-collapse-search:hover {
-    background: var(--search-border-color);
-    color: var(--search-text-primary);
+    background: var(--border-color);
+    color: var(--text-primary);
 }
 
 .btn-collapse-search svg {
@@ -227,8 +191,8 @@ body.dark-theme,
 .btn-show-search {
     display: none; /* ברירת מחדל - מוסתר */
     padding: 8px 16px;
-    background: var(--search-primary-color) !important;
-    border: 1px solid var(--search-primary-color) !important;
+    background: var(--primary-color) !important;
+    border: 1px solid var(--primary-color) !important;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
@@ -239,8 +203,7 @@ body.dark-theme,
 }
 
 .btn-show-search:hover {
-    background: var(--search-primary-hover) !important;
-    border-color: var(--search-primary-hover) !important;
+    filter: brightness(0.9);
 }
 
 .btn-show-search svg {

@@ -330,7 +330,25 @@ const UserSettings = (function() {
         }
         document.body.classList.toggle('sidebar-collapsed', isCollapsed);
 
-        console.log('UserSettings applied:', { darkMode: isDark, colorScheme, fontSize, compactMode, sidebarCollapsed: isCollapsed });
+        // תצוגת מובייל (טבלה/כרטיסים)
+        const mobileViewMode = get('mobileViewMode', 'cards');
+        document.body.classList.remove('mobile-view-table', 'mobile-view-cards');
+        document.body.classList.add('mobile-view-' + mobileViewMode);
+
+        // עדכון כפתור המעבר אם קיים
+        const mobileToggleLabel = document.getElementById('mobileViewLabel');
+        const mobileToggleIcon = document.getElementById('mobileViewIcon');
+        if (mobileToggleLabel && mobileToggleIcon) {
+            if (mobileViewMode === 'table') {
+                mobileToggleLabel.textContent = 'כרטיסים';
+                mobileToggleIcon.innerHTML = '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>';
+            } else {
+                mobileToggleLabel.textContent = 'טבלה';
+                mobileToggleIcon.innerHTML = '<path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18" stroke-linecap="round" stroke-linejoin="round"/>';
+            }
+        }
+
+        console.log('UserSettings applied:', { darkMode: isDark, colorScheme, fontSize, compactMode, sidebarCollapsed: isCollapsed, mobileViewMode });
     }
 
     /**
@@ -343,7 +361,7 @@ const UserSettings = (function() {
 
             // האזנה לשינויים ועדכון UI
             onChange((key, value) => {
-                if (['darkMode', 'colorScheme', 'fontSize', 'compactMode', 'sidebarCollapsed'].includes(key)) {
+                if (['darkMode', 'colorScheme', 'fontSize', 'compactMode', 'sidebarCollapsed', 'mobileViewMode'].includes(key)) {
                     applyToUI();
                 }
             });

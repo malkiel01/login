@@ -202,24 +202,37 @@
 
 /* Mobile View */
 @media (max-width: 768px) {
-    /* הסתר טבלה והצג כרטיסים */
+    /* ברירת מחדל: כרטיסים במובייל */
     .table-responsive {
         display: none;
     }
-    
+
     .entity-cards {
         display: block;
     }
-    
-    /* אם רוצים להשאיר טבלה עם גלילה */
-    .table-mobile-scroll {
+
+    /* מצב טבלה במובייל - כשהמשתמש בוחר */
+    body.mobile-view-table .table-responsive {
         display: block;
     }
-    
-    .table-mobile-scroll .data-table {
+
+    body.mobile-view-table .entity-cards {
+        display: none;
+    }
+
+    body.mobile-view-table .data-table {
         min-width: 600px;
     }
-    
+
+    /* מצב כרטיסים במובייל (ברירת מחדל) */
+    body.mobile-view-cards .table-responsive {
+        display: none;
+    }
+
+    body.mobile-view-cards .entity-cards {
+        display: block;
+    }
+
     /* פעולות בכרטיסים */
     .entity-card-actions {
         display: flex;
@@ -228,12 +241,75 @@
         padding-top: 0.75rem;
         border-top: 1px solid var(--border-color);
     }
-    
+
     .entity-card-actions .btn {
         flex: 1;
         padding: 0.5rem;
         font-size: 0.75rem;
     }
+}
+
+/* ===================================================================
+   MOBILE VIEW TOGGLE BUTTON
+   =================================================================== */
+.mobile-view-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: var(--primary-color, #667eea);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    direction: rtl;
+}
+
+.mobile-view-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.mobile-view-toggle:active {
+    transform: translateY(0);
+}
+
+.mobile-view-toggle svg {
+    width: 18px;
+    height: 18px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.mobile-view-toggle span {
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .mobile-view-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+/* Dark Mode for toggle */
+[data-theme="dark"] .mobile-view-toggle,
+body.dark-theme .mobile-view-toggle {
+    background: var(--primary-color, #818cf8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Green scheme for toggle */
+[data-color-scheme="green"] .mobile-view-toggle,
+body.color-scheme-green .mobile-view-toggle {
+    background: #059669;
 }
 
 /* Small Mobile */

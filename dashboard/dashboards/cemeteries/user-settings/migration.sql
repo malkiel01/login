@@ -57,10 +57,11 @@ INSERT INTO user_settings_defaults (settingKey, defaultValue, settingType, categ
 ('emailNotifications', 'true', 'boolean', 'notifications', 'התראות במייל', 'קבל עדכונים למייל', 3),
 
 -- הגדרות טבלאות
-('tableDefaultSort', 'createDate', 'string', 'tables', 'מיון ברירת מחדל', 'העמודה למיון ברירת מחדל', 1),
-('tableSortDirection', 'desc', 'string', 'tables', 'כיוון מיון', 'כיוון המיון (עולה/יורד)', 2),
-('tableShowFilters', 'true', 'boolean', 'tables', 'הצג מסננים', 'הצג פאנל מסננים בטבלאות', 3),
-('tableAnimations', 'true', 'boolean', 'tables', 'אנימציות', 'הפעל אנימציות בטבלאות', 4),
+('tableDefaultSort', 'createDate', 'string', 'tables', 'מיון ברירת מחדל', 'העמודה למיון ברירת מחדל', NULL, 1),
+('tableSortDirection', 'desc', 'string', 'tables', 'כיוון מיון', 'כיוון המיון (עולה/יורד)', NULL, 2),
+('tableShowFilters', 'true', 'boolean', 'tables', 'הצג מסננים', 'הצג פאנל מסננים בטבלאות', NULL, 3),
+('tableAnimations', 'true', 'boolean', 'tables', 'אנימציות', 'הפעל אנימציות בטבלאות', NULL, 4),
+('mobileViewMode', 'cards', 'string', 'tables', 'תצוגת מובייל', 'בחר תצוגה במכשירים ניידים', '[{"value":"cards","label":"כרטיסים"},{"value":"table","label":"טבלה"}]', 5),
 
 -- הגדרות ניווט
 ('defaultLandingPage', 'dashboard', 'string', 'navigation', 'דף נחיתה', 'הדף הראשון בכניסה', 1),

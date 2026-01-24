@@ -26,6 +26,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/tables.css?v=20260124">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
 
@@ -296,6 +297,86 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                     // החלה מיידית על הממשק
                     UserSettings.applyToUI();
                 }
+            }
+        });
+    </script>
+
+    <!-- Mobile View Toggle Button -->
+    <button class="mobile-view-toggle" id="mobileViewToggle" onclick="toggleMobileView()">
+        <svg id="mobileViewIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Table icon (default) -->
+            <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="mobileViewLabel">טבלה</span>
+    </button>
+
+    <script>
+        // מעבר בין תצוגות במובייל
+        function toggleMobileView() {
+            const body = document.body;
+            const label = document.getElementById('mobileViewLabel');
+            const icon = document.getElementById('mobileViewIcon');
+
+            // קבלת המצב הנוכחי
+            const isTableMode = body.classList.contains('mobile-view-table');
+
+            // מעבר למצב הפוך
+            if (isTableMode) {
+                body.classList.remove('mobile-view-table');
+                body.classList.add('mobile-view-cards');
+                label.textContent = 'טבלה';
+                icon.innerHTML = '<path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18" stroke-linecap="round" stroke-linejoin="round"/>';
+                saveMobileViewMode('cards');
+            } else {
+                body.classList.remove('mobile-view-cards');
+                body.classList.add('mobile-view-table');
+                label.textContent = 'כרטיסים';
+                icon.innerHTML = '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>';
+                saveMobileViewMode('table');
+            }
+        }
+
+        // שמירת ההעדפה
+        function saveMobileViewMode(mode) {
+            if (typeof UserSettings !== 'undefined') {
+                UserSettings.set('mobileViewMode', mode).catch(err => {
+                    console.warn('Failed to save mobile view mode:', err);
+                });
+            }
+        }
+
+        // אתחול מצב תצוגה במובייל
+        function initMobileViewMode() {
+            if (typeof UserSettings !== 'undefined') {
+                const mode = UserSettings.get('mobileViewMode', 'cards');
+                const body = document.body;
+                const label = document.getElementById('mobileViewLabel');
+                const icon = document.getElementById('mobileViewIcon');
+
+                body.classList.remove('mobile-view-table', 'mobile-view-cards');
+
+                if (mode === 'table') {
+                    body.classList.add('mobile-view-table');
+                    if (label) label.textContent = 'כרטיסים';
+                    if (icon) icon.innerHTML = '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>';
+                } else {
+                    body.classList.add('mobile-view-cards');
+                    if (label) label.textContent = 'טבלה';
+                    if (icon) icon.innerHTML = '<path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18" stroke-linecap="round" stroke-linejoin="round"/>';
+                }
+            }
+        }
+
+        // אתחול לאחר טעינת UserSettings
+        document.addEventListener('DOMContentLoaded', function() {
+            // חיכוי לאתחול UserSettings ואז אתחול מצב מובייל
+            setTimeout(initMobileViewMode, 500);
+        });
+
+        // עדכון בזמן אמת כשהגדרה משתנה
+        window.addEventListener('userSettingsChanged', function(event) {
+            if (event.detail && event.detail.key === 'mobileViewMode') {
+                initMobileViewMode();
             }
         });
     </script>

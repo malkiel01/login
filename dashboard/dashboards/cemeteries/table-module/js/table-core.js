@@ -151,6 +151,8 @@ class TableManager {
     async _loadUserPreferences() {
         if (!this.config.userPreferences.enabled) return;
 
+        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+
         try {
             if (typeof UserSettings !== 'undefined') {
                 // שימוש בהגדרות המשתמש הגלובליות
@@ -162,6 +164,18 @@ class TableManager {
                     if (this.config.itemsPerPage < 999999) {
                         this.config.showPagination = true;
                     }
+                }
+
+                // טעינת רוחב עמודות שנשמר
+                const savedColumnWidths = await UserSettings.getAsync(`${storageKey}_columnWidths`, null);
+                if (savedColumnWidths) {
+                    this._savedColumnWidths = JSON.parse(savedColumnWidths);
+                }
+
+                // טעינת נראות עמודות שנשמרה
+                const savedColumnVisibility = await UserSettings.getAsync(`${storageKey}_columnVisibility`, null);
+                if (savedColumnVisibility) {
+                    this._savedColumnVisibility = JSON.parse(savedColumnVisibility);
                 }
             }
         } catch (error) {
@@ -209,7 +223,7 @@ class TableManager {
     }
 
     /**
-     * אתחול עמודות עם בדיקת הרשאות
+     * אתחול עמודות עם בדיקת הרשאות והעדפות שמורות
      */
     _initColumns() {
         const visibleCols = this.config.permissions.visibleColumns;
@@ -224,8 +238,21 @@ class TableManager {
             const isVisible = col.visible !== false && isAllowed;
 
             this.state.columnOrder.push(index);
-            this.state.columnWidths[index] = col.width || 'auto';
-            this.state.columnVisibility[index] = isVisible;
+
+            // ⭐ טען רוחב עמודה מהעדפות שמורות אם יש
+            const fieldName = col.field || `col_${index}`;
+            if (this._savedColumnWidths && this._savedColumnWidths[fieldName]) {
+                this.state.columnWidths[index] = this._savedColumnWidths[fieldName];
+            } else {
+                this.state.columnWidths[index] = col.width || 'auto';
+            }
+
+            // ⭐ טען נראות עמודה מהעדפות שמורות אם יש
+            if (this._savedColumnVisibility && typeof this._savedColumnVisibility[fieldName] === 'boolean') {
+                this.state.columnVisibility[index] = this._savedColumnVisibility[fieldName] && isAllowed;
+            } else {
+                this.state.columnVisibility[index] = isVisible;
+            }
         });
     }
 
@@ -966,6 +993,9 @@ class TableManager {
             document.body.style.userSelect = '';
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
+
+            // ⭐ שמירת רוחב עמודות למשתמש
+            this._saveColumnWidths();
         };
 
         this.elements.thead.addEventListener('mousedown', (e) => {
@@ -1229,6 +1259,7 @@ class TableManager {
             checkbox.onchange = () => {
                 this.state.columnVisibility[index] = checkbox.checked;
                 this._refreshTable();
+                this._saveColumnVisibility(); // ⭐ שמירה אוטומטית
             };
 
             const label = document.createElement('span');
@@ -1258,6 +1289,7 @@ class TableManager {
             this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = true);
             menu.remove();
             this._refreshTable();
+            this._saveColumnVisibility(); // ⭐ שמירה אוטומטית
         };
 
         const hideAllBtn = document.createElement('button');
@@ -1270,6 +1302,7 @@ class TableManager {
             this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = false);
             menu.remove();
             this._refreshTable();
+            this._saveColumnVisibility(); // ⭐ שמירה אוטומטית
         };
 
         actions.appendChild(showAllBtn);
@@ -1532,6 +1565,44 @@ class TableManager {
         } catch (error) {
             console.warn('TableManager: Failed to save user preference', error);
         }
+    }
+
+    /**
+     * ⭐ שמירת רוחב עמודות למשתמש
+     */
+    async _saveColumnWidths() {
+        if (!this.config.userPreferences.enabled) return;
+
+        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+
+        // בניית אובייקט רוחב עמודות לפי שם שדה
+        const widthsByField = {};
+        this.config.columns.forEach((col, index) => {
+            const fieldName = col.field || `col_${index}`;
+            widthsByField[fieldName] = this.state.columnWidths[index];
+        });
+
+        await this._saveUserPreference(`${storageKey}_columnWidths`, JSON.stringify(widthsByField));
+        console.log('TableManager: Column widths saved for', storageKey);
+    }
+
+    /**
+     * ⭐ שמירת נראות עמודות למשתמש
+     */
+    async _saveColumnVisibility() {
+        if (!this.config.userPreferences.enabled) return;
+
+        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+
+        // בניית אובייקט נראות עמודות לפי שם שדה
+        const visibilityByField = {};
+        this.config.columns.forEach((col, index) => {
+            const fieldName = col.field || `col_${index}`;
+            visibilityByField[fieldName] = this.state.columnVisibility[index];
+        });
+
+        await this._saveUserPreference(`${storageKey}_columnVisibility`, JSON.stringify(visibilityByField));
+        console.log('TableManager: Column visibility saved for', storageKey);
     }
 
     // ====================================

@@ -438,11 +438,37 @@ class TableManager {
         this.elements.thead = thead;
         this.elements.tbody = tbody;
 
+        // ציור כותרות (לפני colgroup כדי שנוכל למדוד רוחב)
+        this.renderHeaders();
+
         // יצירת colgroup לשתי הטבלאות (סנכרון רוחב עמודות)
         this._createColgroups();
 
-        // ציור כותרות
-        this.renderHeaders();
+        // ⭐ המרת רוחב auto לפיקסלים - מונע שינוי בעמודות אחרות
+        this._convertAutoWidthsToPixels();
+    }
+
+    /**
+     * ⭐ המרת רוחב auto לפיקסלים אחרי רינדור ראשוני
+     * מונע מצב שעמודות אחרות משתנות כשמשנים עמודה אחת
+     */
+    _convertAutoWidthsToPixels() {
+        const headerCells = this.elements.thead.querySelectorAll('.tm-header-cell');
+
+        headerCells.forEach(th => {
+            const colIndex = parseInt(th.dataset.colIndex);
+            if (isNaN(colIndex)) return;
+
+            // אם הרוחב הוא auto - המר לפיקסלים
+            const currentWidth = this.state.columnWidths[colIndex];
+            if (currentWidth === 'auto' || currentWidth === '') {
+                const actualWidth = th.offsetWidth;
+                this.state.columnWidths[colIndex] = actualWidth + 'px';
+            }
+        });
+
+        // סנכרן מחדש את ה-colgroup עם הערכים החדשים
+        this._syncColumnWidths();
     }
 
     /**

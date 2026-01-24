@@ -615,20 +615,39 @@ class TableManager {
     }
 
     /**
-     * סנכרון גלילה אופקית - עם ניקוי event listeners
+     * סנכרון גלילה אופקית - דו-כיווני
      */
     _syncHorizontalScroll() {
         const headerContainer = this.elements.headerContainer;
         const bodyContainer = this.elements.bodyContainer;
 
-        // שמירת handler לניקוי עתידי
-        const scrollHandler = () => {
+        // מניעת לולאה אינסופית
+        let isSyncing = false;
+
+        // סנכרון מהתוכן לכותרת
+        const bodyScrollHandler = () => {
+            if (isSyncing) return;
+            isSyncing = true;
             headerContainer.scrollLeft = bodyContainer.scrollLeft;
+            isSyncing = false;
         };
 
-        this._boundHandlers.set('bodyScroll', scrollHandler);
+        // ⭐ סנכרון מהכותרת לתוכן
+        const headerScrollHandler = () => {
+            if (isSyncing) return;
+            isSyncing = true;
+            bodyContainer.scrollLeft = headerContainer.scrollLeft;
+            isSyncing = false;
+        };
 
-        bodyContainer.addEventListener('scroll', scrollHandler, {
+        this._boundHandlers.set('bodyScroll', bodyScrollHandler);
+        this._boundHandlers.set('headerScroll', headerScrollHandler);
+
+        bodyContainer.addEventListener('scroll', bodyScrollHandler, {
+            signal: this._abortController.signal
+        });
+
+        headerContainer.addEventListener('scroll', headerScrollHandler, {
             signal: this._abortController.signal
         });
     }

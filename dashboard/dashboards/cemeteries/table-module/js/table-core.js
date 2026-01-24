@@ -1213,6 +1213,22 @@ class TableManager {
         this.loadInitialData();
     }
 
+    /**
+     * קבלת נתונים מסוננים
+     * @returns {Array} הנתונים לאחר סינון
+     */
+    getFilteredData() {
+        return this.state.filteredData;
+    }
+
+    /**
+     * קבלת נתונים מוצגים
+     * @returns {Array} הנתונים המוצגים כרגע
+     */
+    getDisplayedData() {
+        return this.state.displayedData;
+    }
+
     getColumnWidths() {
         const widths = {};
         this.config.columns.forEach((col, index) => {

@@ -1,17 +1,23 @@
 /*
  * File: table-module/js/table-core.js
- * Version: 3.1.0
+ * Version: 3.2.0
  * Created: 2026-01-23
  * Updated: 2026-01-24
  * Author: Malkiel
  * Description: מנוע טבלאות מרכזי - גרסה מודולרית עם תיקוני באגים
  *
+ * שינויים מ-v3.1.0:
+ * - ⭐ תצוגת כרטיסים למובייל (cards view)
+ * - ⭐ מעבר בין תצוגת רשימה לכרטיסים בהגדרות (רק בפלאפון)
+ * - ⭐ שמירת העדפת תצוגת מובייל לכל entity
+ * - ⭐ עיצוב כרטיסים עם Dark Mode
+ *
  * שינויים מ-v3.0.0:
- * - ⭐ תפריט עמודה (⋮) עם מיון וסינון
- * - ⭐ פילטרים מתקדמים: טקסט, מספר, תאריך, enum
- * - ⭐ אינדיקטור פילטר פעיל בכותרת
- * - ⭐ תמיכה בסינון "בין" לתאריכים ומספרים
- * - ⭐ תמיכה בתאריך משוער (±2.5 שנים)
+ * - תפריט עמודה (⋮) עם מיון וסינון
+ * - פילטרים מתקדמים: טקסט, מספר, תאריך, enum
+ * - אינדיקטור פילטר פעיל בכותרת
+ * - תמיכה בסינון "בין" לתאריכים ומספרים
+ * - תמיכה בתאריך משוער (±2.5 שנים)
  *
  * שינויים מ-v2.1.0:
  * - תיקון Race Condition ב-infinite scroll
@@ -129,6 +135,9 @@ class TableManager {
             multiSelectEnabled: false,
             selectedRows: new Set(),
 
+            // ⭐ מצב תצוגה לפלאפון (cards/list)
+            mobileViewMode: 'list', // 'list' או 'cards'
+
             filteredData: [],
             displayedData: []
         };
@@ -202,10 +211,24 @@ class TableManager {
                 if (savedColumnVisibility) {
                     this._savedColumnVisibility = JSON.parse(savedColumnVisibility);
                 }
+
+                // ⭐ טעינת מצב תצוגה למובייל
+                const savedMobileViewMode = await UserSettings.getAsync(`${storageKey}_mobileViewMode`, null);
+                if (savedMobileViewMode) {
+                    this.state.mobileViewMode = savedMobileViewMode;
+                }
             }
         } catch (error) {
             console.warn('TableManager: Failed to load user preferences', error);
         }
+    }
+
+    /**
+     * ⭐ בדיקה אם מדובר במכשיר מובייל
+     */
+    _isMobileDevice() {
+        return window.innerWidth <= 768 ||
+               /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
     /**
@@ -244,9 +267,15 @@ class TableManager {
             this.initInfiniteScroll();
         }
 
+        // ⭐ הפעלת מצב כרטיסים אם במובייל ונבחר
+        if (this._isMobileDevice() && this.state.mobileViewMode === 'cards') {
+            this._refreshMobileView();
+        }
+
         console.log(`TableManager [${this.instanceId}]: Initialized`, {
             mode: this.config.showPagination ? 'pagination' : 'infinite-scroll',
-            itemsPerPage: this.config.itemsPerPage
+            itemsPerPage: this.config.itemsPerPage,
+            mobileViewMode: this.state.mobileViewMode
         });
     }
 
@@ -1317,6 +1346,12 @@ class TableManager {
      * ציור שורות
      */
     renderRows(append = false) {
+        // ⭐ בדיקה אם במצב כרטיסים במובייל
+        if (this._isMobileDevice() && this.state.mobileViewMode === 'cards') {
+            this._renderCardsView();
+            return;
+        }
+
         const tbody = this.elements.tbody;
 
         if (!append) {
@@ -2082,6 +2117,41 @@ class TableManager {
         columnsSection.appendChild(columnsContent);
         menu.appendChild(columnsSection);
 
+        // ===================================================================
+        // סקשן 4: תצוגת מובייל (רק בפלאפון)
+        // ===================================================================
+        if (this._isMobileDevice()) {
+            const mobileSection = document.createElement('div');
+            mobileSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+
+            const mobileTitle = document.createElement('div');
+            mobileTitle.style.cssText = `font-weight: 600; margin-bottom: 10px; color: var(--text-primary, #1f2937); font-size: 13px;`;
+            mobileTitle.textContent = '📱 תצוגת מובייל';
+            mobileSection.appendChild(mobileTitle);
+
+            // אופציה 1: תצוגת רשימה (ברירת מחדל)
+            const listOption = this._createRadioOption(
+                'mobileViewMode',
+                'list',
+                '📋 תצוגת רשימה (טבלה)',
+                this.state.mobileViewMode === 'list',
+                () => this._setMobileViewMode('list', menu)
+            );
+            mobileSection.appendChild(listOption);
+
+            // אופציה 2: תצוגת כרטיסים
+            const cardsOption = this._createRadioOption(
+                'mobileViewMode',
+                'cards',
+                '🃏 תצוגת כרטיסים',
+                this.state.mobileViewMode === 'cards',
+                () => this._setMobileViewMode('cards', menu)
+            );
+            mobileSection.appendChild(cardsOption);
+
+            menu.appendChild(mobileSection);
+        }
+
         document.body.appendChild(menu);
 
         // סגירה בלחיצה מחוץ לתפריט
@@ -2118,6 +2188,214 @@ class TableManager {
         container.appendChild(radio);
         container.appendChild(text);
         return container;
+    }
+
+    /**
+     * ⭐ שינוי מצב תצוגה מובייל (cards/list)
+     */
+    _setMobileViewMode(mode, menu) {
+        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+        this.state.mobileViewMode = mode;
+
+        // שמירת העדפה
+        this._saveUserPreference(`${storageKey}_mobileViewMode`, mode);
+
+        // רענון תצוגה
+        this._refreshMobileView();
+
+        // סגירת תפריט
+        if (menu) menu.remove();
+
+        // הודעה למשתמש
+        if (typeof showToast === 'function') {
+            const msg = mode === 'cards' ? 'מצב תצוגת כרטיסים' : 'מצב תצוגת רשימה';
+            showToast(msg, 'info');
+        }
+    }
+
+    /**
+     * ⭐ רענון תצוגת מובייל
+     */
+    _refreshMobileView() {
+        if (this._isMobileDevice() && this.state.mobileViewMode === 'cards') {
+            // הסתר טבלה והצג כרטיסים
+            if (this.elements.headerContainer) {
+                this.elements.headerContainer.style.display = 'none';
+            }
+            this._renderCardsView();
+        } else {
+            // הצג טבלה
+            if (this.elements.headerContainer) {
+                this.elements.headerContainer.style.display = '';
+            }
+            this.renderRows(false);
+        }
+    }
+
+    /**
+     * ⭐ רינדור תצוגת כרטיסים למובייל
+     */
+    _renderCardsView() {
+        const container = this.elements.bodyContainer;
+        if (!container) return;
+
+        // ניקוי ויצירת container לכרטיסים
+        container.innerHTML = '';
+
+        const cardsWrapper = document.createElement('div');
+        cardsWrapper.className = 'tm-cards-wrapper';
+        cardsWrapper.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px;
+        `;
+
+        if (this.state.displayedData.length === 0) {
+            cardsWrapper.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--text-muted, #6b7280);">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
+                    <div>אין נתונים להצגה</div>
+                </div>
+            `;
+        } else {
+            this.state.displayedData.forEach((row, index) => {
+                const card = this._createCard(row, index);
+                cardsWrapper.appendChild(card);
+            });
+        }
+
+        container.appendChild(cardsWrapper);
+
+        // עדכון footer
+        this._updateFooterInfo();
+    }
+
+    /**
+     * ⭐ יצירת כרטיס למובייל
+     */
+    _createCard(rowData, rowIndex) {
+        const card = document.createElement('div');
+        card.className = 'tm-card';
+        const rowId = rowData.id || rowData.unicId || rowIndex;
+        card.setAttribute('data-row-id', rowId);
+
+        card.style.cssText = `
+            background: var(--bg-primary, white);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s, transform 0.2s;
+        `;
+
+        // בדיקת בחירה
+        if (this.state.selectedRows.has(rowId)) {
+            card.style.background = 'rgba(102, 126, 234, 0.1)';
+            card.style.borderColor = 'var(--primary-color, #667eea)';
+        }
+
+        // ===================================================================
+        // כותרת הכרטיס - שדה ראשי (nameField או שדה ראשון)
+        // ===================================================================
+        const headerField = this.config.columns.find(c => c.isPrimary || c.field === 'name' || c.field === 'firstName')
+            || this.config.columns[0];
+
+        if (headerField) {
+            const headerValue = rowData[headerField.field];
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'tm-card-header';
+            headerDiv.style.cssText = `
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text-primary, #1f2937);
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid var(--border-color, #e5e7eb);
+            `;
+            headerDiv.textContent = headerValue || 'ללא שם';
+            card.appendChild(headerDiv);
+        }
+
+        // ===================================================================
+        // תוכן הכרטיס - שאר השדות
+        // ===================================================================
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'tm-card-content';
+        contentDiv.style.cssText = `display: flex; flex-direction: column; gap: 8px;`;
+
+        this.state.columnOrder.forEach(colIndex => {
+            if (!this.state.columnVisibility[colIndex]) return;
+
+            const col = this.config.columns[colIndex];
+            // דלג על שדה הכותרת
+            if (col === headerField) return;
+
+            const value = rowData[col.field];
+            let displayValue = '';
+
+            // Custom renderer
+            if (col.render) {
+                displayValue = col.render(rowData);
+            } else {
+                displayValue = value !== null && value !== undefined ? String(value) : '-';
+            }
+
+            const row = document.createElement('div');
+            row.className = 'tm-card-row';
+            row.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 14px;
+            `;
+
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'tm-card-label';
+            labelSpan.style.cssText = `color: var(--text-muted, #6b7280); font-weight: 500;`;
+            labelSpan.textContent = col.label || col.field;
+
+            const valueSpan = document.createElement('span');
+            valueSpan.className = 'tm-card-value';
+            valueSpan.style.cssText = `color: var(--text-primary, #1f2937); text-align: left; max-width: 60%;`;
+            valueSpan.innerHTML = displayValue;
+
+            row.appendChild(labelSpan);
+            row.appendChild(valueSpan);
+            contentDiv.appendChild(row);
+        });
+
+        card.appendChild(contentDiv);
+
+        // ===================================================================
+        // אירועים
+        // ===================================================================
+        card.addEventListener('click', () => {
+            if (this.state.multiSelectEnabled) {
+                const isSelected = this.state.selectedRows.has(rowId);
+                this.toggleRowSelection(rowId, !isSelected);
+                card.style.background = !isSelected ? 'rgba(102, 126, 234, 0.1)' : 'var(--bg-primary, white)';
+                card.style.borderColor = !isSelected ? 'var(--primary-color, #667eea)' : 'var(--border-color, #e5e7eb)';
+            }
+        });
+
+        card.addEventListener('dblclick', () => {
+            if (this.config.onRowDoubleClick) {
+                this.config.onRowDoubleClick(rowData, rowIndex);
+            }
+        });
+
+        // Hover effect
+        card.addEventListener('mouseenter', () => {
+            card.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+            card.style.transform = 'translateY(-2px)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+            card.style.transform = '';
+        });
+
+        return card;
     }
 
     /**

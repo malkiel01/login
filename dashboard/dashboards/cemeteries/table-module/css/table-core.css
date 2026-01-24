@@ -1,10 +1,14 @@
 /*
  * File: table-module/css/table-core.css
- * Version: 3.1.0
+ * Version: 3.2.0
  * Created: 2026-01-23
  * Updated: 2026-01-24
  * Author: Malkiel
  * Description: סטיילים למודול טבלאות - תמיכה מלאה ב-Dark Mode ו-RTL
+ *
+ * v3.2.0:
+ * - סטיילים לתצוגת כרטיסים (cards view) למובייל
+ * - תמיכה ב-Dark Mode ו-Green scheme לכרטיסים
  *
  * v3.1.0:
  * - סטיילים לתפריט עמודה (column menu)
@@ -760,6 +764,103 @@ body.dark-theme .tm-filter-dialog select {
 [data-theme="dark"] .tm-column-menu-btn:hover,
 body.dark-theme .tm-column-menu-btn:hover {
     background: var(--bg-tertiary, #475569);
+}
+
+/* ===================================================================
+   Mobile Cards View
+   =================================================================== */
+.tm-cards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+.tm-card {
+    background: var(--bg-primary, white);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.tm-card:active {
+    transform: scale(0.98);
+}
+
+.tm-card.tm-selected {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: var(--primary-color, #667eea);
+}
+
+.tm-card-header {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.tm-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tm-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.tm-card-label {
+    color: var(--text-muted, #6b7280);
+    font-weight: 500;
+}
+
+.tm-card-value {
+    color: var(--text-primary, #1f2937);
+    text-align: left;
+    max-width: 60%;
+}
+
+/* Dark mode - Cards */
+[data-theme="dark"] .tm-card,
+body.dark-theme .tm-card {
+    background: var(--bg-secondary, #334155);
+    border-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .tm-card.tm-selected,
+body.dark-theme .tm-card.tm-selected {
+    background: rgba(129, 140, 248, 0.15);
+    border-color: var(--primary-color, #818cf8);
+}
+
+[data-theme="dark"] .tm-card-header,
+body.dark-theme .tm-card-header {
+    color: var(--text-primary, #f1f5f9);
+    border-bottom-color: var(--border-color, #475569);
+}
+
+[data-theme="dark"] .tm-card-label,
+body.dark-theme .tm-card-label {
+    color: var(--text-muted, #94a3b8);
+}
+
+[data-theme="dark"] .tm-card-value,
+body.dark-theme .tm-card-value {
+    color: var(--text-primary, #f1f5f9);
+}
+
+/* Green color scheme - Cards */
+[data-color-scheme="green"] .tm-card.tm-selected,
+body.color-scheme-green .tm-card.tm-selected {
+    background: rgba(5, 150, 105, 0.1);
+    border-color: #059669;
 }
 
 /* ===================================================================

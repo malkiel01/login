@@ -1,8 +1,54 @@
+/**
+ * Search Section Styles
+ * v1.1.0 - תמיכה בערכות נושא (Theme Support)
+ */
+
+/* ===================================================================
+   CSS Variables - ברירות מחדל (Light Theme)
+   =================================================================== */
+:root {
+    --search-text-primary: var(--text-primary, #374151);
+    --search-text-secondary: var(--text-secondary, #6b7280);
+    --search-text-muted: var(--text-muted, #9ca3af);
+    --search-bg-primary: var(--bg-primary, #ffffff);
+    --search-bg-secondary: var(--bg-secondary, #f9fafb);
+    --search-bg-tertiary: var(--bg-tertiary, #f3f4f6);
+    --search-border-color: var(--border-color, #e5e7eb);
+    --search-primary-color: var(--primary-color, #667eea);
+    --search-primary-hover: var(--primary-hover, #5568d3);
+    --search-primary-light: var(--primary-light, #dbeafe);
+    --search-primary-text: var(--primary-text, #1e40af);
+}
+
+/* ===================================================================
+   Dark Theme Support
+   =================================================================== */
+html[data-theme="dark"],
+body.dark-theme,
+[data-theme="dark"] {
+    --search-text-primary: var(--text-primary, #f1f5f9);
+    --search-text-secondary: var(--text-secondary, #cbd5e1);
+    --search-text-muted: var(--text-muted, #94a3b8);
+    --search-bg-primary: var(--bg-primary, #1e293b);
+    --search-bg-secondary: var(--bg-secondary, #334155);
+    --search-bg-tertiary: var(--bg-tertiary, #475569);
+    --search-border-color: var(--border-color, #475569);
+    --search-primary-color: var(--primary-color, #818cf8);
+    --search-primary-hover: var(--primary-hover, #6366f1);
+    --search-primary-light: var(--primary-light, #312e81);
+    --search-primary-text: var(--primary-text, #c7d2fe);
+}
+
+/* ===================================================================
+   Search Section
+   =================================================================== */
 .search-section {
     margin-bottom: 20px;
     padding: 20px;
-    background: #f9fafb;
+    background: var(--search-bg-secondary);
     border-radius: 8px;
+    transition: all 0.3s ease;
+    max-height: 500px; /* גובה מקסימלי לאנימציה */
 }
 
 .search-container {
@@ -13,16 +59,22 @@
     width: 100%;
     padding: 12px 16px;
     padding-right: 45px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--search-border-color);
     border-radius: 8px;
     font-size: 16px;
     transition: all 0.2s ease;
     direction: rtl;
+    background: var(--search-bg-primary);
+    color: var(--search-text-primary);
+}
+
+.search-input::placeholder {
+    color: var(--search-text-muted);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--search-primary-color);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -33,43 +85,44 @@
     transform: translateY(-50%);
     width: 20px;
     height: 20px;
-    color: #9ca3af;
+    color: var(--search-text-muted);
     pointer-events: none;
 }
 
 .search-counter {
     margin-top: 10px;
     padding: 8px 16px;
-    background: #fff;
+    background: var(--search-bg-primary);
     border-radius: 6px;
     font-size: 14px;
     display: flex;
     align-items: center;
     gap: 10px;
     direction: rtl;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--search-border-color);
 }
 
 .search-counter.active {
-    background: #dbeafe;
-    border-color: #3b82f6;
+    background: var(--search-primary-light);
+    border-color: var(--search-primary-color);
 }
 
 .counter-filtered {
-    color: #1e40af;
+    color: var(--search-primary-text);
     font-weight: 600;
 }
 
 .counter-separator {
-    color: #6b7280;
+    color: var(--search-text-secondary);
 }
 
 .counter-total {
-    color: #374151;
+    color: var(--search-text-primary);
 }
 
-/* ----- */
-
+/* ===================================================================
+   Pagination
+   =================================================================== */
 .pagination {
     display: flex;
     justify-content: center;
@@ -82,7 +135,7 @@
 
 .btn-pagination {
     padding: 8px 16px;
-    background: #667eea;
+    background: var(--search-primary-color);
     color: white;
     border: none;
     border-radius: 6px;
@@ -92,19 +145,19 @@
 }
 
 .btn-pagination:hover {
-    background: #5568d3;
+    background: var(--search-primary-hover);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-pagination:disabled {
-    background: #9ca3af;
+    background: var(--search-text-muted);
     cursor: not-allowed;
     transform: none;
 }
 
 .pagination-info {
-    color: #6b7280;
+    color: var(--search-text-secondary);
     font-size: 14px;
 }
 
@@ -123,7 +176,7 @@
 .search-section-title {
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: var(--search-text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -132,26 +185,26 @@
 .search-section-title svg {
     width: 18px;
     height: 18px;
-    color: #6b7280;
+    color: var(--search-text-secondary);
 }
 
 .btn-collapse-search {
     display: inline-flex; /* מוצג בכל המסכים */
     padding: 6px 12px;
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
+    background: var(--search-bg-tertiary);
+    border: 1px solid var(--search-border-color);
     border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
-    color: #6b7280;
+    color: var(--search-text-secondary);
     transition: all 0.2s ease;
     gap: 6px;
     align-items: center;
 }
 
 .btn-collapse-search:hover {
-    background: #e5e7eb;
-    color: #374151;
+    background: var(--search-border-color);
+    color: var(--search-text-primary);
 }
 
 .btn-collapse-search svg {
@@ -174,8 +227,8 @@
 .btn-show-search {
     display: none; /* ברירת מחדל - מוסתר */
     padding: 8px 16px;
-    background: #667eea !important;
-    border: 1px solid #667eea !important;
+    background: var(--search-primary-color) !important;
+    border: 1px solid var(--search-primary-color) !important;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
@@ -186,8 +239,8 @@
 }
 
 .btn-show-search:hover {
-    background: #5568d3 !important;
-    border-color: #5568d3 !important;
+    background: var(--search-primary-hover) !important;
+    border-color: var(--search-primary-hover) !important;
 }
 
 .btn-show-search svg {
@@ -199,12 +252,6 @@
 /* הצג כפתור "הצג חיפוש" כשהסקשן מכווץ - בכל המסכים */
 .btn-show-search.visible {
     display: inline-flex !important;
-}
-
-/* אנימציה לסקשן החיפוש */
-.search-section {
-    transition: all 0.3s ease;
-    max-height: 500px; /* גובה מקסימלי לאנימציה */
 }
 
 /* ====================================

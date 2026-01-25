@@ -227,6 +227,14 @@ class Popup {
             z-index: ${this.state.zIndex};
         `;
 
+        // העתק את הגדרות הנושא לפופאפ
+        const themeSettings = this.getThemeSettings();
+        container.setAttribute('data-theme', themeSettings.dataTheme);
+        container.setAttribute('data-color-scheme', themeSettings.colorScheme);
+        if (themeSettings.dataTheme === 'dark') {
+            container.classList.add('dark-theme');
+        }
+
         // Header
         const header = this.createHeader();
 

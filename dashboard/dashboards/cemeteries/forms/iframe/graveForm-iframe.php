@@ -114,13 +114,7 @@ $graveLocations = [
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f1f5f9;
-            color: #334155;
-            padding: 20px;
-            direction: rtl;
-        }
+        /* body styling from popup-forms.css */
 
         /* Form styles */
         .form-grid {
@@ -183,14 +177,7 @@ $graveLocations = [
         .btn-secondary { background: #e2e8f0; color: #475569; }
         .btn-secondary:hover { background: #cbd5e1; }
 
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-        }
+        /* form-actions מוגדר ב-popup-forms.css */
 
         .alert {
             padding: 12px 16px;
@@ -212,12 +199,13 @@ $graveLocations = [
     </style>
 </head>
 <body>
-    <div id="alertContainer">
-        <div id="successAlert" class="alert alert-success"></div>
-        <div id="errorAlert" class="alert alert-error"></div>
-    </div>
+    <div class="form-container">
+        <div id="alertContainer">
+            <div id="successAlert" class="alert alert-success"></div>
+            <div id="errorAlert" class="alert alert-error"></div>
+        </div>
 
-    <form id="graveForm">
+        <form id="graveForm">
         <input type="hidden" name="unicId" value="<?= htmlspecialchars($grave['unicId'] ?? '') ?>">
 
         <div class="sortable-sections" id="graveSortableSections">
@@ -365,7 +353,8 @@ $graveLocations = [
                 <i class="fas fa-times"></i> ביטול
             </button>
         </div>
-    </form>
+        </form>
+    </div>
 
     <script>
         const isEdit = <?= $isEdit ? 'true' : 'false' ?>;

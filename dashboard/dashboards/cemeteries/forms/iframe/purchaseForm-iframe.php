@@ -76,15 +76,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: #f1f5f9;
-            color: #334155;
-            padding: 20px;
-            direction: rtl;
-        }
-
-        .form-container { max-width: 100%; }
+        /* body styling from popup-forms.css */
         /* Section styles now in popup-sections.css */
 
         .form-grid {
@@ -138,14 +130,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         .btn-info { background: #0891b2; color: white; }
         .btn-info:hover { background: #0e7490; }
 
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-        }
+        /* form-actions מוגדר ב-popup-forms.css */
 
         .alert {
             padding: 12px 16px;

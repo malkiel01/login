@@ -22,11 +22,18 @@ if (!isLoggedIn()) {
 try {
     $conn = getDBConnection();
     $userId = getCurrentUserId();
+
+    // Debug logging
+    error_log("Settings Page: userId = " . var_export($userId, true));
+
     $settings = new UserSettingsManager($conn, $userId);
 
     // קבלת כל ההגדרות עם ברירות מחדל
     $allSettings = $settings->getAllWithDefaults();
     $categories = $settings->getCategories();
+
+    // Debug logging
+    error_log("Settings Page: loaded settings = " . json_encode(array_keys($allSettings)));
 
 } catch (Exception $e) {
     die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
@@ -75,7 +82,7 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/user-settings/css/user-settings.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/user-settings/css/user-settings.css?v=20260125b">
 
     <!-- Popup API -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>

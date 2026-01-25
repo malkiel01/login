@@ -22,6 +22,10 @@ if (!isLoggedIn()) {
 try {
     $conn = getDBConnection();
     $userId = getCurrentUserId();
+
+    // Debug logging
+    error_log("UserSettings API: userId = " . var_export($userId, true));
+
     $settings = new UserSettingsManager($conn, $userId);
 
     $action = $_GET['action'] ?? $_POST['action'] ?? 'get';
@@ -54,6 +58,9 @@ try {
         case 'set':
             $input = json_decode(file_get_contents('php://input'), true);
 
+            // Debug logging
+            error_log("UserSettings SET: userId = $userId, input = " . json_encode($input));
+
             if (isset($input['settings']) && is_array($input['settings'])) {
                 // שמירת מספר הגדרות
                 $success = $settings->setMultiple($input['settings']);
@@ -65,6 +72,7 @@ try {
                     $input['type'] ?? null,
                     $input['category'] ?? null
                 );
+                error_log("UserSettings SET result: " . ($success ? 'success' : 'failed'));
             } else {
                 throw new Exception('Missing key or settings');
             }

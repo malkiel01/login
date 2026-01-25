@@ -158,6 +158,9 @@ class UserSettingsManager {
      */
     public function getAll($category = null) {
         try {
+            // Debug logging
+            error_log("UserSettingsManager::getAll - userId: " . $this->userId);
+
             $sql = "
                 SELECT us.settingKey, us.settingValue, us.settingType, us.category,
                        usd.label, usd.description

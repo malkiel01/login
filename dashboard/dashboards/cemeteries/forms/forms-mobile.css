@@ -538,64 +538,78 @@
 
 /* ====================================
    12. DARK MODE - תמיכה בנושא כהה
+   כל הסגנונות הכהים לטפסי iframe במקום מרכזי אחד
    ==================================== */
-[data-theme="dark"] body,
+
+/* === רקע הדף הראשי === */
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+body[data-theme="dark"],
 body.dark-theme {
     background: var(--bg-primary, #0f172a) !important;
     color: var(--text-primary, #f1f5f9) !important;
 }
 
-[data-theme="dark"] .sortable-section,
+/* רקע גלילה */
+html[data-theme="dark"],
+body[data-theme="dark"],
+body.dark-theme {
+    background-color: var(--bg-primary, #0f172a) !important;
+}
+
+/* === סקשנים === */
+body[data-theme="dark"] .sortable-section,
 body.dark-theme .sortable-section {
     background: var(--bg-secondary, #1e293b) !important;
     border-color: var(--border-color, #334155) !important;
 }
 
-[data-theme="dark"] .sortable-section:hover,
+body[data-theme="dark"] .sortable-section:hover,
 body.dark-theme .sortable-section:hover {
     border-color: var(--primary-color, #818cf8) !important;
 }
 
-[data-theme="dark"] .section-drag-handle,
+body[data-theme="dark"] .section-drag-handle,
 body.dark-theme .section-drag-handle {
     background: linear-gradient(135deg, var(--bg-tertiary, #334155) 0%, var(--bg-secondary, #1e293b) 100%) !important;
     border-bottom-color: var(--border-color, #475569) !important;
 }
 
-[data-theme="dark"] .section-drag-handle::before,
+body[data-theme="dark"] .section-drag-handle::before,
 body.dark-theme .section-drag-handle::before {
     background: var(--text-muted, #64748b) !important;
 }
 
-[data-theme="dark"] .section-title,
+body[data-theme="dark"] .section-title,
 body.dark-theme .section-title {
     color: var(--text-secondary, #94a3b8) !important;
 }
 
-[data-theme="dark"] .section-toggle-btn,
+body[data-theme="dark"] .section-toggle-btn,
 body.dark-theme .section-toggle-btn {
     background: rgba(148, 163, 184, 0.2) !important;
     color: var(--text-muted, #94a3b8) !important;
 }
 
-[data-theme="dark"] .section-toggle-btn:hover,
+body[data-theme="dark"] .section-toggle-btn:hover,
 body.dark-theme .section-toggle-btn:hover {
     background: rgba(148, 163, 184, 0.4) !important;
 }
 
-[data-theme="dark"] .section-content,
+body[data-theme="dark"] .section-content,
 body.dark-theme .section-content {
     background: var(--bg-secondary, #1e293b) !important;
 }
 
-[data-theme="dark"] .form-group label,
+/* === שדות טופס === */
+body[data-theme="dark"] .form-group label,
 body.dark-theme .form-group label {
     color: var(--text-secondary, #94a3b8) !important;
 }
 
-[data-theme="dark"] .form-group input,
-[data-theme="dark"] .form-group select,
-[data-theme="dark"] .form-group textarea,
+body[data-theme="dark"] .form-group input,
+body[data-theme="dark"] .form-group select,
+body[data-theme="dark"] .form-group textarea,
 body.dark-theme .form-group input,
 body.dark-theme .form-group select,
 body.dark-theme .form-group textarea {
@@ -604,9 +618,9 @@ body.dark-theme .form-group textarea {
     color: var(--text-primary, #f1f5f9) !important;
 }
 
-[data-theme="dark"] .form-group input:focus,
-[data-theme="dark"] .form-group select:focus,
-[data-theme="dark"] .form-group textarea:focus,
+body[data-theme="dark"] .form-group input:focus,
+body[data-theme="dark"] .form-group select:focus,
+body[data-theme="dark"] .form-group textarea:focus,
 body.dark-theme .form-group input:focus,
 body.dark-theme .form-group select:focus,
 body.dark-theme .form-group textarea:focus {
@@ -614,31 +628,32 @@ body.dark-theme .form-group textarea:focus {
     box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2) !important;
 }
 
-[data-theme="dark"] .form-group input:disabled,
-[data-theme="dark"] .form-group select:disabled,
+body[data-theme="dark"] .form-group input:disabled,
+body[data-theme="dark"] .form-group select:disabled,
 body.dark-theme .form-group input:disabled,
 body.dark-theme .form-group select:disabled {
     background: var(--bg-primary, #0f172a) !important;
     color: var(--text-muted, #64748b) !important;
 }
 
-[data-theme="dark"] .btn-secondary,
+body[data-theme="dark"] .btn-secondary,
 body.dark-theme .btn-secondary {
     background: var(--bg-tertiary, #334155) !important;
     color: var(--text-primary, #f1f5f9) !important;
 }
 
-[data-theme="dark"] .btn-secondary:hover,
+body[data-theme="dark"] .btn-secondary:hover,
 body.dark-theme .btn-secondary:hover {
     background: var(--bg-secondary, #475569) !important;
 }
 
-[data-theme="dark"] .form-actions,
+body[data-theme="dark"] .form-actions,
 body.dark-theme .form-actions {
+    background: var(--bg-secondary, #1e293b) !important;
     border-top-color: var(--border-color, #334155) !important;
 }
 
-[data-theme="dark"] .location-display,
+body[data-theme="dark"] .location-display,
 body.dark-theme .location-display {
     background: var(--bg-tertiary, #334155) !important;
     border-color: var(--border-color, #475569) !important;
@@ -646,30 +661,30 @@ body.dark-theme .location-display {
 }
 
 /* Section colors - purple section in dark mode */
-[data-theme="dark"] .section-grave .section-drag-handle,
+body[data-theme="dark"] .section-grave .section-drag-handle,
 body.dark-theme .section-grave .section-drag-handle {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
 }
 
-[data-theme="dark"] .section-grave .section-title,
+body[data-theme="dark"] .section-grave .section-title,
 body.dark-theme .section-grave .section-title {
     color: #a78bfa !important;
 }
 
-[data-theme="dark"] .section-grave .section-content,
+body[data-theme="dark"] .section-grave .section-content,
 body.dark-theme .section-grave .section-content {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%) !important;
 }
 
 /* Alert messages */
-[data-theme="dark"] .alert-success,
+body[data-theme="dark"] .alert-success,
 body.dark-theme .alert-success {
     background: rgba(34, 197, 94, 0.2) !important;
     color: #86efac !important;
     border-color: rgba(34, 197, 94, 0.3) !important;
 }
 
-[data-theme="dark"] .alert-error,
+body[data-theme="dark"] .alert-error,
 body.dark-theme .alert-error {
     background: rgba(239, 68, 68, 0.2) !important;
     color: #fca5a5 !important;
@@ -677,27 +692,105 @@ body.dark-theme .alert-error {
 }
 
 /* Smart Select dark mode */
-[data-theme="dark"] .smart-select-dropdown,
+body[data-theme="dark"] .smart-select-dropdown,
 body.dark-theme .smart-select-dropdown {
     background: var(--bg-secondary, #1e293b) !important;
     border-color: var(--border-color, #475569) !important;
 }
 
-[data-theme="dark"] .smart-select-option,
+body[data-theme="dark"] .smart-select-option,
 body.dark-theme .smart-select-option {
     color: var(--text-primary, #f1f5f9) !important;
 }
 
-[data-theme="dark"] .smart-select-option:hover,
-[data-theme="dark"] .smart-select-option.highlighted,
+body[data-theme="dark"] .smart-select-option:hover,
+body[data-theme="dark"] .smart-select-option.highlighted,
 body.dark-theme .smart-select-option:hover,
 body.dark-theme .smart-select-option.highlighted {
     background: var(--bg-tertiary, #334155) !important;
 }
 
-[data-theme="dark"] .smart-select-search,
+body[data-theme="dark"] .smart-select-search,
 body.dark-theme .smart-select-search {
     background: var(--bg-tertiary, #334155) !important;
     border-color: var(--border-color, #475569) !important;
     color: var(--text-primary, #f1f5f9) !important;
+}
+
+/* === מודאלים בדארק מוד === */
+body[data-theme="dark"] .modal-content,
+body.dark-theme .modal-content {
+    background: var(--bg-secondary, #1e293b) !important;
+    border-color: var(--border-color, #475569) !important;
+}
+
+body[data-theme="dark"] .modal-header,
+body.dark-theme .modal-header {
+    background: var(--bg-tertiary, #334155) !important;
+    border-bottom-color: var(--border-color, #475569) !important;
+    color: var(--text-primary, #f1f5f9) !important;
+}
+
+body[data-theme="dark"] .modal-body,
+body.dark-theme .modal-body {
+    background: var(--bg-secondary, #1e293b) !important;
+    color: var(--text-primary, #f1f5f9) !important;
+}
+
+body[data-theme="dark"] .modal-footer,
+body.dark-theme .modal-footer {
+    background: var(--bg-secondary, #1e293b) !important;
+    border-top-color: var(--border-color, #475569) !important;
+}
+
+/* === טבלאות בדארק מוד === */
+body[data-theme="dark"] .data-table,
+body[data-theme="dark"] table,
+body.dark-theme .data-table,
+body.dark-theme table {
+    background: var(--bg-secondary, #1e293b) !important;
+}
+
+body[data-theme="dark"] .data-table tr,
+body[data-theme="dark"] table tr,
+body.dark-theme .data-table tr,
+body.dark-theme table tr {
+    background: var(--bg-secondary, #1e293b) !important;
+    border-color: var(--border-color, #475569) !important;
+}
+
+body[data-theme="dark"] .data-table td,
+body[data-theme="dark"] table td,
+body.dark-theme .data-table td,
+body.dark-theme table td {
+    color: var(--text-primary, #f1f5f9) !important;
+    border-bottom-color: var(--border-color, #334155) !important;
+}
+
+body[data-theme="dark"] .data-table td::before,
+body.dark-theme .data-table td::before {
+    color: var(--text-muted, #94a3b8) !important;
+}
+
+/* === כרטיסי מידע (info cards) בדארק מוד === */
+body[data-theme="dark"] .info-card,
+body.dark-theme .info-card {
+    background: var(--bg-tertiary, #334155) !important;
+    border-color: var(--border-color, #475569) !important;
+}
+
+body[data-theme="dark"] .info-card-label,
+body.dark-theme .info-card-label {
+    color: var(--text-muted, #94a3b8) !important;
+}
+
+body[data-theme="dark"] .info-card-value,
+body.dark-theme .info-card-value {
+    color: var(--text-primary, #f1f5f9) !important;
+}
+
+/* === form-container בדארק מוד === */
+body[data-theme="dark"] .form-container,
+body.dark-theme .form-container {
+    background: var(--bg-primary, #0f172a) !important;
 }

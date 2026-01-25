@@ -50,6 +50,7 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
     <style>
         /* === סגנונות ספציפיים לטופס זה - צבעי הסקציות === */

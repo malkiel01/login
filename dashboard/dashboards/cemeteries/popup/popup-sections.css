@@ -1,0 +1,450 @@
+/**
+ * Popup Sections CSS
+ * סגנונות גנריים לסקציות בטפסי פופאפ
+ * @version 1.0.0
+ *
+ * שימוש:
+ * <div class="sortable-section section-green">
+ *     <div class="section-drag-handle">
+ *         <span class="section-title">כותרת</span>
+ *         <button class="section-toggle-btn"><i class="fas fa-chevron-down"></i></button>
+ *     </div>
+ *     <div class="section-content">...</div>
+ * </div>
+ *
+ * צבעים זמינים:
+ * - section-green (ירוק - לפרטים ראשיים)
+ * - section-blue (כחול - למיקום)
+ * - section-purple (סגול - לפרטי קשר)
+ * - section-orange (כתום - לפרטים נוספים)
+ * - section-red (אדום - לאזהרות/מחיקה)
+ * - section-gray (אפור - ברירת מחדל)
+ * - section-teal (טורקיז - לסטטיסטיקות)
+ * - section-pink (ורוד - להיסטוריה)
+ */
+
+/* ========================================
+   Base Section Structure
+======================================== */
+
+.sortable-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sortable-section {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sortable-section:hover {
+    border-color: #94a3b8;
+}
+
+/* ========================================
+   Section Header (Drag Handle)
+======================================== */
+
+.section-drag-handle {
+    height: 32px;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #cbd5e1;
+    position: relative;
+    user-select: none;
+}
+
+.section-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* קו הגרירה באמצע */
+.section-drag-handle::before {
+    content: "";
+    width: 40px;
+    height: 4px;
+    background: #94a3b8;
+    border-radius: 2px;
+}
+
+/* כותרת הסקשן */
+.section-title {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* כפתור קיפול */
+.section-toggle-btn {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: rgba(100, 116, 139, 0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.section-toggle-btn:hover {
+    background: rgba(100, 116, 139, 0.4);
+}
+
+.section-toggle-btn i {
+    transition: transform 0.2s;
+}
+
+/* ========================================
+   Section Content
+======================================== */
+
+.section-content {
+    padding: 20px;
+    background: #f8fafc;
+}
+
+/* מצב מקופל */
+.sortable-section.collapsed .section-content {
+    display: none;
+}
+
+.sortable-section.collapsed .section-toggle-btn i {
+    transform: rotate(-90deg);
+}
+
+/* ========================================
+   Color Themes - Light Mode
+======================================== */
+
+/* === Green (ירוק) === */
+.section-green .section-drag-handle {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-bottom-color: #86efac;
+}
+.section-green .section-drag-handle::before { background: #22c55e; }
+.section-green .section-title { color: #166534; }
+.section-green .section-toggle-btn { background: rgba(22, 163, 74, 0.2); color: #166534; }
+.section-green .section-toggle-btn:hover { background: rgba(22, 163, 74, 0.3); }
+.section-green .section-content { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+.section-green:hover { border-color: #22c55e; }
+
+/* === Blue (כחול) === */
+.section-blue .section-drag-handle {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-bottom-color: #93c5fd;
+}
+.section-blue .section-drag-handle::before { background: #3b82f6; }
+.section-blue .section-title { color: #1e40af; }
+.section-blue .section-toggle-btn { background: rgba(59, 130, 246, 0.2); color: #1e40af; }
+.section-blue .section-toggle-btn:hover { background: rgba(59, 130, 246, 0.3); }
+.section-blue .section-content { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+.section-blue:hover { border-color: #3b82f6; }
+
+/* === Purple (סגול) === */
+.section-purple .section-drag-handle {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    border-bottom-color: #a5b4fc;
+}
+.section-purple .section-drag-handle::before { background: #6366f1; }
+.section-purple .section-title { color: #3730a3; }
+.section-purple .section-toggle-btn { background: rgba(99, 102, 241, 0.2); color: #3730a3; }
+.section-purple .section-toggle-btn:hover { background: rgba(99, 102, 241, 0.3); }
+.section-purple .section-content { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); }
+.section-purple:hover { border-color: #6366f1; }
+
+/* === Orange (כתום) === */
+.section-orange .section-drag-handle {
+    background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+    border-bottom-color: #fdba74;
+}
+.section-orange .section-drag-handle::before { background: #f97316; }
+.section-orange .section-title { color: #c2410c; }
+.section-orange .section-toggle-btn { background: rgba(249, 115, 22, 0.2); color: #c2410c; }
+.section-orange .section-toggle-btn:hover { background: rgba(249, 115, 22, 0.3); }
+.section-orange .section-content { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); }
+.section-orange:hover { border-color: #f97316; }
+
+/* === Red (אדום) === */
+.section-red .section-drag-handle {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-bottom-color: #fca5a5;
+}
+.section-red .section-drag-handle::before { background: #ef4444; }
+.section-red .section-title { color: #b91c1c; }
+.section-red .section-toggle-btn { background: rgba(239, 68, 68, 0.2); color: #b91c1c; }
+.section-red .section-toggle-btn:hover { background: rgba(239, 68, 68, 0.3); }
+.section-red .section-content { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); }
+.section-red:hover { border-color: #ef4444; }
+
+/* === Gray (אפור - ברירת מחדל) === */
+.section-gray .section-drag-handle {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    border-bottom-color: #94a3b8;
+}
+.section-gray .section-drag-handle::before { background: #64748b; }
+.section-gray .section-title { color: #475569; }
+.section-gray .section-toggle-btn { background: rgba(100, 116, 139, 0.2); color: #475569; }
+.section-gray .section-toggle-btn:hover { background: rgba(100, 116, 139, 0.3); }
+.section-gray .section-content { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
+.section-gray:hover { border-color: #64748b; }
+
+/* === Teal (טורקיז) === */
+.section-teal .section-drag-handle {
+    background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+    border-bottom-color: #5eead4;
+}
+.section-teal .section-drag-handle::before { background: #14b8a6; }
+.section-teal .section-title { color: #0f766e; }
+.section-teal .section-toggle-btn { background: rgba(20, 184, 166, 0.2); color: #0f766e; }
+.section-teal .section-toggle-btn:hover { background: rgba(20, 184, 166, 0.3); }
+.section-teal .section-content { background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); }
+.section-teal:hover { border-color: #14b8a6; }
+
+/* === Pink (ורוד) === */
+.section-pink .section-drag-handle {
+    background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+    border-bottom-color: #f9a8d4;
+}
+.section-pink .section-drag-handle::before { background: #ec4899; }
+.section-pink .section-title { color: #9d174d; }
+.section-pink .section-toggle-btn { background: rgba(236, 72, 153, 0.2); color: #9d174d; }
+.section-pink .section-toggle-btn:hover { background: rgba(236, 72, 153, 0.3); }
+.section-pink .section-content { background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); }
+.section-pink:hover { border-color: #ec4899; }
+
+/* ========================================
+   Dark Mode - Base
+======================================== */
+
+body[data-theme="dark"] .sortable-section,
+body.dark-theme .sortable-section {
+    background: #334155;
+    border-color: #475569;
+}
+
+body[data-theme="dark"] .sortable-section:hover,
+body.dark-theme .sortable-section:hover {
+    border-color: #64748b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme="dark"] .section-drag-handle,
+body.dark-theme .section-drag-handle {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    border-bottom-color: #475569;
+}
+
+body[data-theme="dark"] .section-drag-handle::before,
+body.dark-theme .section-drag-handle::before {
+    background: #94a3b8;
+}
+
+body[data-theme="dark"] .section-title,
+body.dark-theme .section-title {
+    color: #e2e8f0;
+}
+
+body[data-theme="dark"] .section-toggle-btn,
+body.dark-theme .section-toggle-btn {
+    background: rgba(148, 163, 184, 0.25);
+    color: #cbd5e1;
+}
+
+body[data-theme="dark"] .section-toggle-btn:hover,
+body.dark-theme .section-toggle-btn:hover {
+    background: rgba(148, 163, 184, 0.4);
+}
+
+body[data-theme="dark"] .section-content,
+body.dark-theme .section-content {
+    background: #334155;
+}
+
+/* ========================================
+   Dark Mode - Color Themes
+======================================== */
+
+/* === Green Dark === */
+body[data-theme="dark"] .section-green .section-drag-handle,
+body.dark-theme .section-green .section-drag-handle {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.15) 100%);
+    border-bottom-color: rgba(34, 197, 94, 0.3);
+}
+body[data-theme="dark"] .section-green .section-drag-handle::before,
+body.dark-theme .section-green .section-drag-handle::before { background: #22c55e; }
+body[data-theme="dark"] .section-green .section-title,
+body.dark-theme .section-green .section-title { color: #86efac; }
+body[data-theme="dark"] .section-green .section-toggle-btn,
+body.dark-theme .section-green .section-toggle-btn { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+body[data-theme="dark"] .section-green .section-content,
+body.dark-theme .section-green .section-content { background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%); }
+body[data-theme="dark"] .section-green:hover,
+body.dark-theme .section-green:hover { border-color: #22c55e; }
+
+/* === Blue Dark === */
+body[data-theme="dark"] .section-blue .section-drag-handle,
+body.dark-theme .section-blue .section-drag-handle {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.15) 100%);
+    border-bottom-color: rgba(59, 130, 246, 0.3);
+}
+body[data-theme="dark"] .section-blue .section-drag-handle::before,
+body.dark-theme .section-blue .section-drag-handle::before { background: #3b82f6; }
+body[data-theme="dark"] .section-blue .section-title,
+body.dark-theme .section-blue .section-title { color: #93c5fd; }
+body[data-theme="dark"] .section-blue .section-toggle-btn,
+body.dark-theme .section-blue .section-toggle-btn { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+body[data-theme="dark"] .section-blue .section-content,
+body.dark-theme .section-blue .section-content { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%); }
+body[data-theme="dark"] .section-blue:hover,
+body.dark-theme .section-blue:hover { border-color: #3b82f6; }
+
+/* === Purple Dark === */
+body[data-theme="dark"] .section-purple .section-drag-handle,
+body.dark-theme .section-purple .section-drag-handle {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0.15) 100%);
+    border-bottom-color: rgba(99, 102, 241, 0.3);
+}
+body[data-theme="dark"] .section-purple .section-drag-handle::before,
+body.dark-theme .section-purple .section-drag-handle::before { background: #6366f1; }
+body[data-theme="dark"] .section-purple .section-title,
+body.dark-theme .section-purple .section-title { color: #a5b4fc; }
+body[data-theme="dark"] .section-purple .section-toggle-btn,
+body.dark-theme .section-purple .section-toggle-btn { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+body[data-theme="dark"] .section-purple .section-content,
+body.dark-theme .section-purple .section-content { background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%); }
+body[data-theme="dark"] .section-purple:hover,
+body.dark-theme .section-purple:hover { border-color: #6366f1; }
+
+/* === Orange Dark === */
+body[data-theme="dark"] .section-orange .section-drag-handle,
+body.dark-theme .section-orange .section-drag-handle {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.15) 100%);
+    border-bottom-color: rgba(249, 115, 22, 0.3);
+}
+body[data-theme="dark"] .section-orange .section-drag-handle::before,
+body.dark-theme .section-orange .section-drag-handle::before { background: #f97316; }
+body[data-theme="dark"] .section-orange .section-title,
+body.dark-theme .section-orange .section-title { color: #fdba74; }
+body[data-theme="dark"] .section-orange .section-toggle-btn,
+body.dark-theme .section-orange .section-toggle-btn { background: rgba(249, 115, 22, 0.2); color: #fdba74; }
+body[data-theme="dark"] .section-orange .section-content,
+body.dark-theme .section-orange .section-content { background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.05) 100%); }
+body[data-theme="dark"] .section-orange:hover,
+body.dark-theme .section-orange:hover { border-color: #f97316; }
+
+/* === Red Dark === */
+body[data-theme="dark"] .section-red .section-drag-handle,
+body.dark-theme .section-red .section-drag-handle {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.15) 100%);
+    border-bottom-color: rgba(239, 68, 68, 0.3);
+}
+body[data-theme="dark"] .section-red .section-drag-handle::before,
+body.dark-theme .section-red .section-drag-handle::before { background: #ef4444; }
+body[data-theme="dark"] .section-red .section-title,
+body.dark-theme .section-red .section-title { color: #fca5a5; }
+body[data-theme="dark"] .section-red .section-toggle-btn,
+body.dark-theme .section-red .section-toggle-btn { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+body[data-theme="dark"] .section-red .section-content,
+body.dark-theme .section-red .section-content { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%); }
+body[data-theme="dark"] .section-red:hover,
+body.dark-theme .section-red:hover { border-color: #ef4444; }
+
+/* === Gray Dark === */
+body[data-theme="dark"] .section-gray .section-drag-handle,
+body.dark-theme .section-gray .section-drag-handle {
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.4) 0%, rgba(100, 116, 139, 0.2) 100%);
+    border-bottom-color: rgba(100, 116, 139, 0.3);
+}
+body[data-theme="dark"] .section-gray .section-drag-handle::before,
+body.dark-theme .section-gray .section-drag-handle::before { background: #94a3b8; }
+body[data-theme="dark"] .section-gray .section-title,
+body.dark-theme .section-gray .section-title { color: #cbd5e1; }
+body[data-theme="dark"] .section-gray .section-toggle-btn,
+body.dark-theme .section-gray .section-toggle-btn { background: rgba(100, 116, 139, 0.3); color: #cbd5e1; }
+body[data-theme="dark"] .section-gray .section-content,
+body.dark-theme .section-gray .section-content { background: linear-gradient(135deg, rgba(100, 116, 139, 0.1) 0%, rgba(100, 116, 139, 0.05) 100%); }
+body[data-theme="dark"] .section-gray:hover,
+body.dark-theme .section-gray:hover { border-color: #94a3b8; }
+
+/* === Teal Dark === */
+body[data-theme="dark"] .section-teal .section-drag-handle,
+body.dark-theme .section-teal .section-drag-handle {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.3) 0%, rgba(20, 184, 166, 0.15) 100%);
+    border-bottom-color: rgba(20, 184, 166, 0.3);
+}
+body[data-theme="dark"] .section-teal .section-drag-handle::before,
+body.dark-theme .section-teal .section-drag-handle::before { background: #14b8a6; }
+body[data-theme="dark"] .section-teal .section-title,
+body.dark-theme .section-teal .section-title { color: #5eead4; }
+body[data-theme="dark"] .section-teal .section-toggle-btn,
+body.dark-theme .section-teal .section-toggle-btn { background: rgba(20, 184, 166, 0.2); color: #5eead4; }
+body[data-theme="dark"] .section-teal .section-content,
+body.dark-theme .section-teal .section-content { background: linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(20, 184, 166, 0.05) 100%); }
+body[data-theme="dark"] .section-teal:hover,
+body.dark-theme .section-teal:hover { border-color: #14b8a6; }
+
+/* === Pink Dark === */
+body[data-theme="dark"] .section-pink .section-drag-handle,
+body.dark-theme .section-pink .section-drag-handle {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(236, 72, 153, 0.15) 100%);
+    border-bottom-color: rgba(236, 72, 153, 0.3);
+}
+body[data-theme="dark"] .section-pink .section-drag-handle::before,
+body.dark-theme .section-pink .section-drag-handle::before { background: #ec4899; }
+body[data-theme="dark"] .section-pink .section-title,
+body.dark-theme .section-pink .section-title { color: #f9a8d4; }
+body[data-theme="dark"] .section-pink .section-toggle-btn,
+body.dark-theme .section-pink .section-toggle-btn { background: rgba(236, 72, 153, 0.2); color: #f9a8d4; }
+body[data-theme="dark"] .section-pink .section-content,
+body.dark-theme .section-pink .section-content { background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%); }
+body[data-theme="dark"] .section-pink:hover,
+body.dark-theme .section-pink:hover { border-color: #ec4899; }
+
+/* ========================================
+   Responsive - Mobile
+======================================== */
+
+@media screen and (max-width: 768px) {
+    .sortable-section {
+        border-radius: 8px;
+    }
+
+    .section-drag-handle {
+        height: 40px;
+        /* במובייל אין גרירה */
+        cursor: default;
+    }
+
+    .section-title {
+        font-size: 14px;
+    }
+
+    .section-toggle-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    .section-content {
+        padding: 15px;
+    }
+}

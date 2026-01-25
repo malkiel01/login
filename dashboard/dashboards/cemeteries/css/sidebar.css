@@ -96,7 +96,7 @@
 }
 
 .hierarchy-header.active .hierarchy-count {
-    background: white;
+    background: var(--bg-primary);
     color: var(--primary-color);
 }
 

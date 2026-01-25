@@ -1361,3 +1361,396 @@ body[data-theme="dark"] .price-box .price-type,
 body.dark-theme .price-box .price-type {
     color: #6ee7b7 !important;
 }
+
+/* ========================================
+   23. Error Page - דף שגיאה
+   ======================================== */
+.error-page {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    color: #ef4444;
+    text-align: center;
+}
+
+/* ========================================
+   24. Section Headers - כותרות סקציות
+   ======================================== */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.section-header h2 {
+    margin: 0;
+}
+
+.section-header.color-orange h2 { color: #92400e; }
+.section-header.color-purple h2 { color: #5b21b6; }
+.section-header.color-green h2 { color: #166534; }
+.section-header.color-blue h2 { color: #1e40af; }
+.section-header.color-red h2 { color: #991b1b; }
+
+body[data-theme="dark"] .section-header.color-orange h2 { color: #fbbf24 !important; }
+body[data-theme="dark"] .section-header.color-purple h2 { color: #a78bfa !important; }
+body[data-theme="dark"] .section-header.color-green h2 { color: #4ade80 !important; }
+body[data-theme="dark"] .section-header.color-blue h2 { color: #60a5fa !important; }
+body[data-theme="dark"] .section-header.color-red h2 { color: #f87171 !important; }
+
+/* ========================================
+   25. Empty State - מצב ריק
+   ======================================== */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.empty-state.error {
+    color: #ef4444;
+}
+
+body[data-theme="dark"] .empty-state {
+    color: #94a3b8 !important;
+}
+
+body[data-theme="dark"] .empty-state.error {
+    color: #f87171 !important;
+}
+
+/* ========================================
+   26. Payments Modal - מודל תשלומים
+   ======================================== */
+.payments-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.payments-modal {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: auto;
+    direction: rtl;
+}
+
+.payments-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payments-modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.payments-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.payments-modal-body {
+    padding: 20px;
+}
+
+.payments-modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.payments-info-box {
+    background: var(--bg-tertiary);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.payments-section-title {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.payments-section-title.mandatory {
+    color: #dc2626;
+}
+
+.payments-section-title.optional {
+    color: #059669;
+}
+
+.payments-section-title.custom {
+    color: #3b82f6;
+}
+
+.payment-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.payment-item.mandatory {
+    background: #fef2f2;
+}
+
+.payment-item.optional {
+    background: #f0fdf4;
+    cursor: pointer;
+}
+
+.payment-item.custom {
+    background: #eff6ff;
+}
+
+.payment-item input[type="checkbox"] {
+    margin-left: 10px;
+}
+
+.payment-item .payment-name {
+    flex: 1;
+}
+
+.payment-item .payment-price {
+    font-weight: bold;
+}
+
+.payment-item .payment-price.mandatory {
+    color: #dc2626;
+}
+
+.payment-item .payment-price.optional {
+    color: #059669;
+}
+
+.payment-item .payment-price.custom {
+    color: #3b82f6;
+}
+
+.payment-item .payment-remove {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.add-payment-form {
+    background: #eff6ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.add-payment-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.add-payment-field {
+    min-width: 150px;
+}
+
+.add-payment-field.price {
+    width: 120px;
+}
+
+.add-payment-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.add-payment-field select,
+.add-payment-field input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.payments-total {
+    background: #1e293b;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.payments-total-label {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.payments-total-value {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+/* Payments Modal - Dark Mode */
+body[data-theme="dark"] .payments-modal {
+    background: #334155 !important;
+    border: 1px solid #475569 !important;
+}
+
+body[data-theme="dark"] .payments-modal-header {
+    border-color: #475569 !important;
+}
+
+body[data-theme="dark"] .payments-modal-footer {
+    border-color: #475569 !important;
+}
+
+body[data-theme="dark"] .payments-info-box {
+    background: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body[data-theme="dark"] .payment-item.mandatory {
+    background: rgba(220, 38, 38, 0.15) !important;
+}
+
+body[data-theme="dark"] .payment-item.optional {
+    background: rgba(5, 150, 105, 0.15) !important;
+}
+
+body[data-theme="dark"] .payment-item.custom {
+    background: rgba(59, 130, 246, 0.15) !important;
+}
+
+body[data-theme="dark"] .add-payment-form {
+    background: rgba(59, 130, 246, 0.15) !important;
+}
+
+body[data-theme="dark"] .payments-total {
+    background: #0f172a !important;
+}
+
+/* ========================================
+   27. Utility Classes - קלאסים עזר
+   ======================================== */
+.mt-0 { margin-top: 0 !important; }
+.mt-10 { margin-top: 10px !important; }
+.mt-15 { margin-top: 15px !important; }
+.mt-20 { margin-top: 20px !important; }
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-10 { margin-bottom: 10px !important; }
+.mb-15 { margin-bottom: 15px !important; }
+.mb-20 { margin-bottom: 20px !important; }
+
+.text-center { text-align: center !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-error { color: #ef4444 !important; }
+.text-success { color: #10b981 !important; }
+
+.d-none { display: none !important; }
+.d-flex { display: flex !important; }
+.d-block { display: block !important; }
+
+.flex-1 { flex: 1 !important; }
+.gap-10 { gap: 10px !important; }
+.align-center { align-items: center !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-end { justify-content: flex-end !important; }
+
+.font-bold { font-weight: bold !important; }
+.font-16 { font-size: 16px !important; }
+.font-24 { font-size: 24px !important; }
+
+/* ========================================
+   28. Payments List Display
+   ======================================== */
+.payments-list {
+    margin-top: 15px;
+}
+
+.payments-list-empty {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.payments-list-empty i {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.payments-list-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.payments-list-item.mandatory {
+    background: #fef2f2;
+}
+
+.payments-list-item.optional {
+    background: #f0fdf4;
+}
+
+.payments-list-item .payment-amount {
+    font-weight: bold;
+}
+
+.payments-list-item.mandatory .payment-amount {
+    color: #dc2626;
+}
+
+.payments-list-item.optional .payment-amount {
+    color: #059669;
+}
+
+body[data-theme="dark"] .payments-list-item.mandatory {
+    background: rgba(220, 38, 38, 0.15) !important;
+}
+
+body[data-theme="dark"] .payments-list-item.optional {
+    background: rgba(5, 150, 105, 0.15) !important;
+}
+
+body[data-theme="dark"] .payments-list-item.mandatory .payment-amount {
+    color: #fca5a5 !important;
+}
+
+body[data-theme="dark"] .payments-list-item.optional .payment-amount {
+    color: #6ee7b7 !important;
+}

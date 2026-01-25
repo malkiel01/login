@@ -146,7 +146,9 @@ class PopupAPI {
         const { event, data: eventData } = data;
 
         // החלת הגדרות נושא אם התקבלו
+        console.log('[PopupAPI] DEBUG - event:', event, 'has theme:', !!eventData?.theme);
         if (event === 'loaded' && eventData?.theme) {
+            console.log('[PopupAPI] DEBUG - calling applyTheme NOW');
             this.applyTheme(eventData.theme);
         }
 

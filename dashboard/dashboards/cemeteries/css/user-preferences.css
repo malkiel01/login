@@ -47,15 +47,7 @@ body.color-scheme-green .nav-item.active {
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 
-[data-color-scheme="green"] .btn-primary,
-body.color-scheme-green .btn-primary {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-}
-
-[data-color-scheme="green"] .btn-primary:hover,
-body.color-scheme-green .btn-primary:hover {
-    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-}
+/* btn-primary uses CSS variables from color scheme - no need to hardcode */
 
 [data-color-scheme="green"] a,
 body.color-scheme-green a {
@@ -100,28 +92,35 @@ body.color-scheme-green .form-control:focus {
    =================================================================== */
 html[data-theme="dark"],
 html[data-theme="dark"] body,
-body.dark-theme {
+body.dark-theme,
+/* תמיכה בשילוב dark mode + color schemes */
+html[data-theme="dark"][data-color-scheme="green"],
+html[data-theme="dark"][data-color-scheme="purple"],
+body.dark-theme[data-color-scheme="green"],
+body.dark-theme[data-color-scheme="purple"],
+body.dark-theme.color-scheme-green,
+body.dark-theme.color-scheme-purple {
     /* רקעים */
-    --bg-primary: #1e293b;
-    --bg-secondary: #334155;
-    --bg-tertiary: #475569;
+    --bg-primary: #1e293b !important;
+    --bg-secondary: #334155 !important;
+    --bg-tertiary: #475569 !important;
 
     /* טקסטים */
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
+    --text-primary: #f1f5f9 !important;
+    --text-secondary: #cbd5e1 !important;
+    --text-muted: #94a3b8 !important;
 
     /* גבולות */
-    --border-color: #475569;
+    --border-color: #475569 !important;
 
     /* צלליות */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 
-    /* צבעים מותאמים */
-    --primary-color: #818cf8;
-    --primary-dark: #a78bfa;
+    /* צבעים ראשיים - חשוב: מחליפים את ערכת הצבע! */
+    --primary-color: #818cf8 !important;
+    --primary-dark: #a78bfa !important;
 }
 
 /* רקע גוף בדארק - עם !important לעקוף main.css */

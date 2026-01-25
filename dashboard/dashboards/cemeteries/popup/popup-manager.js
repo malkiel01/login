@@ -38,7 +38,7 @@ class PopupManager {
         if (!targetDoc.getElementById('popup-api-js') && !targetWindow.PopupAPI) {
             const script = targetDoc.createElement('script');
             script.id = 'popup-api-js';
-            script.src = '/dashboard/dashboards/cemeteries/popup/popup-api.js';
+            script.src = '/dashboard/dashboards/cemeteries/popup/popup-api.js?v=' + Date.now();
             targetDoc.head.appendChild(script);
             console.log('✅ Popup API loaded');
         }

@@ -140,6 +140,11 @@ class PopupAPI {
     static handleMessage(e) {
         const data = e.data;
 
+        // Debug: הצג כל הודעה שמגיעה
+        if (data.type === 'popup-event') {
+            console.log('[PopupAPI] 📨 Message received:', data.event, 'for popup:', data.popupId, 'my id:', this.popupId);
+        }
+
         if (data.type !== 'popup-event') return;
         if (data.popupId !== this.popupId) return;
 

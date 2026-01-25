@@ -947,6 +947,7 @@ class Popup {
 
         if (this.config.type === 'iframe' && this.elements.iframe) {
             try {
+                console.log(`📤 [PopupManager] Sending ${event} to iframe ${this.id}`, message);
                 this.elements.iframe.contentWindow.postMessage(message, '*');
             } catch (e) {
                 console.warn('Failed to send message to iframe:', e);

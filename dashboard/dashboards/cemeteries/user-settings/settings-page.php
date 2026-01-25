@@ -82,7 +82,7 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/user-settings/css/user-settings.css?v=20260125b">
 
     <!-- Popup API -->
-    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }

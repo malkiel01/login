@@ -28,8 +28,6 @@ class PopupAPI {
         if (this.isDetached) {
             this.restoreDetachedState();
         }
-
-        console.log(`[PopupAPI] Initialized - ID: ${this.popupId}, InIframe: ${this.isInIframe}, Detached: ${this.isDetached}`);
     }
 
     /**
@@ -61,12 +59,8 @@ class PopupAPI {
             const popup = window.PopupManager?.get(this.popupId);
             if (popup) {
                 popup.handleMessage({ data: message });
-            } else {
-                console.warn('[PopupAPI] Cannot send - popup not found');
             }
         }
-
-        console.log(`[PopupAPI] Sent: ${action}`, payload);
     }
 
     /**
@@ -117,8 +111,6 @@ class PopupAPI {
                 callback(e.detail.data);
             });
         }
-
-        console.log(`[PopupAPI] Listening to: ${event}`);
     }
 
     /**
@@ -140,11 +132,6 @@ class PopupAPI {
     static handleMessage(e) {
         const data = e.data;
 
-        // Debug: הצג כל הודעה שמגיעה
-        if (data.type === 'popup-event') {
-            console.log('[PopupAPI] 📨 Message received:', data.event, 'for popup:', data.popupId, 'my id:', this.popupId);
-        }
-
         if (data.type !== 'popup-event') return;
         if (data.popupId !== this.popupId) return;
 
@@ -152,7 +139,6 @@ class PopupAPI {
 
         // החלת הגדרות נושא אם התקבלו (בטעינה או בשינוי נושא)
         if ((event === 'loaded' || event === 'themeChanged') && eventData?.theme) {
-            console.log(`[PopupAPI] Theme ${event === 'themeChanged' ? 'changed' : 'loaded'}, applying...`);
             this.applyTheme(eventData.theme);
         }
 
@@ -166,19 +152,13 @@ class PopupAPI {
                 }
             });
         }
-
-        console.log(`[PopupAPI] Received event: ${event}`, eventData);
     }
 
     /**
      * החלת הגדרות נושא על ה-iframe
      */
     static applyTheme(theme) {
-        console.log('[PopupAPI] applyTheme called with:', theme);
-        if (!theme) {
-            console.log('[PopupAPI] Theme is null/undefined, returning');
-            return;
-        }
+        if (!theme) return;
 
         try {
             const root = document.documentElement;
@@ -214,8 +194,6 @@ class PopupAPI {
                     }
                 }
             }
-
-            console.log('[PopupAPI] Theme applied:', theme.dataTheme, theme.colorScheme);
         } catch (err) {
             console.error('[PopupAPI] Error in applyTheme:', err);
         }
@@ -231,7 +209,6 @@ class PopupAPI {
 
             if (stateJSON) {
                 const state = JSON.parse(stateJSON);
-                console.log('[PopupAPI] Restored detached state:', state);
 
                 // שחזור גלילה
                 if (state.state?.scrollPosition) {
@@ -307,9 +284,8 @@ if (window.self !== window.top) {
             };
 
             PopupAPI.applyTheme(theme);
-            console.log('[PopupAPI] Theme loaded from parent directly');
         } catch (e) {
-            console.log('[PopupAPI] Could not access parent (CORS):', e.message);
+            // CORS error - parent not accessible
         }
     }, 100);
 }

@@ -122,67 +122,7 @@ $graveLocations = [
             direction: rtl;
         }
 
-        .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
-        .sortable-section {
-            background: white;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            overflow: hidden;
-        }
-        .sortable-section:hover { border-color: #94a3b8; }
-
-        .section-drag-handle {
-            height: 32px;
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #cbd5e1;
-            position: relative;
-        }
-        .section-drag-handle::before {
-            content: "";
-            width: 40px;
-            height: 4px;
-            background: #94a3b8;
-            border-radius: 2px;
-        }
-
-        .section-toggle-btn {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: rgba(100, 116, 139, 0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #64748b;
-            font-size: 12px;
-        }
-        .section-toggle-btn:hover { background: rgba(100, 116, 139, 0.4); }
-
-        .section-title {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-        }
-
-        .section-content { padding: 20px; }
-        .sortable-section.collapsed .section-content { display: none; }
-        .sortable-section.collapsed .section-toggle-btn i { transform: rotate(-90deg); }
-
+        /* Form styles */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -261,10 +201,6 @@ $graveLocations = [
         .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
         .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
-        .section-grave .section-drag-handle { background: linear-gradient(135deg, #ede9fe 0%, #c4b5fd 100%); }
-        .section-grave .section-title { color: #5b21b6; }
-        .section-grave .section-content { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); }
-
         .location-display {
             padding: 10px 12px;
             background: #f5f3ff;
@@ -286,7 +222,7 @@ $graveLocations = [
 
         <div class="sortable-sections" id="graveSortableSections">
             <!-- פרטי הקבר -->
-            <div class="sortable-section section-grave">
+            <div class="sortable-section section-purple">
                 <div class="section-drag-handle">
                     <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                         <i class="fas fa-chevron-down"></i>
@@ -401,7 +337,7 @@ $graveLocations = [
 
             <?php if ($isEdit): ?>
             <!-- מסמכים -->
-            <div class="sortable-section">
+            <div class="sortable-section section-gray">
                 <div class="section-drag-handle">
                     <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                         <i class="fas fa-chevron-down"></i>

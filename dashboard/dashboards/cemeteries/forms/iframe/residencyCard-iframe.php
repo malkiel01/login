@@ -110,62 +110,7 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
             padding: 20px;
             direction: rtl;
         }
-        .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
-        .sortable-section {
-            background: white;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            overflow: hidden;
-        }
-        .sortable-section:hover { border-color: #94a3b8; }
-        .section-drag-handle {
-            height: 32px;
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #cbd5e1;
-            position: relative;
-        }
-        .section-drag-handle::before {
-            content: "";
-            width: 40px;
-            height: 4px;
-            background: #94a3b8;
-            border-radius: 2px;
-        }
-        .section-toggle-btn {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: rgba(100, 116, 139, 0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #64748b;
-            font-size: 12px;
-        }
-        .section-toggle-btn:hover { background: rgba(100, 116, 139, 0.4); }
-        .section-title {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-        }
-        .section-content { padding: 20px; }
-        .sortable-section.collapsed .section-content { display: none; }
-        .sortable-section.collapsed .section-toggle-btn i { transform: rotate(-90deg); }
+        /* Section styles now in popup-sections.css */
 
         .info-grid {
             display: grid;
@@ -244,7 +189,7 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
     <div class="sortable-sections" id="residencySortableSections">
 
         <!-- סקשן 1: פרטי חוק תושבות -->
-        <div class="sortable-section section-residency" data-section="details">
+        <div class="sortable-section section-blue section-residency" data-section="details">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                     <i class="fas fa-chevron-down"></i>
@@ -299,7 +244,7 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
         </div>
 
         <!-- סקשן 2: מסמכים -->
-        <div class="sortable-section" data-section="documents">
+        <div class="sortable-section section-gray" data-section="documents">
             <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                     <i class="fas fa-chevron-down"></i>

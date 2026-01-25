@@ -111,15 +111,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; color: #334155; padding: 20px; direction: rtl; }
-        .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
-        .sortable-section { background: white; border-radius: 12px; border: 2px solid transparent; overflow: hidden; }
-        .sortable-section:hover { border-color: #94a3b8; }
-        .section-drag-handle { height: 32px; background: linear-gradient(135deg, #e2e8f0, #cbd5e1); cursor: grab; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #cbd5e1; position: relative; }
-        .section-drag-handle::before { content: ""; width: 40px; height: 4px; background: #94a3b8; border-radius: 2px; }
-        .section-toggle-btn { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: none; background: rgba(100,116,139,0.2); border-radius: 4px; cursor: pointer; color: #64748b; font-size: 12px; display: flex; align-items: center; justify-content: center; }
-        .section-title { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; }
-        .section-content { padding: 20px; }
-        .sortable-section.collapsed .section-content { display: none; }
+        /* Section styles now in popup-sections.css */
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
         .info-card { padding: 12px; border-radius: 8px; background: white; }
         .info-card .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
@@ -145,7 +137,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
 <body>
     <div class="sortable-sections" id="graveCardSortableSections">
         <!-- פרטי הקבר -->
-        <div class="sortable-section section-grave">
+        <div class="sortable-section section-grave section-purple">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #ede9fe, #c4b5fd);">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
                 <span class="section-title" style="color: #5b21b6;"><i class="fas fa-monument"></i> <?= htmlspecialchars($grave['graveNameHe'] ?? 'קבר') ?></span>
@@ -175,7 +167,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
 
         <!-- פרטי רכישה -->
         <?php if ($purchase): ?>
-        <div class="sortable-section section-purchase">
+        <div class="sortable-section section-purchase section-green">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
                 <span class="section-title" style="color: #166534;"><i class="fas fa-shopping-cart"></i> רכישה</span>
@@ -196,7 +188,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             </div>
         </div>
         <?php else: ?>
-        <div class="sortable-section section-purchase">
+        <div class="sortable-section section-purchase section-green">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
                 <span class="section-title" style="color: #166534;"><i class="fas fa-shopping-cart"></i> רכישה</span>
@@ -209,7 +201,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
 
         <!-- תיק קבורה -->
         <?php if ($burial): ?>
-        <div class="sortable-section section-burial">
+        <div class="sortable-section section-burial section-orange">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
                 <span class="section-title" style="color: #92400e;"><i class="fas fa-cross"></i> קבורה</span>
@@ -227,7 +219,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             </div>
         </div>
         <?php else: ?>
-        <div class="sortable-section section-burial">
+        <div class="sortable-section section-burial section-orange">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
                 <span class="section-title" style="color: #92400e;"><i class="fas fa-cross"></i> קבורה</span>
@@ -239,7 +231,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
         <?php endif; ?>
 
         <!-- מסמכים -->
-        <div class="sortable-section">
+        <div class="sortable-section section-gray">
             <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>

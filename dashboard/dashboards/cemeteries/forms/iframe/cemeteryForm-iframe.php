@@ -52,70 +52,7 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
-    <style>
-        /* === סגנונות ספציפיים לטופס זה - צבעי הסקציות === */
-
-        /* סקשן ירוק - פרטי בית עלמין */
-        .section-cemetery .section-drag-handle {
-            background: linear-gradient(135deg, #dcfce7, #bbf7d0) !important;
-        }
-        .section-cemetery .section-title { color: #166534 !important; }
-        .section-cemetery .section-content {
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important;
-        }
-
-        /* סקשן כחול - מיקום */
-        .section-location .section-drag-handle {
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
-        }
-        .section-location .section-title { color: #1e40af !important; }
-        .section-location .section-content {
-            background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
-        }
-
-        /* סקשן סגול - פרטי קשר */
-        .section-contact .section-drag-handle {
-            background: linear-gradient(135deg, #e0e7ff, #c7d2fe) !important;
-        }
-        .section-contact .section-title { color: #3730a3 !important; }
-        .section-contact .section-content {
-            background: linear-gradient(135deg, #eef2ff, #e0e7ff) !important;
-        }
-
-        /* === Dark Mode === */
-        body[data-theme="dark"] .section-cemetery .section-drag-handle,
-        body.dark-theme .section-cemetery .section-drag-handle {
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.15)) !important;
-        }
-        body[data-theme="dark"] .section-cemetery .section-title,
-        body.dark-theme .section-cemetery .section-title { color: #86efac !important; }
-        body[data-theme="dark"] .section-cemetery .section-content,
-        body.dark-theme .section-cemetery .section-content {
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05)) !important;
-        }
-
-        body[data-theme="dark"] .section-location .section-drag-handle,
-        body.dark-theme .section-location .section-drag-handle {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.15)) !important;
-        }
-        body[data-theme="dark"] .section-location .section-title,
-        body.dark-theme .section-location .section-title { color: #93c5fd !important; }
-        body[data-theme="dark"] .section-location .section-content,
-        body.dark-theme .section-location .section-content {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)) !important;
-        }
-
-        body[data-theme="dark"] .section-contact .section-drag-handle,
-        body.dark-theme .section-contact .section-drag-handle {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.15)) !important;
-        }
-        body[data-theme="dark"] .section-contact .section-title,
-        body.dark-theme .section-contact .section-title { color: #a5b4fc !important; }
-        body[data-theme="dark"] .section-contact .section-content,
-        body.dark-theme .section-contact .section-content {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05)) !important;
-        }
-    </style>
+    <!-- All section styles now come from popup-sections.css -->
 </head>
 <body>
     <div class="loading-overlay" id="loadingOverlay">
@@ -130,7 +67,7 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
 
             <div class="sortable-sections" id="cemeteryFormSortableSections">
                 <!-- סקשן: פרטי בית העלמין -->
-                <div class="sortable-section section-cemetery" data-section="details">
+                <div class="sortable-section section-green" data-section="details">
                     <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -170,7 +107,7 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
                 </div>
 
                 <!-- סקשן: פרטי קשר -->
-                <div class="sortable-section section-location" data-section="contact">
+                <div class="sortable-section section-blue" data-section="contact">
                     <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -198,7 +135,7 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
                 </div>
 
                 <!-- סקשן: פרטים נוספים -->
-                <div class="sortable-section section-contact" data-section="additional">
+                <div class="sortable-section section-purple" data-section="additional">
                     <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>

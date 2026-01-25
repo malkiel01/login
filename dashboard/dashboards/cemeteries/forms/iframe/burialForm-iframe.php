@@ -84,63 +84,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         }
 
         .form-container { max-width: 100%; }
-        .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
-        .sortable-section {
-            background: white;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            overflow: visible;
-            transition: border-color 0.2s;
-        }
-        .sortable-section:hover { border-color: #94a3b8; }
-
-        .section-drag-handle {
-            height: 32px;
-            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #cbd5e1;
-            position: relative;
-        }
-        .section-drag-handle::before {
-            content: "";
-            width: 40px;
-            height: 4px;
-            background: #94a3b8;
-            border-radius: 2px;
-        }
-        .section-toggle-btn {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: rgba(100,116,139,0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            color: #64748b;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .section-toggle-btn:hover { background: rgba(100,116,139,0.4); }
-        .section-title {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-        }
-        .section-content { padding: 20px; }
-        .sortable-section.collapsed .section-content { display: none; }
-        .sortable-section.collapsed .section-toggle-btn i { transform: rotate(-90deg); }
+        /* Section styles now in popup-sections.css */
 
         .form-grid {
             display: grid;
@@ -303,7 +247,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             <div class="sortable-sections" id="burialFormSortableSections">
                 <!-- סקשן 1: פרטי נפטר -->
-                <div class="sortable-section" data-section="deceased">
+                <div class="sortable-section section-purple" data-section="deceased">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #fee2e2, #fecaca);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -343,7 +287,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 </div>
 
                 <!-- סקשן 2: בחירת קבר -->
-                <div class="sortable-section" data-section="grave">
+                <div class="sortable-section section-green" data-section="grave">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -397,7 +341,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 </div>
 
                 <!-- סקשן 3: פרטי פטירה -->
-                <div class="sortable-section" data-section="death">
+                <div class="sortable-section section-blue" data-section="death">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #e0e7ff, #c7d2fe);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -433,7 +377,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 </div>
 
                 <!-- סקשן 4: פרטי קבורה -->
-                <div class="sortable-section" data-section="burial">
+                <div class="sortable-section section-orange" data-section="burial">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -469,7 +413,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 </div>
 
                 <!-- סקשן 5: פרטים נוספים -->
-                <div class="sortable-section" data-section="additional">
+                <div class="sortable-section section-orange" data-section="additional">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #ede9fe, #c4b5fd);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -507,7 +451,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 6: מסמכים -->
                 <?php if ($isEditMode): ?>
-                <div class="sortable-section" data-section="documents">
+                <div class="sortable-section section-gray" data-section="documents">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>

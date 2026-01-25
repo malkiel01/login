@@ -20,11 +20,6 @@ class PopupManager {
         const targetDoc = this.getTargetDocument();
         const targetWindow = this.getTargetWindow();
 
-        // הדפס גירסה (רק פעם אחת)
-        if (!this.cssLoaded) {
-            console.log(`🎯 PopupManager v${this.version} initialized`);
-        }
-
         // טען CSS אם עדיין לא נטען
         if (!targetDoc.getElementById('popup-manager-css')) {
             const link = targetDoc.createElement('link');
@@ -32,7 +27,6 @@ class PopupManager {
             link.rel = 'stylesheet';
             link.href = '/dashboard/dashboards/cemeteries/popup/popup.css?v=' + Date.now();
             targetDoc.head.appendChild(link);
-            console.log('✅ Popup CSS loaded');
         }
 
         // טען PopupAPI אם עדיין לא נטען
@@ -41,7 +35,6 @@ class PopupManager {
             script.id = 'popup-api-js';
             script.src = '/dashboard/dashboards/cemeteries/popup/popup-api.js?v=' + Date.now();
             targetDoc.head.appendChild(script);
-            console.log('✅ Popup API loaded');
         }
 
         this.cssLoaded = true;
@@ -65,7 +58,6 @@ class PopupManager {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes' &&
                     (mutation.attributeName === 'data-theme' || mutation.attributeName === 'data-color-scheme')) {
-                    console.log('🎨 Theme changed, updating all popups...');
                     this.updateAllPopupsTheme();
                     break;
                 }
@@ -76,8 +68,6 @@ class PopupManager {
             attributes: true,
             attributeFilter: ['data-theme', 'data-color-scheme']
         });
-
-        console.log('👁️ Theme observer initialized');
     }
 
     /**
@@ -485,8 +475,6 @@ class Popup {
 
         // שליחת הנושא החדש ל-iframe
         this.notifyContent('themeChanged', { theme: themeSettings });
-
-        console.log(`🎨 Popup ${this.id} theme updated to: ${themeSettings.dataTheme}`);
     }
 
     /**
@@ -947,7 +935,6 @@ class Popup {
 
         if (this.config.type === 'iframe' && this.elements.iframe) {
             try {
-                console.log(`📤 [PopupManager] Sending ${event} to iframe ${this.id}`, message);
                 this.elements.iframe.contentWindow.postMessage(message, '*');
             } catch (e) {
                 console.warn('Failed to send message to iframe:', e);

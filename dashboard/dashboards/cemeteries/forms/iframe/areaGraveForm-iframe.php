@@ -213,63 +213,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
         }
 
         .form-container { max-width: 100%; }
-        .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
-        .sortable-section {
-            background: white;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            overflow: visible;
-            transition: border-color 0.2s;
-        }
-        .sortable-section:hover { border-color: #94a3b8; }
-
-        .section-drag-handle {
-            height: 32px;
-            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #cbd5e1;
-            position: relative;
-        }
-        .section-drag-handle::before {
-            content: "";
-            width: 40px;
-            height: 4px;
-            background: #94a3b8;
-            border-radius: 2px;
-        }
-        .section-toggle-btn {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: rgba(100,116,139,0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            color: #64748b;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .section-toggle-btn:hover { background: rgba(100,116,139,0.4); }
-        .section-title {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-        }
-        .section-content { padding: 20px; }
-        .sortable-section.collapsed .section-content { display: none; }
-        .sortable-section.collapsed .section-toggle-btn i { transform: rotate(-90deg); }
+        /* Section styles now in popup-sections.css */
 
         .form-grid {
             display: grid;
@@ -578,7 +522,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
 
             <div class="sortable-sections" id="areaGraveSortableSections">
                 <!-- סקשן 1: פרטי אחוזת קבר -->
-                <div class="sortable-section" data-section="details">
+                <div class="sortable-section section-blue" data-section="details">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
@@ -680,7 +624,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
                 </div>
 
                 <!-- סקשן 2: קברים באחוזה -->
-                <div class="sortable-section" data-section="graves">
+                <div class="sortable-section section-purple" data-section="graves">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #f3e8ff, #e9d5ff);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>

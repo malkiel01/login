@@ -331,29 +331,90 @@ const UserSettings = (function() {
     }
 
     /**
+     * ערכי נושא - מוגדרים פעם אחת
+     */
+    const THEME_VALUES = {
+        light: {
+            purple: { primaryColor: '#667eea', primaryDark: '#764ba2' },
+            green: { primaryColor: '#059669', primaryDark: '#047857' },
+            bgPrimary: '#ffffff',
+            bgSecondary: '#f8fafc',
+            bgTertiary: '#f1f5f9',
+            textPrimary: '#1e293b',
+            textSecondary: '#475569',
+            textMuted: '#94a3b8',
+            borderColor: '#e2e8f0'
+        },
+        dark: {
+            primaryColor: '#374151',
+            primaryDark: '#1f2937',
+            bgPrimary: '#0f172a',
+            bgSecondary: '#1e293b',
+            bgTertiary: '#334155',
+            textPrimary: '#f1f5f9',
+            textSecondary: '#cbd5e1',
+            textMuted: '#94a3b8',
+            borderColor: '#475569'
+        }
+    };
+
+    /**
      * החלת הגדרות על הממשק
      */
     function applyToUI() {
+        const root = document.documentElement;
+
         // מצב כהה (toggle)
         const darkMode = get('darkMode', false);
         const isDark = darkMode === true || darkMode === 'true';
         const theme = isDark ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
+
+        // הגדרת attributes ו-classes
+        root.setAttribute('data-theme', theme);
+        document.body.setAttribute('data-theme', theme); // סנכרון body עם html
         document.body.classList.remove('dark-theme', 'light-theme');
         document.body.classList.add(theme + '-theme');
 
-        // סגנון צבע (רק במצב בהיר)
+        // סגנון צבע
         const colorScheme = get('colorScheme', 'purple');
-        document.documentElement.setAttribute('data-color-scheme', isDark ? '' : colorScheme);
+        const colorSchemeValue = isDark ? '' : colorScheme;
+        root.setAttribute('data-color-scheme', colorSchemeValue);
+        document.body.setAttribute('data-color-scheme', colorSchemeValue); // סנכרון body עם html
         document.body.classList.remove('color-scheme-purple', 'color-scheme-green');
         if (!isDark) {
             document.body.classList.add('color-scheme-' + colorScheme);
         }
 
+        // הגדרת CSS Variables ישירות - זה מה שמבטיח עדכון מיידי!
+        if (isDark) {
+            const dark = THEME_VALUES.dark;
+            root.style.setProperty('--primary-color', dark.primaryColor);
+            root.style.setProperty('--primary-dark', dark.primaryDark);
+            root.style.setProperty('--bg-primary', dark.bgPrimary);
+            root.style.setProperty('--bg-secondary', dark.bgSecondary);
+            root.style.setProperty('--bg-tertiary', dark.bgTertiary);
+            root.style.setProperty('--text-primary', dark.textPrimary);
+            root.style.setProperty('--text-secondary', dark.textSecondary);
+            root.style.setProperty('--text-muted', dark.textMuted);
+            root.style.setProperty('--border-color', dark.borderColor);
+        } else {
+            const light = THEME_VALUES.light;
+            const colors = light[colorScheme] || light.purple;
+            root.style.setProperty('--primary-color', colors.primaryColor);
+            root.style.setProperty('--primary-dark', colors.primaryDark);
+            root.style.setProperty('--bg-primary', light.bgPrimary);
+            root.style.setProperty('--bg-secondary', light.bgSecondary);
+            root.style.setProperty('--bg-tertiary', light.bgTertiary);
+            root.style.setProperty('--text-primary', light.textPrimary);
+            root.style.setProperty('--text-secondary', light.textSecondary);
+            root.style.setProperty('--text-muted', light.textMuted);
+            root.style.setProperty('--border-color', light.borderColor);
+        }
+
         // גודל גופן (מוגבל בין 10-30)
         let fontSize = get('fontSize', 14);
         fontSize = Math.min(30, Math.max(10, fontSize));
-        document.documentElement.style.setProperty('--base-font-size', fontSize + 'px');
+        root.style.setProperty('--base-font-size', fontSize + 'px');
 
         // מצב קומפקטי
         const compactMode = get('compactMode', false);

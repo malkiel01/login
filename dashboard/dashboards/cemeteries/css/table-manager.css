@@ -20,7 +20,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    background: white;
+    background: var(--bg-primary);
 }
 
 .tm-header-cell {
@@ -29,11 +29,12 @@
     padding: 12px 16px;
     font-weight: 600;
     text-align: right;
-    border-left: 1px solid #e5e7eb;
-    border-bottom: 2px solid #e5e7eb;
+    border-left: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
     user-select: none;
     white-space: nowrap;
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     z-index: 100;
 }
 
@@ -93,7 +94,8 @@
 /* === תפריט עמודה - RTL FIX === */
 .tm-column-menu {
     position: fixed;
-    background: white;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-width: 180px;
@@ -110,10 +112,11 @@
     align-items: center;
     gap: 10px;
     transition: background 0.2s;
+    color: var(--text-primary);
 }
 
 .tm-menu-item:hover {
-    background: #f3f4f6;
+    background: var(--bg-tertiary);
 }
 
 .tm-menu-item span:first-child {
@@ -123,7 +126,7 @@
 
 .tm-menu-divider {
     height: 1px;
-    background: #e5e7eb;
+    background: var(--border-color);
     margin: 4px 0;
 }
 
@@ -151,28 +154,30 @@
 /* === שורות === */
 .tm-row {
     transition: background 0.2s;
+    color: var(--text-primary);
 }
 
 .tm-row:hover {
-    background: #f9fafb;
+    background: var(--bg-tertiary);
 }
 
 .tm-row:nth-child(even) {
-    background: #f8fafc;
+    background: var(--bg-secondary);
 }
 
 .tm-row:nth-child(even):hover {
-    background: #f1f5f9;
+    background: var(--bg-tertiary);
 }
 
 .tm-cell {
     padding: 12px 16px;
     text-align: right;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-color);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 0;  /* נדרש כדי ש-ellipsis יעבוד עם table-layout: fixed */
+    color: var(--text-primary);
 }
 
 /* === רספונסיביות === */
@@ -231,7 +236,7 @@
     min-width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    background: white;
+    background: var(--bg-primary);
     table-layout: fixed;
 }
 
@@ -263,7 +268,7 @@
 .tm-no-results {
     text-align: center;
     padding: 60px 20px;
-    color: #9ca3af;
+    color: var(--text-muted);
 }
 
 .tm-no-results-icon {
@@ -275,18 +280,18 @@
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 8px;
-    color: #4b5563;
+    color: var(--text-secondary);
 }
 
 .tm-no-results-text {
-    color: #9ca3af;
+    color: var(--text-muted);
 }
 
 /* === אינדיקטור טעינה === */
 .tm-loading-indicator {
     text-align: center;
     padding: 20px;
-    color: #6b7280;
+    color: var(--text-secondary);
 }
 
 .tm-loading-spinner {

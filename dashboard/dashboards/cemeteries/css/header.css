@@ -7,9 +7,8 @@
 /* ===================================================================
    Main Header Container
    =================================================================== */
+/* הגדרות צבע ב-user-preferences.css - כאן רק layout */
 .dashboard-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
     padding: 1.5rem 2rem;
     box-shadow: var(--shadow-lg);
     position: fixed;

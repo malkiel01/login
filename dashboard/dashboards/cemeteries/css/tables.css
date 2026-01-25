@@ -1,9 +1,9 @@
 /* tables.css - עיצוב טבלאות רספונסיבי */
 
-/* Base Table Styles */
+/* Base Table Styles - הכל עובד דרך CSS Variables! */
 .data-table {
     width: 100%;
-    background: white;
+    background: var(--bg-primary);
     border-collapse: separate;
     border-spacing: 0;
     border-radius: var(--radius-md);
@@ -12,7 +12,7 @@
 }
 
 .data-table thead {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
 }
 
 .data-table th {
@@ -58,17 +58,17 @@
 }
 
 .table-responsive::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--bg-tertiary);
     border-radius: 10px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--text-muted);
     border-radius: 10px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--text-secondary);
 }
 
 /* Entity Cards - חלופה לטבלאות במובייל */
@@ -77,7 +77,7 @@
 }
 
 .entity-card {
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 1rem;

@@ -351,7 +351,7 @@ const UserSettings = (function() {
 
             // האזנה לשינויים ועדכון UI
             onChange((key, value) => {
-                if (['darkMode', 'colorScheme', 'fontSize', 'compactMode', 'sidebarCollapsed'].includes(key)) {
+                if (['darkMode', 'colorScheme', 'fontSize', 'compactMode', 'sidebarCollapsed', 'showHeaderStats'].includes(key)) {
                     applyToUI();
                 }
             });

@@ -86,7 +86,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
     <title><?= $pageTitle ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
-    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=20260125"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {

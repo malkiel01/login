@@ -97,7 +97,7 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
 
     <!-- Popup API -->
-    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=20260125"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }

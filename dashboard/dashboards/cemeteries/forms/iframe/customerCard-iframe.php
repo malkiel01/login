@@ -119,7 +119,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
 
     <!-- Popup API -->
-    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=20260125"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }

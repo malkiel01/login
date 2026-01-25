@@ -378,7 +378,39 @@ class Popup {
         if (this.config.onLoad) {
             this.config.onLoad(this);
         }
-        this.notifyContent('loaded', { popupId: this.id });
+
+        // שליחת הגדרות נושא ל-iframe
+        const themeSettings = this.getThemeSettings();
+        this.notifyContent('loaded', { popupId: this.id, theme: themeSettings });
+    }
+
+    /**
+     * קבלת הגדרות נושא נוכחיות מהדף הראשי
+     */
+    getThemeSettings() {
+        const root = document.documentElement;
+        const body = document.body;
+
+        return {
+            dataTheme: root.getAttribute('data-theme') || 'light',
+            colorScheme: root.getAttribute('data-color-scheme') || 'purple',
+            classes: {
+                darkTheme: body.classList.contains('dark-theme'),
+                lightTheme: body.classList.contains('light-theme'),
+                colorScheme: Array.from(body.classList).find(c => c.startsWith('color-scheme-')) || ''
+            },
+            cssVars: {
+                primaryColor: getComputedStyle(root).getPropertyValue('--primary-color').trim(),
+                primaryDark: getComputedStyle(root).getPropertyValue('--primary-dark').trim(),
+                bgPrimary: getComputedStyle(root).getPropertyValue('--bg-primary').trim(),
+                bgSecondary: getComputedStyle(root).getPropertyValue('--bg-secondary').trim(),
+                bgTertiary: getComputedStyle(root).getPropertyValue('--bg-tertiary').trim(),
+                textPrimary: getComputedStyle(root).getPropertyValue('--text-primary').trim(),
+                textSecondary: getComputedStyle(root).getPropertyValue('--text-secondary').trim(),
+                textMuted: getComputedStyle(root).getPropertyValue('--text-muted').trim(),
+                borderColor: getComputedStyle(root).getPropertyValue('--border-color').trim()
+            }
+        };
     }
 
     /**

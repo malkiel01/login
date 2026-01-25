@@ -145,6 +145,11 @@ class PopupAPI {
 
         const { event, data: eventData } = data;
 
+        // החלת הגדרות נושא אם התקבלו
+        if (event === 'loaded' && eventData?.theme) {
+            this.applyTheme(eventData.theme);
+        }
+
         // קריאה ל-listeners רשומים
         if (this.listeners.has(event)) {
             this.listeners.get(event).forEach(callback => {
@@ -157,6 +162,46 @@ class PopupAPI {
         }
 
         console.log(`[PopupAPI] Received event: ${event}`, eventData);
+    }
+
+    /**
+     * החלת הגדרות נושא על ה-iframe
+     */
+    static applyTheme(theme) {
+        if (!theme) return;
+
+        const root = document.documentElement;
+        const body = document.body;
+
+        // הגדרת attributes
+        root.setAttribute('data-theme', theme.dataTheme);
+        root.setAttribute('data-color-scheme', theme.colorScheme);
+        body.setAttribute('data-theme', theme.dataTheme);
+        body.setAttribute('data-color-scheme', theme.colorScheme);
+
+        // הגדרת classes
+        body.classList.remove('dark-theme', 'light-theme');
+        body.classList.add(theme.dataTheme + '-theme');
+
+        // הסרת color-scheme classes ישנים והוספת חדש
+        body.classList.forEach(cls => {
+            if (cls.startsWith('color-scheme-')) body.classList.remove(cls);
+        });
+        if (theme.classes.colorScheme) {
+            body.classList.add(theme.classes.colorScheme);
+        }
+
+        // הגדרת CSS Variables ישירות
+        if (theme.cssVars) {
+            for (const [key, value] of Object.entries(theme.cssVars)) {
+                if (value) {
+                    const cssVarName = '--' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    root.style.setProperty(cssVarName, value);
+                }
+            }
+        }
+
+        console.log('[PopupAPI] Theme applied:', theme.dataTheme, theme.colorScheme);
     }
 
     /**

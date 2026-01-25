@@ -1,13 +1,17 @@
 /*
  * File: css/user-preferences.css
- * Version: 1.0.0
+ * Version: 2.0.0
  * Created: 2026-01-23
+ * Updated: 2026-01-25
  * Author: Malkiel
- * Description: תמיכה בהעדפות משתמש - Dark Mode, Font Size, Compact Mode
+ * Description: תמיכה בהעדפות משתמש - ערכות צבע, מצב כהה, גודל פונט, מצב קומפקטי
+ *
+ * עקרון מרכזי: הכל עובד דרך CSS Variables!
+ * כל ערכת צבע רק מגדירה variables, והרכיבים משתמשים בהם אוטומטית.
  */
 
 /* ===================================================================
-   משתנה גודל גופן בסיסי
+   1. BASE - משתנים בסיסיים
    =================================================================== */
 :root {
     --base-font-size: 14px;
@@ -18,10 +22,11 @@ html {
 }
 
 /* ===================================================================
-   COLOR SCHEMES (Light Mode Styles)
+   2. COLOR SCHEMES - ערכות צבע (מצב בהיר)
+   רק מגדירים variables - אין overrides מפורשים!
    =================================================================== */
 
-/* Purple (Default) - כבר מוגדר ב-main.css */
+/* Purple (Default) */
 [data-color-scheme="purple"],
 body.color-scheme-purple {
     --primary-color: #667eea;
@@ -35,61 +40,9 @@ body.color-scheme-green {
     --primary-dark: #047857;
 }
 
-[data-color-scheme="green"] .dashboard-header,
-body.color-scheme-green .dashboard-header {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-}
-
-[data-color-scheme="green"] .sidebar .sidebar-item.active,
-[data-color-scheme="green"] .nav-item.active,
-body.color-scheme-green .sidebar .sidebar-item.active,
-body.color-scheme-green .nav-item.active {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-}
-
-/* btn-primary uses CSS variables from color scheme - no need to hardcode */
-
-[data-color-scheme="green"] a,
-body.color-scheme-green a {
-    color: #059669;
-}
-
-[data-color-scheme="green"] a:hover,
-body.color-scheme-green a:hover {
-    color: #047857;
-}
-
-/* Green Gradient Background - עם !important לעקוף main.css */
-body.color-scheme-green {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-}
-
-/* Badges and highlights */
-[data-color-scheme="green"] .badge-primary,
-body.color-scheme-green .badge-primary {
-    background: #059669;
-}
-
-[data-color-scheme="green"] .hierarchy-card:hover,
-body.color-scheme-green .hierarchy-card:hover {
-    border-color: #059669;
-}
-
-[data-color-scheme="green"] .search-input:focus,
-body.color-scheme-green .search-input:focus {
-    border-color: #059669;
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
-}
-
-[data-color-scheme="green"] .form-control:focus,
-body.color-scheme-green .form-control:focus {
-    border-color: #059669;
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
-}
-
 /* ===================================================================
-   DARK MODE - ערכת צבעים כהה עצמאית
-   לא תלויה בערכת הצבע הבהירה!
+   3. DARK MODE - ערכת צבעים כהה עצמאית
+   עוקפת את ערכות הצבע הבהירות!
    =================================================================== */
 html[data-theme="dark"],
 html[data-theme="dark"] body,
@@ -118,25 +71,26 @@ body.dark-theme.color-scheme-purple {
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
 
-    /* צבעים ראשיים - ערכת כהה עצמאית */
-    /* שחור-אפור כמו אפליקציות סטנדרטיות */
+    /* צבעים ראשיים - שחור-אפור */
     --primary-color: #374151 !important;
     --primary-dark: #1f2937 !important;
 }
 
-/* רקע גוף בדארק - עם !important לעקוף main.css */
+/* רקע גוף בדארק */
 body.dark-theme {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%) !important;
 }
 
-/* Header בדארק - משתמש ב-variables של ערכת הצבע */
+/* Header בדארק */
 body.dark-theme .dashboard-header,
 html[data-theme="dark"] .dashboard-header,
 [data-theme="dark"] .dashboard-header {
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%) !important;
 }
 
-/* כרטיסים ופאנלים */
+/* -------------------------------------------------------------------
+   3.1 Dark Mode - רכיבים כלליים
+   ------------------------------------------------------------------- */
 [data-theme="dark"] .card,
 [data-theme="dark"] .panel,
 [data-theme="dark"] .sidebar,
@@ -151,7 +105,15 @@ body.dark-theme .popup-content {
     border-color: var(--border-color);
 }
 
-/* טבלאות */
+body.dark-theme .dashboard-container,
+body.dark-theme .dashboard-content,
+body.dark-theme .main-content {
+    background: var(--bg-primary);
+}
+
+/* -------------------------------------------------------------------
+   3.2 Dark Mode - טבלאות
+   ------------------------------------------------------------------- */
 [data-theme="dark"] .table,
 [data-theme="dark"] table,
 body.dark-theme .table,
@@ -184,7 +146,30 @@ body.dark-theme table tr:hover {
     background: var(--bg-tertiary);
 }
 
-/* שדות קלט */
+/* קישורים בטבלאות - לבן בהיר */
+[data-theme="dark"] .table a,
+[data-theme="dark"] table a,
+[data-theme="dark"] .data-table a,
+[data-theme="dark"] .tm-cell a,
+body.dark-theme .table a,
+body.dark-theme table a,
+body.dark-theme .data-table a,
+body.dark-theme .tm-cell a {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .table a:hover,
+[data-theme="dark"] table a:hover,
+body.dark-theme .table a:hover,
+body.dark-theme table a:hover {
+    color: #f8fafc;
+    text-decoration: underline;
+}
+
+/* -------------------------------------------------------------------
+   3.3 Dark Mode - שדות קלט
+   ------------------------------------------------------------------- */
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea,
@@ -205,6 +190,9 @@ body.dark-theme textarea::placeholder {
     color: var(--text-muted);
 }
 
+/* -------------------------------------------------------------------
+   3.4 Dark Mode - כפתורים
+   ------------------------------------------------------------------- */
 /* כפתורים משניים */
 [data-theme="dark"] .btn-secondary,
 [data-theme="dark"] .btn-outline,
@@ -222,14 +210,39 @@ body.dark-theme .btn-outline:hover {
     background: var(--bg-primary);
 }
 
-/* Dashboard Container */
-body.dark-theme .dashboard-container,
-body.dark-theme .dashboard-content,
-body.dark-theme .main-content {
-    background: var(--bg-primary);
+/* כפתורים ראשיים - שחור-אפור עם גבול לבן */
+[data-theme="dark"] .btn-primary,
+body.dark-theme .btn-primary,
+[data-theme="dark"] .btn-search-toggle,
+[data-theme="dark"] .btn-show-search,
+body.dark-theme .btn-search-toggle,
+body.dark-theme .btn-show-search {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    color: #f9fafb !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Sidebar */
+[data-theme="dark"] .btn-primary:hover,
+body.dark-theme .btn-primary:hover,
+[data-theme="dark"] .btn-search-toggle:hover,
+[data-theme="dark"] .btn-show-search:hover,
+body.dark-theme .btn-search-toggle:hover,
+body.dark-theme .btn-show-search:hover {
+    background: linear-gradient(135deg, #4b5563 0%, var(--primary-color) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .btn-search-toggle svg,
+[data-theme="dark"] .btn-show-search svg,
+body.dark-theme .btn-search-toggle svg,
+body.dark-theme .btn-show-search svg {
+    stroke: white !important;
+}
+
+/* -------------------------------------------------------------------
+   3.5 Dark Mode - Sidebar
+   ------------------------------------------------------------------- */
 [data-theme="dark"] .sidebar,
 [data-theme="dark"] .side-panel,
 body.dark-theme .sidebar,
@@ -252,81 +265,25 @@ body.dark-theme .nav-item.active {
     color: white;
 }
 
-/* Breadcrumb */
-[data-theme="dark"] .breadcrumb,
-body.dark-theme .breadcrumb {
-    background: var(--bg-secondary);
-}
-
-/* Cards */
-[data-theme="dark"] .hierarchy-card,
-[data-theme="dark"] .stat-card,
-[data-theme="dark"] .info-card,
-body.dark-theme .hierarchy-card,
-body.dark-theme .stat-card,
-body.dark-theme .info-card {
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
-}
-
-/* Dropdowns */
-[data-theme="dark"] .dropdown-menu,
-[data-theme="dark"] .select-dropdown,
-body.dark-theme .dropdown-menu,
-body.dark-theme .select-dropdown {
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
-}
-
-[data-theme="dark"] .dropdown-item:hover,
-body.dark-theme .dropdown-item:hover {
-    background: var(--bg-tertiary);
-}
-
-/* Search */
-[data-theme="dark"] .search-container,
-[data-theme="dark"] .search-input,
-body.dark-theme .search-container,
-body.dark-theme .search-input {
-    background: var(--bg-tertiary);
-    border-color: var(--border-color);
-    color: var(--text-primary);
-}
-
-/* Modals & Popups */
-[data-theme="dark"] .modal-overlay,
-[data-theme="dark"] .popup-overlay,
-body.dark-theme .modal-overlay,
-body.dark-theme .popup-overlay {
-    background: rgba(0, 0, 0, 0.7);
-}
-
-/* Badges */
-[data-theme="dark"] .badge,
-body.dark-theme .badge {
-    opacity: 0.9;
-}
-
-/* Sidebar hierarchy items - DARK MODE */
-/* לא אקטיבי - כהה ושקט */
+/* Hierarchy items - לא אקטיבי */
 [data-theme="dark"] .hierarchy-header,
 body.dark-theme .hierarchy-header {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    color: #94a3b8 !important;
+    background: var(--bg-secondary) !important;
+    border-color: var(--bg-tertiary) !important;
+    color: var(--text-muted) !important;
 }
 
 [data-theme="dark"] .hierarchy-header:hover:not(.disabled):not(.active),
 body.dark-theme .hierarchy-header:hover:not(.disabled):not(.active) {
-    background: #334155 !important;
-    border-color: #475569 !important;
-    color: #cbd5e1 !important;
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
 }
 
-/* אקטיבי - אפרפר כמו הכפתורים, פונט לבן מודגש */
+/* Hierarchy items - אקטיבי */
 [data-theme="dark"] .hierarchy-header.active,
 body.dark-theme .hierarchy-header.active {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     color: #ffffff !important;
     font-weight: 700 !important;
@@ -350,74 +307,70 @@ body.dark-theme .hierarchy-header.active .hierarchy-count {
     color: #f1f5f9 !important;
 }
 
-/* כפתורים ראשיים וחיפוש - DARK MODE */
-/* שחור-אפור עם גבול לבן */
-[data-theme="dark"] .btn-primary,
-body.dark-theme .btn-primary,
-[data-theme="dark"] .btn-search-toggle,
-[data-theme="dark"] .btn-show-search,
-body.dark-theme .btn-search-toggle,
-body.dark-theme .btn-show-search {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
-    color: #f9fafb !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-[data-theme="dark"] .btn-primary:hover,
-body.dark-theme .btn-primary:hover,
-[data-theme="dark"] .btn-search-toggle:hover,
-[data-theme="dark"] .btn-show-search:hover,
-body.dark-theme .btn-search-toggle:hover,
-body.dark-theme .btn-show-search:hover {
-    background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="dark"] .btn-search-toggle svg,
-[data-theme="dark"] .btn-show-search svg,
-body.dark-theme .btn-search-toggle svg,
-body.dark-theme .btn-show-search svg {
-    stroke: white !important;
-}
-
-/* קישורים בתוך טבלאות - לבן בהיר */
-[data-theme="dark"] .table a,
-[data-theme="dark"] table a,
-[data-theme="dark"] .data-table a,
-[data-theme="dark"] .tm-cell a,
-body.dark-theme .table a,
-body.dark-theme table a,
-body.dark-theme .data-table a,
-body.dark-theme .tm-cell a {
-    color: #ffffff;
-    font-weight: 500;
-}
-
-[data-theme="dark"] .table a:hover,
-[data-theme="dark"] table a:hover,
-[data-theme="dark"] .data-table a:hover,
-[data-theme="dark"] .tm-cell a:hover,
-body.dark-theme .table a:hover,
-body.dark-theme table a:hover,
-body.dark-theme .data-table a:hover,
-body.dark-theme .tm-cell a:hover {
-    color: #f8fafc;
-    text-decoration: underline;
-}
-
-/* קישור בית בסיידבר - dark mode - שחור-אפור עם גבול לבן */
+/* Home link בסיידבר */
 [data-theme="dark"] .sidebar-home-link,
 body.dark-theme .sidebar-home-link {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 [data-theme="dark"] .sidebar-home-link:hover,
 body.dark-theme .sidebar-home-link:hover {
-    background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+    background: linear-gradient(135deg, #4b5563 0%, var(--primary-color) 100%) !important;
     border-color: rgba(255, 255, 255, 0.4) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* -------------------------------------------------------------------
+   3.6 Dark Mode - אחרים
+   ------------------------------------------------------------------- */
+[data-theme="dark"] .breadcrumb,
+body.dark-theme .breadcrumb {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .hierarchy-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .info-card,
+body.dark-theme .hierarchy-card,
+body.dark-theme .stat-card,
+body.dark-theme .info-card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .select-dropdown,
+body.dark-theme .dropdown-menu,
+body.dark-theme .select-dropdown {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+body.dark-theme .dropdown-item:hover {
+    background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .search-container,
+[data-theme="dark"] .search-input,
+body.dark-theme .search-container,
+body.dark-theme .search-input {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-overlay,
+[data-theme="dark"] .popup-overlay,
+body.dark-theme .modal-overlay,
+body.dark-theme .popup-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .badge,
+body.dark-theme .badge {
+    opacity: 0.9;
 }
 
 /* Scrollbar */
@@ -437,7 +390,7 @@ body.dark-theme ::-webkit-scrollbar-thumb:hover {
 }
 
 /* ===================================================================
-   COMPACT MODE
+   4. COMPACT MODE - מצב קומפקטי
    =================================================================== */
 body.compact-mode {
     --base-font-size: 13px;
@@ -502,7 +455,7 @@ body.compact-mode .popup-content {
 }
 
 /* ===================================================================
-   SIDEBAR COLLAPSED
+   5. SIDEBAR COLLAPSED - סיידבר מכווץ
    =================================================================== */
 .sidebar.collapsed,
 .side-panel.collapsed {
@@ -546,13 +499,12 @@ body.compact-mode .popup-content {
     display: none;
 }
 
-/* התאמת התוכן הראשי */
 body.sidebar-collapsed .main-content,
 body.sidebar-collapsed .dashboard-content {
     margin-right: 60px;
 }
 
-/* Tooltip on hover for collapsed sidebar */
+/* Tooltip on hover */
 .sidebar.collapsed .sidebar-item:hover::after,
 .side-panel.collapsed .nav-item:hover::after {
     content: attr(data-title);
@@ -572,7 +524,7 @@ body.sidebar-collapsed .dashboard-content {
 }
 
 /* ===================================================================
-   TRANSITIONS
+   6. TRANSITIONS - אנימציות
    =================================================================== */
 body,
 .sidebar,
@@ -583,15 +535,17 @@ table,
 input,
 select,
 textarea,
-.btn {
+.btn,
+.dashboard-header {
     transition: background-color 0.3s ease,
+                background 0.3s ease,
                 color 0.3s ease,
                 border-color 0.3s ease,
                 width 0.3s ease;
 }
 
 /* ===================================================================
-   PRINT - ביטול דארק מוד בהדפסה
+   7. PRINT - הדפסה
    =================================================================== */
 @media print {
     [data-theme="dark"],

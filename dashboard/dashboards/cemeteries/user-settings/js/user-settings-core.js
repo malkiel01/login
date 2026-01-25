@@ -350,20 +350,6 @@ const UserSettings = (function() {
             document.body.classList.add('color-scheme-' + colorScheme);
         }
 
-        // עדכון ישיר של ההדר - לא מחכה ל-CSS cascade
-        const header = document.querySelector('.dashboard-header');
-        if (header) {
-            if (isDark) {
-                // מצב כהה - אפור כהה
-                header.style.background = 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)';
-            } else if (colorScheme === 'green') {
-                header.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
-            } else {
-                // סגול (ברירת מחדל)
-                header.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            }
-        }
-
         // גודל גופן (מוגבל בין 10-30)
         let fontSize = get('fontSize', 14);
         fontSize = Math.min(30, Math.max(10, fontSize));

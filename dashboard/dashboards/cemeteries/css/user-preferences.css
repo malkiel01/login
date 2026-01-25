@@ -307,6 +307,42 @@ body.dark-theme .badge {
     opacity: 0.9;
 }
 
+/* Sidebar hierarchy items - DARK MODE */
+/* לא אקטיבי - כהה ושקט */
+[data-theme="dark"] .hierarchy-header,
+body.dark-theme .hierarchy-header {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .hierarchy-header:hover:not(.disabled):not(.active),
+body.dark-theme .hierarchy-header:hover:not(.disabled):not(.active) {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+/* אקטיבי - בולט יותר עם גבול לבן */
+[data-theme="dark"] .hierarchy-header.active,
+body.dark-theme .hierarchy-header.active {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: #f1f5f9 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .hierarchy-header.active .hierarchy-icon,
+body.dark-theme .hierarchy-header.active .hierarchy-icon {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .hierarchy-header.active .hierarchy-count,
+body.dark-theme .hierarchy-header.active .hierarchy-count {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #f1f5f9 !important;
+}
+
 /* כפתורים ראשיים וחיפוש - DARK MODE */
 /* שחור-אפור עם גבול לבן */
 [data-theme="dark"] .btn-primary,

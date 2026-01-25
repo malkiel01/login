@@ -323,13 +323,20 @@ body.dark-theme .hierarchy-header:hover:not(.disabled):not(.active) {
     color: #cbd5e1 !important;
 }
 
-/* אקטיבי - אפרפר כמו הכפתורים */
+/* אקטיבי - אפרפר כמו הכפתורים, פונט לבן מודגש */
 [data-theme="dark"] .hierarchy-header.active,
 body.dark-theme .hierarchy-header.active {
     background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
-    color: #f1f5f9 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .hierarchy-header.active .hierarchy-title,
+body.dark-theme .hierarchy-header.active .hierarchy-title {
+    color: #ffffff !important;
+    font-weight: 700 !important;
 }
 
 [data-theme="dark"] .hierarchy-header.active .hierarchy-icon,

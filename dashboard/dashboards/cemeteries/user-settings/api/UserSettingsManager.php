@@ -10,18 +10,27 @@
 class UserSettingsManager {
     private $conn;
     private $userId;
+    private $deviceType;
     private $cache = [];
     private static $migrationDone = false;
 
-    public function __construct($conn, $userId) {
+    public function __construct($conn, $userId, $deviceType = 'desktop') {
         $this->conn = $conn;
         $this->userId = $userId;
+        $this->deviceType = in_array($deviceType, ['desktop', 'mobile']) ? $deviceType : 'desktop';
 
         // וידוא שההגדרות החדשות קיימות (מיגרציה אוטומטית)
         if (!self::$migrationDone) {
             $this->ensureV2Settings();
             self::$migrationDone = true;
         }
+    }
+
+    /**
+     * קבלת סוג המכשיר הנוכחי
+     */
+    public function getDeviceType() {
+        return $this->deviceType;
     }
 
     /**
@@ -132,9 +141,9 @@ class UserSettingsManager {
             $stmt = $this->conn->prepare("
                 SELECT settingValue, settingType
                 FROM user_settings
-                WHERE userId = :userId AND settingKey = :key
+                WHERE userId = :userId AND deviceType = :deviceType AND settingKey = :key
             ");
-            $stmt->execute(['userId' => $this->userId, 'key' => $key]);
+            $stmt->execute(['userId' => $this->userId, 'deviceType' => $this->deviceType, 'key' => $key]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($result) {
@@ -158,17 +167,14 @@ class UserSettingsManager {
      */
     public function getAll($category = null) {
         try {
-            // Debug logging
-            error_log("UserSettingsManager::getAll - userId: " . $this->userId);
-
             $sql = "
                 SELECT us.settingKey, us.settingValue, us.settingType, us.category,
                        usd.label, usd.description
                 FROM user_settings us
                 LEFT JOIN user_settings_defaults usd ON us.settingKey = usd.settingKey
-                WHERE us.userId = :userId
+                WHERE us.userId = :userId AND us.deviceType = :deviceType
             ";
-            $params = ['userId' => $this->userId];
+            $params = ['userId' => $this->userId, 'deviceType' => $this->deviceType];
 
             if ($category) {
                 $sql .= " AND us.category = :category";
@@ -180,9 +186,6 @@ class UserSettingsManager {
             $stmt = $this->conn->prepare($sql);
             $stmt->execute($params);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Debug: log raw results count
-            error_log("UserSettingsManager::getAll - raw results count: " . count($results));
 
             $settings = [];
             foreach ($results as $row) {
@@ -231,10 +234,6 @@ class UserSettingsManager {
             // קבלת ערכי המשתמש
             $userSettings = $this->getAll($category);
 
-            // Debug logging
-            error_log("getAllWithDefaults: userId=" . $this->userId . ", userSettings count=" . count($userSettings));
-            error_log("getAllWithDefaults: userSettings keys=" . json_encode(array_keys($userSettings)));
-
             // מיזוג
             $result = [];
             foreach ($defaults as $default) {
@@ -282,28 +281,23 @@ class UserSettingsManager {
             // המרה לstring לשמירה
             $stringValue = $this->valueToString($value, $type);
 
-            // Debug: log what we're trying to save
-            error_log("UserSettingsManager::set - userId={$this->userId}, key=$key, value=$stringValue, type=$type, category=$category");
-
             // Use simpler INSERT ... ON DUPLICATE KEY UPDATE syntax
-            $sql = "INSERT INTO user_settings (userId, settingKey, settingValue, settingType, category)
-                    VALUES (?, ?, ?, ?, ?)
+            $sql = "INSERT INTO user_settings (userId, deviceType, settingKey, settingValue, settingType, category)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE
                         settingValue = VALUES(settingValue),
                         settingType = VALUES(settingType),
                         updateDate = CURRENT_TIMESTAMP";
 
             $stmt = $this->conn->prepare($sql);
-            $result = $stmt->execute([
+            $stmt->execute([
                 $this->userId,
+                $this->deviceType,
                 $key,
                 $stringValue,
                 $type,
                 $category ?? 'general'
             ]);
-
-            $rowCount = $stmt->rowCount();
-            error_log("UserSettingsManager::set - result=$result, rowCount=$rowCount");
 
             // עדכון cache
             $this->cache[$key] = $value;
@@ -352,9 +346,9 @@ class UserSettingsManager {
         try {
             $stmt = $this->conn->prepare("
                 DELETE FROM user_settings
-                WHERE userId = :userId AND settingKey = :key
+                WHERE userId = :userId AND deviceType = :deviceType AND settingKey = :key
             ");
-            $stmt->execute(['userId' => $this->userId, 'key' => $key]);
+            $stmt->execute(['userId' => $this->userId, 'deviceType' => $this->deviceType, 'key' => $key]);
 
             unset($this->cache[$key]);
 
@@ -371,8 +365,8 @@ class UserSettingsManager {
      */
     public function resetAll($category = null) {
         try {
-            $sql = "DELETE FROM user_settings WHERE userId = :userId";
-            $params = ['userId' => $this->userId];
+            $sql = "DELETE FROM user_settings WHERE userId = :userId AND deviceType = :deviceType";
+            $params = ['userId' => $this->userId, 'deviceType' => $this->deviceType];
 
             if ($category) {
                 $sql .= " AND category = :category";

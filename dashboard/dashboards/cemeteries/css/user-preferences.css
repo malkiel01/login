@@ -305,6 +305,81 @@ body.dark-theme .badge {
     opacity: 0.9;
 }
 
+/* כפתורים ראשיים */
+[data-theme="dark"] .btn-primary,
+body.dark-theme .btn-primary {
+    background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+    color: white;
+    border: none;
+}
+
+[data-theme="dark"] .btn-primary:hover,
+body.dark-theme .btn-primary:hover {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    box-shadow: 0 8px 16px rgba(129, 140, 248, 0.3);
+}
+
+/* כפתורי חיפוש - אותו סגנון כמו btn-primary */
+[data-theme="dark"] .btn-search-toggle,
+[data-theme="dark"] .btn-show-search,
+body.dark-theme .btn-search-toggle,
+body.dark-theme .btn-show-search {
+    background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%) !important;
+    border: none !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .btn-search-toggle:hover,
+[data-theme="dark"] .btn-show-search:hover,
+body.dark-theme .btn-search-toggle:hover,
+body.dark-theme .btn-show-search:hover {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    box-shadow: 0 8px 16px rgba(129, 140, 248, 0.3);
+}
+
+[data-theme="dark"] .btn-search-toggle svg,
+[data-theme="dark"] .btn-show-search svg,
+body.dark-theme .btn-search-toggle svg,
+body.dark-theme .btn-show-search svg {
+    stroke: white !important;
+}
+
+/* קישורים בתוך טבלאות */
+[data-theme="dark"] .table a,
+[data-theme="dark"] table a,
+[data-theme="dark"] .data-table a,
+[data-theme="dark"] .tm-cell a,
+body.dark-theme .table a,
+body.dark-theme table a,
+body.dark-theme .data-table a,
+body.dark-theme .tm-cell a {
+    color: #93c5fd;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .table a:hover,
+[data-theme="dark"] table a:hover,
+[data-theme="dark"] .data-table a:hover,
+[data-theme="dark"] .tm-cell a:hover,
+body.dark-theme .table a:hover,
+body.dark-theme table a:hover,
+body.dark-theme .data-table a:hover,
+body.dark-theme .tm-cell a:hover {
+    color: #bfdbfe;
+    text-decoration: underline;
+}
+
+/* קישור בית בסיידבר - dark mode */
+[data-theme="dark"] .sidebar-home-link,
+body.dark-theme .sidebar-home-link {
+    background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+}
+
+[data-theme="dark"] .sidebar-home-link:hover,
+body.dark-theme .sidebar-home-link:hover {
+    box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
+}
+
 /* Scrollbar */
 [data-theme="dark"] ::-webkit-scrollbar-track,
 body.dark-theme ::-webkit-scrollbar-track {

@@ -6,6 +6,50 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/inclu
 
 // בדיקת הרשאות - רק cemetery_manager או admin יכולים לגשת
 requireDashboard(['cemetery_manager', 'admin']);
+
+// טעינת הגדרות משתמש מראש למניעת FOUC
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/user-settings/api/UserSettingsManager.php';
+$userSettingsConn = getDBConnection();
+$userId = getCurrentUserId();
+
+// זיהוי סוג מכשיר מ-User-Agent (fallback אם אין cookie)
+function detectDeviceType() {
+    // בדוק cookie קודם
+    if (isset($_COOKIE['deviceType']) && in_array($_COOKIE['deviceType'], ['mobile', 'desktop'])) {
+        return $_COOKIE['deviceType'];
+    }
+    // זיהוי לפי User-Agent
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $mobileKeywords = ['Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 'BlackBerry', 'Windows Phone'];
+    foreach ($mobileKeywords as $keyword) {
+        if (stripos($userAgent, $keyword) !== false) {
+            return 'mobile';
+        }
+    }
+    return 'desktop';
+}
+$detectedDeviceType = detectDeviceType();
+$userSettingsManager = new UserSettingsManager($userSettingsConn, $userId, $detectedDeviceType);
+$userPrefs = $userSettingsManager->getAllWithDefaults();
+
+// קבלת ערכים להחלה על ה-body
+$isDarkMode = isset($userPrefs['darkMode']) && ($userPrefs['darkMode']['value'] === true || $userPrefs['darkMode']['value'] === 'true');
+$colorScheme = isset($userPrefs['colorScheme']) ? $userPrefs['colorScheme']['value'] : 'purple';
+$fontSize = isset($userPrefs['fontSize']) ? max(10, min(30, (int)$userPrefs['fontSize']['value'])) : 14;
+$isCompact = isset($userPrefs['compactMode']) && ($userPrefs['compactMode']['value'] === true || $userPrefs['compactMode']['value'] === 'true');
+$sidebarCollapsed = isset($userPrefs['sidebarCollapsed']) && ($userPrefs['sidebarCollapsed']['value'] === true || $userPrefs['sidebarCollapsed']['value'] === 'true');
+
+$bodyClasses = [];
+$bodyClasses[] = $isDarkMode ? 'dark-theme' : 'light-theme';
+if (!$isDarkMode) {
+    $bodyClasses[] = 'color-scheme-' . $colorScheme;
+}
+if ($isCompact) {
+    $bodyClasses[] = 'compact-mode';
+}
+if ($sidebarCollapsed) {
+    $bodyClasses[] = 'sidebar-collapsed';
+}
 ?>
 <?php
 // טען את הקונפיג תשלומים
@@ -42,7 +86,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
 
 </head>
-<body>
+<body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->
     <svg style="display: none;">
         <!-- Refresh Icon - Modern circular arrows -->

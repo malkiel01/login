@@ -23,12 +23,27 @@ try {
     $conn = getDBConnection();
     $userId = getCurrentUserId();
 
-    // Debug logging
-    error_log("UserSettings API: userId = " . var_export($userId, true));
+    // קריאת JSON מה-body קודם (לפני בדיקת action)
+    $input = null;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $rawInput = file_get_contents('php://input');
+        if ($rawInput) {
+            $input = json_decode($rawInput, true);
+        }
+    }
 
-    $settings = new UserSettingsManager($conn, $userId);
+    // קבלת סוג המכשיר (desktop/mobile)
+    $deviceType = $input['deviceType'] ?? $_GET['deviceType'] ?? 'desktop';
 
-    $action = $_GET['action'] ?? $_POST['action'] ?? 'get';
+    $settings = new UserSettingsManager($conn, $userId, $deviceType);
+
+    // עכשיו בודקים action - כולל מתוך ה-JSON
+    if ($input && isset($input['action'])) {
+        $action = $input['action'];
+    } else {
+        $action = $_GET['action'] ?? $_POST['action'] ?? 'get';
+    }
+
     $response = ['success' => false];
 
     switch ($action) {
@@ -42,7 +57,8 @@ try {
                 $response = [
                     'success' => true,
                     'key' => $key,
-                    'value' => $value
+                    'value' => $value,
+                    'deviceType' => $deviceType
                 ];
             } else {
                 // קבלת כל ההגדרות
@@ -50,16 +66,17 @@ try {
                 $response = [
                     'success' => true,
                     'settings' => $allSettings,
-                    'category' => $category
+                    'category' => $category,
+                    'deviceType' => $deviceType
                 ];
             }
             break;
 
         case 'set':
-            $input = json_decode(file_get_contents('php://input'), true);
-
-            // Debug logging
-            error_log("UserSettings SET: userId = $userId, input = " . json_encode($input));
+            // $input כבר נקרא למעלה
+            if (!$input) {
+                throw new Exception('No input data received');
+            }
 
             if (isset($input['settings']) && is_array($input['settings'])) {
                 // שמירת מספר הגדרות
@@ -72,31 +89,15 @@ try {
                     $input['type'] ?? null,
                     $input['category'] ?? null
                 );
-                error_log("UserSettings SET result: " . ($success ? 'success' : 'failed'));
-
-                // DEBUG: verify if saved
-                $verifyStmt = $conn->prepare("SELECT * FROM user_settings WHERE userId = ? AND settingKey = ?");
-                $verifyStmt->execute([$userId, $input['key']]);
-                $verifyResult = $verifyStmt->fetch(PDO::FETCH_ASSOC);
-                error_log("UserSettings VERIFY after save: " . json_encode($verifyResult));
             } else {
                 throw new Exception('Missing key or settings');
             }
 
-            // Return debug info in response
-            $response = [
-                'success' => $success,
-                'debug' => [
-                    'userId' => $userId,
-                    'key' => $input['key'] ?? null,
-                    'value' => $input['value'] ?? null,
-                    'verified' => $verifyResult ?? null
-                ]
-            ];
+            $response = ['success' => $success];
             break;
 
         case 'reset':
-            $input = json_decode(file_get_contents('php://input'), true);
+            // $input כבר נקרא למעלה (אם זה POST)
             $key = $input['key'] ?? null;
             $category = $input['category'] ?? null;
 

@@ -1,9 +1,10 @@
 /*
  * File: user-settings/js/user-settings-core.js
- * Version: 1.0.0
+ * Version: 2.0.0
  * Created: 2026-01-23
+ * Updated: 2026-01-25
  * Author: Malkiel
- * Description: קוד מרכזי להגדרות משתמש
+ * Description: קוד מרכזי להגדרות משתמש עם תמיכה בפרופילי מכשיר
  */
 
 const UserSettings = (function() {
@@ -13,11 +14,39 @@ const UserSettings = (function() {
     let isLoaded = false;
     let loadingPromise = null;
     let listeners = [];
+    let currentDeviceType = null;
+
+    /**
+     * שמירת סוג מכשיר בcookie
+     */
+    function setDeviceTypeCookie(deviceType) {
+        document.cookie = `deviceType=${deviceType}; path=/; max-age=31536000`; // שנה
+    }
+
+    /**
+     * קבלת סוג המכשיר הנוכחי
+     */
+    function getDeviceType() {
+        if (currentDeviceType) return currentDeviceType;
+
+        if (typeof UserSettingsStorage !== 'undefined') {
+            currentDeviceType = UserSettingsStorage.getDeviceType();
+        } else {
+            currentDeviceType = window.innerWidth < 768 ? 'mobile' : 'desktop';
+        }
+
+        // שמירה בcookie לטעינה הבאה (למניעת FOUC)
+        setDeviceTypeCookie(currentDeviceType);
+
+        return currentDeviceType;
+    }
 
     /**
      * טעינת הגדרות מהשרת
      */
     async function load(forceRefresh = false) {
+        const deviceType = getDeviceType();
+
         // אם כבר נטען ולא צריך רענון
         if (isLoaded && !forceRefresh) {
             return settings;
@@ -30,7 +59,7 @@ const UserSettings = (function() {
 
         // בדיקת cache מקומי
         if (!forceRefresh && typeof UserSettingsStorage !== 'undefined') {
-            const cached = UserSettingsStorage.getCache();
+            const cached = UserSettingsStorage.getCache(deviceType);
             if (cached) {
                 settings = cached;
                 isLoaded = true;
@@ -39,7 +68,7 @@ const UserSettings = (function() {
         }
 
         // טעינה מהשרת
-        loadingPromise = fetch(`${API_URL}?action=get`)
+        loadingPromise = fetch(`${API_URL}?action=get&deviceType=${deviceType}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -48,7 +77,7 @@ const UserSettings = (function() {
 
                     // שמירה בcache
                     if (typeof UserSettingsStorage !== 'undefined') {
-                        UserSettingsStorage.setCache(settings);
+                        UserSettingsStorage.setCache(settings, deviceType);
                     }
 
                     return settings;
@@ -76,7 +105,7 @@ const UserSettings = (function() {
 
         // בדיקה בcache
         if (typeof UserSettingsStorage !== 'undefined') {
-            const cached = UserSettingsStorage.getCachedValue(key);
+            const cached = UserSettingsStorage.getCachedValue(key, getDeviceType());
             if (cached !== null) return cached;
         }
 
@@ -97,11 +126,13 @@ const UserSettings = (function() {
      * שמירת הגדרה
      */
     async function set(key, value) {
+        const deviceType = getDeviceType();
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'set', key, value })
+                body: JSON.stringify({ action: 'set', key, value, deviceType })
             });
 
             const data = await response.json();
@@ -117,7 +148,7 @@ const UserSettings = (function() {
 
                 // עדכון cache
                 if (typeof UserSettingsStorage !== 'undefined') {
-                    UserSettingsStorage.updateCacheItem(key, value);
+                    UserSettingsStorage.updateCacheItem(key, value, deviceType);
                 }
 
                 // שליחת event
@@ -138,11 +169,13 @@ const UserSettings = (function() {
      * שמירת מספר הגדרות בבת אחת
      */
     async function setMultiple(settingsObj) {
+        const deviceType = getDeviceType();
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'set', settings: settingsObj })
+                body: JSON.stringify({ action: 'set', settings: settingsObj, deviceType })
             });
 
             const data = await response.json();
@@ -161,7 +194,7 @@ const UserSettings = (function() {
 
                 // עדכון cache
                 if (typeof UserSettingsStorage !== 'undefined') {
-                    UserSettingsStorage.setCache(settings);
+                    UserSettingsStorage.setCache(settings, deviceType);
                 }
 
                 return true;
@@ -179,11 +212,13 @@ const UserSettings = (function() {
      * איפוס הגדרה לברירת מחדל
      */
     async function reset(key) {
+        const deviceType = getDeviceType();
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'reset', key })
+                body: JSON.stringify({ action: 'reset', key, deviceType })
             });
 
             const data = await response.json();
@@ -198,7 +233,7 @@ const UserSettings = (function() {
 
                 // רענון cache
                 if (typeof UserSettingsStorage !== 'undefined') {
-                    UserSettingsStorage.clearCache();
+                    UserSettingsStorage.clearCache(deviceType);
                 }
 
                 return true;
@@ -216,11 +251,13 @@ const UserSettings = (function() {
      * איפוס כל ההגדרות
      */
     async function resetAll(category = null) {
+        const deviceType = getDeviceType();
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'reset', category })
+                body: JSON.stringify({ action: 'reset', category, deviceType })
             });
 
             const data = await response.json();
@@ -228,7 +265,7 @@ const UserSettings = (function() {
             if (data.success) {
                 // רענון cache וטעינה מחדש
                 if (typeof UserSettingsStorage !== 'undefined') {
-                    UserSettingsStorage.clearCache();
+                    UserSettingsStorage.clearCache(deviceType);
                 }
 
                 await load(true);
@@ -289,7 +326,7 @@ const UserSettings = (function() {
 
         // שליחת event גלובלי
         window.dispatchEvent(new CustomEvent('userSettingsChanged', {
-            detail: { key, value }
+            detail: { key, value, deviceType: getDeviceType() }
         }));
     }
 
@@ -313,8 +350,9 @@ const UserSettings = (function() {
             document.body.classList.add('color-scheme-' + colorScheme);
         }
 
-        // גודל גופן
-        const fontSize = get('fontSize', 14);
+        // גודל גופן (מוגבל בין 10-30)
+        let fontSize = get('fontSize', 14);
+        fontSize = Math.min(30, Math.max(10, fontSize));
         document.documentElement.style.setProperty('--base-font-size', fontSize + 'px');
 
         // מצב קומפקטי
@@ -338,7 +376,38 @@ const UserSettings = (function() {
             headerStats.classList.toggle('hidden', !showStats);
         }
 
-        console.log('UserSettings applied:', { darkMode: isDark, colorScheme, fontSize, compactMode, sidebarCollapsed: isCollapsed, showHeaderStats: showStats });
+        console.log('UserSettings applied:', { deviceType: getDeviceType(), darkMode: isDark, colorScheme, fontSize, compactMode, sidebarCollapsed: isCollapsed, showHeaderStats: showStats });
+    }
+
+    /**
+     * האזנה לשינוי גודל מסך
+     */
+    function setupResizeListener() {
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                const newDeviceType = typeof UserSettingsStorage !== 'undefined'
+                    ? UserSettingsStorage.getDeviceType()
+                    : (window.innerWidth < 768 ? 'mobile' : 'desktop');
+
+                if (newDeviceType !== currentDeviceType) {
+                    console.log('UserSettings: Device type changed from', currentDeviceType, 'to', newDeviceType);
+                    currentDeviceType = newDeviceType;
+                    isLoaded = false;
+                    settings = {};
+
+                    // עדכון cookie
+                    setDeviceTypeCookie(newDeviceType);
+
+                    // טעינה מחדש עבור המכשיר החדש
+                    load(true).then(() => {
+                        applyToUI();
+                        notifyListeners('*', null);
+                    });
+                }
+            }, 300);
+        });
     }
 
     /**
@@ -346,6 +415,9 @@ const UserSettings = (function() {
      */
     async function init() {
         try {
+            // הגדרת האזנה לשינוי גודל מסך
+            setupResizeListener();
+
             await load();
             applyToUI();
 
@@ -356,7 +428,7 @@ const UserSettings = (function() {
                 }
             });
 
-            console.log('UserSettings initialized');
+            console.log('UserSettings initialized for device:', getDeviceType());
             return true;
         } catch (error) {
             console.error('UserSettings: Init error', error);
@@ -376,7 +448,8 @@ const UserSettings = (function() {
         getByCategory,
         onChange,
         applyToUI,
-        init
+        init,
+        getDeviceType
     };
 })();
 

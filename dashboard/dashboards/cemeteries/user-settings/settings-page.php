@@ -7,8 +7,6 @@
  * Description: דף הגדרות אישיות - עצמאי לטעינה ב-iframe
  */
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 header('Content-Type: text/html; charset=utf-8');
 
 require_once dirname(__DIR__) . '/config.php';
@@ -23,23 +21,16 @@ try {
     $conn = getDBConnection();
     $userId = getCurrentUserId();
 
-    // Debug logging - check userId type and value
-    error_log("Settings Page: userId = " . var_export($userId, true) . ", type = " . gettype($userId));
+    // קבלת סוג המכשיר מה-URL או ברירת מחדל
+    $deviceType = $_GET['deviceType'] ?? 'auto';
+    // אם auto, יזוהה ב-JS - לצורך PHP נשתמש ב-desktop
+    $phpDeviceType = ($deviceType === 'auto') ? 'desktop' : $deviceType;
 
-    // Check if user has any settings in DB
-    $checkStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM user_settings WHERE userId = :uid");
-    $checkStmt->execute(['uid' => $userId]);
-    $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
-    error_log("Settings Page: user has " . $checkResult['cnt'] . " settings in DB");
-
-    $settings = new UserSettingsManager($conn, $userId);
+    $settings = new UserSettingsManager($conn, $userId, $phpDeviceType);
 
     // קבלת כל ההגדרות עם ברירות מחדל
     $allSettings = $settings->getAllWithDefaults();
     $categories = $settings->getCategories();
-
-    // Debug logging
-    error_log("Settings Page: loaded settings = " . json_encode(array_keys($allSettings)));
 
 } catch (Exception $e) {
     die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
@@ -102,33 +93,54 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             padding: 20px;
             direction: rtl;
         }
+        .device-profile-indicator {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .profile-badge {
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: var(--settings-card-bg, #f3f4f6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            border: 2px solid transparent;
+        }
+        .profile-badge:hover {
+            background: var(--settings-hover, #e5e7eb);
+        }
+        .profile-badge.active {
+            background: var(--primary-color, #667eea);
+            color: white;
+            border-color: var(--primary-dark, #5a67d8);
+        }
+        .profile-badge i {
+            font-size: 1.1em;
+        }
     </style>
 </head>
 <body>
     <div class="settings-container">
-        <!-- DEBUG: show what PHP loaded -->
-        <?php
-        // Check how many settings this user has in DB
-        $dbCountStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM user_settings WHERE userId = ?");
-        $dbCountStmt->execute([$userId]);
-        $dbCount = $dbCountStmt->fetch(PDO::FETCH_ASSOC)['cnt'];
-
-        // Check all userIds that have settings
-        $allUsersStmt = $conn->query("SELECT DISTINCT userId, COUNT(*) as cnt FROM user_settings GROUP BY userId");
-        $allUsers = $allUsersStmt->fetchAll(PDO::FETCH_ASSOC);
-        ?>
-        <div style="background:#fffbcc; padding:10px; margin-bottom:10px; font-size:12px; border:1px solid #f0e68c; border-radius:5px; direction:ltr; text-align:left;">
-            <strong>DEBUG:</strong> userId=<?= htmlspecialchars($userId) ?>,
-            <strong style="color:red;">DB count for this user: <?= $dbCount ?></strong>,
-            All users with settings: <?= htmlspecialchars(json_encode($allUsers)) ?><br>
-            Settings loaded: <?= htmlspecialchars(json_encode(array_map(function($s) { return $s['value']; }, $allSettings))) ?>
-        </div>
-
         <div class="settings-header">
             <h1><i class="fas fa-cog"></i> הגדרות אישיות</h1>
             <button class="btn-settings btn-settings-danger" onclick="resetAllSettings()">
                 <i class="fas fa-undo"></i> איפוס הכל
             </button>
+        </div>
+
+        <!-- Device Profile Indicator -->
+        <div class="device-profile-indicator">
+            <span class="profile-badge" data-device="desktop" onclick="switchProfile('desktop')">
+                <i class="fas fa-desktop"></i> דסקטופ
+            </span>
+            <span class="profile-badge" data-device="mobile" onclick="switchProfile('mobile')">
+                <i class="fas fa-mobile-alt"></i> מובייל
+            </span>
         </div>
 
         <div id="settingsMessage" class="settings-message" style="display: none;"></div>
@@ -182,10 +194,17 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                         </select>
 
                         <?php elseif ($data['type'] === 'number'): ?>
+                        <?php
+                            $minMax = '';
+                            if ($key === 'fontSize') {
+                                $minMax = 'min="10" max="30"';
+                            }
+                        ?>
                         <input type="number"
                                class="form-control"
                                data-key="<?= htmlspecialchars($key) ?>"
                                value="<?= htmlspecialchars($data['value'] ?? 0) ?>"
+                               <?= $minMax ?>
                                onchange="saveSetting('<?= htmlspecialchars($key) ?>', parseFloat(this.value))">
 
                         <?php else: ?>
@@ -210,6 +229,31 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
     <script>
         const API_URL = '/dashboard/dashboards/cemeteries/user-settings/api/api.php';
 
+        // סוג המכשיר הנוכחי
+        let currentDeviceType = '<?= $deviceType ?>' === 'auto'
+            ? (typeof UserSettingsStorage !== 'undefined' ? UserSettingsStorage.getDeviceType() : 'desktop')
+            : '<?= $deviceType ?>';
+
+        // עדכון אינדיקטור הפרופיל
+        function updateProfileIndicator() {
+            document.querySelectorAll('.profile-badge').forEach(badge => {
+                badge.classList.toggle('active', badge.dataset.device === currentDeviceType);
+            });
+        }
+
+        // מעבר בין פרופילים
+        function switchProfile(deviceType) {
+            if (deviceType === currentDeviceType) return;
+
+            currentDeviceType = deviceType;
+            updateProfileIndicator();
+
+            // טעינה מחדש עם הפרופיל החדש
+            const url = new URL(window.location.href);
+            url.searchParams.set('deviceType', deviceType);
+            window.location.href = url.toString();
+        }
+
         // הצגת הודעה
         function showMessage(text, type = 'success') {
             const msg = document.getElementById('settingsMessage');
@@ -232,11 +276,19 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
 
         // שמירת הגדרה
         async function saveSetting(key, value) {
+            // וולידציה לגודל פונט
+            if (key === 'fontSize') {
+                value = Math.min(30, Math.max(10, value));
+                // עדכון ה-input עם הערך המתוקן
+                const input = document.querySelector('.setting-item[data-key="fontSize"] input');
+                if (input) input.value = value;
+            }
+
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'set', key, value })
+                    body: JSON.stringify({ action: 'set', key, value, deviceType: currentDeviceType })
                 });
 
                 const data = await response.json();
@@ -250,7 +302,7 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
 
                     // עדכון cache
                     if (typeof UserSettingsStorage !== 'undefined') {
-                        UserSettingsStorage.updateCacheItem(key, value);
+                        UserSettingsStorage.updateCacheItem(key, value, currentDeviceType);
                     }
 
                     // שליחת event לparent
@@ -258,7 +310,8 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                         window.parent.postMessage({
                             type: 'userSettingChanged',
                             key: key,
-                            value: value
+                            value: value,
+                            deviceType: currentDeviceType
                         }, '*');
                     }
 
@@ -283,7 +336,7 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'reset', key })
+                    body: JSON.stringify({ action: 'reset', key, deviceType: currentDeviceType })
                 });
 
                 const data = await response.json();
@@ -310,15 +363,15 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'reset' })
+                    body: JSON.stringify({ action: 'reset', deviceType: currentDeviceType })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    // ניקוי cache
+                    // ניקוי cache עבור הפרופיל הנוכחי
                     if (typeof UserSettingsStorage !== 'undefined') {
-                        UserSettingsStorage.clearCache();
+                        UserSettingsStorage.clearCache(currentDeviceType);
                     }
 
                     // רענון העמוד
@@ -332,18 +385,98 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             }
         }
 
+        // סנכרון הגדרות מ-localStorage לשרת (פעם אחת בטעינה)
+        async function syncFromLocalStorage() {
+            try {
+                // קבלת מפתח cache נכון לפרופיל הנוכחי
+                const storageKey = typeof UserSettingsStorage !== 'undefined'
+                    ? UserSettingsStorage.getStorageKey(currentDeviceType)
+                    : 'user_settings_cache_' + currentDeviceType;
+
+                // נסה לקרוא מ-localStorage של ה-parent (אם זה iframe)
+                let cached = null;
+                try {
+                    if (window.parent && window.parent !== window) {
+                        cached = window.parent.localStorage.getItem(storageKey);
+                    }
+                } catch(e) {}
+
+                if (!cached) {
+                    cached = localStorage.getItem(storageKey);
+                }
+
+                if (!cached) return false;
+
+                const data = JSON.parse(cached);
+                if (!data.settings) return false;
+
+                // בדיקה אם יש הבדלים בין localStorage לשרת
+                const serverSettings = <?= json_encode(array_map(function($s) { return $s['value']; }, $allSettings)) ?>;
+                const localSettings = {};
+                let hasDifferences = false;
+
+                for (const [key, setting] of Object.entries(data.settings)) {
+                    if (setting && setting.value !== undefined) {
+                        localSettings[key] = setting.value;
+                        if (serverSettings[key] !== setting.value) {
+                            hasDifferences = true;
+                        }
+                    }
+                }
+
+                if (!hasDifferences) return false;
+
+                // שליחה לשרת
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'set', settings: localSettings, deviceType: currentDeviceType })
+                });
+
+                const result = await response.json();
+                return result.success;
+            } catch (e) {
+                console.error('Sync error:', e);
+                return false;
+            }
+        }
+
         // אתחול
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // אם deviceType היה auto, בדוק אם צריך לרענן עם הפרופיל הנכון
+            const urlDeviceType = '<?= $deviceType ?>';
+            if (urlDeviceType === 'auto') {
+                const detectedDevice = typeof UserSettingsStorage !== 'undefined'
+                    ? UserSettingsStorage.getDeviceType()
+                    : (window.innerWidth < 768 ? 'mobile' : 'desktop');
+
+                // רענון עם deviceType הנכון (פעם אחת בלבד)
+                const url = new URL(window.location.href);
+                url.searchParams.set('deviceType', detectedDevice);
+                window.location.replace(url.toString());
+                return; // עצור את שאר האתחול
+            }
+
             // עדכון כותרת הפופאפ
             if (typeof PopupAPI !== 'undefined') {
-                PopupAPI.setTitle('הגדרות אישיות');
+                const profileLabel = currentDeviceType === 'mobile' ? 'מובייל' : 'דסקטופ';
+                PopupAPI.setTitle('הגדרות אישיות - ' + profileLabel);
             }
+
+            // עדכון אינדיקטור הפרופיל
+            updateProfileIndicator();
 
             // בדיקת מצב darkMode התחלתי והסתרת colorScheme אם צריך
             const darkModeCheckbox = document.querySelector('.setting-item[data-key="darkMode"] input[type="checkbox"]');
             if (darkModeCheckbox) {
                 updateColorSchemeVisibility(darkModeCheckbox.checked);
             }
+
+            // סנכרון הגדרות מ-localStorage אם יש הבדלים (רק אם deviceType ידוע)
+            // const synced = await syncFromLocalStorage();
+            // if (synced) {
+            //     location.reload();
+            // }
         });
     </script>
 </body>

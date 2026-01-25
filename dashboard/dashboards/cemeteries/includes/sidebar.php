@@ -19,7 +19,13 @@
             <svg class="icon-sm"><use xlink:href="#icon-menu"></use></svg>
         </button>
     </div>
-    
+
+    <!-- כפתור חזרה לראשי - מובייל בלבד -->
+    <a href="/dashboard/" class="sidebar-home-link" onclick="closeSidebarOnMobile()">
+        <span class="hierarchy-icon">🏠</span>
+        <span class="hierarchy-title">חזרה לדף הראשי</span>
+    </a>
+
     <!-- חיפוש מהיר -->
     <div class="sidebar-search">
         <input type="text" 

@@ -191,11 +191,12 @@
 .btn-show-search {
     display: none; /* ברירת מחדל - מוסתר */
     padding: 8px 16px;
-    background: var(--primary-color) !important;
-    border: 1px solid var(--primary-color) !important;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+    border: none !important;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 600;
     color: white !important;
     transition: all 0.2s ease;
     gap: 8px;
@@ -203,7 +204,8 @@
 }
 
 .btn-show-search:hover {
-    filter: brightness(0.9);
+    box-shadow: 0 8px 16px color-mix(in srgb, var(--primary-color) 30%, transparent);
+    transform: translateY(-1px);
 }
 
 .btn-show-search svg {

@@ -37,7 +37,7 @@ $branding = $companyManager->getBranding();
                 <?php else: ?>
                     <span class="header-icon">🪦</span>
                 <?php endif; ?>
-                <h1 class="header-title"><?php echo htmlspecialchars($branding['name']); ?></h1>
+                <h1 class="header-title"><span class="header-title-text"><?php echo htmlspecialchars($branding['name']); ?></span></h1>
             </div>
         </div>
 

@@ -116,25 +116,27 @@
 .btn-search-toggle {
     display: none;
     padding: 8px 16px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border: none;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    color: var(--text-primary);
+    color: white;
+    font-weight: 600;
     transition: all 0.2s ease;
     gap: 8px;
     align-items: center;
 }
 
 .btn-search-toggle:hover {
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
+    box-shadow: 0 8px 16px color-mix(in srgb, var(--primary-color) 30%, transparent);
+    transform: translateY(-1px);
 }
 
 .btn-search-toggle svg {
     width: 18px;
     height: 18px;
+    stroke: white;
 }
 
 .entity-subtitle {
@@ -313,17 +315,22 @@
         margin: 0;
     }
 
-    /* כפתור חיפוש - רקע מותאם לתמה */
+    /* כפתור חיפוש - גרדיאנט כמו כפתור ראשי */
     .entity-title-container .action-buttons .btn-search-toggle,
     .entity-title-container .action-buttons .btn-show-search {
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        border: none;
+        color: white;
     }
 
     .entity-title-container .action-buttons .btn-search-toggle:active,
     .entity-title-container .action-buttons .btn-show-search:active {
-        background: var(--bg-secondary);
+        filter: brightness(0.9);
+    }
+
+    .entity-title-container .action-buttons .btn-search-toggle svg,
+    .entity-title-container .action-buttons .btn-show-search svg {
+        stroke: white;
     }
 
     /* Entity items mobile optimization */

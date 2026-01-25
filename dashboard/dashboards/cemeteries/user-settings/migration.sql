@@ -89,3 +89,16 @@ CREATE TABLE IF NOT EXISTS table_permissions (
     editableColumns JSON DEFAULT NULL,
     UNIQUE KEY unique_user_entity (userId, entityType)
 );
+
+-- Step 1: הוספת עמודת deviceType
+ALTER TABLE user_settings
+ADD COLUMN deviceType ENUM('desktop', 'mobile') NOT NULL DEFAULT 'desktop' AFTER userId;
+
+-- Step 2: עדכון ה-UNIQUE KEY
+ALTER TABLE user_settings DROP INDEX unique_user_setting;
+
+-- Step 3: יצירת UNIQUE KEY חדש
+ALTER TABLE user_settings
+ADD UNIQUE KEY unique_user_device_setting (userId, deviceType, settingKey);
+
+ALTER TABLE user_settings DROP INDEX unique_user_setting;

@@ -307,11 +307,18 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         // פתיחת הגדרות משתמש
         function openUserSettings() {
             if (typeof PopupManager !== 'undefined') {
+                // זיהוי סוג מכשיר והעברתו לדף ההגדרות
+                const deviceType = (typeof UserSettingsStorage !== 'undefined')
+                    ? UserSettingsStorage.getDeviceType()
+                    : (window.innerWidth < 768 ? 'mobile' : 'desktop');
+
+                const profileLabel = deviceType === 'mobile' ? 'מובייל' : 'דסקטופ';
+
                 PopupManager.create({
                     id: 'user-settings-popup',
                     type: 'iframe',
-                    src: '/dashboard/dashboards/cemeteries/user-settings/settings-page.php',
-                    title: 'הגדרות אישיות',
+                    src: '/dashboard/dashboards/cemeteries/user-settings/settings-page.php?deviceType=' + deviceType,
+                    title: 'הגדרות אישיות - ' + profileLabel,
                     width: 700,
                     height: 600
                 });

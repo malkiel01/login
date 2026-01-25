@@ -232,16 +232,16 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             <div class="sortable-sections" id="burialFormSortableSections">
                 <!-- סקשן 1: פרטי נפטר -->
-                <div class="sortable-section section-purple" data-section="deceased">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #fee2e2, #fecaca);">
+                <div class="sortable-section section-red" data-section="deceased">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #991b1b;">
+                        <span class="section-title">
                             <i class="fas fa-user"></i> פרטי הנפטר/ת
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #fef2f2, #fee2e2);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group span-2">
                                 <label>נפטר/ת <span class="required">*</span></label>
@@ -273,15 +273,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 2: בחירת קבר -->
                 <div class="sortable-section section-green" data-section="grave">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #166534;">
+                        <span class="section-title">
                             <i class="fas fa-cross"></i> בחירת קבר
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>בית עלמין</label>
@@ -327,15 +327,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 3: פרטי פטירה -->
                 <div class="sortable-section section-blue" data-section="death">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #e0e7ff, #c7d2fe);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #3730a3;">
+                        <span class="section-title">
                             <i class="fas fa-calendar-times"></i> פרטי פטירה
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eef2ff, #e0e7ff);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>תאריך פטירה <span class="required">*</span></label>
@@ -363,15 +363,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 4: פרטי קבורה -->
                 <div class="sortable-section section-orange" data-section="burial">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #92400e;">
+                        <span class="section-title">
                             <i class="fas fa-book-dead"></i> פרטי קבורה
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>תאריך קבורה <span class="required">*</span></label>
@@ -398,16 +398,16 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 </div>
 
                 <!-- סקשן 5: פרטים נוספים -->
-                <div class="sortable-section section-orange" data-section="additional">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #ede9fe, #c4b5fd);">
+                <div class="sortable-section section-purple" data-section="additional">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #5b21b6;">
+                        <span class="section-title">
                             <i class="fas fa-info-circle"></i> פרטים נוספים
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>קרבת איש קשר</label>
@@ -436,16 +436,16 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 6: מסמכים -->
                 <?php if ($isEditMode): ?>
-                <div class="sortable-section section-gray" data-section="documents">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8);">
+                <div class="sortable-section section-pink" data-section="documents">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #9d174d;">
+                        <span class="section-title">
                             <i class="fas fa-folder-open"></i> מסמכים
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #fdf2f8, #fce7f3);">
+                    <div class="section-content">
                         <div id="documentsContainer">
                             <div class="documents-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                 <span style="color: #64748b; font-size: 13px;">

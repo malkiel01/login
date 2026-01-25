@@ -190,13 +190,13 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
 
         <!-- סקשן 1: פרטי חוק תושבות -->
         <div class="sortable-section section-blue section-residency" data-section="details">
-            <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+            <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                     <i class="fas fa-chevron-down"></i>
                 </button>
-                <span class="section-title" style="color: #1e40af;"><i class="fas fa-balance-scale"></i> פרטי חוק תושבות</span>
+                <span class="section-title"><i class="fas fa-balance-scale"></i> פרטי חוק תושבות</span>
             </div>
-            <div class="section-content" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+            <div class="section-content">
                 <div class="header-title">
                     <h2><i class="fas fa-balance-scale"></i> <?= $residencyName ?></h2>
                     <span class="status-badge" style="background: <?= $residencyTypeColor ?>">

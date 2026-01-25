@@ -234,15 +234,15 @@ $citiesJson = json_encode($allCities);
             <div class="sortable-sections" id="residencyFormSortableSections">
                 <!-- סקשן 1: פרטי חוק התושבות -->
                 <div class="sortable-section section-blue" data-section="details">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #1e40af;">
+                        <span class="section-title">
                             <i class="fas fa-gavel"></i> פרטי חוק התושבות
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                    <div class="section-content">
                         <div class="info-box">
                             <i class="fas fa-info-circle"></i>
                             חוקי תושבות מגדירים כיצד לקוחות מסווגים לפי המיקום שלהם. בחר מדינה ו/או עיר כדי להגדיר את סוג התושבות.
@@ -264,15 +264,15 @@ $citiesJson = json_encode($allCities);
 
                 <!-- סקשן 2: מיקום -->
                 <div class="sortable-section section-green" data-section="location">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #166534;">
+                        <span class="section-title">
                             <i class="fas fa-map-marker-alt"></i> מיקום
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                    <div class="section-content">
                         <div class="info-box" style="background: #f0fdf4; border-color: #86efac; color: #166534;">
                             <i class="fas fa-lightbulb"></i>
                             בחר מדינה בלבד להגדרת חוק ברמת מדינה, או גם עיר להגדרה ספציפית יותר.
@@ -312,15 +312,15 @@ $citiesJson = json_encode($allCities);
 
                 <!-- סקשן 3: פרטים נוספים -->
                 <div class="sortable-section section-orange" data-section="additional">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #92400e;">
+                        <span class="section-title">
                             <i class="fas fa-info-circle"></i> פרטים נוספים
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group span-2">
                                 <label>תיאור</label>

@@ -222,15 +222,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             <div class="sortable-sections" id="customerFormSortableSections">
                 <!-- סקשן 1: פרטים אישיים -->
                 <div class="sortable-section section-blue" data-section="personal">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #1e40af;">
+                        <span class="section-title">
                             <i class="fas fa-user"></i> פרטים אישיים
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>סוג זיהוי</label>
@@ -304,15 +304,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 2: כתובת -->
                 <div class="sortable-section section-green" data-section="address">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #166534;">
+                        <span class="section-title">
                             <i class="fas fa-map-marker-alt"></i> כתובת
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>מדינה</label>
@@ -338,15 +338,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 3: פרטי התקשרות -->
                 <div class="sortable-section section-orange" data-section="contact">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #92400e;">
+                        <span class="section-title">
                             <i class="fas fa-phone"></i> פרטי התקשרות
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>טלפון</label>
@@ -364,15 +364,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 4: פרטים נוספים -->
                 <div class="sortable-section section-purple" data-section="additional">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #ede9fe, #c4b5fd);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #5b21b6;">
+                        <span class="section-title">
                             <i class="fas fa-info-circle"></i> פרטים נוספים
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>סטטוס לקוח</label>
@@ -396,16 +396,16 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 5: מסמכים -->
                 <?php if ($isEditMode): ?>
-                <div class="sortable-section section-gray" data-section="documents">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8);">
+                <div class="sortable-section section-pink" data-section="documents">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #9d174d;">
+                        <span class="section-title">
                             <i class="fas fa-folder-open"></i> מסמכים
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #fdf2f8, #fce7f3);">
+                    <div class="section-content">
                         <div id="customerExplorer" style="min-height: 300px;">
                             <div style="text-align: center; color: #94a3b8; padding: 40px;">
                                 <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>

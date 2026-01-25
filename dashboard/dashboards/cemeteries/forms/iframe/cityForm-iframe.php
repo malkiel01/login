@@ -193,15 +193,15 @@ $pageTitle = $isEditMode ? 'עריכת עיר' : 'הוספת עיר חדשה';
             <div class="sortable-sections" id="cityFormSortableSections">
                 <!-- סקשן: פרטי העיר -->
                 <div class="sortable-section section-green" data-section="details">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #166534;">
+                        <span class="section-title">
                             <i class="fas fa-city"></i> פרטי העיר
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group span-2">
                                 <label>מדינה <span class="required">*</span></label>

@@ -165,15 +165,15 @@ $pageTitle = $isEditMode ? 'עריכת מדינה' : 'הוספת מדינה חד
             <div class="sortable-sections" id="countryFormSortableSections">
                 <!-- סקשן: פרטי המדינה -->
                 <div class="sortable-section section-blue" data-section="details">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #1e40af;">
+                        <span class="section-title">
                             <i class="fas fa-flag"></i> פרטי המדינה
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>שם מדינה בעברית <span class="required">*</span></label>

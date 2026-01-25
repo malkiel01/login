@@ -183,15 +183,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             <div class="sortable-sections" id="paymentFormSortableSections">
                 <!-- סקשן 1: הגדרת תשלום -->
                 <div class="sortable-section section-blue" data-section="payment-info">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #1e40af;">
+                        <span class="section-title">
                             <i class="fas fa-coins"></i> הגדרת תשלום
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>הגדרת מחיר <span class="required">*</span></label>
@@ -218,15 +218,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 2: תנאי סינון -->
                 <div class="sortable-section section-orange" data-section="filter-conditions">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #92400e;">
+                        <span class="section-title">
                             <i class="fas fa-filter"></i> תנאי סינון
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>סוג חלקה</label>
@@ -250,15 +250,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 <!-- סקשן 3: מיקום (אופציונלי) -->
                 <div class="sortable-section section-green collapsed" data-section="location">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #166534;">
+                        <span class="section-title">
                             <i class="fas fa-map-marker-alt"></i> מיקום (אופציונלי)
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>בית עלמין</label>

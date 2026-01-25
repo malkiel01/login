@@ -134,14 +134,14 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
     <div class="sortable-sections" id="paymentCardSortableSections">
         <!-- פרטי התשלום -->
         <div class="sortable-section section-green section-payment">
-            <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+            <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
-                <span class="section-title" style="color: #065f46;">
+                <span class="section-title">
                     <i class="fas fa-money-bill-wave"></i> הגדרת תשלום #<?= $serialId ?>
                     <span class="status-badge" style="background: <?= $plotTypeColor ?>"><?= $plotTypeName ?></span>
                 </span>
             </div>
-            <div class="section-content" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5);">
+            <div class="section-content">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                     <h2 style="margin: 0; color: #065f46;"><i class="fas fa-money-bill-wave"></i> הגדרת תשלום #<?= $serialId ?></h2>
                     <span class="status-badge" style="background: <?= $plotTypeColor ?>"><?= $plotTypeName ?></span>

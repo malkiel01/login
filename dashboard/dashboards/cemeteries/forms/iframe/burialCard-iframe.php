@@ -136,11 +136,11 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
     <div class="sortable-sections" id="burialCardSortableSections">
         <!-- פרטי קבורה -->
         <div class="sortable-section section-burial section-orange">
-            <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+            <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
-                <span class="section-title" style="color: #92400e;"><i class="fas fa-cross"></i> קבורה #<?= htmlspecialchars($burial['serialBurialId'] ?? '-') ?></span>
+                <span class="section-title"><i class="fas fa-cross"></i> קבורה #<?= htmlspecialchars($burial['serialBurialId'] ?? '-') ?></span>
             </div>
-            <div class="section-content" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+            <div class="section-content">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                     <h2 style="margin: 0; color: #92400e;"><i class="fas fa-cross"></i> קבורה #<?= htmlspecialchars($burial['serialBurialId'] ?? '-') ?></h2>
                     <span class="status-badge" style="background: <?= $statusColor ?>"><?= $statusName ?></span>
@@ -157,11 +157,11 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
 
         <!-- פרטי הנפטר -->
         <div class="sortable-section section-deceased section-purple">
-            <div class="section-drag-handle" style="background: linear-gradient(135deg, #ede9fe, #c4b5fd);">
+            <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
-                <span class="section-title" style="color: #5b21b6;"><i class="fas fa-user"></i> פרטי הנפטר/ת</span>
+                <span class="section-title"><i class="fas fa-user"></i> פרטי הנפטר/ת</span>
             </div>
-            <div class="section-content" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+            <div class="section-content">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                     <h2 style="margin: 0; color: #5b21b6;"><i class="fas fa-user"></i> <?= $deceasedName ?></h2>
                 </div>
@@ -181,11 +181,11 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
 
         <!-- פרטי הקבר -->
         <div class="sortable-section section-grave section-green">
-            <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+            <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
-                <span class="section-title" style="color: #166534;"><i class="fas fa-monument"></i> פרטי הקבר</span>
+                <span class="section-title"><i class="fas fa-monument"></i> פרטי הקבר</span>
             </div>
-            <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+            <div class="section-content">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                     <h2 style="margin: 0; color: #166534;"><i class="fas fa-monument"></i> <?= htmlspecialchars($burial['graveNameHe'] ?? 'קבר') ?></h2>
                 </div>
@@ -205,11 +205,11 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
         <!-- פרטי הרכישה -->
         <?php if ($burial['purchaseUnicId']): ?>
         <div class="sortable-section section-purchase section-blue">
-            <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+            <div class="section-drag-handle">
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
-                <span class="section-title" style="color: #1e40af;"><i class="fas fa-shopping-cart"></i> פרטי הרכישה</span>
+                <span class="section-title"><i class="fas fa-shopping-cart"></i> פרטי הרכישה</span>
             </div>
-            <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+            <div class="section-content">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                     <h2 style="margin: 0; color: #1e40af;"><i class="fas fa-shopping-cart"></i> רכישה #<?= htmlspecialchars($burial['serialPurchaseId'] ?? '-') ?></h2>
                     <?php $pStatus = $burial['purchaseStatus'] ?? 1; $pStatusName = $purchaseStatusNames[$pStatus] ?? 'לא ידוע'; $pStatusColor = $purchaseStatusColors[$pStatus] ?? '#64748b'; ?>

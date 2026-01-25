@@ -523,15 +523,15 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
             <div class="sortable-sections" id="areaGraveSortableSections">
                 <!-- סקשן 1: פרטי אחוזת קבר -->
                 <div class="sortable-section section-blue" data-section="details">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #1e40af;">
+                        <span class="section-title">
                             <i class="fas fa-layer-group"></i> פרטי אחוזת קבר
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <!-- בחירת היררכיה: בית עלמין ← גוש ← חלקה ← שורה -->
                             <div class="form-group">
@@ -625,11 +625,11 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
 
                 <!-- סקשן 2: קברים באחוזה -->
                 <div class="sortable-section section-purple" data-section="graves">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #f3e8ff, #e9d5ff);">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #7c3aed;">
+                        <span class="section-title">
                             <i class="fas fa-monument"></i> קברים באחוזה (1-5)
                         </span>
                     </div>

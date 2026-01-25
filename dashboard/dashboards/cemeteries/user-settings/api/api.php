@@ -73,11 +73,26 @@ try {
                     $input['category'] ?? null
                 );
                 error_log("UserSettings SET result: " . ($success ? 'success' : 'failed'));
+
+                // DEBUG: verify if saved
+                $verifyStmt = $conn->prepare("SELECT * FROM user_settings WHERE userId = ? AND settingKey = ?");
+                $verifyStmt->execute([$userId, $input['key']]);
+                $verifyResult = $verifyStmt->fetch(PDO::FETCH_ASSOC);
+                error_log("UserSettings VERIFY after save: " . json_encode($verifyResult));
             } else {
                 throw new Exception('Missing key or settings');
             }
 
-            $response = ['success' => $success];
+            // Return debug info in response
+            $response = [
+                'success' => $success,
+                'debug' => [
+                    'userId' => $userId,
+                    'key' => $input['key'] ?? null,
+                    'value' => $input['value'] ?? null,
+                    'verified' => $verifyResult ?? null
+                ]
+            ];
             break;
 
         case 'reset':

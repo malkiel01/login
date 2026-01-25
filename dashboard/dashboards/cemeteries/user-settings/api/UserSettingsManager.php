@@ -282,24 +282,28 @@ class UserSettingsManager {
             // המרה לstring לשמירה
             $stringValue = $this->valueToString($value, $type);
 
-            $stmt = $this->conn->prepare("
-                INSERT INTO user_settings (userId, settingKey, settingValue, settingType, category)
-                VALUES (:userId, :key, :value, :type, :category)
-                ON DUPLICATE KEY UPDATE
-                    settingValue = :value2,
-                    settingType = :type2,
-                    updateDate = CURRENT_TIMESTAMP
-            ");
+            // Debug: log what we're trying to save
+            error_log("UserSettingsManager::set - userId={$this->userId}, key=$key, value=$stringValue, type=$type, category=$category");
 
-            $stmt->execute([
-                'userId' => $this->userId,
-                'key' => $key,
-                'value' => $stringValue,
-                'type' => $type,
-                'category' => $category ?? 'general',
-                'value2' => $stringValue,
-                'type2' => $type
+            // Use simpler INSERT ... ON DUPLICATE KEY UPDATE syntax
+            $sql = "INSERT INTO user_settings (userId, settingKey, settingValue, settingType, category)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                        settingValue = VALUES(settingValue),
+                        settingType = VALUES(settingType),
+                        updateDate = CURRENT_TIMESTAMP";
+
+            $stmt = $this->conn->prepare($sql);
+            $result = $stmt->execute([
+                $this->userId,
+                $key,
+                $stringValue,
+                $type,
+                $category ?? 'general'
             ]);
+
+            $rowCount = $stmt->rowCount();
+            error_log("UserSettingsManager::set - result=$result, rowCount=$rowCount");
 
             // עדכון cache
             $this->cache[$key] = $value;
@@ -307,7 +311,7 @@ class UserSettingsManager {
             return true;
 
         } catch (Exception $e) {
-            error_log("UserSettingsManager::set error: " . $e->getMessage());
+            error_log("UserSettingsManager::set ERROR: " . $e->getMessage());
             return false;
         }
     }

@@ -330,7 +330,15 @@ const UserSettings = (function() {
         }
         document.body.classList.toggle('sidebar-collapsed', isCollapsed);
 
-        console.log('UserSettings applied:', { darkMode: isDark, colorScheme, fontSize, compactMode, sidebarCollapsed: isCollapsed });
+        // הצגת סטטיסטיקות בכותרת
+        const showHeaderStats = get('showHeaderStats', true);
+        const showStats = showHeaderStats === true || showHeaderStats === 'true';
+        const headerStats = document.getElementById('headerStats');
+        if (headerStats) {
+            headerStats.classList.toggle('hidden', !showStats);
+        }
+
+        console.log('UserSettings applied:', { darkMode: isDark, colorScheme, fontSize, compactMode, sidebarCollapsed: isCollapsed, showHeaderStats: showStats });
     }
 
     /**

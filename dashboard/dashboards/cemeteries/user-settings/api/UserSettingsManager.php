@@ -76,8 +76,46 @@ class UserSettingsManager {
 
                 error_log("UserSettingsManager: V2 migration completed successfully");
             }
+
+            // V3 Migration - Add showHeaderStats
+            $this->ensureV3Settings();
+
         } catch (Exception $e) {
             error_log("UserSettingsManager: V2 migration error - " . $e->getMessage());
+        }
+    }
+
+    /**
+     * V3 Migration - הוספת הגדרת הצגת סטטיסטיקות בכותרת
+     */
+    private function ensureV3Settings() {
+        try {
+            // בדיקה אם showHeaderStats קיים
+            $stmt = $this->conn->prepare("
+                SELECT COUNT(*) FROM user_settings_defaults WHERE settingKey = 'showHeaderStats'
+            ");
+            $stmt->execute();
+            $exists = $stmt->fetchColumn() > 0;
+
+            if (!$exists) {
+                // הוספת showHeaderStats
+                $stmt = $this->conn->prepare("
+                    INSERT INTO user_settings_defaults
+                    (settingKey, defaultValue, settingType, category, label, description, options, sortOrder)
+                    VALUES ('showHeaderStats', 'true', 'boolean', 'display', 'הצג סטטיסטיקות בכותרת', 'הצג את סיכומי הקברים בכותרת העליונה', NULL, 3)
+                ");
+                $stmt->execute();
+
+                // עדכון sortOrder של שאר ההגדרות
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 4 WHERE settingKey = 'fontSize'");
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 5 WHERE settingKey = 'tableRowsPerPage'");
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 6 WHERE settingKey = 'sidebarCollapsed'");
+                $this->conn->exec("UPDATE user_settings_defaults SET sortOrder = 7 WHERE settingKey = 'compactMode'");
+
+                error_log("UserSettingsManager: V3 migration (showHeaderStats) completed");
+            }
+        } catch (Exception $e) {
+            error_log("UserSettingsManager: V3 migration error - " . $e->getMessage());
         }
     }
 

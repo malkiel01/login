@@ -1,0 +1,518 @@
+/**
+ * Company Settings Page Styles
+ * v1.0.0 - 2026-01-25
+ */
+
+/* ===================================================================
+   Variables & Base
+   =================================================================== */
+:root {
+    --settings-primary: #667eea;
+    --settings-primary-dark: #5a67d8;
+    --settings-bg: #f7fafc;
+    --settings-card-bg: #ffffff;
+    --settings-border: #e2e8f0;
+    --settings-text: #2d3748;
+    --settings-text-secondary: #718096;
+    --settings-success: #48bb78;
+    --settings-error: #e53e3e;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    direction: rtl;
+}
+
+/* ===================================================================
+   Layout
+   =================================================================== */
+.settings-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.settings-header {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-title h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--settings-text);
+}
+
+.header-icon {
+    font-size: 32px;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--settings-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: var(--settings-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-back svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ===================================================================
+   Main Content
+   =================================================================== */
+.settings-main {
+    flex: 1;
+    padding: 40px 20px;
+}
+
+.settings-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ===================================================================
+   Settings Card
+   =================================================================== */
+.settings-card {
+    background: var(--settings-card-bg);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 25px 30px;
+    border-bottom: 1px solid var(--settings-border);
+    background: #fafbfc;
+}
+
+.card-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--settings-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+/* ===================================================================
+   Form Elements
+   =================================================================== */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--settings-text);
+    margin-bottom: 8px;
+}
+
+.form-label .required {
+    color: var(--settings-error);
+    margin-right: 4px;
+}
+
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--settings-border);
+    border-radius: 8px;
+    font-size: 15px;
+    color: var(--settings-text);
+    transition: all 0.2s ease;
+    direction: rtl;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--settings-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-hint {
+    font-size: 13px;
+    color: var(--settings-text-secondary);
+    margin-top: 6px;
+}
+
+/* ===================================================================
+   Logo Upload
+   =================================================================== */
+.logo-upload-wrapper {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.logo-preview-container {
+    flex-shrink: 0;
+}
+
+.logo-preview {
+    width: 150px;
+    height: 150px;
+    border: 2px dashed var(--settings-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fafbfc;
+    overflow: hidden;
+}
+
+.logo-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.logo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--settings-text-secondary);
+}
+
+.logo-placeholder svg {
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+}
+
+.logo-placeholder span {
+    font-size: 13px;
+}
+
+.logo-upload-area {
+    flex: 1;
+}
+
+.upload-dropzone {
+    border: 2px dashed var(--settings-border);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fafbfc;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone.drag-over {
+    border-color: var(--settings-primary);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-dropzone svg {
+    width: 40px;
+    height: 40px;
+    color: var(--settings-primary);
+    margin-bottom: 15px;
+}
+
+.upload-text {
+    font-size: 15px;
+    color: var(--settings-text);
+    margin-bottom: 8px;
+}
+
+.upload-text span {
+    color: var(--settings-primary);
+    font-weight: 600;
+}
+
+.upload-hint {
+    font-size: 13px;
+    color: var(--settings-text-secondary);
+}
+
+.btn-remove-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 15px;
+    padding: 8px 16px;
+    background: #fff5f5;
+    color: var(--settings-error);
+    border: 1px solid #fed7d7;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-remove-logo:hover {
+    background: #fed7d7;
+}
+
+/* ===================================================================
+   Form Row (2 columns)
+   =================================================================== */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* ===================================================================
+   Buttons
+   =================================================================== */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 1px solid var(--settings-border);
+    margin-top: 30px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--settings-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--settings-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-secondary {
+    background: var(--settings-bg);
+    color: var(--settings-text);
+    border: 1px solid var(--settings-border);
+}
+
+.btn-secondary:hover {
+    background: #edf2f7;
+}
+
+.btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ===================================================================
+   Messages
+   =================================================================== */
+.message {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease;
+}
+
+.message-success {
+    background: #c6f6d5;
+    color: #276749;
+    border: 1px solid #9ae6b4;
+}
+
+.message-error {
+    background: #fed7d7;
+    color: #c53030;
+    border: 1px solid #feb2b2;
+}
+
+.message svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================================================
+   Loading State
+   =================================================================== */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--settings-border);
+    border-top-color: var(--settings-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===================================================================
+   Footer
+   =================================================================== */
+.settings-footer {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    text-align: center;
+}
+
+.footer-text {
+    color: var(--settings-text-secondary);
+    font-size: 14px;
+}
+
+/* ===================================================================
+   Responsive
+   =================================================================== */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .settings-main {
+        padding: 20px 15px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .logo-upload-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo-upload-area {
+        width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-header {
+        padding: 15px 20px;
+    }
+
+    .header-title h1 {
+        font-size: 20px;
+    }
+
+    .card-header {
+        padding: 20px;
+    }
+
+    .card-header h2 {
+        font-size: 18px;
+    }
+
+    .logo-preview {
+        width: 120px;
+        height: 120px;
+    }
+}

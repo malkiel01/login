@@ -1,5 +1,12 @@
-/* header.css - עיצוב הידר מלא */
+/**
+ * Header Styles
+ * v2.0.0 - 2026-01-25
+ * Theme-compatible with CSS variables
+ */
 
+/* ===================================================================
+   Main Header Container
+   =================================================================== */
 .dashboard-header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     color: white;
@@ -24,31 +31,59 @@
     width: 100%;
 }
 
+/* ===================================================================
+   Header Right Section (Branding)
+   =================================================================== */
 .header-right {
     display: flex;
     align-items: center;
 }
 
-.header-title {
+/* ===================================================================
+   Company Branding
+   =================================================================== */
+.header-branding {
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+.header-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: var(--bg-primary);
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     font-size: 1.75rem;
     font-weight: 600;
     margin: 0;
+    color: white;
 }
 
 .header-icon {
     font-size: 2rem;
 }
 
+/* ===================================================================
+   Header Left Section (Stats & Actions)
+   =================================================================== */
 .header-left {
     display: flex;
     align-items: center;
     gap: 2rem;
 }
 
-/* Hamburger Menu Button */
+/* ===================================================================
+   Hamburger Menu Button
+   =================================================================== */
 .hamburger-menu {
     display: none;
     background: transparent;
@@ -56,6 +91,7 @@
     padding: 0.5rem;
     cursor: pointer;
     transition: var(--transition);
+    color: white;
 }
 
 .hamburger-menu:hover {
@@ -68,7 +104,163 @@
     fill: white;
 }
 
-/* Statistics - Desktop */
+/* ===================================================================
+   Back to Home Button - Responsive
+   =================================================================== */
+.btn-home-responsive {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-left: 15px;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    animation: slideInFromLeft 0.5s ease-out;
+}
+
+.icon-home {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+/* Desktop - Button with fill animation */
+@media (min-width: 769px) {
+    .btn-home-responsive {
+        gap: 8px;
+        padding: 10px 20px;
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 25px;
+        color: white;
+        font-weight: 600;
+        overflow: hidden;
+    }
+
+    .btn-home-text {
+        display: inline;
+        font-size: 14px;
+        transition: color 0.3s ease;
+    }
+
+    /* Fill animation effect */
+    .btn-home-responsive::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0.3));
+        transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: -1;
+    }
+
+    .btn-home-responsive:hover::before {
+        left: 0;
+    }
+
+    .btn-home-responsive:hover {
+        border-color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-home-responsive:hover .icon-home {
+        transform: translateX(3px);
+    }
+
+    .btn-home-responsive:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Ripple effect on click */
+    .btn-home-responsive::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+
+    .btn-home-responsive:active::after {
+        animation: ripple 0.6s ease-out;
+    }
+}
+
+/* Mobile - Round button with rotation */
+@media (max-width: 768px) {
+    .btn-home-responsive {
+        width: 40px;
+        height: 40px;
+        background: var(--bg-primary);
+        border: 2px solid var(--primary-color);
+        border-radius: 50%;
+        color: var(--primary-color);
+        margin-left: 10px;
+    }
+
+    .btn-home-text {
+        display: none;
+    }
+
+    .btn-home-responsive:hover,
+    .btn-home-responsive:active {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        border-color: transparent;
+        color: white;
+        transform: rotate(360deg) scale(1.1);
+        box-shadow: 0 5px 15px color-mix(in srgb, var(--primary-color) 40%, transparent);
+    }
+
+    .btn-home-responsive:hover .icon-home,
+    .btn-home-responsive:active .icon-home {
+        transform: scale(1.2);
+    }
+
+    .btn-home-responsive:focus {
+        animation: mobilePulse 1.5s;
+        outline: none;
+    }
+}
+
+/* Hide on very small screens and tablets */
+@media (max-width: 380px) {
+    .btn-home-responsive {
+        display: none !important;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .btn-home-responsive {
+        display: none !important;
+    }
+}
+
+/* Print - hide button */
+@media print {
+    .btn-home-responsive {
+        display: none;
+    }
+}
+
+/* ===================================================================
+   Statistics Cards
+   =================================================================== */
 .header-stats {
     display: flex;
     gap: 1rem;
@@ -111,6 +303,7 @@
     font-size: 1.5rem;
     font-weight: bold;
     line-height: 1.2;
+    color: white;
 }
 
 .stat-label {
@@ -118,9 +311,17 @@
     font-size: 0.75rem;
     opacity: 0.9;
     margin-top: 2px;
+    color: white;
 }
 
-/* Action Buttons */
+/* Hidden state for stats (user preference) */
+.header-stats.hidden {
+    display: none !important;
+}
+
+/* ===================================================================
+   Action Buttons
+   =================================================================== */
 .header-actions {
     display: flex;
     gap: 0.5rem;
@@ -134,6 +335,43 @@
 
 .header-actions .btn:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===================================================================
+   Animations
+   =================================================================== */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(4);
+        opacity: 0;
+    }
+}
+
+@keyframes mobilePulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary-color) 70%, transparent);
+    }
+    70% {
+        box-shadow: 0 0 0 10px color-mix(in srgb, var(--primary-color) 0%, transparent);
+    }
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary-color) 0%, transparent);
+    }
 }
 
 /* Refresh Icon Animation */
@@ -151,31 +389,35 @@
     to { transform: rotate(360deg); }
 }
 
-/* Tablet View */
+/* ===================================================================
+   Tablet View (max-width: 1024px)
+   =================================================================== */
 @media (max-width: 1024px) {
     .hamburger-menu {
         display: block;
     }
-    
+
     .header-content {
         gap: 1rem;
     }
-    
+
     .header-stats {
         gap: 1rem;
     }
-    
+
     .header-stat {
         min-width: 70px;
         padding: 0.4rem 0.8rem;
     }
-    
+
     .stat-value {
         font-size: 1.25rem;
     }
 }
 
-/* Mobile View */
+/* ===================================================================
+   Mobile View (max-width: 768px)
+   =================================================================== */
 @media (max-width: 768px) {
     .dashboard-header {
         padding: 0.5rem 1rem;
@@ -191,6 +433,16 @@
     .header-right {
         flex: 1;
         justify-content: flex-start;
+    }
+
+    .header-branding {
+        gap: 0.5rem;
+    }
+
+    .header-logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
     }
 
     .header-title {
@@ -232,7 +484,9 @@
     }
 }
 
-/* Small Mobile */
+/* ===================================================================
+   Small Mobile (max-width: 480px)
+   =================================================================== */
 @media (max-width: 480px) {
     .header-title {
         font-size: 0.95rem;
@@ -242,7 +496,12 @@
         font-size: 1.1rem;
     }
 
-    /* Keep stats hidden on small mobile too */
+    .header-logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    /* Keep stats hidden on small mobile */
     .header-stats {
         display: none !important;
     }
@@ -250,4 +509,11 @@
     .header-actions .btn {
         padding: 0.35rem 0.5rem;
     }
+}
+
+/* ===================================================================
+   Dark Mode Adjustments (optional)
+   =================================================================== */
+@media (prefers-color-scheme: dark) {
+    /* Dark mode specific adjustments if needed */
 }

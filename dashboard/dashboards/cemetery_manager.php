@@ -1,9 +1,21 @@
+<?php
+// Load configuration and company settings
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/settings/api/CompanySettingsManager.php';
+
+$conn = getDBConnection();
+$companyManager = CompanySettingsManager::getInstance($conn);
+$companySettings = $companyManager->getAll();
+
+$companyName = $companySettings['company_name'] ?? 'מערכת ניהול בתי עלמין';
+$companyLogo = $companySettings['company_logo'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת ניהול בתי עלמין - דף ראשי</title>
+    <title><?php echo htmlspecialchars($companyName); ?> - דף ראשי</title>
     <style>
         * {
             margin: 0;
@@ -51,6 +63,16 @@
             justify-content: center;
             font-size: 24px;
             color: white;
+        }
+
+        .logo-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: contain;
+            background: white;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .site-title {
@@ -317,9 +339,13 @@
     <header class="header">
         <div class="header-content">
             <div class="logo-section">
-                <div class="logo">🏛️</div>
+                <?php if ($companyLogo): ?>
+                    <img src="<?php echo htmlspecialchars($companyLogo); ?>" alt="לוגו" class="logo-img">
+                <?php else: ?>
+                    <div class="logo">🏛️</div>
+                <?php endif; ?>
                 <div>
-                    <div class="site-title">מערכת ניהול בתי עלמין</div>
+                    <div class="site-title"><?php echo htmlspecialchars($companyName); ?></div>
                     <div class="site-subtitle">ניהול מקיף ויעיל של בתי עלמין</div>
                 </div>
             </div>
@@ -437,20 +463,20 @@
 
             <!-- מודול הגדרות -->
             <a href="/dashboard/dashboards/settings/" class="module-card module-settings">
-                <span class="module-badge badge-soon">בקרוב</span>
+                <span class="module-badge badge-new">פעיל</span>
                 <div class="module-icon">⚙️</div>
-                <h3 class="module-title">הגדרות מערכת</h3>
+                <h3 class="module-title">הגדרות חברה</h3>
                 <p class="module-description">
-                    ניהול משתמשים, הרשאות, הגדרות מערכת וגיבויים
+                    הגדרת פרטי החברה, לוגו, פרטי קשר וקוד ביטוח לאומי
                 </p>
                 <div class="module-stats">
                     <div class="stat-item">
-                        <span class="stat-value">8</span>
-                        <span class="stat-label">משתמשים</span>
+                        <span class="stat-value">7</span>
+                        <span class="stat-label">הגדרות</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">3</span>
-                        <span class="stat-label">תפקידים</span>
+                        <span class="stat-value">✓</span>
+                        <span class="stat-label">מוכן</span>
                     </div>
                 </div>
             </a>

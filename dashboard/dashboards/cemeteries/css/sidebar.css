@@ -104,6 +104,7 @@
 .hierarchy-icon {
     font-size: 1.25rem;
     transition: transform 0.3s;
+    color: var(--text-secondary);
 }
 
 .hierarchy-header:hover .hierarchy-icon {
@@ -115,6 +116,7 @@
     font-size: 0.875rem;
     font-weight: 500;
     transition: opacity 0.3s;
+    color: var(--text-primary);
 }
 
 .dashboard-sidebar.collapsed .hierarchy-title {
@@ -179,7 +181,7 @@
 }
 
 .selected-item:hover {
-    background: var(--primary-light, #f0f4ff);
+    background: var(--bg-tertiary);
     transform: translateX(2px);
 }
 

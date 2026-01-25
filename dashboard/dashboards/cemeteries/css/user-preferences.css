@@ -120,6 +120,16 @@ body.dark-theme .table,
 body.dark-theme table {
     background: var(--bg-secondary);
     color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+[data-theme="dark"] .table td,
+[data-theme="dark"] table td,
+body.dark-theme .table td,
+body.dark-theme table td {
+    font-size: 0.95rem;
+    line-height: 1.4;
 }
 
 [data-theme="dark"] .table th,

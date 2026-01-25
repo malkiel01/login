@@ -107,9 +107,21 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
 <body>
     <div class="settings-container">
         <!-- DEBUG: show what PHP loaded -->
+        <?php
+        // Check how many settings this user has in DB
+        $dbCountStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM user_settings WHERE userId = ?");
+        $dbCountStmt->execute([$userId]);
+        $dbCount = $dbCountStmt->fetch(PDO::FETCH_ASSOC)['cnt'];
+
+        // Check all userIds that have settings
+        $allUsersStmt = $conn->query("SELECT DISTINCT userId, COUNT(*) as cnt FROM user_settings GROUP BY userId");
+        $allUsers = $allUsersStmt->fetchAll(PDO::FETCH_ASSOC);
+        ?>
         <div style="background:#fffbcc; padding:10px; margin-bottom:10px; font-size:12px; border:1px solid #f0e68c; border-radius:5px; direction:ltr; text-align:left;">
             <strong>DEBUG:</strong> userId=<?= htmlspecialchars($userId) ?>,
-            settings loaded: <?= htmlspecialchars(json_encode(array_map(function($s) { return $s['value']; }, $allSettings))) ?>
+            <strong style="color:red;">DB count for this user: <?= $dbCount ?></strong>,
+            All users with settings: <?= htmlspecialchars(json_encode($allUsers)) ?><br>
+            Settings loaded: <?= htmlspecialchars(json_encode(array_map(function($s) { return $s['value']; }, $allSettings))) ?>
         </div>
 
         <div class="settings-header">

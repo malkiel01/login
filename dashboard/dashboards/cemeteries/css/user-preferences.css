@@ -381,7 +381,7 @@ body.dark-theme .btn-show-search svg {
     stroke: white !important;
 }
 
-/* קישורים בתוך טבלאות */
+/* קישורים בתוך טבלאות - לבן בהיר */
 [data-theme="dark"] .table a,
 [data-theme="dark"] table a,
 [data-theme="dark"] .data-table a,
@@ -390,7 +390,7 @@ body.dark-theme .table a,
 body.dark-theme table a,
 body.dark-theme .data-table a,
 body.dark-theme .tm-cell a {
-    color: #93c5fd;
+    color: #ffffff;
     font-weight: 500;
 }
 
@@ -402,7 +402,7 @@ body.dark-theme .table a:hover,
 body.dark-theme table a:hover,
 body.dark-theme .data-table a:hover,
 body.dark-theme .tm-cell a:hover {
-    color: #bfdbfe;
+    color: #f8fafc;
     text-decoration: underline;
 }
 

@@ -160,7 +160,7 @@ body.dark-theme .tm-cell a,
 body.dark-theme td a,
 body.dark-theme .tm-row a {
     color: #ffffff !important;
-    font-weight: 500;
+    font-weight: 700;
 }
 
 [data-theme="dark"] .table a:hover,

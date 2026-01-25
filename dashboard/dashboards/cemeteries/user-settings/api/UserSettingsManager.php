@@ -181,6 +181,9 @@ class UserSettingsManager {
             $stmt->execute($params);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Debug: log raw results count
+            error_log("UserSettingsManager::getAll - raw results count: " . count($results));
+
             $settings = [];
             foreach ($results as $row) {
                 $settings[$row['settingKey']] = [
@@ -227,6 +230,10 @@ class UserSettingsManager {
 
             // קבלת ערכי המשתמש
             $userSettings = $this->getAll($category);
+
+            // Debug logging
+            error_log("getAllWithDefaults: userId=" . $this->userId . ", userSettings count=" . count($userSettings));
+            error_log("getAllWithDefaults: userSettings keys=" . json_encode(array_keys($userSettings)));
 
             // מיזוג
             $result = [];

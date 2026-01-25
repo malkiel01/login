@@ -151,19 +151,25 @@ body.dark-theme table tr:hover {
 [data-theme="dark"] table a,
 [data-theme="dark"] .data-table a,
 [data-theme="dark"] .tm-cell a,
+[data-theme="dark"] td a,
+[data-theme="dark"] .tm-row a,
 body.dark-theme .table a,
 body.dark-theme table a,
 body.dark-theme .data-table a,
-body.dark-theme .tm-cell a {
-    color: #ffffff;
+body.dark-theme .tm-cell a,
+body.dark-theme td a,
+body.dark-theme .tm-row a {
+    color: #ffffff !important;
     font-weight: 500;
 }
 
 [data-theme="dark"] .table a:hover,
 [data-theme="dark"] table a:hover,
+[data-theme="dark"] td a:hover,
 body.dark-theme .table a:hover,
-body.dark-theme table a:hover {
-    color: #f8fafc;
+body.dark-theme table a:hover,
+body.dark-theme td a:hover {
+    color: #f8fafc !important;
     text-decoration: underline;
 }
 

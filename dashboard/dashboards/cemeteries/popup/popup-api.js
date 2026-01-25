@@ -263,6 +263,40 @@ if (document.readyState === 'loading') {
     PopupAPI.init();
 }
 
+// Fallback: אם ב-iframe, נסה לקרוא את הנושא ישירות מההורה
+if (window.self !== window.top) {
+    setTimeout(() => {
+        try {
+            const parentRoot = window.parent.document.documentElement;
+            const parentBody = window.parent.document.body;
+
+            const theme = {
+                dataTheme: parentRoot.getAttribute('data-theme') || 'light',
+                colorScheme: parentRoot.getAttribute('data-color-scheme') || 'purple',
+                classes: {
+                    colorScheme: Array.from(parentBody.classList).find(c => c.startsWith('color-scheme-')) || ''
+                },
+                cssVars: {
+                    primaryColor: getComputedStyle(parentRoot).getPropertyValue('--primary-color').trim(),
+                    primaryDark: getComputedStyle(parentRoot).getPropertyValue('--primary-dark').trim(),
+                    bgPrimary: getComputedStyle(parentRoot).getPropertyValue('--bg-primary').trim(),
+                    bgSecondary: getComputedStyle(parentRoot).getPropertyValue('--bg-secondary').trim(),
+                    bgTertiary: getComputedStyle(parentRoot).getPropertyValue('--bg-tertiary').trim(),
+                    textPrimary: getComputedStyle(parentRoot).getPropertyValue('--text-primary').trim(),
+                    textSecondary: getComputedStyle(parentRoot).getPropertyValue('--text-secondary').trim(),
+                    textMuted: getComputedStyle(parentRoot).getPropertyValue('--text-muted').trim(),
+                    borderColor: getComputedStyle(parentRoot).getPropertyValue('--border-color').trim()
+                }
+            };
+
+            PopupAPI.applyTheme(theme);
+            console.log('[PopupAPI] Theme loaded from parent directly');
+        } catch (e) {
+            console.log('[PopupAPI] Could not access parent (CORS):', e.message);
+        }
+    }, 100);
+}
+
 // Export
 window.PopupAPI = PopupAPI;
 

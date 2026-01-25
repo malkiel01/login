@@ -403,27 +403,41 @@ body.popup-detached-window .popup-detached-content {
    Dark Mode Support
 ======================================== */
 
+/*
+   היררכיה ויזואלית בדארק מוד:
+   - עמוד ראשי: #0f172a (הכי כהה)
+   - פופאפ container: #1e293b + גבול בהיר + צל חזק
+   - פופאפ content: #1e293b (מתאים ל-iframe)
+*/
 [data-theme="dark"] .popup-container,
 body.dark-theme .popup-container,
 .popup-container[data-theme="dark"],
 .popup-container.dark-theme {
-    background: var(--bg-secondary, #1e293b);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    background: #1e293b;
+    /* גבול בהיר להבחנה מהרקע */
+    border: 2px solid #475569 !important;
+    /* צל חזק ליצירת עומק */
+    box-shadow:
+        0 0 0 1px rgba(71, 85, 105, 0.5),
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        0 10px 30px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] .popup-header,
 body.dark-theme .popup-header,
 .popup-container[data-theme="dark"] .popup-header,
 .popup-container.dark-theme .popup-header {
-    background: linear-gradient(135deg, var(--bg-tertiary, #334155) 0%, var(--bg-secondary, #1e293b) 100%);
-    border-bottom-color: var(--border-color, #475569);
+    /* כותרת בולטת יותר */
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    border-bottom: 1px solid #64748b;
 }
 
 [data-theme="dark"] .popup-content,
 body.dark-theme .popup-content,
 .popup-container[data-theme="dark"] .popup-content,
 .popup-container.dark-theme .popup-content {
-    background: var(--bg-primary, #0f172a);
+    /* רקע מתאים ל-iframe */
+    background: #1e293b;
 }
 
 [data-theme="dark"] .popup-minimized-container,

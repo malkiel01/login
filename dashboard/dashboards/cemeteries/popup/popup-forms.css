@@ -585,49 +585,62 @@ input[type="radio"] {
 /* ========================================
    17. DARK MODE
    כל הסגנונות הכהים במקום מרכזי אחד
+
+   היררכיה ויזואלית (מהכהה לבהיר):
+   ----------------------------------------
+   | עמוד ראשי       | #0f172a | slate-900 | הכי כהה - רקע האתר
+   | תוכן פופאפ      | #1e293b | slate-800 | בינוני - רקע הטופס
+   | סקציות          | #334155 | slate-700 | בהיר יותר - קופסאות
+   | שדות קלט        | #475569 | slate-600 | הכי בהיר - אינטראקטיבי
+   ----------------------------------------
    ======================================== */
 
-/* === בסיס === */
+/* === בסיס - רקע הפופאפ === */
 html[data-theme="dark"],
 html[data-theme="dark"] body,
 body[data-theme="dark"],
 body.dark-theme {
-    background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
+    /* רקע בינוני - להבדיל מהעמוד הראשי */
+    background: #1e293b !important;
+    color: var(--text-primary, #f1f5f9) !important;
 }
 
-/* === סקציות === */
+/* === סקציות - בולטות על רקע הפופאפ === */
 body[data-theme="dark"] .sortable-section,
 body.dark-theme .sortable-section {
-    background: var(--bg-secondary) !important;
-    border-color: var(--border-color) !important;
+    /* רקע בהיר יותר מהפופאפ - slate-700 */
+    background: #334155 !important;
+    border: 1px solid #475569 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 body[data-theme="dark"] .sortable-section:hover,
 body.dark-theme .sortable-section:hover {
-    border-color: var(--primary-color) !important;
+    border-color: var(--primary-color, #818cf8) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
 }
 
 body[data-theme="dark"] .section-drag-handle,
 body.dark-theme .section-drag-handle {
-    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%) !important;
-    border-bottom-color: var(--border-color) !important;
+    /* כותרת הסקשן - מעט כהה יותר */
+    background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+    border-bottom: 1px solid #475569 !important;
 }
 
 body[data-theme="dark"] .section-drag-handle::before,
 body.dark-theme .section-drag-handle::before {
-    background: var(--text-muted) !important;
+    background: #94a3b8 !important;
 }
 
 body[data-theme="dark"] .section-title,
 body.dark-theme .section-title {
-    color: var(--text-secondary) !important;
+    color: #e2e8f0 !important;
 }
 
 body[data-theme="dark"] .section-toggle-btn,
 body.dark-theme .section-toggle-btn {
-    background: rgba(148, 163, 184, 0.2) !important;
-    color: var(--text-muted) !important;
+    background: rgba(148, 163, 184, 0.25) !important;
+    color: #cbd5e1 !important;
 }
 
 body[data-theme="dark"] .section-toggle-btn:hover,
@@ -637,13 +650,14 @@ body.dark-theme .section-toggle-btn:hover {
 
 body[data-theme="dark"] .section-content,
 body.dark-theme .section-content {
-    background: var(--bg-secondary) !important;
+    /* תוכן הסקשן - אותו רקע כמו הסקשן */
+    background: #334155 !important;
 }
 
-/* === שדות טופס === */
+/* === שדות טופס - הכי בהירים לאינטראקציה === */
 body[data-theme="dark"] .form-group label,
 body.dark-theme .form-group label {
-    color: var(--text-secondary) !important;
+    color: #cbd5e1 !important;
 }
 
 body[data-theme="dark"] .form-control,
@@ -654,9 +668,10 @@ body.dark-theme .form-control,
 body.dark-theme input,
 body.dark-theme select,
 body.dark-theme textarea {
-    background: var(--bg-tertiary) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-primary) !important;
+    /* שדות - הכי בהיר (slate-600) - בולט לאינטראקציה */
+    background: #475569 !important;
+    border: 1px solid #64748b !important;
+    color: #f1f5f9 !important;
 }
 
 body[data-theme="dark"] .form-control:focus,
@@ -667,8 +682,9 @@ body.dark-theme .form-control:focus,
 body.dark-theme input:focus,
 body.dark-theme select:focus,
 body.dark-theme textarea:focus {
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2) !important;
+    border-color: var(--primary-color, #818cf8) !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3) !important;
+    background: #526278 !important;
 }
 
 body[data-theme="dark"] .form-control:disabled,
@@ -677,27 +693,32 @@ body[data-theme="dark"] select:disabled,
 body.dark-theme .form-control:disabled,
 body.dark-theme input:disabled,
 body.dark-theme select:disabled {
-    background: var(--bg-primary) !important;
-    color: var(--text-muted) !important;
+    background: #1e293b !important;
+    color: #64748b !important;
+    border-color: #334155 !important;
 }
 
 /* === כפתורים === */
 body[data-theme="dark"] .btn-secondary,
 body.dark-theme .btn-secondary {
-    background: var(--bg-tertiary) !important;
-    color: var(--text-primary) !important;
+    background: #475569 !important;
+    color: #f1f5f9 !important;
+    border: 1px solid #64748b !important;
 }
 
 body[data-theme="dark"] .btn-secondary:hover,
 body.dark-theme .btn-secondary:hover {
-    background: var(--border-color) !important;
+    background: #526278 !important;
+    border-color: #94a3b8 !important;
 }
 
-/* === Form Actions === */
+/* === Form Actions - אזור כפתורים קבוע === */
 body[data-theme="dark"] .form-actions,
 body.dark-theme .form-actions {
-    background: var(--bg-secondary) !important;
-    border-top-color: var(--border-color) !important;
+    /* כמו הסקציות - slate-700 */
+    background: #334155 !important;
+    border-top: 1px solid #475569 !important;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* === Alerts === */
@@ -729,29 +750,29 @@ body.dark-theme .alert-info {
     border-color: rgba(37, 99, 235, 0.3) !important;
 }
 
-/* === Info Cards === */
+/* === Info Cards - כרטיסי מידע === */
 body[data-theme="dark"] .info-card,
 body.dark-theme .info-card {
-    background: var(--bg-tertiary) !important;
-    border-color: var(--border-color) !important;
+    background: #475569 !important;
+    border: 1px solid #64748b !important;
 }
 
 body[data-theme="dark"] .info-card-label,
 body.dark-theme .info-card-label {
-    color: var(--text-muted) !important;
+    color: #94a3b8 !important;
 }
 
 body[data-theme="dark"] .info-card-value,
 body.dark-theme .info-card-value {
-    color: var(--text-primary) !important;
+    color: #f1f5f9 !important;
 }
 
 /* === Location Display === */
 body[data-theme="dark"] .location-display,
 body.dark-theme .location-display {
-    background: var(--bg-tertiary) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-primary) !important;
+    background: #475569 !important;
+    border: 1px solid #64748b !important;
+    color: #f1f5f9 !important;
 }
 
 /* === Tables === */
@@ -759,60 +780,63 @@ body[data-theme="dark"] .data-table,
 body[data-theme="dark"] table,
 body.dark-theme .data-table,
 body.dark-theme table {
-    background: var(--bg-secondary) !important;
+    background: #334155 !important;
+    border: 1px solid #475569 !important;
 }
 
 body[data-theme="dark"] .data-table th,
 body[data-theme="dark"] table th,
 body.dark-theme .data-table th,
 body.dark-theme table th {
-    background: var(--bg-tertiary) !important;
-    color: var(--text-secondary) !important;
-    border-bottom-color: var(--border-color) !important;
+    background: #475569 !important;
+    color: #e2e8f0 !important;
+    border-bottom: 2px solid #64748b !important;
 }
 
 body[data-theme="dark"] .data-table td,
 body[data-theme="dark"] table td,
 body.dark-theme .data-table td,
 body.dark-theme table td {
-    color: var(--text-primary) !important;
-    border-bottom-color: var(--border-color) !important;
+    color: #f1f5f9 !important;
+    border-bottom: 1px solid #475569 !important;
 }
 
 body[data-theme="dark"] .data-table tbody tr:hover,
 body[data-theme="dark"] table tbody tr:hover,
 body.dark-theme .data-table tbody tr:hover,
 body.dark-theme table tbody tr:hover {
-    background: var(--bg-tertiary) !important;
+    background: #3d4f63 !important;
 }
 
 /* === Modals === */
 body[data-theme="dark"] .modal-content,
 body.dark-theme .modal-content {
-    background: var(--bg-secondary) !important;
+    background: #334155 !important;
+    border: 1px solid #475569 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
 }
 
 body[data-theme="dark"] .modal-header,
 body.dark-theme .modal-header {
-    background: var(--bg-tertiary) !important;
-    border-bottom-color: var(--border-color) !important;
+    background: #475569 !important;
+    border-bottom: 1px solid #64748b !important;
 }
 
 body[data-theme="dark"] .modal-title,
 body.dark-theme .modal-title {
-    color: var(--text-primary) !important;
+    color: #f1f5f9 !important;
 }
 
 body[data-theme="dark"] .modal-body,
 body.dark-theme .modal-body {
-    background: var(--bg-secondary) !important;
-    color: var(--text-primary) !important;
+    background: #334155 !important;
+    color: #f1f5f9 !important;
 }
 
 body[data-theme="dark"] .modal-footer,
 body.dark-theme .modal-footer {
-    background: var(--bg-secondary) !important;
-    border-top-color: var(--border-color) !important;
+    background: #334155 !important;
+    border-top: 1px solid #475569 !important;
 }
 
 /* === Status Badges - Dark Mode === */

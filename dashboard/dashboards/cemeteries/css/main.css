@@ -112,7 +112,7 @@ a:hover {
 }
 
 .btn-primary:hover {
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 20px color-mix(in srgb, var(--primary-color) 30%, transparent);
 }
 
 .btn-secondary {
@@ -258,7 +258,7 @@ a:hover {
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
 }
 
 .form-control:disabled {

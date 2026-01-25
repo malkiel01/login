@@ -1012,3 +1012,352 @@ body.dark-theme .status-pending {
         padding-bottom: calc(12px + env(safe-area-inset-bottom));
     }
 }
+
+/* ========================================
+   20. Smart Select - בחירה עם חיפוש
+   ======================================== */
+.smart-select-container {
+    position: relative;
+}
+
+.smart-select-display {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.2s ease;
+}
+
+.smart-select-display:hover {
+    border-color: var(--text-muted);
+}
+
+.smart-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 9999;
+    display: none;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+
+.smart-select-dropdown.open {
+    display: block;
+}
+
+.smart-select-search {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.smart-select-search input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.smart-select-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: background 0.15s ease;
+}
+
+.smart-select-option:hover {
+    background: var(--bg-tertiary);
+}
+
+.smart-select-option.selected {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--primary-color);
+}
+
+/* Smart Select - Dark Mode */
+body[data-theme="dark"] .smart-select-display,
+body.dark-theme .smart-select-display {
+    background: #475569 !important;
+    border-color: #64748b !important;
+    color: #f1f5f9 !important;
+}
+
+body[data-theme="dark"] .smart-select-dropdown,
+body.dark-theme .smart-select-dropdown {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+body[data-theme="dark"] .smart-select-search,
+body.dark-theme .smart-select-search {
+    border-color: #475569 !important;
+}
+
+body[data-theme="dark"] .smart-select-search input,
+body.dark-theme .smart-select-search input {
+    background: #475569 !important;
+    border-color: #64748b !important;
+    color: #f1f5f9 !important;
+}
+
+body[data-theme="dark"] .smart-select-option,
+body.dark-theme .smart-select-option {
+    color: #f1f5f9 !important;
+}
+
+body[data-theme="dark"] .smart-select-option:hover,
+body.dark-theme .smart-select-option:hover {
+    background: #475569 !important;
+}
+
+body[data-theme="dark"] .smart-select-option.selected,
+body.dark-theme .smart-select-option.selected {
+    background: rgba(129, 140, 248, 0.25) !important;
+    color: #a5b4fc !important;
+}
+
+/* ========================================
+   21. Custom Select - בחירה מותאמת
+   ======================================== */
+.custom-select-container {
+    position: relative;
+}
+
+.custom-select-display {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    min-height: 42px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.custom-select-display:hover {
+    border-color: var(--text-muted);
+}
+
+.custom-select-display.open {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 9999;
+    margin-top: 4px;
+    max-height: 300px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.custom-select-search {
+    padding: 10px 12px;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    outline: none;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.custom-select-options {
+    overflow-y: auto;
+    max-height: 250px;
+}
+
+.custom-select-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--bg-tertiary);
+    transition: background 0.15s;
+    color: var(--text-primary);
+}
+
+.custom-select-option:hover {
+    background: var(--bg-tertiary);
+}
+
+.custom-select-option.selected {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
+}
+
+.custom-select-option .option-name {
+    font-weight: 500;
+}
+
+.custom-select-option .option-details {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.custom-select-option .option-status {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.custom-select-option .status-buyer {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.custom-option-hint {
+    padding: 15px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.custom-option-loading {
+    padding: 15px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.custom-option-loading i {
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+/* Custom Select - Dark Mode */
+body[data-theme="dark"] .custom-select-display,
+body.dark-theme .custom-select-display {
+    background: #475569 !important;
+    border-color: #64748b !important;
+    color: #f1f5f9 !important;
+}
+
+body[data-theme="dark"] .custom-select-display.open,
+body.dark-theme .custom-select-display.open {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3) !important;
+}
+
+body[data-theme="dark"] .custom-select-dropdown,
+body.dark-theme .custom-select-dropdown {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+body[data-theme="dark"] .custom-select-search,
+body.dark-theme .custom-select-search {
+    background: #475569 !important;
+    border-color: #64748b !important;
+    color: #f1f5f9 !important;
+}
+
+body[data-theme="dark"] .custom-select-option,
+body.dark-theme .custom-select-option {
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+
+body[data-theme="dark"] .custom-select-option:hover,
+body.dark-theme .custom-select-option:hover {
+    background: #475569 !important;
+}
+
+body[data-theme="dark"] .custom-select-option.selected,
+body.dark-theme .custom-select-option.selected {
+    background: rgba(129, 140, 248, 0.25) !important;
+    color: #a5b4fc !important;
+}
+
+body[data-theme="dark"] .custom-select-option .option-details,
+body.dark-theme .custom-select-option .option-details {
+    color: #94a3b8 !important;
+}
+
+body[data-theme="dark"] .custom-select-option .status-buyer,
+body.dark-theme .custom-select-option .status-buyer {
+    background: rgba(22, 163, 74, 0.2) !important;
+    color: #86efac !important;
+}
+
+body[data-theme="dark"] .custom-option-hint,
+body.dark-theme .custom-option-hint {
+    color: #94a3b8 !important;
+}
+
+/* ========================================
+   22. Price Box - תיבת מחיר
+   ======================================== */
+.price-box {
+    text-align: center;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    margin-bottom: 20px;
+    border: 2px solid #10b981;
+}
+
+.price-box .price-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.price-box .price-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: #065f46;
+}
+
+.price-box .price-type {
+    font-size: 14px;
+    color: #10b981;
+    margin-top: 5px;
+}
+
+/* Price Box - Dark Mode */
+body[data-theme="dark"] .price-box,
+body.dark-theme .price-box {
+    background: #334155 !important;
+    border-color: #10b981 !important;
+}
+
+body[data-theme="dark"] .price-box .price-label,
+body.dark-theme .price-box .price-label {
+    color: #94a3b8 !important;
+}
+
+body[data-theme="dark"] .price-box .price-value,
+body.dark-theme .price-box .price-value {
+    color: #34d399 !important;
+}
+
+body[data-theme="dark"] .price-box .price-type,
+body.dark-theme .price-box .price-type {
+    color: #6ee7b7 !important;
+}

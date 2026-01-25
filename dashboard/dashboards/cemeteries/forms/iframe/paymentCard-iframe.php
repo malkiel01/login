@@ -94,41 +94,12 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>כרטיס תשלום #<?= $serialId ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; color: #334155; padding: 20px; direction: rtl; }
-        /* Section styles now in popup-sections.css */
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-        .info-card { padding: 12px; border-radius: 8px; background: white; }
-        .info-card .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
-        .info-card .value { font-weight: 600; }
-        .info-card.span-2 { grid-column: span 2; }
-        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; color: white; }
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
-        .btn-success { background: #10b981; color: white; }
-        .empty-state { text-align: center; padding: 30px; color: #94a3b8; }
-        .empty-state i { font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5; }
-
-        .section-payment .info-card { border: 1px solid #a7f3d0; }
-        .section-payment .info-card .value { color: #065f46; }
-
-        .price-box {
-            text-align: center;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid #10b981;
-        }
-        .price-box .price-label { font-size: 14px; color: #64748b; margin-bottom: 5px; }
-        .price-box .price-value { font-size: 36px; font-weight: 700; color: #065f46; }
-        .price-box .price-type { font-size: 14px; color: #10b981; margin-top: 5px; }
-    </style>
 </head>
 <body>
     <div class="sortable-sections" id="paymentCardSortableSections">

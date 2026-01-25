@@ -104,99 +104,13 @@ $graveLocations = [
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
 
     <!-- Popup API -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
 
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        /* body styling from popup-forms.css */
-
-        /* Form styles */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-        }
-
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.span-2 { grid-column: span 2; }
-        .form-group label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 6px;
-        }
-        .form-group label .required { color: #ef4444; margin-right: 2px; }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.2s;
-            background: white;
-        }
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #7c3aed;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-        }
-        .form-group input:disabled,
-        .form-group select:disabled {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-        .form-group textarea { resize: vertical; min-height: 80px; }
-        .form-group input.error,
-        .form-group select.error { border-color: #ef4444; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .btn-purple { background: #7c3aed; color: white; }
-        .btn-purple:hover { background: #6d28d9; }
-        .btn-purple:disabled { background: #a78bfa; cursor: not-allowed; }
-        .btn-secondary { background: #e2e8f0; color: #475569; }
-        .btn-secondary:hover { background: #cbd5e1; }
-
-        /* form-actions מוגדר ב-popup-forms.css */
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
-        }
-        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-
-        .location-display {
-            padding: 10px 12px;
-            background: #f5f3ff;
-            border: 1px solid #c4b5fd;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #5b21b6;
-        }
-    </style>
 </head>
 <body>
     <div class="form-container">

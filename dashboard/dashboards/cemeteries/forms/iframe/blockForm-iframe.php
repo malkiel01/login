@@ -67,107 +67,11 @@ $pageTitle = $isEditMode ? 'עריכת גוש' : 'הוספת גוש חדש';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        /* body styling from popup-forms.css */
-
-        /* Form styles */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.span-2 { grid-column: span 2; }
-        .form-group label {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .form-group label .required { color: #ef4444; }
-
-        .form-control {
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background: white;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-        .form-control:disabled {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-        .form-control.error { border-color: #ef4444; }
-
-        textarea.form-control {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
-        .btn-secondary { background: #64748b; color: white; }
-        .btn-secondary:hover { background: #475569; }
-
-        /* form-actions מוגדר ב-popup-forms.css */
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
-        }
-        .alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-        .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        .alert.show { display: block; }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .loading-overlay.show { display: flex; }
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
 </head>
 <body>
     <div class="loading-overlay" id="loadingOverlay">

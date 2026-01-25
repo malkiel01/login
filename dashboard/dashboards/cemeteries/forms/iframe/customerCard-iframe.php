@@ -115,6 +115,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
@@ -123,99 +124,6 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
     <!-- Popup API -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
 
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f1f5f9;
-            color: #334155;
-            padding: 20px;
-            direction: rtl;
-        }
-        /* Section styles now in popup-sections.css */
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-        .info-card {
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .info-card .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
-        .info-card .value { font-weight: 600; color: #334155; }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            color: white;
-        }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #cbd5e1;
-            color: #64748b;
-        }
-        .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
-
-        .purchase-card, .burial-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-        .purchase-card:last-child, .burial-card:last-child { margin-bottom: 0; }
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .card-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
-            font-size: 12px;
-            color: #64748b;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #94a3b8;
-        }
-        .empty-state i {
-            font-size: 32px;
-            margin-bottom: 10px;
-            display: block;
-            opacity: 0.5;
-        }
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .header-title h2 { margin: 0; font-size: 18px; color: #1e293b; }
-    </style>
 </head>
 <body>
     <div class="sortable-sections" id="customerSortableSections">

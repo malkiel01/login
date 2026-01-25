@@ -93,6 +93,7 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
@@ -101,89 +102,6 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
     <!-- Popup API -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
 
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f1f5f9;
-            color: #334155;
-            padding: 20px;
-            direction: rtl;
-        }
-        /* Section styles now in popup-sections.css */
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-        .info-card {
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .info-card .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
-        .info-card .value { font-weight: 600; color: #334155; }
-        .info-card.span-2 { grid-column: span 2; }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            color: white;
-        }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .header-title h2 { margin: 0; font-size: 18px; color: #1e293b; }
-
-        .section-residency .info-card { border: 1px solid #bfdbfe; }
-        .section-residency .info-card .value { color: #1e40af; }
-
-        .type-box {
-            text-align: center;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid <?= $residencyTypeColor ?>;
-        }
-        .type-box .type-icon { font-size: 36px; margin-bottom: 10px; color: <?= $residencyTypeColor ?>; }
-        .type-box .type-label { font-size: 14px; color: #64748b; margin-bottom: 5px; }
-        .type-box .type-value { font-size: 24px; font-weight: 700; color: <?= $residencyTypeColor ?>; }
-
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #94a3b8;
-        }
-        .empty-state i {
-            font-size: 32px;
-            margin-bottom: 10px;
-            display: block;
-            opacity: 0.5;
-        }
-    </style>
 </head>
 <body>
     <div class="sortable-sections" id="residencySortableSections">

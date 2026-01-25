@@ -85,93 +85,10 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: #f1f5f9;
-            color: #334155;
-            padding: 20px;
-            direction: rtl;
-        }
-
-        .form-container { max-width: 100%; }
-        /* Section styles now in popup-sections.css */
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.span-2 { grid-column: span 2; }
-        .form-group label {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .form-group label .required { color: #ef4444; }
-
-        .form-control {
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background: white;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-        .form-control:disabled {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-        .form-control.error { border-color: #ef4444; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
-        .btn-secondary { background: #64748b; color: white; }
-        .btn-secondary:hover { background: #475569; }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
-        }
-        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-    </style>
 </head>
 <body>
     <div class="form-container">

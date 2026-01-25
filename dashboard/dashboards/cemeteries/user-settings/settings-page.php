@@ -23,8 +23,14 @@ try {
     $conn = getDBConnection();
     $userId = getCurrentUserId();
 
-    // Debug logging
-    error_log("Settings Page: userId = " . var_export($userId, true));
+    // Debug logging - check userId type and value
+    error_log("Settings Page: userId = " . var_export($userId, true) . ", type = " . gettype($userId));
+
+    // Check if user has any settings in DB
+    $checkStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM user_settings WHERE userId = :uid");
+    $checkStmt->execute(['uid' => $userId]);
+    $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
+    error_log("Settings Page: user has " . $checkResult['cnt'] . " settings in DB");
 
     $settings = new UserSettingsManager($conn, $userId);
 

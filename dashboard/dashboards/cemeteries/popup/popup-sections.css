@@ -50,7 +50,7 @@
 ======================================== */
 
 .section-drag-handle {
-    height: 32px;
+    height: 40px;
     background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
     cursor: grab;
     display: flex;
@@ -429,7 +429,7 @@ body.dark-theme .section-pink:hover { border-color: #ec4899; }
     }
 
     .section-drag-handle {
-        height: 40px;
+        height: 44px;
         /* במובייל אין גרירה */
         cursor: default;
     }
@@ -439,8 +439,8 @@ body.dark-theme .section-pink:hover { border-color: #ec4899; }
     }
 
     .section-toggle-btn {
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         font-size: 14px;
     }
 

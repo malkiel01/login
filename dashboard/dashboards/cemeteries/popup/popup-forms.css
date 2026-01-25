@@ -65,7 +65,7 @@ html, body {
 
 body {
     padding: 20px;
-    padding-bottom: 90px; /* מקום לכפתורים קבועים */
+    padding-bottom: 0; /* הכפתורים sticky - לא צריך מקום נוסף */
 }
 
 /* ====================================
@@ -74,6 +74,17 @@ body {
 .form-container {
     max-width: 100%;
     background: var(--bg-primary);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* הטופס עצמו - flex למיקום כפתורים */
+.form-container form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100%;
 }
 
 /* ====================================
@@ -97,9 +108,9 @@ body {
     border-color: var(--text-muted);
 }
 
-/* כותרת סקשן */
+/* כותרת סקשן - הגובה מוגדר ב-popup-sections.css */
 .section-drag-handle {
-    height: 36px;
+    /* height defined in popup-sections.css */
     background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
     cursor: grab;
     display: flex;
@@ -313,15 +324,21 @@ textarea {
 
 /* ====================================
    8. Form Actions (כפתורי שמירה/ביטול)
+   כפתורים קבועים בתחתית הטופס
    ==================================== */
 .form-actions {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
-    margin-top: 20px;
-    padding-top: 20px;
+    padding: 15px 20px;
     border-top: 1px solid var(--border-color);
     background: var(--bg-secondary);
+    /* קבוע בתחתית - לכל המסכים */
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
 /* ====================================
@@ -580,6 +597,41 @@ input[type="radio"] {
 .status-pending {
     background: #fef3c7;
     color: #d97706;
+}
+
+/* ========================================
+   16. LIGHT MODE
+   סגנונות מפורשים למצב בהיר
+   ======================================== */
+
+html[data-theme="light"],
+html[data-theme="light"] body,
+body[data-theme="light"],
+body.light-theme {
+    background: #ffffff !important;
+    color: #334155 !important;
+}
+
+body[data-theme="light"] .form-container,
+body.light-theme .form-container {
+    background: #ffffff !important;
+}
+
+body[data-theme="light"] .sortable-section,
+body.light-theme .sortable-section {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+body[data-theme="light"] .section-content,
+body.light-theme .section-content {
+    background: #ffffff !important;
+}
+
+body[data-theme="light"] .form-actions,
+body.light-theme .form-actions {
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
 }
 
 /* ========================================
@@ -864,7 +916,7 @@ body.dark-theme .status-pending {
 @media screen and (max-width: 768px) {
     body {
         padding: 12px;
-        padding-bottom: 90px;
+        padding-bottom: 0;
     }
 
     .form-grid {
@@ -878,7 +930,7 @@ body.dark-theme .status-pending {
 
     .section-drag-handle {
         cursor: default;
-        height: 44px;
+        /* height defined in popup-sections.css mobile */
     }
 
     .section-toggle-btn {
@@ -908,7 +960,7 @@ body.dark-theme .status-pending {
         padding: 12px;
         border-radius: 0;
         z-index: 9999;
-        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .form-actions .btn {
@@ -936,7 +988,7 @@ body.dark-theme .status-pending {
 @media screen and (max-width: 480px) {
     body {
         padding: 8px;
-        padding-bottom: 85px;
+        padding-bottom: 0;
     }
 
     .section-content {
@@ -958,9 +1010,5 @@ body.dark-theme .status-pending {
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .form-actions {
         padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    }
-
-    body {
-        padding-bottom: calc(90px + env(safe-area-inset-bottom));
     }
 }

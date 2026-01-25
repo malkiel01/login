@@ -83,14 +83,14 @@
     </div>
 
     <!-- קו מפריד -->
-    <div style="margin: 20px 15px; border-top: 2px solid #e5e7eb;"></div>
+    <div class="sidebar-divider"></div>
     
     <!-- ניהול נוסף -->
-    <div class="management-section" style="padding: 0 15px;">
-        <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 600;">ניהול</h4>
+    <div class="management-section">
+        <h4>ניהול</h4>
         
         <!-- לקוחות -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="customersItem" onclick="handleSidebarClick('customersItem', loadCustomers)">
                 <span class="hierarchy-icon">👥</span>
                 <span class="hierarchy-title">לקוחות</span>
@@ -99,7 +99,7 @@
         </div>
         
         <!-- רכישות -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="purchasesItem" onclick="handleSidebarClick('purchasesItem', loadPurchases)">
                 <span class="hierarchy-icon">💰</span>
                 <span class="hierarchy-title">רכישות</span>
@@ -108,7 +108,7 @@
         </div>
         
         <!-- קבורות -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="burialsItem" onclick="handleSidebarClick('burialsItem', loadBurials)">
                 <span class="hierarchy-icon">⚱️</span>
                 <span class="hierarchy-title">קבורות</span>
@@ -118,7 +118,7 @@
     </div>
 
     <!-- קו מפריד -->
-    <div style="margin: 20px 15px; border-top: 2px solid #e5e7eb;"></div>
+    <div class="sidebar-divider"></div>
 
 
     <!-- <button onclick="GravesInventoryReport.open()" class="btn-primary">
@@ -126,14 +126,11 @@
     </button> -->
 
     <!-- ניהול מערכת -->
-    <div class="system-management-section" style="padding: 0 15px;">
-        <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 600;">
-            <span style="margin-left: 5px;">⚙️</span>
-            ניהול מערכת
-        </h4>
+    <div class="system-management-section">
+        <h4>⚙️ ניהול מערכת</h4>
         
         <!-- דוח קברים -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="gravesReportItem" onclick="handleSidebarClick('gravesReportItem', function() { GravesInventoryReport.open(); })">
                 <span class="hierarchy-icon">📊</span>
                 <span class="hierarchy-title">דוח יתרות קברים</span>
@@ -141,7 +138,7 @@
         </div>  
 
         <!-- תשלומים -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="paymentsItem" onclick="handleSidebarClick('paymentsItem', loadPayments)">
                 <span class="hierarchy-icon">💳</span>
                 <span class="hierarchy-title">ניהול תשלומים</span>
@@ -150,7 +147,7 @@
         </div>
 
         <!-- תושבויות -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="residencyItem" onclick="handleSidebarClick('residencyItem', function() { if(typeof loadResidencies === 'function') loadResidencies(); })">
                 <span class="hierarchy-icon">🏠</span>
                 <span class="hierarchy-title">הגדרות תושבות</span>
@@ -159,7 +156,7 @@
         </div>
 
         <!-- מדינות -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="countriesItem" onclick="handleSidebarClick('countriesItem', function() { if(typeof loadCountries === 'function') loadCountries(); })">
                 <span class="hierarchy-icon">🌍</span>
                 <span class="hierarchy-title">ניהול מדינות</span>
@@ -168,7 +165,7 @@
         </div>
 
         <!-- ערים -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="citiesItem" onclick="handleSidebarClick('citiesItem', function() { if(typeof loadCities === 'function') loadCities(); })">
                 <span class="hierarchy-icon">🏙️</span>
                 <span class="hierarchy-title">ניהול ערים</span>
@@ -177,43 +174,43 @@
         </div>
 
         <!-- Popup Manager Demo -->
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="popupDemoItem" onclick="handleSidebarClick('popupDemoItem', loadPopupDemo)">
                 <span class="hierarchy-icon">🎯</span>
                 <span class="hierarchy-title">Popup Manager - Demo</span>
-                <span class="badge" style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;">חדש</span>
+                <span class="badge badge-new">חדש</span>
             </div>
         </div>
 
         <!-- אופציות עתידיות -->
-        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+        <div class="management-item">
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">🗺️</span>
                 <span class="hierarchy-title">טריטוריית בית עלמין</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="badge badge-soon">בקרוב</span>
             </div>
         </div>
         
-        <div class="management-item" style="margin-bottom: 10px;">
+        <div class="management-item">
             <div class="hierarchy-header" id="mapItem" onclick="handleSidebarClick('mapItem', openMap)">
                 <span class="hierarchy-icon">🗺️</span>
                 <span class="hierarchy-title">ניהול מפות</span>
             </div>
         </div>
         
-        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+        <div class="management-item">
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">🔐</span>
                 <span class="hierarchy-title">ניהול הרשאות</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="badge badge-soon">בקרוב</span>
             </div>
         </div>
         
-        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+        <div class="management-item">
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">📊</span>
                 <span class="hierarchy-title">ניהול דוחות</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="badge badge-soon">בקרוב</span>
             </div>
         </div>
     </div>
@@ -248,203 +245,6 @@
         <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14l5-5l-5-5m5 5H9"/>
     </symbol>
 </svg>
-
-<style>
-/* ============================================
-   SIDEBAR UNIFIED DESIGN - עיצוב אחיד מלא
-   Version: 2.0.0
-   ============================================ */
-
-/* Base State - מצב רגיל */
-.hierarchy-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #475569;
-    font-weight: 500;
-    position: relative;
-}
-
-/* Hover State - ריחוף */
-.hierarchy-header:hover:not(.disabled) {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: translateX(-2px);
-}
-
-/* Active State - מצב פעיל (כמו התשלומים!) */
-.hierarchy-header.active {
-    background: #f0f9ff;
-    border: 1px solid #3b82f6;
-    color: #1e40af;
-    font-weight: 600;
-    transform: translateX(-3px);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
-}
-
-/* Active State - Count Badge בעיצוב כחול */
-.hierarchy-header.active .hierarchy-count {
-    background: #3b82f6;
-    color: white;
-}
-
-/* Disabled State */
-.hierarchy-header.disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.hierarchy-header.disabled:hover {
-    transform: none;
-}
-
-/* Icon Styling */
-.hierarchy-icon {
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-}
-
-.hierarchy-header:hover:not(.disabled) .hierarchy-icon {
-    transform: scale(1.05);
-}
-
-.hierarchy-header.active .hierarchy-icon {
-    transform: scale(1.1);
-}
-
-/* Title Styling */
-.hierarchy-title {
-    flex: 1;
-    font-size: 0.9375rem;
-    line-height: 1.4;
-}
-
-/* Count Badge - עיצוב אחיד */
-.hierarchy-count {
-    background: #e2e8f0;
-    color: #475569;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    min-width: 28px;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-.hierarchy-header:hover:not(.disabled) .hierarchy-count {
-    background: #cbd5e1;
-    transform: scale(1.05);
-}
-
-/* Loading State for Count */
-.hierarchy-count.loading {
-    background: #f1f5f9;
-    color: transparent;
-    position: relative;
-    overflow: hidden;
-}
-
-.hierarchy-count.loading::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.6), 
-        transparent
-    );
-    animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-    to { left: 100%; }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .hierarchy-header {
-        padding: 0.75rem 0.875rem;
-    }
-    
-    .hierarchy-icon {
-        font-size: 1.25rem;
-        width: 28px;
-        height: 28px;
-    }
-    
-    .hierarchy-title {
-        font-size: 0.875rem;
-    }
-    
-    .hierarchy-count {
-        font-size: 0.75rem;
-        padding: 0.2rem 0.6rem;
-    }
-}
-
-/* Selected Item Container */
-.selected-item-container {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    background: #f8fafc;
-    border-radius: 0.375rem;
-    display: none;
-}
-
-.selected-item-container.active {
-    display: block;
-}
-
-/* Logout Button - עיצוב עדין */
-.btn-logout {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 12px;
-    background: #f3f4f6;
-    color: #6b7280;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 13px;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-logout:hover {
-    background: #fee2e2;
-    color: #dc2626;
-    border-color: #fecaca;
-}
-
-.btn-logout svg {
-    width: 14px;
-    height: 14px;
-}
-
-.sidebar-footer {
-    padding: 10px 15px;
-    border-top: 1px solid #e5e7eb;
-    margin-top: auto;
-}
-</style>
 
 <script>
 /*

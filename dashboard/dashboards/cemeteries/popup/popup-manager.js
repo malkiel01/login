@@ -6,11 +6,12 @@
  */
 
 class PopupManager {
-    static version = '1.0.1';
+    static version = '1.0.2';
     static popups = new Map();
     static maxZIndex = 10000;
     static minimizedContainer = null;
     static cssLoaded = false;
+    static themeObserver = null;
 
     /**
      * טוען את ה-CSS ו-JS של הפופ-אפ (אם עדיין לא נטענו)
@@ -44,6 +45,48 @@ class PopupManager {
         }
 
         this.cssLoaded = true;
+
+        // אתחול האזנה לשינויי נושא
+        this.initThemeObserver();
+    }
+
+    /**
+     * אתחול observer לשינויי נושא
+     * מעדכן את כל הפופאפים הפתוחים כשהנושא משתנה
+     */
+    static initThemeObserver() {
+        if (this.themeObserver) return; // כבר מאותחל
+
+        const targetDoc = this.getTargetDocument();
+        const root = targetDoc.documentElement;
+
+        // MutationObserver לשינויי data-theme attribute
+        this.themeObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' &&
+                    (mutation.attributeName === 'data-theme' || mutation.attributeName === 'data-color-scheme')) {
+                    console.log('🎨 Theme changed, updating all popups...');
+                    this.updateAllPopupsTheme();
+                    break;
+                }
+            }
+        });
+
+        this.themeObserver.observe(root, {
+            attributes: true,
+            attributeFilter: ['data-theme', 'data-color-scheme']
+        });
+
+        console.log('👁️ Theme observer initialized');
+    }
+
+    /**
+     * עדכון הנושא בכל הפופאפים הפתוחים
+     */
+    static updateAllPopupsTheme() {
+        this.popups.forEach(popup => {
+            popup.updateTheme();
+        });
     }
 
     /**
@@ -419,6 +462,31 @@ class Popup {
                 borderColor: getComputedStyle(root).getPropertyValue('--border-color').trim()
             }
         };
+    }
+
+    /**
+     * עדכון הנושא של הפופאפ (container + iframe)
+     */
+    updateTheme() {
+        const themeSettings = this.getThemeSettings();
+
+        // עדכון ה-container
+        const container = this.elements.container;
+        container.setAttribute('data-theme', themeSettings.dataTheme);
+        container.setAttribute('data-color-scheme', themeSettings.colorScheme);
+
+        // עדכון classes
+        container.classList.remove('dark-theme', 'light-theme');
+        if (themeSettings.dataTheme === 'dark') {
+            container.classList.add('dark-theme');
+        } else {
+            container.classList.add('light-theme');
+        }
+
+        // שליחת הנושא החדש ל-iframe
+        this.notifyContent('themeChanged', { theme: themeSettings });
+
+        console.log(`🎨 Popup ${this.id} theme updated to: ${themeSettings.dataTheme}`);
     }
 
     /**

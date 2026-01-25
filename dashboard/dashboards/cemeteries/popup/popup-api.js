@@ -1,7 +1,7 @@
 /**
  * PopupAPI - API לתקשורת בין התוכן לבין הפופ-אפ
  * תומך גם ב-iframe (postMessage) וגם ב-HTML ישיר
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 class PopupAPI {
@@ -145,10 +145,9 @@ class PopupAPI {
 
         const { event, data: eventData } = data;
 
-        // החלת הגדרות נושא אם התקבלו
-        console.log('[PopupAPI] DEBUG - event:', event, 'has theme:', !!eventData?.theme);
-        if (event === 'loaded' && eventData?.theme) {
-            console.log('[PopupAPI] DEBUG - calling applyTheme NOW');
+        // החלת הגדרות נושא אם התקבלו (בטעינה או בשינוי נושא)
+        if ((event === 'loaded' || event === 'themeChanged') && eventData?.theme) {
+            console.log(`[PopupAPI] Theme ${event === 'themeChanged' ? 'changed' : 'loaded'}, applying...`);
             this.applyTheme(eventData.theme);
         }
 

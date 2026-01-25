@@ -43,8 +43,7 @@ $pageTitle = $isEditMode ? 'עריכת מדינה' : 'הוספת מדינה חד
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/dashboard/css/user-preferences.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-sections.css?v=<?= time() ?>">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=<?= time() ?>"></script>

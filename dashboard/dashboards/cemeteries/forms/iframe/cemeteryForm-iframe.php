@@ -49,176 +49,71 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
     <title><?= $pageTitle ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/forms/forms-mobile.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css?v=20260125">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js?v=20260125"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: #f1f5f9;
-            color: #334155;
-            padding: 20px;
-            direction: rtl;
+        /* === סגנונות ספציפיים לטופס זה - צבעי הסקציות === */
+
+        /* סקשן ירוק - פרטי בית עלמין */
+        .section-cemetery .section-drag-handle {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0) !important;
+        }
+        .section-cemetery .section-title { color: #166534 !important; }
+        .section-cemetery .section-content {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important;
         }
 
-        .form-container { max-width: 100%; }
-
-        .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
-        .sortable-section {
-            background: white;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            overflow: hidden;
-            transition: border-color 0.2s;
+        /* סקשן כחול - מיקום */
+        .section-location .section-drag-handle {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
         }
-        .sortable-section:hover { border-color: #94a3b8; }
-
-        .section-drag-handle {
-            height: 32px;
-            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #cbd5e1;
-            position: relative;
-        }
-        .section-drag-handle::before {
-            content: "";
-            width: 40px;
-            height: 4px;
-            background: #94a3b8;
-            border-radius: 2px;
-        }
-        .section-toggle-btn {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: rgba(100,116,139,0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            color: #64748b;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .section-toggle-btn:hover { background: rgba(100,116,139,0.4); }
-        .section-title {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-        }
-        .section-content { padding: 20px; }
-        .sortable-section.collapsed .section-content { display: none; }
-        .sortable-section.collapsed .section-toggle-btn i { transform: rotate(-90deg); }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.span-2 { grid-column: span 2; }
-        .form-group label {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .form-group label .required { color: #ef4444; }
-
-        .form-control {
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background: white;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-        .form-control:disabled {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-        .form-control.error { border-color: #ef4444; }
-
-        textarea.form-control {
-            min-height: 80px;
-            resize: vertical;
+        .section-location .section-title { color: #1e40af !important; }
+        .section-location .section-content {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
         }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
+        /* סקשן סגול - פרטי קשר */
+        .section-contact .section-drag-handle {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe) !important;
         }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
-        .btn-secondary { background: #64748b; color: white; }
-        .btn-secondary:hover { background: #475569; }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
+        .section-contact .section-title { color: #3730a3 !important; }
+        .section-contact .section-content {
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff) !important;
         }
 
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
+        /* === Dark Mode === */
+        body[data-theme="dark"] .section-cemetery .section-drag-handle,
+        body.dark-theme .section-cemetery .section-drag-handle {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.15)) !important;
         }
-        .alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-        .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        .alert.show { display: block; }
+        body[data-theme="dark"] .section-cemetery .section-title,
+        body.dark-theme .section-cemetery .section-title { color: #86efac !important; }
+        body[data-theme="dark"] .section-cemetery .section-content,
+        body.dark-theme .section-cemetery .section-content {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05)) !important;
+        }
 
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+        body[data-theme="dark"] .section-location .section-drag-handle,
+        body.dark-theme .section-location .section-drag-handle {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.15)) !important;
         }
-        .loading-overlay.show { display: flex; }
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        body[data-theme="dark"] .section-location .section-title,
+        body.dark-theme .section-location .section-title { color: #93c5fd !important; }
+        body[data-theme="dark"] .section-location .section-content,
+        body.dark-theme .section-location .section-content {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)) !important;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        body[data-theme="dark"] .section-contact .section-drag-handle,
+        body.dark-theme .section-contact .section-drag-handle {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.15)) !important;
+        }
+        body[data-theme="dark"] .section-contact .section-title,
+        body.dark-theme .section-contact .section-title { color: #a5b4fc !important; }
+        body[data-theme="dark"] .section-contact .section-content,
+        body.dark-theme .section-contact .section-content {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05)) !important;
+        }
     </style>
 </head>
 <body>
@@ -234,16 +129,16 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
 
             <div class="sortable-sections" id="cemeteryFormSortableSections">
                 <!-- סקשן: פרטי בית העלמין -->
-                <div class="sortable-section" data-section="details">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                <div class="sortable-section section-cemetery" data-section="details">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #166534;">
+                        <span class="section-title">
                             <i class="fas fa-landmark"></i> פרטי בית העלמין
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>שם בית עלמין בעברית <span class="required">*</span></label>
@@ -274,16 +169,16 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
                 </div>
 
                 <!-- סקשן: פרטי קשר -->
-                <div class="sortable-section" data-section="contact">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                <div class="sortable-section section-location" data-section="contact">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #1e40af;">
+                        <span class="section-title">
                             <i class="fas fa-phone"></i> פרטי קשר
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>שם איש קשר</label>
@@ -302,16 +197,16 @@ $pageTitle = $isEditMode ? 'עריכת בית עלמין' : 'הוספת בית �
                 </div>
 
                 <!-- סקשן: פרטים נוספים -->
-                <div class="sortable-section" data-section="additional">
-                    <div class="section-drag-handle" style="background: linear-gradient(135deg, #e0e7ff, #c7d2fe);">
+                <div class="sortable-section section-contact" data-section="additional">
+                    <div class="section-drag-handle">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
-                        <span class="section-title" style="color: #3730a3;">
+                        <span class="section-title">
                             <i class="fas fa-info-circle"></i> פרטים נוספים
                         </span>
                     </div>
-                    <div class="section-content" style="background: linear-gradient(135deg, #eef2ff, #e0e7ff);">
+                    <div class="section-content">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>קוד ביטוח לאומי</label>

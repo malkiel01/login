@@ -1,0 +1,942 @@
+/**
+ * popup-forms.css
+ * סגנונות גלובליים לטפסים בתוך פופאפים/iframes
+ *
+ * קובץ זה מגדיר את העיצוב הבסיסי לכל הטפסים שנטענים בתוך פופאפים.
+ * הסגנונות מבוססים על CSS Variables ומתאימים אוטומטית לערכת הנושא.
+ *
+ * שימוש: הוסף <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup-forms.css">
+ *        לכל קובץ iframe PHP
+ *
+ * @version 1.0.0
+ * @author Malkiel
+ */
+
+/* ====================================
+   1. ערכת ברירת מחדל (FALLBACK)
+   משמשת כשאין CSS Variables מוגדרים
+   ==================================== */
+:root {
+    /* צבעי רקע - Light Mode Default */
+    --bg-primary: #f1f5f9;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e2e8f0;
+
+    /* צבעי טקסט */
+    --text-primary: #334155;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+
+    /* גבולות */
+    --border-color: #e2e8f0;
+
+    /* צבע ראשי */
+    --primary-color: #3b82f6;
+    --primary-dark: #2563eb;
+
+    /* צללים */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+
+    /* רדיוסים */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+/* ====================================
+   2. בסיס - Body & HTML
+   ==================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    direction: rtl;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100%;
+}
+
+body {
+    padding: 20px;
+    padding-bottom: 90px; /* מקום לכפתורים קבועים */
+}
+
+/* ====================================
+   3. Form Container
+   ==================================== */
+.form-container {
+    max-width: 100%;
+    background: var(--bg-primary);
+}
+
+/* ====================================
+   4. סקציות (Sections)
+   ==================================== */
+.sortable-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sortable-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 2px solid transparent;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.sortable-section:hover {
+    border-color: var(--text-muted);
+}
+
+/* כותרת סקשן */
+.section-drag-handle {
+    height: 36px;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+.section-drag-handle::before {
+    content: "";
+    width: 40px;
+    height: 4px;
+    background: var(--text-muted);
+    border-radius: 2px;
+}
+
+.section-title {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.section-toggle-btn {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: rgba(100, 116, 139, 0.15);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.section-toggle-btn:hover {
+    background: rgba(100, 116, 139, 0.3);
+}
+
+.section-content {
+    padding: 20px;
+    background: var(--bg-secondary);
+}
+
+/* סקשן מכווץ */
+.sortable-section.collapsed .section-content {
+    display: none;
+}
+
+.sortable-section.collapsed .section-toggle-btn i {
+    transform: rotate(-90deg);
+}
+
+/* ====================================
+   5. Grid & Form Groups
+   ==================================== */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.span-2 {
+    grid-column: span 2;
+}
+
+.form-group.span-3 {
+    grid-column: span 3;
+}
+
+.form-group label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group label .required {
+    color: #ef4444;
+    margin-right: 2px;
+}
+
+/* ====================================
+   6. Form Controls (Inputs)
+   ==================================== */
+.form-control,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="date"],
+input[type="password"],
+select,
+textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+}
+
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.form-control:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.form-control.error,
+input.error,
+select.error {
+    border-color: #ef4444;
+}
+
+textarea.form-control,
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* ====================================
+   7. כפתורים (Buttons)
+   ==================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+    background: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+/* ====================================
+   8. Form Actions (כפתורי שמירה/ביטול)
+   ==================================== */
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+/* ====================================
+   9. Alerts & Messages
+   ==================================== */
+.alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    margin-bottom: 15px;
+    display: none;
+    font-size: 14px;
+}
+
+.alert.show {
+    display: block;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.alert-warning {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.alert-info {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+/* ====================================
+   10. Info Cards
+   ==================================== */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.info-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+}
+
+.info-card-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.info-card-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ====================================
+   11. Location Display
+   ==================================== */
+.location-display {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    color: var(--text-primary);
+}
+
+/* ====================================
+   12. Loading Overlay
+   ==================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-overlay.show {
+    display: flex;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--bg-tertiary);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ====================================
+   13. Tables
+   ==================================== */
+.data-table,
+table {
+    width: 100%;
+    background: var(--bg-secondary);
+    border-collapse: collapse;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.data-table th,
+table th {
+    padding: 10px 12px;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+    background: var(--bg-tertiary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.data-table td,
+table td {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tbody tr:hover,
+table tbody tr:hover {
+    background: var(--bg-tertiary);
+}
+
+/* ====================================
+   14. Modals
+   ==================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    max-width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.modal-header {
+    padding: 15px 20px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 5px;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 60vh;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ====================================
+   15. Checkboxes & Radio Buttons
+   ==================================== */
+input[type="checkbox"],
+input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}
+
+/* ====================================
+   16. Status Badges
+   ==================================== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-inactive {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* ========================================
+   17. DARK MODE
+   כל הסגנונות הכהים במקום מרכזי אחד
+   ======================================== */
+
+/* === בסיס === */
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+body[data-theme="dark"],
+body.dark-theme {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* === סקציות === */
+body[data-theme="dark"] .sortable-section,
+body.dark-theme .sortable-section {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .sortable-section:hover,
+body.dark-theme .sortable-section:hover {
+    border-color: var(--primary-color) !important;
+}
+
+body[data-theme="dark"] .section-drag-handle,
+body.dark-theme .section-drag-handle {
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .section-drag-handle::before,
+body.dark-theme .section-drag-handle::before {
+    background: var(--text-muted) !important;
+}
+
+body[data-theme="dark"] .section-title,
+body.dark-theme .section-title {
+    color: var(--text-secondary) !important;
+}
+
+body[data-theme="dark"] .section-toggle-btn,
+body.dark-theme .section-toggle-btn {
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: var(--text-muted) !important;
+}
+
+body[data-theme="dark"] .section-toggle-btn:hover,
+body.dark-theme .section-toggle-btn:hover {
+    background: rgba(148, 163, 184, 0.4) !important;
+}
+
+body[data-theme="dark"] .section-content,
+body.dark-theme .section-content {
+    background: var(--bg-secondary) !important;
+}
+
+/* === שדות טופס === */
+body[data-theme="dark"] .form-group label,
+body.dark-theme .form-group label {
+    color: var(--text-secondary) !important;
+}
+
+body[data-theme="dark"] .form-control,
+body[data-theme="dark"] input,
+body[data-theme="dark"] select,
+body[data-theme="dark"] textarea,
+body.dark-theme .form-control,
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .form-control:focus,
+body[data-theme="dark"] input:focus,
+body[data-theme="dark"] select:focus,
+body[data-theme="dark"] textarea:focus,
+body.dark-theme .form-control:focus,
+body.dark-theme input:focus,
+body.dark-theme select:focus,
+body.dark-theme textarea:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2) !important;
+}
+
+body[data-theme="dark"] .form-control:disabled,
+body[data-theme="dark"] input:disabled,
+body[data-theme="dark"] select:disabled,
+body.dark-theme .form-control:disabled,
+body.dark-theme input:disabled,
+body.dark-theme select:disabled {
+    background: var(--bg-primary) !important;
+    color: var(--text-muted) !important;
+}
+
+/* === כפתורים === */
+body[data-theme="dark"] .btn-secondary,
+body.dark-theme .btn-secondary {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .btn-secondary:hover,
+body.dark-theme .btn-secondary:hover {
+    background: var(--border-color) !important;
+}
+
+/* === Form Actions === */
+body[data-theme="dark"] .form-actions,
+body.dark-theme .form-actions {
+    background: var(--bg-secondary) !important;
+    border-top-color: var(--border-color) !important;
+}
+
+/* === Alerts === */
+body[data-theme="dark"] .alert-success,
+body.dark-theme .alert-success {
+    background: rgba(34, 197, 94, 0.2) !important;
+    color: #86efac !important;
+    border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+body[data-theme="dark"] .alert-error,
+body.dark-theme .alert-error {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+body[data-theme="dark"] .alert-warning,
+body.dark-theme .alert-warning {
+    background: rgba(217, 119, 6, 0.2) !important;
+    color: #fcd34d !important;
+    border-color: rgba(217, 119, 6, 0.3) !important;
+}
+
+body[data-theme="dark"] .alert-info,
+body.dark-theme .alert-info {
+    background: rgba(37, 99, 235, 0.2) !important;
+    color: #93c5fd !important;
+    border-color: rgba(37, 99, 235, 0.3) !important;
+}
+
+/* === Info Cards === */
+body[data-theme="dark"] .info-card,
+body.dark-theme .info-card {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .info-card-label,
+body.dark-theme .info-card-label {
+    color: var(--text-muted) !important;
+}
+
+body[data-theme="dark"] .info-card-value,
+body.dark-theme .info-card-value {
+    color: var(--text-primary) !important;
+}
+
+/* === Location Display === */
+body[data-theme="dark"] .location-display,
+body.dark-theme .location-display {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* === Tables === */
+body[data-theme="dark"] .data-table,
+body[data-theme="dark"] table,
+body.dark-theme .data-table,
+body.dark-theme table {
+    background: var(--bg-secondary) !important;
+}
+
+body[data-theme="dark"] .data-table th,
+body[data-theme="dark"] table th,
+body.dark-theme .data-table th,
+body.dark-theme table th {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-secondary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .data-table td,
+body[data-theme="dark"] table td,
+body.dark-theme .data-table td,
+body.dark-theme table td {
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .data-table tbody tr:hover,
+body[data-theme="dark"] table tbody tr:hover,
+body.dark-theme .data-table tbody tr:hover,
+body.dark-theme table tbody tr:hover {
+    background: var(--bg-tertiary) !important;
+}
+
+/* === Modals === */
+body[data-theme="dark"] .modal-content,
+body.dark-theme .modal-content {
+    background: var(--bg-secondary) !important;
+}
+
+body[data-theme="dark"] .modal-header,
+body.dark-theme .modal-header {
+    background: var(--bg-tertiary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+body[data-theme="dark"] .modal-title,
+body.dark-theme .modal-title {
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .modal-body,
+body.dark-theme .modal-body {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .modal-footer,
+body.dark-theme .modal-footer {
+    background: var(--bg-secondary) !important;
+    border-top-color: var(--border-color) !important;
+}
+
+/* === Status Badges - Dark Mode === */
+body[data-theme="dark"] .status-active,
+body.dark-theme .status-active {
+    background: rgba(22, 163, 74, 0.2) !important;
+    color: #86efac !important;
+}
+
+body[data-theme="dark"] .status-inactive,
+body.dark-theme .status-inactive {
+    background: rgba(220, 38, 38, 0.2) !important;
+    color: #fca5a5 !important;
+}
+
+body[data-theme="dark"] .status-pending,
+body.dark-theme .status-pending {
+    background: rgba(217, 119, 6, 0.2) !important;
+    color: #fcd34d !important;
+}
+
+/* ========================================
+   18. RESPONSIVE - מובייל
+   ======================================== */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 12px;
+        padding-bottom: 90px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .form-group.span-2,
+    .form-group.span-3 {
+        grid-column: span 1 !important;
+    }
+
+    .section-drag-handle {
+        cursor: default;
+        height: 44px;
+    }
+
+    .section-toggle-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .form-control,
+    input,
+    select,
+    textarea {
+        font-size: 16px !important; /* מונע zoom באייפון */
+        min-height: 44px;
+    }
+
+    .btn {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+
+    .form-actions {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 12px;
+        border-radius: 0;
+        z-index: 9999;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-actions .btn {
+        flex: 1;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .modal-content {
+        width: 95% !important;
+        max-height: 90vh;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    body {
+        padding: 8px;
+        padding-bottom: 85px;
+    }
+
+    .section-content {
+        padding: 12px;
+    }
+
+    .section-title {
+        font-size: 12px;
+    }
+
+    .form-group label {
+        font-size: 11px;
+    }
+}
+
+/* ========================================
+   19. Safe Area (iPhone X+)
+   ======================================== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .form-actions {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    body {
+        padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    }
+}

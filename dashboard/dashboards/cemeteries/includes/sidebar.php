@@ -38,7 +38,7 @@
     <!-- רמות ההירארכיה -->
     <div class="hierarchy-levels">
         <!-- בתי עלמין -->
-        <?php if (isAdmin() || hasModulePermission('cemeteries', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('cemeteries', 'view') || hasModulePermission('cemeteries', 'edit') || hasModulePermission('cemeteries', 'create')): ?>
         <div class="hierarchy-level">
             <div class="hierarchy-header" id="cemeteriesItem" onclick="handleSidebarClick('cemeteriesItem', loadCemeteries)">
                 <span class="hierarchy-icon">🏛️</span>
@@ -50,7 +50,7 @@
         <?php endif; ?>
 
         <!-- גושים -->
-        <?php if (isAdmin() || hasModulePermission('blocks', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('blocks', 'view') || hasModulePermission('blocks', 'edit') || hasModulePermission('blocks', 'create')): ?>
         <div class="hierarchy-level">
             <div class="hierarchy-header" id="blocksItem" onclick="handleSidebarClick('blocksItem', loadBlocks)">
                 <span class="hierarchy-icon">📦</span>
@@ -62,7 +62,7 @@
         <?php endif; ?>
 
         <!-- חלקות -->
-        <?php if (isAdmin() || hasModulePermission('plots', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('plots', 'view') || hasModulePermission('plots', 'edit') || hasModulePermission('plots', 'create')): ?>
         <div class="hierarchy-level">
             <div class="hierarchy-header" id="plotsItem" onclick="handleSidebarClick('plotsItem', loadPlots)">
                 <span class="hierarchy-icon">📋</span>
@@ -74,7 +74,7 @@
         <?php endif; ?>
 
         <!-- אחוזות קבר -->
-        <?php if (isAdmin() || hasModulePermission('areaGraves', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('areaGraves', 'view') || hasModulePermission('areaGraves', 'edit') || hasModulePermission('areaGraves', 'create')): ?>
         <div class="hierarchy-level">
             <div class="hierarchy-header" id="areaGravesItem" onclick="handleSidebarClick('areaGravesItem', loadAreaGraves)">
                 <span class="hierarchy-icon">🏘️</span>
@@ -86,7 +86,7 @@
         <?php endif; ?>
 
         <!-- קברים -->
-        <?php if (isAdmin() || hasModulePermission('graves', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('graves', 'view') || hasModulePermission('graves', 'edit') || hasModulePermission('graves', 'create')): ?>
         <div class="hierarchy-level">
             <div class="hierarchy-header" id="gravesItem" onclick="handleSidebarClick('gravesItem', loadGraves)">
                 <span class="hierarchy-icon">🪦</span>
@@ -106,7 +106,7 @@
         <h4>ניהול</h4>
 
         <!-- לקוחות -->
-        <?php if (isAdmin() || hasModulePermission('customers', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('customers', 'view') || hasModulePermission('customers', 'edit') || hasModulePermission('customers', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="customersItem" onclick="handleSidebarClick('customersItem', loadCustomers)">
                 <span class="hierarchy-icon">👥</span>
@@ -117,7 +117,7 @@
         <?php endif; ?>
 
         <!-- רכישות -->
-        <?php if (isAdmin() || hasModulePermission('purchases', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('purchases', 'view') || hasModulePermission('purchases', 'edit') || hasModulePermission('purchases', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="purchasesItem" onclick="handleSidebarClick('purchasesItem', loadPurchases)">
                 <span class="hierarchy-icon">💰</span>
@@ -128,7 +128,7 @@
         <?php endif; ?>
 
         <!-- קבורות -->
-        <?php if (isAdmin() || hasModulePermission('burials', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('burials', 'view') || hasModulePermission('burials', 'edit') || hasModulePermission('burials', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="burialsItem" onclick="handleSidebarClick('burialsItem', loadBurials)">
                 <span class="hierarchy-icon">⚱️</span>
@@ -152,7 +152,7 @@
         <h4>ניהול מערכת</h4>
 
         <!-- דוח קברים -->
-        <?php if (isAdmin() || hasModulePermission('reports', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('reports', 'view') || hasModulePermission('reports', 'edit') || hasModulePermission('reports', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="gravesReportItem" onclick="handleSidebarClick('gravesReportItem', function() { GravesInventoryReport.open(); })">
                 <span class="hierarchy-icon">📊</span>
@@ -162,7 +162,7 @@
         <?php endif; ?>
 
         <!-- תשלומים -->
-        <?php if (isAdmin() || hasModulePermission('payments', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('payments', 'view') || hasModulePermission('payments', 'edit') || hasModulePermission('payments', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="paymentsItem" onclick="handleSidebarClick('paymentsItem', loadPayments)">
                 <span class="hierarchy-icon">💳</span>
@@ -173,7 +173,7 @@
         <?php endif; ?>
 
         <!-- תושבויות -->
-        <?php if (isAdmin() || hasModulePermission('residency', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('residency', 'view') || hasModulePermission('residency', 'edit') || hasModulePermission('residency', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="residencyItem" onclick="handleSidebarClick('residencyItem', function() { if(typeof loadResidencies === 'function') loadResidencies(); })">
                 <span class="hierarchy-icon">🏠</span>
@@ -184,7 +184,7 @@
         <?php endif; ?>
 
         <!-- מדינות -->
-        <?php if (isAdmin() || hasModulePermission('countries', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('countries', 'view') || hasModulePermission('countries', 'edit') || hasModulePermission('countries', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="countriesItem" onclick="handleSidebarClick('countriesItem', function() { if(typeof loadCountries === 'function') loadCountries(); })">
                 <span class="hierarchy-icon">🌍</span>
@@ -195,7 +195,7 @@
         <?php endif; ?>
 
         <!-- ערים -->
-        <?php if (isAdmin() || hasModulePermission('cities', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('cities', 'view') || hasModulePermission('cities', 'edit') || hasModulePermission('cities', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="citiesItem" onclick="handleSidebarClick('citiesItem', function() { if(typeof loadCities === 'function') loadCities(); })">
                 <span class="hierarchy-icon">🏙️</span>
@@ -217,7 +217,7 @@
         <?php endif; ?>
 
         <!-- מפות -->
-        <?php if (isAdmin() || hasModulePermission('map', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('map', 'view') || hasModulePermission('map', 'edit')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="mapItem" onclick="handleSidebarClick('mapItem', openMap)">
                 <span class="hierarchy-icon">🗺️</span>
@@ -227,7 +227,7 @@
         <?php endif; ?>
 
         <!-- ניהול משתמשים -->
-        <?php if (isAdmin() || hasModulePermission('users', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('users', 'view') || hasModulePermission('users', 'edit') || hasModulePermission('users', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header" id="usersItem" onclick="handleSidebarClick('usersItem', openUsersManagement)">
                 <span class="hierarchy-icon">👥</span>
@@ -237,7 +237,7 @@
         <?php endif; ?>
 
         <!-- ניהול דוחות - בקרוב -->
-        <?php if (isAdmin() || hasModulePermission('reports', 'view')): ?>
+        <?php if (isAdmin() || hasModulePermission('reports', 'view') || hasModulePermission('reports', 'edit') || hasModulePermission('reports', 'create')): ?>
         <div class="management-item">
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">📊</span>

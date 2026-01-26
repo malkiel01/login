@@ -21,8 +21,8 @@
  */
 async function updateAllSidebarCounts() {
 
-    // פונקציית עזר לבדיקת הרשאה
-    const canView = (module) => window.hasPermission ? window.hasPermission(module, 'view') : true;
+    // פונקציית עזר לבדיקת הרשאה - edit/create כוללים צפיה
+    const canViewModule = (module) => window.canView ? window.canViewModule(module) : true;
 
     // הצג אנימציית Loading על כל המונים
     document.querySelectorAll('.hierarchy-count').forEach(el => {
@@ -31,40 +31,40 @@ async function updateAllSidebarCounts() {
 
     try {
         // 1️⃣ בתי עלמין
-        if (canView('cemeteries')) await updateCemeteriesCount();
+        if (canViewModule('cemeteries')) await updateCemeteriesCount();
 
         // 2️⃣ גושים
-        if (canView('blocks')) await updateBlocksCount();
+        if (canViewModule('blocks')) await updateBlocksCount();
 
         // 3️⃣ חלקות
-        if (canView('plots')) await updatePlotsCount();
+        if (canViewModule('plots')) await updatePlotsCount();
 
         // 4️⃣ אחוזות קבר
-        if (canView('areaGraves')) await updateAreaGravesCount();
+        if (canViewModule('areaGraves')) await updateAreaGravesCount();
 
         // 5️⃣ קברים
-        if (canView('graves')) await updateGravesCount();
+        if (canViewModule('graves')) await updateGravesCount();
 
         // 6️⃣ לקוחות
-        if (canView('customers')) await updateCustomersCount();
+        if (canViewModule('customers')) await updateCustomersCount();
 
         // 7️⃣ רכישות
-        if (canView('purchases')) await updatePurchasesCount();
+        if (canViewModule('purchases')) await updatePurchasesCount();
 
         // 8️⃣ קבורות
-        if (canView('burials')) await updateBurialsCount();
+        if (canViewModule('burials')) await updateBurialsCount();
 
         // 9️⃣ תשלומים
-        if (canView('payments')) await updatePaymentsCount();
+        if (canViewModule('payments')) await updatePaymentsCount();
 
         // 🔟 תושבויות
-        if (canView('residency')) await updateResidencyCount();
+        if (canViewModule('residency')) await updateResidencyCount();
 
         // 1️⃣1️⃣ מדינות
-        if (canView('countries')) await updateCountriesCount();
+        if (canViewModule('countries')) await updateCountriesCount();
 
         // 1️⃣2️⃣ ערים
-        if (canView('cities')) await updateCitiesCount();
+        if (canViewModule('cities')) await updateCitiesCount();
 
 
     } catch (error) {

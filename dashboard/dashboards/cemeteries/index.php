@@ -95,11 +95,27 @@ $isAdminUser = isAdmin();
         window.USER_PERMISSIONS = <?= json_encode($userPermissions) ?>;
         window.IS_ADMIN = <?= $isAdminUser ? 'true' : 'false' ?>;
 
-        // פונקציית עזר לבדיקת הרשאה
+        // פונקציית עזר לבדיקת הרשאה ספציפית
         window.hasPermission = function(module, action) {
             if (window.IS_ADMIN) return true;
             return window.USER_PERMISSIONS[module] &&
                    window.USER_PERMISSIONS[module].includes(action);
+        };
+
+        // פונקציה לבדיקה אם יש הרשאה כלשהי למודול
+        window.hasAnyPermission = function(module) {
+            if (window.IS_ADMIN) return true;
+            return window.USER_PERMISSIONS[module] &&
+                   window.USER_PERMISSIONS[module].length > 0;
+        };
+
+        // פונקציה לבדיקה אם יכול לצפות במודול
+        // edit/create כוללים צפיה - אם יש לך הרשאה לערוך, וודאי שתוכל לראות
+        window.canView = function(module) {
+            if (window.IS_ADMIN) return true;
+            if (!window.USER_PERMISSIONS[module]) return false;
+            const perms = window.USER_PERMISSIONS[module];
+            return perms.includes('view') || perms.includes('edit') || perms.includes('create');
         };
     </script>
 </head>

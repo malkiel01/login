@@ -124,7 +124,7 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                     <div class="info-card"><div class="label">תאריך קבורה</div><div class="value"><?= formatHebrewDate($burial['dateBurial']) ?></div></div>
                     <div class="info-card"><div class="label">שעת קבורה</div><div class="value"><?= htmlspecialchars($burial['timeBurial'] ?? '-') ?></div></div>
                 </div>
-                <div class="card-actions"><button class="btn btn-warning" onclick="editBurial('<?= $burial['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך קבורה</button></div>
+                <div class="card-actions"><?php if (hasModulePermission('burials', 'edit')): ?><button class="btn btn-warning" onclick="editBurial('<?= $burial['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך קבורה</button><?php endif; ?></div>
             </div>
         </div>
 

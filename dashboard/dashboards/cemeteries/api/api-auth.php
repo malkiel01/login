@@ -72,11 +72,29 @@ function requireApiModulePermission(string $module, string $action): void {
 }
 
 /**
- * בדיקת הרשאת צפייה למודול - קיצור נוח
+ * בדיקת הרשאת צפייה למודול
+ * הרשאת edit/create כוללת צפייה (עקביות עם UI)
  * @param string $module
  */
 function requireViewPermission(string $module): void {
-    requireApiModulePermission($module, 'view');
+    // Admin תמיד עובר
+    if (isAdmin()) {
+        return;
+    }
+
+    // בדוק אם יש הרשאת view, edit, או create (כולם מאפשרים צפייה)
+    if (!hasModulePermission($module, 'view') &&
+        !hasModulePermission($module, 'edit') &&
+        !hasModulePermission($module, 'create')) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Forbidden',
+            'message' => 'אין לך הרשאה לצפות במודול זה',
+            'required' => "{$module}.view"
+        ]);
+        exit;
+    }
 }
 
 /**

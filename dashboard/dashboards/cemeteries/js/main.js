@@ -194,9 +194,14 @@ function updateSelectedItem(type, id) {
 function updateTableData(type, data) {
     const tbody = document.getElementById('tableBody');
     const thead = document.getElementById('tableHeaders');
-    
+
     if (!tbody || !thead) return;
-    
+
+    // בדיקת הרשאות
+    const module = getModuleForType(type);
+    const hasEditPermission = window.hasPermission ? window.hasPermission(module, 'edit') : true;
+    const hasDeletePermission = window.hasPermission ? window.hasPermission(module, 'delete') : true;
+
     // עדכון כותרות
     thead.innerHTML = `
         <th>מזהה</th>
@@ -206,26 +211,44 @@ function updateTableData(type, data) {
         <th>נוצר בתאריך</th>
         <th>פעולות</th>
     `;
-    
+
     // עדכון נתונים
     tbody.innerHTML = '';
-    
+
     data.forEach(item => {
         const tr = document.createElement('tr');
+
+        // בניית כפתורי פעולות לפי הרשאות
+        let actionButtons = '';
+        if (hasEditPermission) {
+            actionButtons += `
+                <button class="btn-icon btn-icon-edit" onclick="editItem(${item.id})"
+                        title="עריכה"
+                        style="background: transparent; border: none; cursor: pointer; padding: 6px; font-size: 18px; color: #3b82f6; transition: transform 0.15s;">
+                    ✏️
+                </button>
+            `;
+        }
+        if (hasDeletePermission) {
+            actionButtons += `
+                <button class="btn-icon btn-icon-delete" onclick="deleteItem(${item.id})"
+                        title="מחיקה"
+                        style="background: transparent; border: none; cursor: pointer; padding: 6px; font-size: 18px; color: #ef4444; transition: transform 0.15s;">
+                    🗑️
+                </button>
+            `;
+        }
+        if (!actionButtons) {
+            actionButtons = '<span style="color: #9ca3af;">-</span>';
+        }
+
         tr.innerHTML = `
             <td>${item.id}</td>
             <td>${item.name || item.grave_number || '-'}</td>
             <td>${item.code || '-'}</td>
             <td><span class="badge badge-success">פעיל</span></td>
             <td>${formatDate(item.created_at)}</td>
-            <td>
-                <button class="btn btn-sm btn-secondary" onclick="editItem(${item.id})">
-                    <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">
-                    <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
-                </button>
-            </td>
+            <td>${actionButtons}</td>
         `;
         tbody.appendChild(tr);
     });

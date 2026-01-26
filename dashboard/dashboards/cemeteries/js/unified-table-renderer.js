@@ -228,20 +228,22 @@ class UnifiedTableRenderer {
 
         if (hasEditPermission) {
             html += `
-                <button class="btn btn-sm btn-secondary"
+                <button class="btn-icon btn-icon-edit"
                         onclick="event.stopPropagation(); tableRenderer.editItem('${itemId}')"
-                        title="עריכה">
-                    <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
+                        title="עריכה"
+                        style="background: transparent; border: none; cursor: pointer; padding: 6px; font-size: 18px; color: #3b82f6; transition: transform 0.15s;">
+                    ✏️
                 </button>
             `;
         }
 
         if (hasDeletePermission) {
             html += `
-                <button class="btn btn-sm btn-danger"
+                <button class="btn-icon btn-icon-delete"
                         onclick="event.stopPropagation(); tableRenderer.deleteItem('${itemId}')"
-                        title="מחיקה">
-                    <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
+                        title="מחיקה"
+                        style="background: transparent; border: none; cursor: pointer; padding: 6px; font-size: 18px; color: #ef4444; transition: transform 0.15s;">
+                    🗑️
                 </button>
             `;
         }

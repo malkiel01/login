@@ -142,9 +142,11 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
                 </div>
 
                 <div class="card-actions">
+                    <?php if (hasModulePermission('payments', 'edit')): ?>
                     <button class="btn btn-success" onclick="editPayment('<?= $payment['unicId'] ?>')">
                         <i class="fas fa-edit"></i> ערוך תשלום
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

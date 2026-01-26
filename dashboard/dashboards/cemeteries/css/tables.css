@@ -384,3 +384,37 @@ body.compact-mode .entity-card-toggle {
     width: 20px;
     height: 20px;
 }
+
+/* ===================================================================
+   ACTION BUTTONS - Icon Only Style
+   =================================================================== */
+.btn-icon {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    font-size: 18px;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    opacity: 0.8;
+}
+
+.btn-icon:hover {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+.btn-icon-edit {
+    color: #3b82f6;
+}
+
+.btn-icon-delete {
+    color: #ef4444;
+}
+
+.btn-icon-edit:hover {
+    color: #2563eb;
+}
+
+.btn-icon-delete:hover {
+    color: #dc2626;
+}

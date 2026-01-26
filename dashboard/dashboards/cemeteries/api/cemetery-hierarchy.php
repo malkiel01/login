@@ -6,15 +6,28 @@
 require_once __DIR__ . '/api-auth.php';
 
 require_once '../classes/HierarchyManager.php';
+require_once '../includes/permissions-mapper.php';
 
 // קבלת פרמטרים
 $action = $_GET['action'] ?? '';
 $type = $_GET['type'] ?? '';
 $id = $_GET['id'] ?? null;
 
-// קבלת תפקיד המשתמש (לדוגמה - בינתיים admin)
-// TODO: לקחת מה-session או מה-JWT token
-$userRole = $_SESSION['user_role'] ?? 'admin';
+// מיפוי סוג entity למודול הרשאות
+function getModuleForEntityType(string $type): string {
+    $map = [
+        'cemetery' => 'cemeteries',
+        'block' => 'blocks',
+        'plot' => 'plots',
+        'row' => 'rows',
+        'areaGrave' => 'areaGraves',
+        'grave' => 'graves'
+    ];
+    return $map[$type] ?? $type;
+}
+
+// קבלת תפקיד המשתמש - לשימוש ב-HierarchyManager (לא להרשאות!)
+$userRole = getCurrentUserRole() ?? 'viewer';
 
 try {
     $pdo = getDBConnection();
@@ -200,9 +213,11 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('שיטת בקשה לא תקינה');
             }
-            
-            // בדיקת הרשאה
-            if (!$manager->canCreate()) {
+
+            // בדיקת הרשאה - שימוש במערכת ההרשאות החדשה
+            $module = getModuleForEntityType($type);
+            if (!isAdmin() && !hasModulePermission($module, 'create')) {
+                http_response_code(403);
                 throw new Exception('אין הרשאה ליצור פריט חדש');
             }
             
@@ -280,9 +295,11 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
                 throw new Exception('שיטת בקשה לא תקינה');
             }
-            
-            // בדיקת הרשאה
-            if (!$manager->canEdit()) {
+
+            // בדיקת הרשאה - שימוש במערכת ההרשאות החדשה
+            $module = getModuleForEntityType($type);
+            if (!isAdmin() && !hasModulePermission($module, 'edit')) {
+                http_response_code(403);
                 throw new Exception('אין הרשאה לערוך');
             }
             
@@ -346,9 +363,11 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
                 throw new Exception('שיטת בקשה לא תקינה');
             }
-            
-            // בדיקת הרשאה
-            if (!$manager->canDelete()) {
+
+            // בדיקת הרשאה - שימוש במערכת ההרשאות החדשה
+            $module = getModuleForEntityType($type);
+            if (!isAdmin() && !hasModulePermission($module, 'delete')) {
+                http_response_code(403);
                 throw new Exception('אין הרשאה למחוק');
             }
             

@@ -153,9 +153,11 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 </div>
 
                 <div class="card-actions">
+                    <?php if (hasModulePermission('customers', 'edit')): ?>
                     <button class="btn btn-primary" onclick="editCustomer('<?= $customer['unicId'] ?>')">
                         <i class="fas fa-edit"></i> ערוך לקוח
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

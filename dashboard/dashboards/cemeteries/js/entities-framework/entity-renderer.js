@@ -240,24 +240,48 @@ class EntityRenderer {
                 };
             } else if (col.type === 'actions') {
                 // ✅ תיקון קריטי: actions מקבל את השורה המלאה!
+                // ✅ v1.2.0: בדיקת הרשאות לפני הצגת כפתורים
                 columnDef.render = (row) => {
                     const idField = this.getIdField(entityType);
                     const entityId = row[idField];
-                    
-                    return `
-                        <div class="action-buttons" style="display: flex; gap: 8px; justify-content: center;">
-                            <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); }" 
-                                    class="btn-edit" 
+
+                    // בדיקת הרשאות - edit/delete
+                    const module = window.getModuleForType ? window.getModuleForType(entityType) : entityType;
+                    const hasEditPermission = window.hasPermission ? window.hasPermission(module, 'edit') : true;
+                    const hasDeletePermission = window.hasPermission ? window.hasPermission(module, 'delete') : true;
+
+                    let buttons = '';
+
+                    if (hasEditPermission) {
+                        buttons += `
+                            <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); }"
+                                    class="btn-icon btn-icon-edit"
                                     title="ערוך"
-                                    style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                                    style="background: transparent; border: none; cursor: pointer; padding: 6px; font-size: 18px; color: #3b82f6; transition: transform 0.15s;">
                                 ✏️
                             </button>
-                            <button onclick="EntityLoader.deleteEntity('${entityType}', '${entityId}')" 
-                                    class="btn-delete" 
+                        `;
+                    }
+
+                    if (hasDeletePermission) {
+                        buttons += `
+                            <button onclick="EntityLoader.deleteEntity('${entityType}', '${entityId}')"
+                                    class="btn-icon btn-icon-delete"
                                     title="מחק"
-                                    style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                                    style="background: transparent; border: none; cursor: pointer; padding: 6px; font-size: 18px; color: #ef4444; transition: transform 0.15s;">
                                 🗑️
                             </button>
+                        `;
+                    }
+
+                    // אם אין הרשאות כלל - הצג מקף
+                    if (!buttons) {
+                        return '<span style="color: #9ca3af;">-</span>';
+                    }
+
+                    return `
+                        <div class="action-buttons" style="display: flex; gap: 8px; justify-content: center;">
+                            ${buttons}
                         </div>
                     `;
                 };

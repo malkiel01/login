@@ -136,7 +136,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 <?php if (!empty($grave['comments'])): ?>
                 <div class="info-card comments-box"><div class="label">הערות</div><div class="value"><?= nl2br(htmlspecialchars($grave['comments'])) ?></div></div>
                 <?php endif; ?>
-                <div class="card-actions"><button class="btn btn-purple" onclick="editGrave('<?= $grave['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך קבר</button></div>
+                <div class="card-actions"><?php if (hasModulePermission('graves', 'edit')): ?><button class="btn btn-purple" onclick="editGrave('<?= $grave['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך קבר</button><?php endif; ?></div>
             </div>
         </div>
 

@@ -153,9 +153,11 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
                 </div>
 
                 <div class="card-actions">
+                    <?php if (hasModulePermission('residency', 'edit')): ?>
                     <button class="btn btn-primary" onclick="editResidency('<?= $residency['unicId'] ?>')">
                         <i class="fas fa-edit"></i> ערוך חוק תושבות
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

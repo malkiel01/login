@@ -123,7 +123,7 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
                     <div class="info-card"><div class="label">סטטוס רוכש</div><div class="value"><?= $buyerStatusNames[$purchase['buyer_status'] ?? 1] ?? '-' ?></div></div>
                     <div class="info-card span-2"><div class="label">קבר</div><div class="value"><i class="fas fa-monument"></i> <?= htmlspecialchars($purchase['graveNameHe'] ?? '-') ?> <span class="location-subtitle">(<?= $graveLocationStr ?>)</span></div></div>
                 </div>
-                <div class="card-actions"><button class="btn btn-success" onclick="editPurchase('<?= $purchase['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך רכישה</button></div>
+                <div class="card-actions"><?php if (hasModulePermission('purchases', 'edit')): ?><button class="btn btn-success" onclick="editPurchase('<?= $purchase['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך רכישה</button><?php endif; ?></div>
             </div>
         </div>
 

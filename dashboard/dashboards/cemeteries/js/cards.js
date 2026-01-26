@@ -14,7 +14,10 @@ async function createCemeteryCard(cemeteryId, signal) {
         
         const cemetery = data.data;
         const stats = await getCemeteryStats(cemeteryId, signal);
-        
+
+        // בדיקת הרשאת עריכה
+        const hasEditPermission = window.hasPermission ? window.hasPermission('cemeteries', 'edit') : true;
+
         return `
             <div class="info-card" id="cemeteryCard">
                 <div class="info-card-header">
@@ -27,10 +30,12 @@ async function createCemeteryCard(cemeteryId, signal) {
                         </div>
                     </div>
                     <div class="info-card-actions">
+                        ${hasEditPermission ? `
                         <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${cemetery.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
+                        ` : ''}
                         <button class="info-card-btn" onclick="viewCemeteryMap('${cemetery.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-map"></use></svg>
                             מפה
@@ -108,7 +113,10 @@ async function createBlockCard(blockId) {
         
         const block = data.data;
         const stats = await getBlockStats(blockId);
-        
+
+        // בדיקת הרשאת עריכה
+        const hasEditPermission = window.hasPermission ? window.hasPermission('blocks', 'edit') : true;
+
         return `
             <div class="info-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                 <div class="info-card-header">
@@ -121,10 +129,12 @@ async function createBlockCard(blockId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
+                        ${hasEditPermission ? `
                         <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${block.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
+                        ` : ''}
                         <button class="info-card-btn" onclick="viewBlockMap('${block.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-map"></use></svg>
                             מפה
@@ -203,7 +213,7 @@ async function createPlotCard(plotId) {
                     `${API_BASE}areaGraves-api.php?action=count&lineId=${row.unicId}`
                 );
                 const areaGravesData = await areaGravesResponse.json();
-                
+
                 return {
                     ...row,
                     area_graves_count: areaGravesData.success ? areaGravesData.count : 0
@@ -216,7 +226,10 @@ async function createPlotCard(plotId) {
                 };
             }
         }));
-        
+
+        // בדיקת הרשאת עריכה
+        const hasEditPermission = window.hasPermission ? window.hasPermission('plots', 'edit') : true;
+
         return `
             <div class="info-card" style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%);">
                 <div class="info-card-header">
@@ -229,10 +242,12 @@ async function createPlotCard(plotId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
+                        ${hasEditPermission ? `
                         <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${plot.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
+                        ` : ''}
                         <button class="info-card-btn" onclick="managePlotRows('${plot.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-rows"></use></svg>
                             ניהול שורות
@@ -323,7 +338,10 @@ async function createAreaGraveCard(areaGraveId) {
         
         const areaGrave = data.data;
         const stats = await getAreaGraveStats(areaGraveId);
-        
+
+        // בדיקת הרשאת עריכה
+        const hasEditPermission = window.hasPermission ? window.hasPermission('areaGraves', 'edit') : true;
+
         return `
             <div class="info-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <div class="info-card-header">
@@ -336,10 +354,12 @@ async function createAreaGraveCard(areaGraveId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
+                        ${hasEditPermission ? `
                         <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${areaGrave.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
+                        ` : ''}
                         <button class="info-card-btn" onclick="printAreaGraveReport(${areaGrave.id})">
                             <svg class="icon-sm"><use xlink:href="#icon-print"></use></svg>
                             דוח
@@ -434,7 +454,10 @@ async function createCustomerCard(customerId) {
         
         // ספירת רכישות
         const purchasesCount = customer.purchases ? customer.purchases.length : 0;
-        
+
+        // בדיקת הרשאת עריכה
+        const hasEditPermission = window.hasPermission ? window.hasPermission('customers', 'edit') : true;
+
         return `
             <div class="info-card" id="customerCard">
                 <div class="info-card-header">
@@ -447,9 +470,11 @@ async function createCustomerCard(customerId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
+                        ${hasEditPermission ? `
                         <button class="btn-secondary" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${customer.unicId}')">
                             <span>✏️</span> עריכה
                         </button>
+                        ` : ''}
                         <button class="btn-primary" onclick="printCustomerReport('${customer.unicId}')">
                             <span>🖨️</span> הדפסה
                         </button>

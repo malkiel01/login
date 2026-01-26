@@ -201,15 +201,16 @@ function updateTableData(type, data) {
     const module = getModuleForType(type);
     const hasEditPermission = window.hasPermission ? window.hasPermission(module, 'edit') : true;
     const hasDeletePermission = window.hasPermission ? window.hasPermission(module, 'delete') : true;
+    const hasAnyActionPermission = hasEditPermission || hasDeletePermission;
 
-    // עדכון כותרות
+    // עדכון כותרות - עמודת פעולות רק אם יש הרשאות
     thead.innerHTML = `
         <th>מזהה</th>
         <th>שם</th>
         <th>קוד</th>
         <th>סטטוס</th>
         <th>נוצר בתאריך</th>
-        <th>פעולות</th>
+        ${hasAnyActionPermission ? '<th>פעולות</th>' : ''}
     `;
 
     // עדכון נתונים
@@ -238,9 +239,6 @@ function updateTableData(type, data) {
                 </button>
             `;
         }
-        if (!actionButtons) {
-            actionButtons = '<span style="color: #9ca3af;">-</span>';
-        }
 
         tr.innerHTML = `
             <td>${item.id}</td>
@@ -248,7 +246,7 @@ function updateTableData(type, data) {
             <td>${item.code || '-'}</td>
             <td><span class="badge badge-success">פעיל</span></td>
             <td>${formatDate(item.created_at)}</td>
-            <td>${actionButtons}</td>
+            ${hasAnyActionPermission ? `<td>${actionButtons}</td>` : ''}
         `;
         tbody.appendChild(tr);
     });

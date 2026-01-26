@@ -96,16 +96,32 @@ class UnifiedTableRenderer {
     }
     
     /**
+     * בדיקה אם יש הרשאות לפעולות (עריכה או מחיקה)
+     */
+    hasAnyActionPermission() {
+        const type = this.currentType;
+        const module = window.getModuleForType ? window.getModuleForType(type) : type;
+        const hasEditPermission = window.hasPermission ? window.hasPermission(module, 'edit') : true;
+        const hasDeletePermission = window.hasPermission ? window.hasPermission(module, 'delete') : true;
+        return hasEditPermission || hasDeletePermission;
+    }
+
+    /**
      * ציור כותרות הטבלה
      */
     renderHeaders(thead) {
         let html = '';
-        
+        const hasActions = this.hasAnyActionPermission();
+
         this.config.table_columns.forEach(column => {
+            // דלג על עמודת פעולות אם אין הרשאות
+            if (column.type === 'actions' && !hasActions) {
+                return;
+            }
             const width = column.width ? `style="width: ${column.width}"` : '';
             html += `<th ${width}>${column.title}</th>`;
         });
-        
+
         thead.innerHTML = html;
     }
     
@@ -114,32 +130,38 @@ class UnifiedTableRenderer {
      */
     renderRows(tbody, data) {
         tbody.innerHTML = '';
-        
+
         // אם אין נתונים
         if (data.length === 0) {
             this.renderEmptyState(tbody);
             return;
         }
-        
+
+        const hasActions = this.hasAnyActionPermission();
+
         // ציור כל שורה
         data.forEach((item, index) => {
             const tr = document.createElement('tr');
             tr.style.cursor = 'pointer';
-            
+
             // קבל את ה-unicId או id
             const itemId = item.unicId || item.id;
             const itemName = this.getItemName(item);
-            
+
             // הגדר אירועים
             tr.ondblclick = () => this.openItem(itemId, itemName);
             tr.onclick = () => selectTableRow(tr);
-            
+
             // ציור העמודות
             let html = '';
             this.config.table_columns.forEach(column => {
+                // דלג על עמודת פעולות אם אין הרשאות
+                if (column.type === 'actions' && !hasActions) {
+                    return;
+                }
                 html += this.renderCell(column, item, index);
             });
-            
+
             tr.innerHTML = html;
             tbody.appendChild(tr);
         });

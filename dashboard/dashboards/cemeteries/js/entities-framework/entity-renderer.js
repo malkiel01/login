@@ -162,17 +162,28 @@ class EntityRenderer {
      */
     static async initTable(entityType, data, totalItems, signal = null) {
         const config = ENTITY_CONFIG[entityType];
-        
-        
+
+
         // המתן ל-DOM
         const tableBody = await this.waitForElement('#tableBody', 5000);
         if (!tableBody) {
             console.error('❌ tableBody not found after 5 seconds');
             return null;
         }
-        
+
+        // בדיקה אם יש הרשאות לפעולות
+        const module = window.getModuleForType ? window.getModuleForType(entityType) : entityType;
+        const hasEditPermission = window.hasPermission ? window.hasPermission(module, 'edit') : true;
+        const hasDeletePermission = window.hasPermission ? window.hasPermission(module, 'delete') : true;
+        const hasAnyActionPermission = hasEditPermission || hasDeletePermission;
+
+        // סינון עמודת פעולות אם אין הרשאות
+        const filteredColumns = hasAnyActionPermission
+            ? config.columns
+            : config.columns.filter(col => col.type !== 'actions');
+
         // הגדרת עמודות
-        const columns = config.columns.map(col => {
+        const columns = filteredColumns.map(col => {
             const columnDef = {
                 field: col.field,
                 label: col.label,

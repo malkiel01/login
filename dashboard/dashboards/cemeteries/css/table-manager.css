@@ -90,32 +90,26 @@
     transform: scale(1.15);
 }
 
-/* === כפתור תפריט (3 נקודות) === */
+/* === כפתור תפריט (3 נקודות) - סגנון מאוחד עם אייקון מיון === */
 .tm-menu-btn {
-    background: rgba(255, 255, 255, 0.35) !important;
-    border: 2px solid rgba(255, 255, 255, 0.6) !important;
-    color: #ffffff !important;
-    padding: 2px 8px !important;
-    border-radius: 5px;
+    background: none;
+    border: none;
     cursor: pointer;
-    font-size: 20px !important;
-    line-height: 1;
-    transition: all 0.2s;
-    font-weight: bold;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    padding: 2px 6px;
+    font-size: 18px;
+    color: inherit;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    border-radius: 4px;
     flex-shrink: 0;
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px !important;
-    min-height: 26px !important;
-    vertical-align: middle;
+    font-weight: bold;
 }
 
 .tm-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.5) !important;
-    transform: scale(1.1);
-    border-color: rgba(255, 255, 255, 0.8);
+    opacity: 1;
 }
 
 /* === תפריט עמודה - RTL FIX === */
@@ -222,16 +216,11 @@
     }
 
     .tm-menu-btn {
-        padding: 2px 6px !important;
-        font-size: 18px !important;
-        min-width: 24px !important;
-        min-height: 22px !important;
+        font-size: 16px;
     }
 
     .tm-sort-icon {
-        font-size: 18px !important;
-        min-width: 18px;
-        min-height: 18px;
+        font-size: 16px;
     }
 
     .tm-header-wrapper {
@@ -378,17 +367,7 @@ body.dark-theme .tm-menu-divider {
     background: var(--border-color, #475569);
 }
 
-[data-theme="dark"] .tm-menu-btn,
-body.dark-theme .tm-menu-btn {
-    background: rgba(255, 255, 255, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
-    font-size: 20px !important;
-}
-
-[data-theme="dark"] .tm-menu-btn:hover,
-body.dark-theme .tm-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.3) !important;
-}
+/* Dark mode - כפתור תפריט יורש את הסגנון הבסיסי */
 
 [data-theme="dark"] .tm-row:hover,
 body.dark-theme .tm-row:hover {
@@ -463,12 +442,7 @@ body.compact-mode .tm-cell {
     padding: 8px 12px;
 }
 
-body.compact-mode .tm-menu-btn {
-    padding: 2px 6px !important;
-    font-size: 18px !important;
-    min-width: 26px !important;
-    min-height: 24px !important;
-}
+/* Compact mode - כפתור תפריט יורש את הסגנון הבסיסי */
 
 body.compact-mode .tm-no-results {
     padding: 40px 15px;

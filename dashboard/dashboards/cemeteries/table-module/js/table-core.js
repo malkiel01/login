@@ -854,33 +854,12 @@ class TableManager {
 
         wrapper.appendChild(labelContainer);
 
-        // ⭐ כפתור תפריט עמודה (פילטר/מיון)
+        // ⭐ כפתור תפריט עמודה (פילטר/מיון) - סגנונות ב-CSS
         if (this.config.filterable || this.config.sortable) {
             const menuBtn = document.createElement('button');
             menuBtn.className = 'tm-column-menu-btn';
             menuBtn.innerHTML = '⋮';
-            menuBtn.style.cssText = `
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 2px 6px;
-                font-size: 18px;
-                color: inherit;
-                opacity: 0.5;
-                transition: opacity 0.2s;
-                border-radius: 4px;
-                flex-shrink: 0;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-            `;
-            menuBtn.onmouseover = () => {
-                menuBtn.style.opacity = '1';
-            };
-            menuBtn.onmouseout = () => {
-                menuBtn.style.opacity = '0.5';
-            };
+            // סגנונות מוגדרים ב-CSS (.tm-column-menu-btn)
             menuBtn.onclick = (e) => {
                 e.stopPropagation();
                 this._showColumnMenu(colIndex, menuBtn, col);
@@ -890,8 +869,7 @@ class TableManager {
             const hasFilter = this.state.filters.has(col.field);
             if (hasFilter) {
                 menuBtn.innerHTML = '🔍';
-                menuBtn.style.opacity = '1';
-                menuBtn.style.color = 'var(--primary-color, #3b82f6)';
+                menuBtn.classList.add('has-filter');
             }
 
             wrapper.appendChild(menuBtn);

@@ -26,9 +26,9 @@
 .tm-header-cell {
     position: sticky;
     top: 0;
-    padding: 6px 8px !important;
+    padding: 4px 6px !important;
     font-weight: 700;
-    font-size: 1.05rem !important;
+    font-size: 1.15rem !important;
     text-align: right;
     border-left: 1px solid rgba(255, 255, 255, 0.15);
     border-bottom: none;
@@ -68,34 +68,36 @@
 }
 
 .tm-sort-icon {
-    font-size: 14px;
-    opacity: 0.85;
+    font-size: 20px;
+    opacity: 1;
     transition: all 0.2s;
-    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+    font-weight: bold;
 }
 
 .tm-header-cell:hover .tm-sort-icon {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 /* === כפתור תפריט === */
 .tm-menu-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     color: #ffffff;
-    padding: 4px 6px;
+    padding: 3px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 18px;
     line-height: 1;
     transition: all 0.2s;
     font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .tm-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.35);
-    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
 }
 
 /* === תפריט עמודה - RTL FIX === */
@@ -192,24 +194,28 @@
 /* === רספונסיביות === */
 @media (max-width: 768px) {
     .tm-header-cell {
-        padding: 8px 12px;
-        font-size: 14px;
+        padding: 4px 6px;
+        font-size: 1rem;
     }
-    
+
     .tm-cell {
-        padding: 8px 12px;
+        padding: 6px 10px;
         font-size: 14px;
     }
-    
+
     .tm-menu-btn {
         padding: 2px 6px;
-        font-size: 14px;
+        font-size: 16px;
     }
-    
+
+    .tm-sort-icon {
+        font-size: 18px;
+    }
+
     .tm-column-menu {
         min-width: 150px;
     }
-    
+
     .tm-menu-item {
         padding: 8px 12px;
         font-size: 14px;

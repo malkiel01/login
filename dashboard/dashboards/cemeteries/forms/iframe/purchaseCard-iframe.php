@@ -111,19 +111,19 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
                 <span class="section-title"><i class="fas fa-shopping-cart"></i> רכישה #<?= htmlspecialchars($purchase['serialPurchaseId'] ?? '-') ?></span>
             </div>
             <div class="section-content">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #166534;"><i class="fas fa-shopping-cart"></i> רכישה #<?= htmlspecialchars($purchase['serialPurchaseId'] ?? '-') ?></h2>
+                <div class="card-header-row purchase">
+                    <h2><i class="fas fa-shopping-cart"></i> רכישה #<?= htmlspecialchars($purchase['serialPurchaseId'] ?? '-') ?></h2>
                     <span class="status-badge" style="background: <?= $statusColor ?>"><?= $statusName ?></span>
                 </div>
                 <div class="info-grid">
                     <div class="info-card"><div class="label">מספר רכישה</div><div class="value"><?= htmlspecialchars($purchase['serialPurchaseId'] ?? '-') ?></div></div>
                     <div class="info-card"><div class="label">תאריך פתיחה</div><div class="value"><?= formatHebrewDate($purchase['dateOpening']) ?></div></div>
-                    <div class="info-card"><div class="label">סכום כולל</div><div class="value" style="font-size: 18px;"><?= formatPrice($purchase['price']) ?></div></div>
+                    <div class="info-card"><div class="label">סכום כולל</div><div class="value value-lg"><?= formatPrice($purchase['price']) ?></div></div>
                     <div class="info-card"><div class="label">מספר תשלומים</div><div class="value"><?= htmlspecialchars($purchase['numOfPayments'] ?? '1') ?></div></div>
                     <div class="info-card"><div class="label">סטטוס רוכש</div><div class="value"><?= $buyerStatusNames[$purchase['buyer_status'] ?? 1] ?? '-' ?></div></div>
-                    <div class="info-card span-2"><div class="label">קבר</div><div class="value"><i class="fas fa-monument"></i> <?= htmlspecialchars($purchase['graveNameHe'] ?? '-') ?> <span style="color: #64748b; font-weight: normal; font-size: 12px;">(<?= $graveLocationStr ?>)</span></div></div>
+                    <div class="info-card span-2"><div class="label">קבר</div><div class="value"><i class="fas fa-monument"></i> <?= htmlspecialchars($purchase['graveNameHe'] ?? '-') ?> <span class="location-subtitle">(<?= $graveLocationStr ?>)</span></div></div>
                 </div>
-                <div style="margin-top: 15px;"><button class="btn btn-success" onclick="editPurchase('<?= $purchase['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך רכישה</button></div>
+                <div class="card-actions"><button class="btn btn-success" onclick="editPurchase('<?= $purchase['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך רכישה</button></div>
             </div>
         </div>
 
@@ -134,8 +134,8 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
                 <span class="section-title"><i class="fas fa-monument"></i> פרטי הקבר</span>
             </div>
             <div class="section-content">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #5b21b6;"><i class="fas fa-monument"></i> <?= htmlspecialchars($purchase['graveNameHe'] ?? 'קבר') ?></h2>
+                <div class="card-header-row purchase">
+                    <h2><i class="fas fa-monument"></i> <?= htmlspecialchars($purchase['graveNameHe'] ?? 'קבר') ?></h2>
                     <span class="status-badge" style="background: <?= $graveStatusColor ?>"><?= $graveStatusName ?></span>
                 </div>
                 <div class="info-grid">
@@ -147,7 +147,7 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
                     <div class="info-card"><div class="label">סוג חלקה</div><div class="value"><?= $plotTypeNames[$purchase['plotType'] ?? 1] ?? '-' ?></div></div>
                     <div class="info-card"><div class="label">מיקום בשורה</div><div class="value"><?= $graveLocationNames[$purchase['graveLocation'] ?? 0] ?? '-' ?></div></div>
                 </div>
-                <div style="margin-top: 15px;"><button class="btn btn-purple" onclick="viewGrave('<?= $purchase['graveUnicId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס קבר</button></div>
+                <div class="card-actions"><button class="btn btn-purple" onclick="viewGrave('<?= $purchase['graveUnicId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס קבר</button></div>
             </div>
         </div>
 
@@ -159,20 +159,20 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
             </div>
             <div class="section-content">
                 <?php if ($burial): ?>
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #92400e;"><i class="fas fa-cross"></i> <?= htmlspecialchars($burial['deceasedName'] ?? 'נפטר/ת') ?></h2>
+                <div class="card-header-row purchase">
+                    <h2><i class="fas fa-cross"></i> <?= htmlspecialchars($burial['deceasedName'] ?? 'נפטר/ת') ?></h2>
                 </div>
                 <div class="info-grid">
-                    <div class="info-card span-2"><div class="label">שם הנפטר/ת</div><div class="value" style="font-size: 16px;"><?= htmlspecialchars($burial['deceasedName'] ?? '-') ?></div></div>
+                    <div class="info-card span-2"><div class="label">שם הנפטר/ת</div><div class="value value-lg"><?= htmlspecialchars($burial['deceasedName'] ?? '-') ?></div></div>
                     <div class="info-card"><div class="label">ת.ז.</div><div class="value"><?= htmlspecialchars($burial['deceasedNumId'] ?? '-') ?></div></div>
                     <div class="info-card"><div class="label">מספר קבורה</div><div class="value"><?= htmlspecialchars($burial['serialBurialId'] ?? '-') ?></div></div>
                     <div class="info-card"><div class="label">תאריך פטירה</div><div class="value"><?= formatHebrewDate($burial['dateDeath']) ?></div></div>
                     <div class="info-card"><div class="label">תאריך קבורה</div><div class="value"><?= formatHebrewDate($burial['dateBurial']) ?></div></div>
                 </div>
-                <div style="margin-top: 15px;"><button class="btn btn-warning" onclick="viewBurial('<?= $burial['unicId'] ?>')"><i class="fas fa-eye"></i> צפה בתיק קבורה</button></div>
+                <div class="card-actions"><button class="btn btn-warning" onclick="viewBurial('<?= $burial['unicId'] ?>')"><i class="fas fa-eye"></i> צפה בתיק קבורה</button></div>
                 <?php else: ?>
                 <div class="empty-state"><i class="fas fa-inbox"></i>אין קבורה משויכת לרכישה זו</div>
-                <div style="text-align: center;"><button class="btn btn-warning" onclick="addBurial('<?= $purchase['unicId'] ?>', '<?= $purchase['graveId'] ?>')"><i class="fas fa-plus"></i> הוסף קבורה</button></div>
+                <div class="card-actions"><button class="btn btn-warning" onclick="addBurial('<?= $purchase['unicId'] ?>', '<?= $purchase['graveId'] ?>')"><i class="fas fa-plus"></i> הוסף קבורה</button></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -184,9 +184,9 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
             <div class="section-content">
-                <div id="purchaseExplorer" style="min-height: 300px;">
-                    <div style="text-align: center; color: #94a3b8; padding: 40px;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                <div id="purchaseExplorer" class="min-h-200">
+                    <div class="loading-state lg">
+                        <i class="fas fa-spinner fa-spin"></i>
                         <span>טוען סייר קבצים...</span>
                     </div>
                 </div>
@@ -212,11 +212,11 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
                     window.purchaseExplorer = new FileExplorer('purchaseExplorer', purchaseId, {});
                     window.explorer = window.purchaseExplorer;
                 } else {
-                    document.getElementById('purchaseExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                    document.getElementById('purchaseExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
                 }
             };
             script.onerror = function() {
-                document.getElementById('purchaseExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                document.getElementById('purchaseExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
             };
             document.head.appendChild(script);
         }

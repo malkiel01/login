@@ -194,8 +194,8 @@ $graveLocations = [
                         <div class="form-group">
                             <label>סטטוס קבר</label>
                             <input type="text" value="<?= htmlspecialchars($graveStatuses[$grave['graveStatus'] ?? 1] ?? 'לא ידוע') ?>" disabled readonly
-                                   style="background: #f1f5f9; color: #64748b;">
-                            <small style="color: #94a3b8; font-size: 11px;">מנוהל אוטומטית ע"י רכישה/קבורה</small>
+                                   class="input-disabled">
+                            <small class="input-disabled-note">מנוהל אוטומטית ע"י רכישה/קבורה</small>
                         </div>
                         <?php endif; ?>
                         <!-- ביצירה - הסטטוס יהיה פנוי (1) אוטומטית -->
@@ -247,9 +247,9 @@ $graveLocations = [
                     <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
                 </div>
                 <div class="section-content">
-                    <div id="graveExplorer" style="min-height: 200px;">
-                        <div style="text-align: center; color: #94a3b8; padding: 40px;">
-                            <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                    <div id="graveExplorer" class="min-h-200">
+                        <div class="loading-state lg">
+                            <i class="fas fa-spinner fa-spin icon-lg"></i>
                             <span>טוען סייר קבצים...</span>
                         </div>
                     </div>
@@ -294,11 +294,11 @@ $graveLocations = [
                     window.graveExplorer = new FileExplorer('graveExplorer', graveId, {});
                     window.explorer = window.graveExplorer;
                 } else {
-                    document.getElementById('graveExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                    document.getElementById('graveExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle icon-lg"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
                 }
             };
             script.onerror = function() {
-                document.getElementById('graveExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                document.getElementById('graveExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle icon-lg"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
             };
             document.head.appendChild(script);
         }

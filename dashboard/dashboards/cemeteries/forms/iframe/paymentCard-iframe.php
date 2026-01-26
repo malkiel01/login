@@ -112,8 +112,8 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
                 </span>
             </div>
             <div class="section-content">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #065f46;"><i class="fas fa-money-bill-wave"></i> הגדרת תשלום #<?= $serialId ?></h2>
+                <div class="card-header-row payment">
+                    <h2><i class="fas fa-money-bill-wave"></i> הגדרת תשלום #<?= $serialId ?></h2>
                     <span class="status-badge" style="background: <?= $plotTypeColor ?>"><?= $plotTypeName ?></span>
                 </div>
 
@@ -132,16 +132,16 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
                     <div class="info-card"><div class="label">תאריך התחלת תשלום</div><div class="value"><?= formatHebrewDate($payment['startPayment']) ?></div></div>
                     <div class="info-card span-2">
                         <div class="label">מיקום</div>
-                        <div class="value"><i class="fas fa-map-marker-alt" style="margin-left: 5px;"></i><?= htmlspecialchars($locationStr) ?></div>
+                        <div class="value"><i class="fas fa-map-marker-alt icon-mr"></i><?= htmlspecialchars($locationStr) ?></div>
                     </div>
                 </div>
 
-                <div class="info-grid" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #a7f3d0;">
+                <div class="info-grid with-green-border">
                     <div class="info-card"><div class="label">תאריך יצירה</div><div class="value"><?= formatHebrewDate($payment['createDate']) ?></div></div>
                     <div class="info-card"><div class="label">תאריך עדכון</div><div class="value"><?= formatHebrewDate($payment['updateDate']) ?></div></div>
                 </div>
 
-                <div style="margin-top: 15px;">
+                <div class="card-actions">
                     <button class="btn btn-success" onclick="editPayment('<?= $payment['unicId'] ?>')">
                         <i class="fas fa-edit"></i> ערוך תשלום
                     </button>
@@ -156,10 +156,10 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
             <div class="section-content">
-                <div id="paymentExplorer" style="min-height: 200px;">
-                    <div style="text-align: center; padding: 40px; color: #64748b;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
-                        טוען סייר קבצים...
+                <div id="paymentExplorer" class="min-h-200">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>טוען סייר קבצים...</span>
                     </div>
                 </div>
             </div>
@@ -183,11 +183,11 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
                     window.paymentExplorer = new FileExplorer('paymentExplorer', paymentId, {});
                     window.explorer = window.paymentExplorer;
                 } else {
-                    document.getElementById('paymentExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+                    document.getElementById('paymentExplorer').innerHTML = '<div class="error-state"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
                 }
             };
             script.onerror = function() {
-                document.getElementById('paymentExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+                document.getElementById('paymentExplorer').innerHTML = '<div class="error-state"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
             };
             document.head.appendChild(script);
         }

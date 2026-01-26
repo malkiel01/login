@@ -27,10 +27,10 @@ if ($isEditMode) {
         $customer = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$customer) {
-            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: הלקוח לא נמצא</body></html>');
+            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body class="error-page">שגיאה: הלקוח לא נמצא</body></html>');
         }
     } catch (Exception $e) {
-        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
+        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body class="error-page">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
     }
 }
 
@@ -142,7 +142,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                             <input type="text" id="spouseSearch" placeholder="חיפוש לפי שם..." oninput="filterSpouseOptions()">
                                         </div>
                                         <div class="smart-select-option" data-value="" onclick="selectSpouse('', 'ללא בן/בת זוג')">
-                                            <span style="color: #94a3b8;">ללא בן/בת זוג</span>
+                                            <span class="muted-text">ללא בן/בת זוג</span>
                                         </div>
                                         <div id="spouseOptions"></div>
                                     </div>
@@ -266,9 +266,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         </span>
                     </div>
                     <div class="section-content">
-                        <div id="customerExplorer" style="min-height: 300px;">
-                            <div style="text-align: center; color: #94a3b8; padding: 40px;">
-                                <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        <div id="customerExplorer" class="min-h-300">
+                            <div class="empty-state">
+                                <i class="fas fa-spinner fa-spin icon-lg"></i>
                                 <span>טוען סייר קבצים...</span>
                             </div>
                         </div>
@@ -358,8 +358,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 } else {
                     console.error('FileExplorer class not found');
                     document.getElementById('customerExplorer').innerHTML = `
-                        <div style="text-align: center; color: #ef4444; padding: 40px;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        <div class="empty-state error">
+                            <i class="fas fa-exclamation-triangle icon-lg"></i>
                             <span>שגיאה בטעינת סייר הקבצים</span>
                         </div>
                     `;
@@ -368,8 +368,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             script.onerror = function() {
                 console.error('Failed to load explorer.js');
                 document.getElementById('customerExplorer').innerHTML = `
-                    <div style="text-align: center; color: #ef4444; padding: 40px;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                    <div class="empty-state error">
+                        <i class="fas fa-exclamation-triangle icon-lg"></i>
                         <span>שגיאה בטעינת סייר הקבצים</span>
                     </div>
                 `;
@@ -544,7 +544,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 spouseContainer.style.opacity = '0.5';
                 spouseContainer.style.pointerEvents = 'none';
                 spouseDisplay.style.cursor = 'not-allowed';
-                spouseLabel.innerHTML = 'בן/בת זוג <span style="color: #94a3b8; font-size: 11px;">(לא זמין)</span>';
+                spouseLabel.innerHTML = 'בן/בת זוג <span class="muted-text-sm">(לא זמין)</span>';
 
                 // נקה את הבחירה אם יש
                 if (selectedSpouseId) {
@@ -561,7 +561,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 spouseContainer.style.opacity = '1';
                 spouseContainer.style.pointerEvents = 'auto';
                 spouseDisplay.style.cursor = 'pointer';
-                spouseLabel.innerHTML = 'בן/בת זוג <span style="color: #94a3b8; font-size: 11px;">(אופציונלי)</span>';
+                spouseLabel.innerHTML = 'בן/בת זוג <span class="muted-text-sm">(אופציונלי)</span>';
             }
         }
 
@@ -592,7 +592,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 // הצג הודעה ראשונית ב-dropdown
                 document.getElementById('spouseOptions').innerHTML = `
-                    <div style="padding: 15px; text-align: center; color: #64748b;">
+                    <div class="loading-center">
                         הקלד לחיפוש בן/בת זוג...
                     </div>
                 `;
@@ -610,7 +610,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             // אם אין טקסט חיפוש - הצג הודעה
             if (!searchTerm || searchTerm.length < 2) {
                 container.innerHTML = `
-                    <div style="padding: 15px; text-align: center; color: #64748b;">
+                    <div class="loading-center">
                         ${searchTerm.length === 0 ? 'הקלד לחיפוש בן/בת זוג...' : 'הקלד לפחות 2 תווים...'}
                     </div>
                 `;
@@ -619,7 +619,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             // הצג אנימציית טעינה
             container.innerHTML = `
-                <div style="padding: 15px; text-align: center; color: #64748b;">
+                <div class="loading-center">
                     <i class="fas fa-spinner fa-spin"></i> מחפש...
                 </div>
             `;
@@ -639,7 +639,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 if (result.success && result.data) {
                     if (result.data.length === 0) {
                         container.innerHTML = `
-                            <div style="padding: 15px; text-align: center; color: #64748b;">
+                            <div class="loading-center">
                                 לא נמצאו תוצאות
                             </div>
                         `;
@@ -648,7 +648,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     }
                 } else {
                     container.innerHTML = `
-                        <div style="padding: 15px; text-align: center; color: #dc2626;">
+                        <div class="error-center">
                             שגיאה בחיפוש
                         </div>
                     `;
@@ -656,7 +656,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             } catch (error) {
                 console.error('Error searching spouses:', error);
                 container.innerHTML = `
-                    <div style="padding: 15px; text-align: center; color: #dc2626;">
+                    <div class="error-center">
                         שגיאה בחיפוש
                     </div>
                 `;
@@ -679,9 +679,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 div.onclick = () => selectSpouse(spouse.unicId, displayName);
 
                 div.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="customer-result-item">
                         <span>${displayName}</span>
-                        <span style="color: #94a3b8; font-size: 12px;">${numId}</span>
+                        <span class="customer-result-id">${numId}</span>
                     </div>
                 `;
 

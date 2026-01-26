@@ -37,10 +37,10 @@ if ($isEditMode) {
         $burial = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$burial) {
-            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: הקבורה לא נמצאה</body></html>');
+            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body class="error-page">שגיאה: הקבורה לא נמצאה</body></html>');
         }
     } catch (Exception $e) {
-        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
+        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body class="error-page">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
     }
 }
 
@@ -106,7 +106,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                         <span id="customerDisplayText">טוען...</span>
                                         <i class="fas fa-chevron-down"></i>
                                     </div>
-                                    <div class="custom-select-dropdown" id="customerDropdown" style="display: none;">
+                                    <div class="custom-select-dropdown" id="customerDropdown" class="d-none">
                                         <input type="text" id="customerSearch" class="custom-select-search"
                                                placeholder="חפש לפי שם, ת.ז או טלפון..." oninput="filterCustomerOptions()">
                                         <div class="custom-select-options" id="customerOptions">
@@ -302,17 +302,17 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     </div>
                     <div class="section-content">
                         <div id="documentsContainer">
-                            <div class="documents-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <span style="color: #64748b; font-size: 13px;">
+                            <div class="documents-toolbar">
+                                <span class="info-text">
                                     <i class="fas fa-info-circle"></i> ניהול מסמכים של הקבורה
                                 </span>
-                                <button type="button" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" onclick="uploadDocument()">
+                                <button type="button" class="btn btn-primary" onclick="uploadDocument()">
                                     <i class="fas fa-upload"></i> העלאת מסמך
                                 </button>
                             </div>
-                            <div id="documentsList" class="documents-list" style="min-height: 100px; border: 2px dashed #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <div style="text-align: center; color: #94a3b8; padding: 20px;">
-                                    <i class="fas fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                            <div id="documentsList" class="documents-list">
+                                <div class="empty-state">
+                                    <i class="fas fa-folder-open icon-lg"></i>
                                     <span>סייר קבצים יטען בהמשך</span>
                                 </div>
                             </div>

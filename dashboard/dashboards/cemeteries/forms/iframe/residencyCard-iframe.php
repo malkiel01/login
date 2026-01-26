@@ -134,25 +134,25 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
                     <div class="info-card"><div class="label">עיר</div><div class="value"><?= htmlspecialchars($residency['cityNameHe'] ?? '-') ?></div></div>
                     <div class="info-card span-2">
                         <div class="label">מיקום מלא</div>
-                        <div class="value"><i class="fas fa-map-marker-alt" style="margin-left: 5px;"></i><?= htmlspecialchars($locationStr) ?></div>
+                        <div class="value"><i class="fas fa-map-marker-alt icon-mr"></i><?= htmlspecialchars($locationStr) ?></div>
                     </div>
                 </div>
 
                 <?php if (!empty($residency['description'])): ?>
-                <div class="info-grid" style="margin-top: 15px;">
+                <div class="info-grid mt-15">
                     <div class="info-card span-2">
                         <div class="label">תיאור</div>
-                        <div class="value" style="font-weight: normal; white-space: pre-wrap;"><?= htmlspecialchars($residency['description']) ?></div>
+                        <div class="value"><?= htmlspecialchars($residency['description']) ?></div>
                     </div>
                 </div>
                 <?php endif; ?>
 
-                <div class="info-grid" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #bfdbfe;">
+                <div class="info-grid with-border">
                     <div class="info-card"><div class="label">תאריך יצירה</div><div class="value"><?= formatHebrewDate($residency['createDate']) ?></div></div>
                     <div class="info-card"><div class="label">תאריך עדכון</div><div class="value"><?= formatHebrewDate($residency['updateDate']) ?></div></div>
                 </div>
 
-                <div style="margin-top: 15px;">
+                <div class="card-actions">
                     <button class="btn btn-primary" onclick="editResidency('<?= $residency['unicId'] ?>')">
                         <i class="fas fa-edit"></i> ערוך חוק תושבות
                     </button>
@@ -169,9 +169,9 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
             <div class="section-content">
-                <div id="residencyExplorer" style="min-height: 200px;">
-                    <div style="text-align: center; color: #94a3b8; padding: 40px;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                <div id="residencyExplorer" class="min-h-200">
+                    <div class="loading-state lg">
+                        <i class="fas fa-spinner fa-spin"></i>
                         <span>טוען סייר קבצים...</span>
                     </div>
                 </div>
@@ -200,11 +200,11 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
                     window.residencyExplorer = new FileExplorer('residencyExplorer', residencyId, {});
                     window.explorer = window.residencyExplorer;
                 } else {
-                    document.getElementById('residencyExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                    document.getElementById('residencyExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
                 }
             };
             script.onerror = function() {
-                document.getElementById('residencyExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                document.getElementById('residencyExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
             };
             document.head.appendChild(script);
         }

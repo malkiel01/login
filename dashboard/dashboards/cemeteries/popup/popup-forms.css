@@ -1754,3 +1754,647 @@ body[data-theme="dark"] .payments-list-item.mandatory .payment-amount {
 body[data-theme="dark"] .payments-list-item.optional .payment-amount {
     color: #6ee7b7 !important;
 }
+
+/* ===== 29. Documents Section ===== */
+.documents-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.documents-toolbar .info-text {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.documents-toolbar .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+.documents-list {
+    min-height: 100px;
+    border: 2px dashed var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.documents-list .empty-state i {
+    font-size: 32px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+body[data-theme="dark"] .documents-toolbar .info-text {
+    color: #94a3b8 !important;
+}
+
+body[data-theme="dark"] .documents-list {
+    border-color: var(--border-color, #334155) !important;
+}
+
+/* ===== 30. Payments Modal (full) ===== */
+.payments-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.payments-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: auto;
+    direction: rtl;
+}
+
+.payments-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payments-modal-header h3 {
+    margin: 0;
+}
+
+.payments-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.payments-modal-body {
+    padding: 20px;
+}
+
+.payments-info-box {
+    background: #f1f5f9;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 13px;
+}
+
+.payments-section-title {
+    margin-bottom: 10px;
+}
+
+.payments-section-title.mandatory {
+    color: #dc2626;
+}
+
+.payments-section-title.optional {
+    color: #059669;
+}
+
+.payments-section-title.add {
+    color: #3b82f6;
+}
+
+.payments-section-content {
+    margin-bottom: 20px;
+}
+
+.payment-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.payment-checkbox-item.mandatory {
+    background: #fef2f2;
+}
+
+.payment-checkbox-item.optional {
+    background: #f0fdf4;
+    cursor: pointer;
+}
+
+.payment-checkbox-item input[type="checkbox"] {
+    margin-left: 10px;
+}
+
+.payment-checkbox-item .payment-name {
+    flex: 1;
+}
+
+.payment-checkbox-item .payment-price {
+    font-weight: bold;
+}
+
+.payment-checkbox-item.mandatory .payment-price {
+    color: #dc2626;
+}
+
+.payment-checkbox-item.optional .payment-price {
+    color: #059669;
+}
+
+.add-payment-box {
+    background: #eff6ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.add-payment-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.add-payment-field {
+    min-width: 150px;
+}
+
+.add-payment-field.price {
+    width: 120px;
+    flex: 0;
+}
+
+.add-payment-field label {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.add-payment-field select,
+.add-payment-field input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+.add-payment-btn {
+    padding: 8px 16px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.custom-payments-list {
+    margin-top: 10px;
+}
+
+.custom-payment-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.custom-payment-item input {
+    margin-left: 10px;
+}
+
+.custom-payment-item .payment-name {
+    flex: 1;
+}
+
+.custom-payment-item .payment-price {
+    color: #3b82f6;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.custom-payment-item .remove-btn {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.payments-total-box {
+    background: #1e293b;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.payments-total-box .label {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.payments-total-box .amount {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.payments-modal-footer {
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.payments-modal-footer .btn-cancel {
+    padding: 10px 20px;
+    background: #e2e8f0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.payments-modal-footer .btn-confirm {
+    padding: 10px 20px;
+    background: #059669;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Dark mode for payments modal */
+body[data-theme="dark"] .payments-modal-content {
+    background: var(--bg-primary, #1e293b) !important;
+}
+
+body[data-theme="dark"] .payments-modal-header {
+    border-color: var(--border-color, #334155) !important;
+}
+
+body[data-theme="dark"] .payments-info-box {
+    background: var(--bg-secondary, #334155) !important;
+}
+
+body[data-theme="dark"] .payment-checkbox-item.mandatory {
+    background: rgba(220, 38, 38, 0.15) !important;
+}
+
+body[data-theme="dark"] .payment-checkbox-item.optional {
+    background: rgba(5, 150, 105, 0.15) !important;
+}
+
+body[data-theme="dark"] .add-payment-box {
+    background: rgba(59, 130, 246, 0.15) !important;
+}
+
+body[data-theme="dark"] .add-payment-field label {
+    color: #94a3b8 !important;
+}
+
+body[data-theme="dark"] .add-payment-field select,
+body[data-theme="dark"] .add-payment-field input {
+    background: var(--bg-primary, #1e293b) !important;
+    border-color: var(--border-color, #475569) !important;
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .custom-payment-item {
+    background: var(--bg-secondary, #334155) !important;
+}
+
+body[data-theme="dark"] .payments-total-box {
+    background: #0f172a !important;
+}
+
+body[data-theme="dark"] .payments-modal-footer {
+    border-color: var(--border-color, #334155) !important;
+}
+
+body[data-theme="dark"] .payments-modal-footer .btn-cancel {
+    background: var(--bg-secondary, #334155) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ===== 31. Inline Utility Classes ===== */
+.muted-text {
+    color: #94a3b8;
+}
+
+.muted-text-sm {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.icon-lg {
+    font-size: 32px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.min-h-200 {
+    min-height: 200px;
+}
+
+.min-h-300 {
+    min-height: 300px;
+}
+
+.loading-center {
+    padding: 15px;
+    text-align: center;
+    color: #64748b;
+}
+
+.error-center {
+    padding: 15px;
+    text-align: center;
+    color: #dc2626;
+}
+
+.customer-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.customer-result-id {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+body[data-theme="dark"] .muted-text,
+body[data-theme="dark"] .muted-text-sm {
+    color: #64748b !important;
+}
+
+body[data-theme="dark"] .loading-center {
+    color: #94a3b8 !important;
+}
+
+body[data-theme="dark"] .customer-result-id {
+    color: #64748b !important;
+}
+
+/* ===== 32. Card Header Styles ===== */
+.card-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.card-header-row h2 {
+    margin: 0;
+}
+
+.card-header-row.burial h2 { color: #92400e; }
+.card-header-row.customer h2 { color: #5b21b6; }
+.card-header-row.grave h2 { color: #166534; }
+.card-header-row.purchase h2 { color: #1e40af; }
+.card-header-row.payment h2 { color: #0891b2; }
+.card-header-row.residency h2 { color: #7c3aed; }
+
+body[data-theme="dark"] .card-header-row.burial h2 { color: #fbbf24 !important; }
+body[data-theme="dark"] .card-header-row.customer h2 { color: #a78bfa !important; }
+body[data-theme="dark"] .card-header-row.grave h2 { color: #4ade80 !important; }
+body[data-theme="dark"] .card-header-row.purchase h2 { color: #60a5fa !important; }
+body[data-theme="dark"] .card-header-row.payment h2 { color: #22d3ee !important; }
+body[data-theme="dark"] .card-header-row.residency h2 { color: #a78bfa !important; }
+
+/* ===== 33. Card Action Buttons ===== */
+.card-actions {
+    margin-top: 15px;
+}
+
+/* ===== 34. Value Highlight ===== */
+.value-lg {
+    font-size: 16px;
+}
+
+/* ===== 35. Loading/Error States for Cards ===== */
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+}
+
+.loading-state i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.loading-state.lg i {
+    font-size: 32px;
+}
+
+.error-state {
+    text-align: center;
+    color: #ef4444;
+    padding: 40px;
+}
+
+.error-state i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.error-state.lg i {
+    font-size: 32px;
+}
+
+body[data-theme="dark"] .loading-state {
+    color: #94a3b8 !important;
+}
+
+/* ===== 36. Disabled Input Style ===== */
+.input-disabled {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+}
+
+.input-disabled-note {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+body[data-theme="dark"] .input-disabled {
+    background: var(--bg-secondary, #334155) !important;
+    color: var(--text-muted, #94a3b8) !important;
+}
+
+body[data-theme="dark"] .input-disabled-note {
+    color: #64748b !important;
+}
+
+/* ===== 37. Info Box with custom background ===== */
+.info-box {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 12px 15px;
+    border-radius: var(--radius-md);
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    color: #1e40af;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.info-box i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+body[data-theme="dark"] .info-box {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-left-color: #818cf8 !important;
+    color: #93c5fd !important;
+}
+
+/* Info box variant - green */
+.info-box.green {
+    background: #f0fdf4;
+    border-left-color: #10b981;
+    color: #166534;
+}
+
+body[data-theme="dark"] .info-box.green {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-left-color: #4ade80 !important;
+    color: #6ee7b7 !important;
+}
+
+/* ===== 38. Flex Row with Gap ===== */
+.flex-row {
+    display: flex;
+    gap: 8px;
+}
+
+.flex-row.gap-12 {
+    gap: 12px;
+}
+
+.flex-1 {
+    flex: 1 !important;
+}
+
+/* ===== 39. Center Cell (table/grid) ===== */
+.center {
+    text-align: center !important;
+}
+
+/* ===== 40. Column Width Classes ===== */
+.col-50 { width: 50px !important; }
+.col-70 { width: 70px !important; }
+.col-80 { width: 80px !important; }
+.col-90 { width: 90px !important; }
+.col-120 { width: 120px !important; }
+.col-130 { width: 130px !important; }
+
+/* ===== 41. Required Badge (color only) ===== */
+.required-badge {
+    color: #fbbf24;
+}
+
+/* ===== 42. Hidden Class ===== */
+.hidden {
+    display: none !important;
+}
+
+/* ===== 43. Status Badge Color Variants ===== */
+.status-badge.blue { background: #3b82f6 !important; }
+.status-badge.orange { background: #f59e0b !important; }
+.status-badge.green { background: #10b981 !important; }
+.status-badge.red { background: #ef4444 !important; }
+.status-badge.purple { background: #8b5cf6 !important; }
+
+/* ===== 44. Text Utilities ===== */
+.fw-600 {
+    font-weight: 600;
+}
+
+.text-muted-icon {
+    color: #64748b;
+}
+
+body[data-theme="dark"] .text-muted-icon {
+    color: #94a3b8 !important;
+}
+
+/* ===== 45. Comments Box ===== */
+.comments-box {
+    margin-top: 15px;
+    border: 1px solid #c4b5fd;
+}
+
+.comments-box .value {
+    color: #5b21b6;
+}
+
+body[data-theme="dark"] .comments-box {
+    border-color: #7c3aed !important;
+}
+
+body[data-theme="dark"] .comments-box .value {
+    color: #a78bfa !important;
+}
+
+/* ===== 46. Info Grid Variants ===== */
+.info-grid.mt-15 {
+    margin-top: 15px;
+}
+
+.info-grid.with-border {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #bfdbfe;
+}
+
+body[data-theme="dark"] .info-grid.with-border {
+    border-top-color: var(--border-color, #475569) !important;
+}
+
+/* ===== 47. Icon Margin ===== */
+.icon-mr {
+    margin-left: 5px;
+}
+
+/* ===== 48. Location Subtitle ===== */
+.location-subtitle {
+    color: #64748b;
+    font-weight: normal;
+    font-size: 12px;
+}
+
+body[data-theme="dark"] .location-subtitle {
+    color: #94a3b8 !important;
+}
+
+/* ===== 49. Info Grid with Green Border ===== */
+.info-grid.with-green-border {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #a7f3d0;
+}
+
+body[data-theme="dark"] .info-grid.with-green-border {
+    border-top-color: #059669 !important;
+}

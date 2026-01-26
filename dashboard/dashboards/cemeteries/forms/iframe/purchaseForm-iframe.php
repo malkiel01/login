@@ -37,10 +37,10 @@ if ($isEditMode) {
         $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$purchase) {
-            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: הרכישה לא נמצאה</body></html>');
+            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body class="error-page">שגיאה: הרכישה לא נמצאה</body></html>');
         }
     } catch (Exception $e) {
-        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
+        die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body class="error-page">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
     }
 }
 
@@ -106,7 +106,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                         <span id="customerDisplayText">טוען...</span>
                                         <i class="fas fa-chevron-down"></i>
                                     </div>
-                                    <div class="custom-select-dropdown" id="customerDropdown" style="display: none;">
+                                    <div class="custom-select-dropdown" id="customerDropdown" class="d-none">
                                         <input type="text"
                                                id="customerSearch"
                                                class="custom-select-search"
@@ -208,15 +208,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             </div>
                         </div>
 
-                        <div style="margin-top: 15px;">
+                        <div class="mt-15">
                             <button type="button" class="btn btn-info" onclick="openPaymentsManager()">
                                 <i class="fas fa-calculator"></i> חשב תשלומים אוטומטית
                             </button>
                         </div>
 
-                        <div class="payments-list" style="margin-top: 15px;">
-                            <div id="paymentsDisplay" style="text-align: center; color: #94a3b8;">
-                                <i class="fas fa-coins" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <div class="payments-list" class="mt-15">
+                            <div id="paymentsDisplay" class="empty-state">
+                                <i class="fas fa-coins"></i>
                                 <div>פירוט תשלומים יופיע כאן</div>
                             </div>
                         </div>
@@ -265,9 +265,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         </span>
                     </div>
                     <div class="section-content">
-                        <div id="purchaseExplorer" style="min-height: 200px;">
-                            <div style="text-align: center; padding: 40px; color: #64748b;">
-                                <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                        <div id="purchaseExplorer" class="min-h-200">
+                            <div class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
                                 טוען סייר קבצים...
                             </div>
                         </div>
@@ -1118,21 +1118,17 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             const modal = document.createElement('div');
             modal.id = 'paymentsModal';
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(0,0,0,0.5); z-index: 10000;
-                display: flex; align-items: center; justify-content: center;
-            `;
+            modal.className = 'payments-modal-backdrop';
 
             modal.innerHTML = `
-                <div style="background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; overflow: auto; direction: rtl;">
-                    <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin: 0; color: #1e293b;">מנהל תשלומים חכם</h3>
-                        <button onclick="closePaymentsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                <div class="payments-modal-content">
+                    <div class="payments-modal-header">
+                        <h3>מנהל תשלומים חכם</h3>
+                        <button onclick="closePaymentsModal()" class="payments-modal-close">&times;</button>
                     </div>
 
-                    <div style="padding: 20px;">
-                        <div style="background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;">
+                    <div class="payments-modal-body">
+                        <div class="payments-info-box">
                             <strong>פרמטרים:</strong>
                             תושבות: ${getResidentLabel(selectedCustomerData?.resident)} |
                             סוג חלקה: ${getPlotTypeLabel(selectedGraveData?.plotType)} |
@@ -1140,40 +1136,40 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         </div>
 
                         ${mandatoryPayments.length > 0 ? `
-                            <h4 style="color: #dc2626; margin-bottom: 10px;">🔒 תשלומי חובה</h4>
-                            <div style="margin-bottom: 20px;">
+                            <h4 class="payments-section-title mandatory">🔒 תשלומי חובה</h4>
+                            <div class="payments-section-content">
                                 ${mandatoryPayments.map((p, i) => `
-                                    <label style="display: flex; align-items: center; padding: 10px; background: #fef2f2; border-radius: 8px; margin-bottom: 8px;">
-                                        <input type="checkbox" checked disabled data-mandatory="true" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}" style="margin-left: 10px;">
-                                        <span style="flex: 1;">${p.name}</span>
-                                        <strong style="color: #dc2626;">₪${parseFloat(p.price).toLocaleString()}</strong>
+                                    <label class="payment-checkbox-item mandatory">
+                                        <input type="checkbox" checked disabled data-mandatory="true" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}">
+                                        <span class="payment-name">${p.name}</span>
+                                        <strong class="payment-price">₪${parseFloat(p.price).toLocaleString()}</strong>
                                     </label>
                                 `).join('')}
                             </div>
                         ` : ''}
 
                         ${optionalPayments.length > 0 ? `
-                            <h4 style="color: #059669; margin-bottom: 10px;">✓ תשלומים אופציונליים (מחירון)</h4>
-                            <div style="margin-bottom: 20px;">
+                            <h4 class="payments-section-title optional">✓ תשלומים אופציונליים (מחירון)</h4>
+                            <div class="payments-section-content">
                                 ${optionalPayments.map((p, i) => {
                                     const isChecked = savedOptionalSelections.has(String(p.priceDefinition));
                                     return `
-                                    <label style="display: flex; align-items: center; padding: 10px; background: #f0fdf4; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
-                                        <input type="checkbox" class="optional-payment" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}" ${isChecked ? 'checked' : ''} style="margin-left: 10px;">
-                                        <span style="flex: 1;">${p.name}</span>
-                                        <strong style="color: #059669;">₪${parseFloat(p.price).toLocaleString()}</strong>
+                                    <label class="payment-checkbox-item optional">
+                                        <input type="checkbox" class="optional-payment" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}" ${isChecked ? 'checked' : ''}>
+                                        <span class="payment-name">${p.name}</span>
+                                        <strong class="payment-price">₪${parseFloat(p.price).toLocaleString()}</strong>
                                     </label>
                                 `;}).join('')}
                             </div>
                         ` : ''}
 
                         <!-- הוספת תשלום ידני -->
-                        <h4 style="color: #3b82f6; margin-bottom: 10px;">➕ הוסף תשלום</h4>
-                        <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                            <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                                <div style="flex: 1; min-width: 150px;">
-                                    <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">סוג תשלום</label>
-                                    <select id="addPaymentType" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <h4 class="payments-section-title add">➕ הוסף תשלום</h4>
+                        <div class="add-payment-box">
+                            <div class="add-payment-row">
+                                <div class="add-payment-field">
+                                    <label>סוג תשלום</label>
+                                    <select id="addPaymentType">
                                         <option value="">-- בחר סוג --</option>
                                         ${Object.entries(PAYMENT_TYPES)
                                             .filter(([id]) => !existingTypes.has(parseInt(id)))
@@ -1182,28 +1178,26 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                             `).join('')}
                                     </select>
                                 </div>
-                                <div style="width: 120px;">
-                                    <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">מחיר (₪)</label>
-                                    <input type="number" id="addPaymentPrice" min="0" step="1" placeholder="0"
-                                        style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <div class="add-payment-field price">
+                                    <label>מחיר (₪)</label>
+                                    <input type="number" id="addPaymentPrice" min="0" step="1" placeholder="0">
                                 </div>
-                                <button type="button" onclick="addCustomPayment()"
-                                    style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                                <button type="button" onclick="addCustomPayment()" class="add-payment-btn">
                                     <i class="fas fa-plus"></i> הוסף
                                 </button>
                             </div>
-                            <div id="customPaymentsList" style="margin-top: 10px;"></div>
+                            <div id="customPaymentsList" class="custom-payments-list"></div>
                         </div>
 
-                        <div style="background: #1e293b; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px;">
-                            <div style="font-size: 14px; margin-bottom: 5px;">סה"כ לתשלום</div>
-                            <div id="modalTotalPrice" style="font-size: 28px; font-weight: bold;">₪0</div>
+                        <div class="payments-total-box">
+                            <div class="label">סה"כ לתשלום</div>
+                            <div id="modalTotalPrice" class="amount">₪0</div>
                         </div>
                     </div>
 
-                    <div style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; justify-content: flex-end;">
-                        <button onclick="closePaymentsModal()" style="padding: 10px 20px; background: #e2e8f0; border: none; border-radius: 8px; cursor: pointer;">ביטול</button>
-                        <button onclick="applyPayments()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer;">אשר תשלומים</button>
+                    <div class="payments-modal-footer">
+                        <button onclick="closePaymentsModal()" class="btn-cancel">ביטול</button>
+                        <button onclick="applyPayments()" class="btn-confirm">אשר תשלומים</button>
                     </div>
                 </div>
             `;
@@ -1302,11 +1296,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
 
             container.innerHTML = customPayments.map((p, i) => `
-                <div style="display: flex; align-items: center; padding: 8px; background: white; border-radius: 6px; margin-top: 8px;">
-                    <input type="checkbox" checked class="custom-payment" data-index="${i}" data-price="${p.price}" data-name="${p.name}" data-type="${p.type}" style="margin-left: 10px;">
-                    <span style="flex: 1;">${p.icon} ${p.name}</span>
-                    <strong style="color: #3b82f6; margin-left: 10px;">₪${p.price.toLocaleString()}</strong>
-                    <button type="button" onclick="removeCustomPayment(${i})" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-right: 8px;">
+                <div class="custom-payment-item">
+                    <input type="checkbox" checked class="custom-payment" data-index="${i}" data-price="${p.price}" data-name="${p.name}" data-type="${p.type}">
+                    <span class="payment-name">${p.icon} ${p.name}</span>
+                    <strong class="payment-price">₪${p.price.toLocaleString()}</strong>
+                    <button type="button" onclick="removeCustomPayment(${i})" class="remove-btn">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -1361,8 +1355,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             const container = document.getElementById('paymentsDisplay');
             if (!container || purchasePayments.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; color: #94a3b8;">
-                        <i class="fas fa-coins" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <div class="empty-state">
+                        <i class="fas fa-coins"></i>
                         <div>פירוט תשלומים יופיע כאן</div>
                     </div>
                 `;
@@ -1370,9 +1364,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
 
             container.innerHTML = purchasePayments.map(p => `
-                <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: ${p.mandatory ? '#fef2f2' : '#f0fdf4'}; border-radius: 6px; margin-bottom: 6px;">
+                <div class="payments-list-item ${p.mandatory ? 'mandatory' : 'optional'}">
                     <span>${p.customPaymentType}</span>
-                    <strong style="color: ${p.mandatory ? '#dc2626' : '#059669'};">₪${parseFloat(p.paymentAmount).toLocaleString()}</strong>
+                    <strong class="payment-amount">₪${parseFloat(p.paymentAmount).toLocaleString()}</strong>
                 </div>
             `).join('');
 
@@ -1500,11 +1494,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     window.purchaseExplorer = new FileExplorer('purchaseExplorer', purchaseId, {});
                     window.explorer = window.purchaseExplorer;
                 } else {
-                    document.getElementById('purchaseExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+                    document.getElementById('purchaseExplorer').innerHTML = '<div class="empty-state error"><i class="fas fa-exclamation-triangle"></i>שגיאה בטעינת סייר הקבצים</div>';
                 }
             };
             script.onerror = function() {
-                document.getElementById('purchaseExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+                document.getElementById('purchaseExplorer').innerHTML = '<div class="empty-state error"><i class="fas fa-exclamation-triangle"></i>שגיאה בטעינת סייר הקבצים</div>';
             };
             document.head.appendChild(script);
         }

@@ -153,7 +153,7 @@ $citiesJson = json_encode($allCities);
                         </span>
                     </div>
                     <div class="section-content">
-                        <div class="info-box" style="background: #f0fdf4; border-color: #86efac; color: #166534;">
+                        <div class="info-box green">
                             <i class="fas fa-lightbulb"></i>
                             בחר מדינה בלבד להגדרת חוק ברמת מדינה, או גם עיר להגדרה ספציפית יותר.
                         </div>

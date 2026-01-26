@@ -114,8 +114,8 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                 <span class="section-title"><i class="fas fa-cross"></i> קבורה #<?= htmlspecialchars($burial['serialBurialId'] ?? '-') ?></span>
             </div>
             <div class="section-content">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #92400e;"><i class="fas fa-cross"></i> קבורה #<?= htmlspecialchars($burial['serialBurialId'] ?? '-') ?></h2>
+                <div class="card-header-row burial">
+                    <h2><i class="fas fa-cross"></i> קבורה #<?= htmlspecialchars($burial['serialBurialId'] ?? '-') ?></h2>
                     <span class="status-badge" style="background: <?= $statusColor ?>"><?= $statusName ?></span>
                 </div>
                 <div class="info-grid">
@@ -124,7 +124,7 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                     <div class="info-card"><div class="label">תאריך קבורה</div><div class="value"><?= formatHebrewDate($burial['dateBurial']) ?></div></div>
                     <div class="info-card"><div class="label">שעת קבורה</div><div class="value"><?= htmlspecialchars($burial['timeBurial'] ?? '-') ?></div></div>
                 </div>
-                <div style="margin-top: 15px;"><button class="btn btn-warning" onclick="editBurial('<?= $burial['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך קבורה</button></div>
+                <div class="card-actions"><button class="btn btn-warning" onclick="editBurial('<?= $burial['unicId'] ?>')"><i class="fas fa-edit"></i> ערוך קבורה</button></div>
             </div>
         </div>
 
@@ -135,11 +135,11 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                 <span class="section-title"><i class="fas fa-user"></i> פרטי הנפטר/ת</span>
             </div>
             <div class="section-content">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #5b21b6;"><i class="fas fa-user"></i> <?= $deceasedName ?></h2>
+                <div class="card-header-row customer">
+                    <h2><i class="fas fa-user"></i> <?= $deceasedName ?></h2>
                 </div>
                 <div class="info-grid">
-                    <div class="info-card span-2"><div class="label">שם מלא</div><div class="value" style="font-size: 16px;"><?= $deceasedName ?></div></div>
+                    <div class="info-card span-2"><div class="label">שם מלא</div><div class="value value-lg"><?= $deceasedName ?></div></div>
                     <div class="info-card"><div class="label">ת.ז.</div><div class="value"><?= htmlspecialchars($burial['deceasedNumId'] ?? '-') ?></div></div>
                     <div class="info-card"><div class="label">מגדר</div><div class="value"><?= $genderName ?></div></div>
                     <div class="info-card"><div class="label">תאריך לידה</div><div class="value"><?= formatHebrewDate($burial['deceasedDateBirth']) ?></div></div>
@@ -147,7 +147,7 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                     <div class="info-card"><div class="label">שם האם</div><div class="value"><?= htmlspecialchars($burial['deceasedNameMother'] ?? '-') ?></div></div>
                 </div>
                 <?php if ($burial['clientId']): ?>
-                <div style="margin-top: 15px;"><button class="btn btn-purple" onclick="viewCustomer('<?= $burial['clientId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס לקוח</button></div>
+                <div class="card-actions"><button class="btn btn-purple" onclick="viewCustomer('<?= $burial['clientId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס לקוח</button></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -159,8 +159,8 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                 <span class="section-title"><i class="fas fa-monument"></i> פרטי הקבר</span>
             </div>
             <div class="section-content">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #166534;"><i class="fas fa-monument"></i> <?= htmlspecialchars($burial['graveNameHe'] ?? 'קבר') ?></h2>
+                <div class="card-header-row grave">
+                    <h2><i class="fas fa-monument"></i> <?= htmlspecialchars($burial['graveNameHe'] ?? 'קבר') ?></h2>
                 </div>
                 <div class="info-grid">
                     <div class="info-card span-2"><div class="label">מיקום מלא</div><div class="value"><?= $graveLocationStr ?></div></div>
@@ -170,7 +170,7 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                     <div class="info-card"><div class="label">שורה</div><div class="value"><?= htmlspecialchars($burial['lineNameHe'] ?? '-') ?></div></div>
                 </div>
                 <?php if ($burial['graveUnicId']): ?>
-                <div style="margin-top: 15px;"><button class="btn btn-success" onclick="viewGrave('<?= $burial['graveUnicId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס קבר</button></div>
+                <div class="card-actions"><button class="btn btn-success" onclick="viewGrave('<?= $burial['graveUnicId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס קבר</button></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -183,18 +183,18 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                 <span class="section-title"><i class="fas fa-shopping-cart"></i> פרטי הרכישה</span>
             </div>
             <div class="section-content">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #1e40af;"><i class="fas fa-shopping-cart"></i> רכישה #<?= htmlspecialchars($burial['serialPurchaseId'] ?? '-') ?></h2>
+                <div class="card-header-row purchase">
+                    <h2><i class="fas fa-shopping-cart"></i> רכישה #<?= htmlspecialchars($burial['serialPurchaseId'] ?? '-') ?></h2>
                     <?php $pStatus = $burial['purchaseStatus'] ?? 1; $pStatusName = $purchaseStatusNames[$pStatus] ?? 'לא ידוע'; $pStatusColor = $purchaseStatusColors[$pStatus] ?? '#64748b'; ?>
                     <span class="status-badge" style="background: <?= $pStatusColor ?>"><?= $pStatusName ?></span>
                 </div>
                 <div class="info-grid">
                     <div class="info-card"><div class="label">מספר רכישה</div><div class="value"><?= htmlspecialchars($burial['serialPurchaseId'] ?? '-') ?></div></div>
                     <div class="info-card"><div class="label">תאריך פתיחה</div><div class="value"><?= formatHebrewDate($burial['purchaseDateOpening']) ?></div></div>
-                    <div class="info-card"><div class="label">מחיר</div><div class="value" style="font-size: 16px;"><?= formatPrice($burial['purchasePrice']) ?></div></div>
+                    <div class="info-card"><div class="label">מחיר</div><div class="value value-lg"><?= formatPrice($burial['purchasePrice']) ?></div></div>
                     <div class="info-card"><div class="label">שם הרוכש</div><div class="value"><?= htmlspecialchars($burial['purchaserFullNameHe'] ?? '-') ?></div></div>
                 </div>
-                <div style="margin-top: 15px;"><button class="btn btn-primary" onclick="viewPurchase('<?= $burial['purchaseUnicId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס רכישה</button></div>
+                <div class="card-actions"><button class="btn btn-primary" onclick="viewPurchase('<?= $burial['purchaseUnicId'] ?>')"><i class="fas fa-eye"></i> צפה בכרטיס רכישה</button></div>
             </div>
         </div>
         <?php endif; ?>
@@ -206,9 +206,9 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
             <div class="section-content">
-                <div id="burialExplorer" style="min-height: 200px;">
-                    <div style="text-align: center; padding: 40px; color: #64748b;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                <div id="burialExplorer" class="min-h-200">
+                    <div class="loading-state lg">
+                        <i class="fas fa-spinner fa-spin"></i>
                         טוען סייר קבצים...
                     </div>
                 </div>
@@ -233,11 +233,11 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                     window.burialExplorer = new FileExplorer('burialExplorer', burialId, {});
                     window.explorer = window.burialExplorer;
                 } else {
-                    document.getElementById('burialExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+                    document.getElementById('burialExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i>שגיאה בטעינת סייר הקבצים</div>';
                 }
             };
             script.onerror = function() {
-                document.getElementById('burialExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+                document.getElementById('burialExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i>שגיאה בטעינת סייר הקבצים</div>';
             };
             document.head.appendChild(script);
         }

@@ -152,7 +152,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                     <div class="info-card"><div class="label">כתובת</div><div class="value"><?= htmlspecialchars($customer['address'] ?? '-') ?></div></div>
                 </div>
 
-                <div style="margin-top: 15px;">
+                <div class="card-actions">
                     <button class="btn btn-primary" onclick="editCustomer('<?= $customer['unicId'] ?>')">
                         <i class="fas fa-edit"></i> ערוך לקוח
                     </button>
@@ -168,7 +168,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 </button>
                 <span class="section-title">
                     <i class="fas fa-shopping-cart"></i> תיקי רכישה
-                    <span class="status-badge" style="background: #3b82f6"><?= $purchaseCount ?></span>
+                    <span class="status-badge blue"><?= $purchaseCount ?></span>
                 </span>
             </div>
             <div class="section-content">
@@ -179,8 +179,8 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                     ?>
                     <div class="purchase-card">
                         <div class="card-header">
-                            <span style="font-weight: 600;">
-                                <i class="fas fa-monument" style="color: #64748b;"></i>
+                            <span class="fw-600">
+                                <i class="fas fa-monument text-muted-icon"></i>
                                 <?= htmlspecialchars($purchase['graveNameHe'] ?? 'קבר') ?>
                             </span>
                             <span class="status-badge" style="background: <?= $pStatusColor ?>"><?= $pStatusName ?></span>
@@ -191,7 +191,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                             <div><strong>מחיר:</strong> <?= formatPrice($purchase['price']) ?></div>
                             <div><strong>מיקום:</strong> <?= htmlspecialchars($purchase['cemeteryNameHe'] ?? '') ?></div>
                         </div>
-                        <div style="margin-top: 10px;">
+                        <div class="card-actions">
                             <button class="btn btn-outline" onclick="viewPurchase('<?= $purchase['unicId'] ?>')">
                                 <i class="fas fa-eye"></i> צפה
                             </button>
@@ -215,7 +215,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 </button>
                 <span class="section-title">
                     <i class="fas fa-cross"></i> תיקי קבורה
-                    <span class="status-badge" style="background: #f59e0b"><?= $burialCount ?></span>
+                    <span class="status-badge orange"><?= $burialCount ?></span>
                 </span>
             </div>
             <div class="section-content">
@@ -223,8 +223,8 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                     <?php foreach ($burials as $burial): ?>
                     <div class="burial-card">
                         <div class="card-header">
-                            <span style="font-weight: 600;">
-                                <i class="fas fa-monument" style="color: #64748b;"></i>
+                            <span class="fw-600">
+                                <i class="fas fa-monument text-muted-icon"></i>
                                 <?= htmlspecialchars($burial['graveNameHe'] ?? 'קבר') ?>
                             </span>
                         </div>
@@ -234,7 +234,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                             <div><strong>תאריך קבורה:</strong> <?= formatHebrewDate($burial['dateBurial']) ?></div>
                             <div><strong>מיקום:</strong> <?= htmlspecialchars($burial['cemeteryNameHe'] ?? '') ?></div>
                         </div>
-                        <div style="margin-top: 10px;">
+                        <div class="card-actions">
                             <button class="btn btn-outline" onclick="viewBurial('<?= $burial['unicId'] ?>')">
                                 <i class="fas fa-eye"></i> צפה
                             </button>
@@ -259,9 +259,9 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
             <div class="section-content">
-                <div id="customerExplorer" style="min-height: 300px;">
-                    <div style="text-align: center; color: #94a3b8; padding: 40px;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                <div id="customerExplorer" class="min-h-200">
+                    <div class="loading-state lg">
+                        <i class="fas fa-spinner fa-spin"></i>
                         <span>טוען סייר קבצים...</span>
                     </div>
                 </div>
@@ -290,11 +290,11 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                     window.customerExplorer = new FileExplorer('customerExplorer', customerId, {});
                     window.explorer = window.customerExplorer;
                 } else {
-                    document.getElementById('customerExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                    document.getElementById('customerExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
                 }
             };
             script.onerror = function() {
-                document.getElementById('customerExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                document.getElementById('customerExplorer').innerHTML = '<div class="error-state lg"><i class="fas fa-exclamation-triangle"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
             };
             document.head.appendChild(script);
         }

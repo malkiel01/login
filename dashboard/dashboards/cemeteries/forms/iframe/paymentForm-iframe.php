@@ -379,10 +379,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         function showAlert(message, type) {
             const alertBox = document.getElementById('alertBox');
             alertBox.textContent = message;
-            alertBox.className = 'alert alert-' + type;
-            alertBox.style.display = 'block';
+            alertBox.className = 'alert alert-' + type + ' show';
             setTimeout(() => {
-                alertBox.style.display = 'none';
+                alertBox.classList.remove('show');
             }, 5000);
         }
 

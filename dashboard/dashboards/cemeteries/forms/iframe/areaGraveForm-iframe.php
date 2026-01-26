@@ -267,8 +267,8 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
 
                             <div class="form-group">
                                 <label><span class="required">*</span> שורה</label>
-                                <div style="display: flex; gap: 8px;">
-                                    <select id="lineIdSelect" class="form-control" style="flex: 1;" required <?= $isEditMode ? 'disabled' : '' ?>>
+                                <div class="flex-row gap-12">
+                                    <select id="lineIdSelect" class="form-control flex-1" required <?= $isEditMode ? 'disabled' : '' ?>>
                                         <option value="">-- בחר שורה --</option>
                                         <?php foreach ($rows as $id => $name): ?>
                                             <option value="<?= htmlspecialchars($id) ?>" <?= ($validatedLineId == $id) ? 'selected' : '' ?>>
@@ -342,15 +342,15 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
                         <table class="graves-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;" class="center">#</th>
-                                    <th>שם קבר <span style="color: #fbbf24;">*</span></th>
-                                    <th style="width: 130px;">סוג חלקה <span style="color: #fbbf24;">*</span></th>
+                                    <th class="col-50 center">#</th>
+                                    <th>שם קבר <span class="required-badge">*</span></th>
+                                    <th class="col-130">סוג חלקה <span class="required-badge">*</span></th>
                                     <?php if ($isEditMode): ?>
-                                    <th style="width: 90px;" class="center">סטטוס</th>
+                                    <th class="col-90 center">סטטוס</th>
                                     <?php endif; ?>
-                                    <th style="width: 80px;" class="center">קבר קטן</th>
-                                    <th style="width: 120px;">עלות בנייה</th>
-                                    <th style="width: 70px;" class="center">פעולות</th>
+                                    <th class="col-80 center">קבר קטן</th>
+                                    <th class="col-120">עלות בנייה</th>
+                                    <th class="col-70 center">פעולות</th>
                                 </tr>
                             </thead>
                             <tbody id="gravesBody">
@@ -358,7 +358,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
                             </tbody>
                         </table>
 
-                        <div class="empty-graves" id="emptyGraves" style="display: none;">
+                        <div class="empty-graves hidden" id="emptyGraves">
                             <i class="fas fa-monument"></i>
                             <div>לחץ "הוסף קבר" כדי להתחיל</div>
                         </div>

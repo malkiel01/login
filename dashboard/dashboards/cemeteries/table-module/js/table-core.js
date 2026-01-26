@@ -189,7 +189,7 @@ class TableManager {
 
                 // ⭐ טעינת כל ההעדפות ממבנה אחיד
                 const savedPrefsRaw = await UserSettings.getAsync(`${storageKey}_preferences`, null);
-                console.log('TableManager: Loading unified preferences for', storageKey);
+                console.log('TableManager: Loading unified preferences for', storageKey, 'raw value:', savedPrefsRaw, 'type:', typeof savedPrefsRaw);
 
                 if (savedPrefsRaw) {
                     const prefs = typeof savedPrefsRaw === 'string' ? JSON.parse(savedPrefsRaw) : savedPrefsRaw;

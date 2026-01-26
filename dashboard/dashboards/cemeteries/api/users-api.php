@@ -126,9 +126,18 @@ function handleList(PDO $pdo): void {
                 u.created_at,
                 u.last_login,
                 r.name as role_name,
-                r.display_name as role_display_name
+                up.dashboard_type,
+                CASE
+                    WHEN up.dashboard_type = 'admin' THEN 'מנהל מערכת'
+                    WHEN up.dashboard_type = 'cemetery_manager' AND r.display_name IS NOT NULL THEN CONCAT('בתי עלמין - ', r.display_name)
+                    WHEN up.dashboard_type = 'cemetery_manager' THEN 'בתי עלמין'
+                    WHEN up.dashboard_type = 'client' THEN 'לקוח'
+                    WHEN up.dashboard_type = 'default' THEN 'בסיסי'
+                    ELSE COALESCE(r.display_name, up.dashboard_type, 'ללא תפקיד')
+                END as role_display_name
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.id
+            LEFT JOIN user_permissions up ON u.id = up.user_id
             WHERE 1=1
         ";
     } else {
@@ -147,6 +156,7 @@ function handleList(PDO $pdo): void {
                 u.created_at,
                 u.last_login,
                 NULL as role_name,
+                NULL as dashboard_type,
                 NULL as role_display_name
             FROM users u
             WHERE 1=1
@@ -227,9 +237,18 @@ function handleGet(PDO $pdo): void {
                 u.created_at,
                 u.last_login,
                 r.name as role_name,
-                r.display_name as role_display_name
+                up.dashboard_type,
+                CASE
+                    WHEN up.dashboard_type = 'admin' THEN 'מנהל מערכת'
+                    WHEN up.dashboard_type = 'cemetery_manager' AND r.display_name IS NOT NULL THEN CONCAT('בתי עלמין - ', r.display_name)
+                    WHEN up.dashboard_type = 'cemetery_manager' THEN 'בתי עלמין'
+                    WHEN up.dashboard_type = 'client' THEN 'לקוח'
+                    WHEN up.dashboard_type = 'default' THEN 'בסיסי'
+                    ELSE COALESCE(r.display_name, up.dashboard_type, 'ללא תפקיד')
+                END as role_display_name
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.id
+            LEFT JOIN user_permissions up ON u.id = up.user_id
             WHERE u.id = ?
         ");
     } else {
@@ -248,6 +267,7 @@ function handleGet(PDO $pdo): void {
                 u.created_at,
                 u.last_login,
                 NULL as role_name,
+                NULL as dashboard_type,
                 NULL as role_display_name
             FROM users u
             WHERE u.id = ?

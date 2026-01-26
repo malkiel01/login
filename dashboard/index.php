@@ -20,6 +20,16 @@ $stmt->execute([$_SESSION['user_id']]);
 $userId = $_SESSION['user_id'];
 $dashboardType = getUserDashboardType($userId);
 
+// טען config של הדשבורד
+require_once __DIR__ . '/config.php';
+
+// בדוק אם יש redirect מוגדר בקונפיג
+if (defined('DASHBOARD_TYPES') && isset(DASHBOARD_TYPES[$dashboardType]['redirect'])) {
+    $redirect = DASHBOARD_TYPES[$dashboardType]['redirect'];
+    header('Location: ' . $redirect);
+    exit;
+}
+
 // בדיקה איזה קובץ דשבורד להציג
 $dashboardFile = __DIR__ . '/dashboards/' . $dashboardType . '.php';
 

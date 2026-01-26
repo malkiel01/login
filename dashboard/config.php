@@ -43,8 +43,8 @@ define('DASHBOARD_TYPES', [
         'permissions' => ['view_basic']
     ],
 
-    // בתי עלמין - עם פרופילים והרשאות גרנולריות
-    'cemeteries' => [
+    // בית עלמין - עם פרופילים והרשאות גרנולריות
+    'cemetery_manager' => [
         'name' => 'דשבורד בתי עלמין',
         'icon' => '🪦',
         'color' => '#8B4513',

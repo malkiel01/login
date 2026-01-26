@@ -16,44 +16,7 @@ $pdo = getDBConnection();
 $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 
-// פונקציה לקבלת סוג הדשבורד - משתמשת ב-getDBConnection שכבר קיים אצלך!
-function getUserDashboardType($userId) {
-    try {
-        global $pdo;
-        
-        // בודק אם טבלת ההרשאות קיימת
-        $stmt = $pdo->prepare("SHOW TABLES LIKE 'user_permissions'");
-        $stmt->execute();
-        
-        if ($stmt->rowCount() == 0) {
-            // אם הטבלה לא קיימת, החזר ברירת מחדל
-            return 'default';
-        }
-        
-        // שליפת סוג הדשבורד מהטבלה
-        $stmt = $pdo->prepare("
-            SELECT dashboard_type 
-            FROM user_permissions 
-            WHERE user_id = ? 
-            LIMIT 1
-        ");
-        $stmt->execute([$userId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($result && $result['dashboard_type']) {
-            return $result['dashboard_type'];
-        }
-        
-        return 'default'; // ברירת מחדל
-        
-    } catch (Exception $e) {
-        // אם יש שגיאה, פשוט החזר default
-        error_log("Error getting dashboard type: " . $e->getMessage());
-        return 'default';
-    }
-}
-
-// קבלת סוג הדשבורד
+// קבלת סוג הדשבורד (הפונקציה מוגדרת ב-middleware.php)
 $userId = $_SESSION['user_id'];
 $dashboardType = getUserDashboardType($userId);
 

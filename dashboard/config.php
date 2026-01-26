@@ -11,49 +11,67 @@ if (file_exists('../config.php')) {
 
 // Dashboard Types
 define('DASHBOARD_TYPES', [
+    // מנהל מערכת - למפתח בלבד, לא ניתן לבחירה
     'admin' => [
-        'name' => 'דשבורד מנהל',
+        'name' => 'מנהל מערכת',
         'icon' => '👨‍💼',
         'color' => '#667eea',
-        'permissions' => ['view_all', 'edit_all', 'delete_all', 'manage_users']
+        'system_only' => true,  // לא ניתן לבחירה בטופס
+        'has_profiles' => false,
+        'permissions' => ['*']  // גישה מלאה לכל
     ],
-    'manager' => [
-        'name' => 'דשבורד מנהל צוות',
-        'icon' => '📈',
-        'color' => '#11998e',
-        'permissions' => ['view_team', 'edit_team', 'reports']
-    ],
-    'employee' => [
-        'name' => 'דשבורד עובד',
-        'icon' => '💼',
-        'color' => '#FC466B',
-        'permissions' => ['view_own', 'edit_own']
-    ],
+
+    // לקוח - מובנה, ללא פרופילים
     'client' => [
         'name' => 'דשבורד לקוח',
         'icon' => '🏢',
         'color' => '#FDBB2D',
+        'system_only' => false,
+        'has_profiles' => false,  // ללא בחירת פרופיל
+        'redirect' => '/dashboard/dashboards/client.php',
         'permissions' => ['view_projects', 'view_reports']
     ],
-    'cemetery_manager' => [
-        'name' => 'דשבורד בתי עלמין',
-        'icon' => '🪦',
-        'color' => '#8B4513',
-        'permissions' => [
-            'view_graves',
-            'edit_graves', 
-            'manage_burials',
-            'view_cemetery_map',
-            'manage_memorials',
-            'generate_reports',
-            'manage_families'
-        ]
-    ],
+
+    // בסיסי - מובנה, ללא פרופילים
     'default' => [
         'name' => 'דשבורד בסיסי',
         'icon' => '🏠',
         'color' => '#e5e7eb',
+        'system_only' => false,
+        'has_profiles' => false,  // ללא בחירת פרופיל
+        'redirect' => '/dashboard/dashboards/default.php',
         'permissions' => ['view_basic']
+    ],
+
+    // בתי עלמין - עם פרופילים והרשאות גרנולריות
+    'cemeteries' => [
+        'name' => 'דשבורד בתי עלמין',
+        'icon' => '🪦',
+        'color' => '#8B4513',
+        'system_only' => false,
+        'has_profiles' => true,   // ניתן לבחור/ליצור פרופיל
+        'redirect' => '/dashboard/dashboards/cemeteries/',
+        'permissions' => []       // ההרשאות מגיעות מהפרופיל
     ]
 ]);
+
+/**
+ * קבלת סוגי דשבורדים הניתנים לבחירה (ללא admin)
+ */
+function getSelectableDashboardTypes(): array {
+    $types = [];
+    foreach (DASHBOARD_TYPES as $key => $type) {
+        if (empty($type['system_only'])) {
+            $types[$key] = $type;
+        }
+    }
+    return $types;
+}
+
+/**
+ * בדיקה האם לסוג דשבורד יש פרופילים
+ */
+function dashboardHasProfiles(string $dashboardType): bool {
+    return DASHBOARD_TYPES[$dashboardType]['has_profiles'] ?? false;
+}
 ?>

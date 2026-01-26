@@ -345,6 +345,10 @@ function handleCreate(PDO $pdo): void {
 
     $userId = $pdo->lastInsertId();
 
+    // שמור סוג דשבורד ב-user_permissions
+    $dashboardType = $data['dashboard_type'] ?? 'cemeteries';
+    saveUserDashboardType($pdo, $userId, $dashboardType);
+
     // הוסף הרשאות מותאמות אם יש
     if (!empty($data['permissions']) && !empty($data['custom_permissions'])) {
         saveCustomPermissions($pdo, $userId, $data['permissions']);
@@ -410,6 +414,11 @@ function handleUpdate(PDO $pdo): void {
     $sql = "UPDATE users SET " . implode(', ', $updates) . " WHERE id = ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
+
+    // עדכן סוג דשבורד
+    if (!empty($data['dashboard_type'])) {
+        saveUserDashboardType($pdo, $id, $data['dashboard_type']);
+    }
 
     // עדכן הרשאות מותאמות
     if (array_key_exists('permissions', $data)) {
@@ -555,5 +564,24 @@ function saveCustomPermissions(PDO $pdo, int $userId, array $permissions): void 
                 $stmt->execute([$userId, (int)$permissionId, (int)$granted]);
             }
         }
+    }
+}
+
+/**
+ * שמירת סוג דשבורד למשתמש
+ */
+function saveUserDashboardType(PDO $pdo, int $userId, string $dashboardType): void {
+    // בדוק אם יש כבר רשומה
+    $stmt = $pdo->prepare("SELECT user_id FROM user_permissions WHERE user_id = ?");
+    $stmt->execute([$userId]);
+
+    if ($stmt->fetch()) {
+        // עדכן
+        $stmt = $pdo->prepare("UPDATE user_permissions SET dashboard_type = ? WHERE user_id = ?");
+        $stmt->execute([$dashboardType, $userId]);
+    } else {
+        // צור חדש
+        $stmt = $pdo->prepare("INSERT INTO user_permissions (user_id, dashboard_type) VALUES (?, ?)");
+        $stmt->execute([$userId, $dashboardType]);
     }
 }

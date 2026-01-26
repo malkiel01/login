@@ -1,17 +1,28 @@
 <?php
-// cemetery_dashboard/api/cemetery-hierarchy.php
-// API לניהול היררכיית בתי עלמין - משתמש ב-HierarchyManager
-
-// ⚠️ DEBUG: הצגת שגיאות - להסיר בפרודקשן!
+// ⚠️ DEBUG: הצגת שגיאות - חייב להיות ראשון!
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// אימות והרשאות - חייב להיות מחובר!
-require_once __DIR__ . '/api-auth.php';
+// cemetery_dashboard/api/cemetery-hierarchy.php
+// API לניהול היררכיית בתי עלמין - משתמש ב-HierarchyManager
 
-require_once '../classes/HierarchyManager.php';
-require_once '../includes/permissions-mapper.php';
+try {
+    // אימות והרשאות - חייב להיות מחובר!
+    require_once __DIR__ . '/api-auth.php';
+
+    require_once '../classes/HierarchyManager.php';
+    require_once '../includes/permissions-mapper.php';
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
+    exit;
+}
 
 // קבלת פרמטרים
 $action = $_GET['action'] ?? '';

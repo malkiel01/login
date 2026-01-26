@@ -53,11 +53,13 @@
 .tm-header-wrapper {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: flex-start;
+    gap: 6px;
     cursor: pointer;
     direction: rtl;
     position: relative;
     z-index: 1;
+    min-height: 28px;
 }
 
 .tm-header-label {
@@ -68,36 +70,45 @@
 }
 
 .tm-sort-icon {
-    font-size: 20px;
+    font-size: 18px;
     opacity: 1;
     transition: all 0.2s;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-    font-weight: bold;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
 }
 
 .tm-header-cell:hover .tm-sort-icon {
     opacity: 1;
-    transform: scale(1.15);
+    transform: scale(1.1);
 }
 
 /* === כפתור תפריט === */
 .tm-menu-btn {
-    background: rgba(255, 255, 255, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     color: #ffffff;
-    padding: 3px 8px;
+    padding: 2px 6px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
     transition: all 0.2s;
     font-weight: bold;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 22px;
 }
 
 .tm-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.4);
-    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.45);
+    transform: scale(1.08);
 }
 
 /* === תפריט עמודה - RTL FIX === */
@@ -195,7 +206,7 @@
 @media (max-width: 768px) {
     .tm-header-cell {
         padding: 4px 6px;
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .tm-cell {
@@ -204,12 +215,19 @@
     }
 
     .tm-menu-btn {
-        padding: 2px 6px;
-        font-size: 16px;
+        padding: 2px 5px;
+        font-size: 14px;
+        min-width: 20px;
+        min-height: 18px;
     }
 
     .tm-sort-icon {
-        font-size: 18px;
+        font-size: 15px;
+    }
+
+    .tm-header-wrapper {
+        gap: 4px;
+        min-height: 24px;
     }
 
     .tm-column-menu {

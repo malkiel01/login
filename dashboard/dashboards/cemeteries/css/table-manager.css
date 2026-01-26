@@ -380,13 +380,14 @@ body.dark-theme .tm-menu-divider {
 
 [data-theme="dark"] .tm-menu-btn,
 body.dark-theme .tm-menu-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--border-color, #475569);
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    font-size: 20px !important;
 }
 
 [data-theme="dark"] .tm-menu-btn:hover,
 body.dark-theme .tm-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.3) !important;
 }
 
 [data-theme="dark"] .tm-row:hover,
@@ -463,8 +464,10 @@ body.compact-mode .tm-cell {
 }
 
 body.compact-mode .tm-menu-btn {
-    padding: 2px 6px;
-    font-size: 14px;
+    padding: 2px 6px !important;
+    font-size: 18px !important;
+    min-width: 26px !important;
+    min-height: 24px !important;
 }
 
 body.compact-mode .tm-no-results {

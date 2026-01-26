@@ -6,14 +6,14 @@ CREATE TABLE IF NOT EXISTS user_tokens (
     user_id INT NOT NULL,
     token VARCHAR(64) NOT NULL UNIQUE,
     refresh_token VARCHAR(64) NOT NULL UNIQUE,
-    device_info JSON DEFAULT NULL,
+    device_info TEXT DEFAULT NULL,
     ip_address VARCHAR(45) DEFAULT NULL,
     user_agent TEXT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
-    refresh_expires_at TIMESTAMP NOT NULL,
+    expires_at DATETIME NOT NULL,
+    refresh_expires_at DATETIME NOT NULL,
     last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE,
+    is_active TINYINT(1) DEFAULT 1,
 
     -- Foreign key
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -25,10 +25,6 @@ CREATE TABLE IF NOT EXISTS user_tokens (
     INDEX idx_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- הוספת עמודות לטבלת users אם לא קיימות
-ALTER TABLE users
-ADD COLUMN IF NOT EXISTS remember_token VARCHAR(64) DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS remember_expiry TIMESTAMP DEFAULT NULL;
-
--- Index על remember_token
-CREATE INDEX IF NOT EXISTS idx_remember_token ON users(remember_token);
+-- הוספת עמודות לטבלת users (תתעלם מהשגיאה אם כבר קיימות)
+-- ALTER TABLE users ADD COLUMN remember_token VARCHAR(64) DEFAULT NULL;
+-- ALTER TABLE users ADD COLUMN remember_expiry DATETIME DEFAULT NULL;

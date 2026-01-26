@@ -32,7 +32,7 @@
 ======================================== */
 
 .popup-header {
-    /* Light mode - סגול (כמו ערכת ברירת מחדל) */
+    /* ברירת מחדל - סגול */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 12px 16px;
@@ -43,6 +43,12 @@
     user-select: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     min-height: 45px;
+}
+
+/* ערכת צבעים ירוקה - Light Mode */
+[data-color-scheme="green"] .popup-header,
+.popup-container[data-color-scheme="green"] .popup-header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
 }
 
 .popup-header:active {

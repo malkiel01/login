@@ -860,31 +860,26 @@ class TableManager {
             menuBtn.className = 'tm-column-menu-btn';
             menuBtn.innerHTML = '⋮';
             menuBtn.style.cssText = `
-                background: rgba(255, 255, 255, 0.3);
-                border: 2px solid rgba(255, 255, 255, 0.5);
+                background: none;
+                border: none;
                 cursor: pointer;
-                padding: 2px 8px;
-                font-size: 20px;
-                color: #ffffff;
-                opacity: 1;
-                transition: all 0.2s;
-                border-radius: 5px;
+                padding: 2px 6px;
+                font-size: 18px;
+                color: inherit;
+                opacity: 0.5;
+                transition: opacity 0.2s;
+                border-radius: 4px;
                 flex-shrink: 0;
-                min-width: 28px;
-                min-height: 26px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 font-weight: bold;
-                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             `;
             menuBtn.onmouseover = () => {
                 menuBtn.style.opacity = '1';
-                menuBtn.style.background = 'var(--bg-tertiary, #e5e7eb)';
             };
             menuBtn.onmouseout = () => {
-                menuBtn.style.opacity = '0.6';
-                menuBtn.style.background = 'none';
+                menuBtn.style.opacity = '0.5';
             };
             menuBtn.onclick = (e) => {
                 e.stopPropagation();

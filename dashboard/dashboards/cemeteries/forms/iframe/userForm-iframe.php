@@ -19,7 +19,7 @@ $popupId = $_GET['popupId'] ?? null;
 $isEditMode = !empty($itemId);
 
 $user = null;
-$userDashboardType = 'cemeteries'; // ברירת מחדל
+$userDashboardType = 'cemetery_manager'; // ברירת מחדל
 $roles = [];
 $permissions = [];
 $userCustomPermissions = [];
@@ -29,7 +29,7 @@ try {
 
     // טעינת פרופילים (roles) - רק של בתי עלמין
     try {
-        $stmt = $conn->query("SELECT * FROM roles WHERE dashboard_type = 'cemeteries' OR dashboard_type IS NULL ORDER BY display_name");
+        $stmt = $conn->query("SELECT * FROM roles WHERE dashboard_type = 'cemetery_manager' OR dashboard_type IS NULL ORDER BY display_name");
         $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         // טבלת roles לא קיימת
@@ -70,12 +70,7 @@ try {
         }
 
         // קביעת סוג הדשבורד הנוכחי
-        $userDashboardType = $user['dashboard_type'] ?? 'cemeteries';
-
-        // המרה מהשמות הישנים לחדשים
-        if ($userDashboardType === 'cemetery_manager') {
-            $userDashboardType = 'cemeteries';
-        }
+        $userDashboardType = $user['dashboard_type'] ?? 'cemetery_manager';
 
         // טעינת הרשאות מותאמות
         try {

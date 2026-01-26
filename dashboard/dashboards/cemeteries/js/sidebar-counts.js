@@ -17,52 +17,56 @@
 
 /**
  * עדכון כל המונים ב-Sidebar
+ * בודק הרשאות לפני כל קריאת API
  */
 async function updateAllSidebarCounts() {
-    
+
+    // פונקציית עזר לבדיקת הרשאה
+    const canView = (module) => window.hasPermission ? window.hasPermission(module, 'view') : true;
+
     // הצג אנימציית Loading על כל המונים
     document.querySelectorAll('.hierarchy-count').forEach(el => {
         el.classList.add('loading');
     });
-    
+
     try {
-        // 1️⃣ בתי עלמין - ✅ cemeteries-api.php (מתוקן!)
-        await updateCemeteriesCount();
-        
-        // 2️⃣ גושים - ✅ cemetery-hierarchy.php (נשאר)
-        await updateBlocksCount();
-        
-        // 3️⃣ חלקות - ✅ cemetery-hierarchy.php (נשאר)
-        await updatePlotsCount();
-        
-        // 4️⃣ אחוזות קבר - ✅ cemetery-hierarchy.php (נשאר)
-        await updateAreaGravesCount();
-        
-        // 5️⃣ קברים - ✅ cemetery-hierarchy.php (נשאר)
-        await updateGravesCount();
-        
-        // 6️⃣ לקוחות - ✅ customers-api.php
-        await updateCustomersCount();
-        
-        // 7️⃣ רכישות - ✅ purchases-api.php
-        await updatePurchasesCount();
-        
-        // 8️⃣ קבורות - ✅ burials-api.php
-        await updateBurialsCount();
-        
-        // 9️⃣ תשלומים - ✅ payments-api.php
-        await updatePaymentsCount();
-        
-        // 🔟 תושבויות - ✅ residency-api.php
-        await updateResidencyCount();
-        
-        // 1️⃣1️⃣ מדינות - ✅ countries-api.php
-        await updateCountriesCount();
-        
-        // 1️⃣2️⃣ ערים - ✅ cities-api.php
-        await updateCitiesCount();
-        
-        
+        // 1️⃣ בתי עלמין
+        if (canView('cemeteries')) await updateCemeteriesCount();
+
+        // 2️⃣ גושים
+        if (canView('blocks')) await updateBlocksCount();
+
+        // 3️⃣ חלקות
+        if (canView('plots')) await updatePlotsCount();
+
+        // 4️⃣ אחוזות קבר
+        if (canView('areaGraves')) await updateAreaGravesCount();
+
+        // 5️⃣ קברים
+        if (canView('graves')) await updateGravesCount();
+
+        // 6️⃣ לקוחות
+        if (canView('customers')) await updateCustomersCount();
+
+        // 7️⃣ רכישות
+        if (canView('purchases')) await updatePurchasesCount();
+
+        // 8️⃣ קבורות
+        if (canView('burials')) await updateBurialsCount();
+
+        // 9️⃣ תשלומים
+        if (canView('payments')) await updatePaymentsCount();
+
+        // 🔟 תושבויות
+        if (canView('residency')) await updateResidencyCount();
+
+        // 1️⃣1️⃣ מדינות
+        if (canView('countries')) await updateCountriesCount();
+
+        // 1️⃣2️⃣ ערים
+        if (canView('cities')) await updateCitiesCount();
+
+
     } catch (error) {
         console.error('❌ שגיאה בעדכון מונים:', error);
     }

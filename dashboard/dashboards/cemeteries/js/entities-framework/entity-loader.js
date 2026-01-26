@@ -51,7 +51,13 @@ class EntityLoader {
             
             // שליחת בקשה
             const response = await fetch(apiUrl, { signal });
-            
+
+            // 403 = אין הרשאה - לא מציגים שגיאה, פשוט לא טוענים
+            if (response.status === 403) {
+                console.log(`⚠️ No permission to view ${entityType}`);
+                return { success: false, noPermission: true };
+            }
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

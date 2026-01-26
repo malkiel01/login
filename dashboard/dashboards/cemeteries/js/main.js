@@ -34,8 +34,8 @@ async function initDashboard() {
         await initEntityConfig();
     }
 
-    // טען נתונים ראשוניים
-    if (typeof loadCemeteries === 'function') {
+    // טען נתונים ראשוניים - רק אם יש הרשאה
+    if (typeof loadCemeteries === 'function' && window.hasPermission('cemeteries', 'view')) {
         loadCemeteries();
     }
 }

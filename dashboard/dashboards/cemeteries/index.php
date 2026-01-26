@@ -55,6 +55,10 @@ if ($sidebarCollapsed) {
 <?php
 // טען את הקונפיג תשלומים
 $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/payment-types-config.php';
+
+// הכן הרשאות משתמש ל-JavaScript
+$userPermissions = getUserPermissionsDetailed();
+$isAdminUser = isAdmin();
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -86,6 +90,18 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- User Preferences (Dark Mode, Compact, etc.) -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
 
+    <!-- User Permissions for JavaScript -->
+    <script>
+        window.USER_PERMISSIONS = <?= json_encode($userPermissions) ?>;
+        window.IS_ADMIN = <?= $isAdminUser ? 'true' : 'false' ?>;
+
+        // פונקציית עזר לבדיקת הרשאה
+        window.hasPermission = function(module, action) {
+            if (window.IS_ADMIN) return true;
+            return window.USER_PERMISSIONS[module] &&
+                   window.USER_PERMISSIONS[module].includes(action);
+        };
+    </script>
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->

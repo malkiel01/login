@@ -3272,10 +3272,10 @@ class TableManager {
         try {
             // מחיקת כל ההעדפות מה-UserSettings
             if (typeof UserSettings !== 'undefined') {
-                await UserSettings.deleteAsync(`${storageKey}_columnWidths`);
-                await UserSettings.deleteAsync(`${storageKey}_columnVisibility`);
-                await UserSettings.deleteAsync(`${storageKey}_displayMode`);
-                await UserSettings.deleteAsync(`${storageKey}_mobileViewMode`);
+                await UserSettings.reset(`${storageKey}_columnWidths`);
+                await UserSettings.reset(`${storageKey}_columnVisibility`);
+                await UserSettings.reset(`${storageKey}_displayMode`);
+                await UserSettings.reset(`${storageKey}_mobileViewMode`);
             }
 
             // איפוס ה-state למצב ברירת מחדל

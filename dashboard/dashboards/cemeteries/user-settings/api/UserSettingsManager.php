@@ -254,6 +254,22 @@ class UserSettingsManager {
                 ];
             }
 
+            // ⭐ הוספת הגדרות דינמיות שנשמרו על ידי המשתמש (שאין להן ברירת מחדל)
+            foreach ($userSettings as $key => $setting) {
+                if (!isset($result[$key])) {
+                    $result[$key] = [
+                        'value' => $setting['value'],
+                        'defaultValue' => null,
+                        'type' => $setting['type'] ?? 'string',
+                        'category' => $setting['category'] ?? 'custom',
+                        'label' => $key,
+                        'description' => null,
+                        'options' => null,
+                        'isDefault' => false
+                    ];
+                }
+            }
+
             return $result;
 
         } catch (Exception $e) {

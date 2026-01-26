@@ -51,35 +51,54 @@ try {
 
 /**
  * קבלת הרשאות ל-entity ספציפי
+ * משתמש במערכת ההרשאות החדשה (hasModulePermission)
  */
 function getEntityPermissions($pdo, $userId, $userRole, $entityType) {
-    // ברירות מחדל לפי role
-    $defaults = getRoleDefaults($userRole);
+    // מיפוי entityType ל-module name
+    $moduleMap = [
+        'cemetery' => 'cemeteries',
+        'block' => 'blocks',
+        'plot' => 'plots',
+        'areaGrave' => 'areaGraves',
+        'grave' => 'graves',
+        'customer' => 'customers',
+        'purchase' => 'purchases',
+        'burial' => 'burials',
+        'payment' => 'payments',
+        'residency' => 'residency',
+        'country' => 'countries',
+        'city' => 'cities',
+        'user' => 'users',
+        'role' => 'roles',
+        'map' => 'map',
+        'report' => 'reports'
+    ];
 
-    // בדיקה אם יש הרשאות מותאמות אישית
-    $stmt = $pdo->prepare("
-        SELECT canView, canEdit, canDelete, canExport, canCreate, visibleColumns, editableColumns
-        FROM table_permissions
-        WHERE userId = :userId AND entityType = :entityType
-        LIMIT 1
-    ");
-    $stmt->execute(['userId' => $userId, 'entityType' => $entityType]);
-    $custom = $stmt->fetch(PDO::FETCH_ASSOC);
+    $module = $moduleMap[$entityType] ?? $entityType;
 
-    if ($custom) {
+    // Admin תמיד מקבל הכל
+    if (isAdmin()) {
         return [
-            'canView' => (bool)$custom['canView'],
-            'canEdit' => (bool)$custom['canEdit'],
-            'canDelete' => (bool)$custom['canDelete'],
-            'canExport' => (bool)$custom['canExport'],
-            'canCreate' => (bool)$custom['canCreate'],
-            'visibleColumns' => $custom['visibleColumns'] ? json_decode($custom['visibleColumns'], true) : null,
-            'editableColumns' => $custom['editableColumns'] ? json_decode($custom['editableColumns'], true) : null
+            'canView' => true,
+            'canEdit' => true,
+            'canDelete' => true,
+            'canExport' => true,
+            'canCreate' => true,
+            'visibleColumns' => null,
+            'editableColumns' => null
         ];
     }
 
-    // החזר ברירות מחדל לפי role
-    return $defaults;
+    // בדוק הרשאות מהמערכת החדשה
+    return [
+        'canView' => hasModulePermission($module, 'view') || hasModulePermission($module, 'edit') || hasModulePermission($module, 'create'),
+        'canEdit' => hasModulePermission($module, 'edit'),
+        'canDelete' => hasModulePermission($module, 'delete'),
+        'canExport' => hasModulePermission($module, 'export'),
+        'canCreate' => hasModulePermission($module, 'create'),
+        'visibleColumns' => null,
+        'editableColumns' => null
+    ];
 }
 
 /**

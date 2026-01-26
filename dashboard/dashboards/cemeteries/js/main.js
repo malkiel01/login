@@ -361,6 +361,53 @@ function getTypeName(type) {
     return typeNames[type] || type;
 }
 
+// מיפוי סוגים למודולי הרשאות
+const typeToModuleMap = {
+    'cemetery': 'cemeteries',
+    'block': 'blocks',
+    'plot': 'plots',
+    'row': 'rows',
+    'areaGrave': 'areaGraves',
+    'grave': 'graves',
+    'customer': 'customers',
+    'purchase': 'purchases',
+    'burial': 'burials',
+    'residency': 'residency',
+    'payment': 'payments',
+    'country': 'countries',
+    'city': 'cities',
+    'user': 'users',
+    'role': 'roles',
+    'map': 'map',
+    'report': 'reports'
+};
+
+// קבלת שם המודול מסוג הרשומה
+function getModuleForType(type) {
+    return typeToModuleMap[type] || type;
+}
+
+// בדיקה אם יש הרשאת יצירה למודול הנוכחי
+function canCreate(type) {
+    if (!type) type = window.currentType;
+    const module = getModuleForType(type);
+    return window.hasPermission ? window.hasPermission(module, 'create') : true;
+}
+
+// בדיקה אם יש הרשאת עריכה למודול הנוכחי
+function canEdit(type) {
+    if (!type) type = window.currentType;
+    const module = getModuleForType(type);
+    return window.hasPermission ? window.hasPermission(module, 'edit') : true;
+}
+
+// בדיקה אם יש הרשאת מחיקה למודול הנוכחי
+function canDelete(type) {
+    if (!type) type = window.currentType;
+    const module = getModuleForType(type);
+    return window.hasPermission ? window.hasPermission(module, 'delete') : true;
+}
+
 // עדכון טקסט כפתור הוספה
 function updateAddButtonText() {
     const buttonTexts = {
@@ -376,14 +423,14 @@ function updateAddButtonText() {
         'residency': 'הוספת חוק תושבות',
         'payment': 'הוספת חוק תשלום'
     };
-    
+
     // עדכן את הסלקטור לחפש את הפונקציה החדשה
     const buttons = document.querySelectorAll('.btn-primary[onclick="tableRenderer.openAddModal()"]');
     buttons.forEach(button => {
         const buttonText = buttonTexts[window.currentType] || 'הוסף';
-        
-        // בדיקה האם להציג או להסתיר את הכפתור
-        if (shouldHideAddButton()) {
+
+        // בדיקה האם להציג או להסתיר את הכפתור - כולל בדיקת הרשאת יצירה
+        if (shouldHideAddButton() || !canCreate()) {
             button.style.display = 'none';
         } else if (shouldDisableAddButton()) {
             button.disabled = true;
@@ -789,3 +836,10 @@ window.API_BASE = API_BASE;
 window.currentType = currentType;
 window.currentParentId = currentParentId;
 window.selectedItems = selectedItems;
+
+// ייצוא פונקציות הרשאות
+window.getModuleForType = getModuleForType;
+window.canCreate = canCreate;
+window.canEdit = canEdit;
+window.canDelete = canDelete;
+window.typeToModuleMap = typeToModuleMap;

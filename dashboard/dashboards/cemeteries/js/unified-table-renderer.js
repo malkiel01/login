@@ -218,18 +218,35 @@ class UnifiedTableRenderer {
         const itemId = item.unicId || item.id;
         const itemName = this.getItemName(item);
         const type = this.currentType;
-        
+
         let html = '';
-        
-        // כפתור עריכה - עכשיו async!
-        if (this.config.permissions.can_edit) {
+
+        // כפתור עריכה - בדוק הרשאה עם hasPermission
+        const module = window.getModuleForType ? window.getModuleForType(type) : type;
+        const hasEditPermission = window.hasPermission ? window.hasPermission(module, 'edit') : true;
+        const hasDeletePermission = window.hasPermission ? window.hasPermission(module, 'delete') : true;
+
+        if (hasEditPermission) {
             html += `
-                <button class="btn btn-sm btn-secondary" 
-                        onclick="event.stopPropagation(); tableRenderer.editItem('${itemId}')">
+                <button class="btn btn-sm btn-secondary"
+                        onclick="event.stopPropagation(); tableRenderer.editItem('${itemId}')"
+                        title="עריכה">
                     <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                 </button>
             `;
         }
+
+        if (hasDeletePermission) {
+            html += `
+                <button class="btn btn-sm btn-danger"
+                        onclick="event.stopPropagation(); tableRenderer.deleteItem('${itemId}')"
+                        title="מחיקה">
+                    <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
+                </button>
+            `;
+        }
+
+        return html;
     }
     
     /**
@@ -249,9 +266,11 @@ class UnifiedTableRenderer {
         `;
         
         // כפתור הוספה אם יש הרשאה
-        if (this.config.permissions.can_create && window.currentParentId) {
+        const module = window.getModuleForType ? window.getModuleForType(this.currentType) : this.currentType;
+        const hasCreatePermission = window.hasPermission ? window.hasPermission(module, 'create') : true;
+        if (hasCreatePermission && window.currentParentId) {
             html += `
-                <button class="btn btn-primary mt-3" 
+                <button class="btn btn-primary mt-3"
                         onclick="tableRenderer.addItem()">
                     הוסף ${this.config.singular}
                 </button>

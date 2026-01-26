@@ -216,7 +216,7 @@ $isAdminUser = isAdmin();
                             </svg>
                             <span>חיפוש</span>
                         </button>
-                        <button class="btn btn-primary btn-add" onclick="tableRenderer.openAddModal()">
+                        <button id="btnAdd" class="btn btn-primary btn-add" onclick="tableRenderer.openAddModal()">
                             <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
                             <span>הוספה</span>
                         </button>

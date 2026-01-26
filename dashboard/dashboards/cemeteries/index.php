@@ -3,6 +3,7 @@
 // cemetery_dashboard/index.php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/functions.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-init.php'; // Persistent Auth for PWA/iOS
 
 // בדיקת הרשאות - רק cemetery_manager או admin יכולים לגשת
 requireDashboard(['cemetery_manager', 'admin']);
@@ -351,5 +352,11 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
             }
         });
     </script>
+
+    <?php
+    // Persistent Auth Scripts (PWA/iOS support)
+    echo getTokenInitScript();
+    echo getLogoutScript();
+    ?>
 </body>
 </html>

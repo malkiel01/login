@@ -1,14 +1,14 @@
 <?php
 // dashboard/index.php - נקודת כניסה ראשית
-session_start();
 
-// בדיקת התחברות
-if (!isset($_SESSION['user_id'])) {
-    header('Location: /auth/login.php');
-    exit;
-}
+// שימוש ב-middleware לבדיקת auth (תומך גם ב-token)
+require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/middleware.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-init.php';
 
-// טעינת קובץ הקונפיג של הפרויקט - כמו שאתה עושה בשאר הקבצים
+// בדיקת התחברות (כולל שחזור מ-token עבור PWA/iOS)
+requireAuth();
+
+// טעינת קובץ הקונפיג של הפרויקט
 require_once '../config.php';
 $pdo = getDBConnection();
 
@@ -226,12 +226,18 @@ if (!file_exists($dashboardFile)) {
             </p>
             
             <div class="buttons">
-                <a href="/auth/logout.php" class="btn btn-secondary">יציאה</a>
+                <a href="#" onclick="performLogout(); return false;" class="btn btn-secondary">יציאה</a>
                 <?php if ($dashboardType == 'admin'): ?>
                     <a href="/dashboard/permissions/manage.php" class="btn">ניהול הרשאות</a>
                 <?php endif; ?>
             </div>
         </div>
+
+        <?php
+        // סקריפטים לאימות עמיד (PWA/iOS)
+        echo getTokenInitScript();
+        echo getLogoutScript();
+        ?>
     </body>
     </html>
     <?php

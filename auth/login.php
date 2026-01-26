@@ -24,6 +24,7 @@ require_once '../permissions/init.php';
 require_once 'rate-limiter.php';  // Rate Limiting להגנה מ-brute force
 require_once 'csrf.php';          // CSRF Protection
 require_once 'audit-logger.php';  // Audit Logging
+require_once 'token-manager.php'; // Persistent Auth for PWA
 // require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
@@ -78,43 +79,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocke
             // רישום התחברות מוצלחת וניקוי ניסיונות
             $rateLimiter->recordSuccessfulLogin($clientIP, $username);
             // בדיקה אם המשתמש סימן "זכור אותי" או שזו אפליקציית PWA
-            $isPWA = isset($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+            $isPWA = isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
                     strpos($_SERVER['HTTP_USER_AGENT'], 'PWA') !== false ||
                     isset($_POST['remember']);
-            
+
+            // יצירת token עמיד (חדש - תומך iOS PWA)
+            $tokenManager = getTokenManager();
+            $deviceInfo = [
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                'is_pwa' => $isPWA,
+                'platform' => $_POST['platform'] ?? 'web'
+            ];
+            $tokenData = $tokenManager->generateToken($user['id'], $deviceInfo);
+
+            // הגדרת cookie עם ה-token החדש
+            setcookie(
+                'auth_token',
+                $tokenData['token'],
+                (int)($tokenData['expires'] / 1000), // המרה מ-ms לשניות
+                '/',
+                $_SERVER['HTTP_HOST'],
+                true,  // HTTPS only
+                true   // HTTP only
+            );
+
+            // שמור גם את ה-remember_token הישן לתאימות אחורה
             if ($isPWA) {
-                // הגדרת סשן ל-30 ימים
-                $lifetime = 2592000; // 30 ימים
-                
-                // יצירת טוקן זכירה
-                $rememberToken = bin2hex(random_bytes(32));
-                
-                // שמירת הטוקן במסד הנתונים
                 $updateStmt = $pdo->prepare("
-                    UPDATE users 
-                    SET last_login = NOW(), 
+                    UPDATE users
+                    SET last_login = NOW(),
                         remember_token = ?,
                         remember_expiry = DATE_ADD(NOW(), INTERVAL 30 DAY)
                     WHERE id = ?
                 ");
-                $updateStmt->execute([$rememberToken, $user['id']]);
-                
-                // יצירת עוגיית זכירה
-                setcookie(
-                    'remember_token', 
-                    $rememberToken,
-                    time() + $lifetime,
-                    '/',
-                    $_SERVER['HTTP_HOST'],
-                    true,  // HTTPS only
-                    true   // HTTP only
-                );
+                $updateStmt->execute([$tokenData['token'], $user['id']]);
             } else {
                 // התחברות רגילה
                 $updateStmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
                 $updateStmt->execute([$user['id']]);
             }
-            
+
             // שמירת פרטים בסשן
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
@@ -123,6 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocke
             $_SESSION['profile_picture'] = $user['profile_picture'];
             $_SESSION['is_pwa'] = $isPWA;
             $_SESSION['session_lifetime'] = $isPWA ? 2592000 : 7200;
+
+            // שמור token data ב-session להעברה ל-JavaScript
+            $_SESSION['token_data'] = $tokenData;
 
             // Audit Log - רישום התחברות מוצלחת
             AuditLogger::logLogin($user['id'], $user['username'], 'local');

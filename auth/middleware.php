@@ -36,12 +36,97 @@ if (!defined('DASHBOARD_TYPES')) {
     require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/config.php';
 }
 
+// טען את מנהל ה-Tokens
+if (!function_exists('getTokenManager')) {
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-manager.php';
+}
+
 /**
  * בדיקה האם המשתמש מחובר
+ * בודק גם session וגם token (עבור PWA/iOS)
  * @return bool
  */
 function isLoggedIn(): bool {
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+    // בדיקת session רגילה
+    if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+        return true;
+    }
+
+    // אם אין session, נסה לשחזר מ-token (עבור PWA/iOS)
+    return tryRestoreSessionFromToken();
+}
+
+/**
+ * ניסיון לשחזר session מ-token
+ * @return bool
+ */
+function tryRestoreSessionFromToken(): bool {
+    // קבל token מ-cookie או header
+    $token = getAuthToken();
+
+    if (empty($token)) {
+        return false;
+    }
+
+    try {
+        $tokenManager = getTokenManager();
+        $userData = $tokenManager->validateToken($token);
+
+        if (!$userData) {
+            return false;
+        }
+
+        // שחזר את ה-session
+        $_SESSION['user_id'] = $userData['user_id'];
+        $_SESSION['username'] = $userData['username'];
+        $_SESSION['name'] = $userData['name'];
+        $_SESSION['email'] = $userData['email'];
+        $_SESSION['profile_picture'] = $userData['profile_picture'];
+        $_SESSION['restored_from_token'] = true;
+        $_SESSION['is_pwa'] = true;
+
+        // אם ה-token עומד לפוג, סמן לרענון
+        if ($userData['should_refresh']) {
+            $_SESSION['token_needs_refresh'] = true;
+        }
+
+        return true;
+
+    } catch (Exception $e) {
+        error_log("Token restore error: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * קבלת auth token מ-cookie או header
+ * @return string|null
+ */
+function getAuthToken(): ?string {
+    // מ-cookie
+    if (isset($_COOKIE['auth_token']) && !empty($_COOKIE['auth_token'])) {
+        return $_COOKIE['auth_token'];
+    }
+
+    // מ-header (Authorization: Bearer)
+    $headers = function_exists('getallheaders') ? getallheaders() : [];
+    if (isset($headers['Authorization'])) {
+        if (preg_match('/Bearer\s+(.+)/', $headers['Authorization'], $matches)) {
+            return $matches[1];
+        }
+    }
+
+    // מ-header (X-Auth-Token)
+    if (isset($headers['X-Auth-Token'])) {
+        return $headers['X-Auth-Token'];
+    }
+
+    // fallback - remember_token ישן
+    if (isset($_COOKIE['remember_token']) && !empty($_COOKIE['remember_token'])) {
+        return $_COOKIE['remember_token'];
+    }
+
+    return null;
 }
 
 /**

@@ -22,7 +22,7 @@
 async function updateAllSidebarCounts() {
 
     // פונקציית עזר לבדיקת הרשאה - edit/create כוללים צפיה
-    const canViewModule = (module) => window.canView ? window.canViewModule(module) : true;
+    const canViewModule = (module) => window.canView ? window.canView(module) : true;
 
     // הצג אנימציית Loading על כל המונים
     document.querySelectorAll('.hierarchy-count').forEach(el => {

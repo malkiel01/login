@@ -34,10 +34,46 @@ async function initDashboard() {
         await initEntityConfig();
     }
 
-    // טען נתונים ראשוניים - רק אם יש הרשאה (view/edit/create)
-    if (typeof loadCemeteries === 'function' && window.canView('cemeteries')) {
-        loadCemeteries();
+    // טען נתונים ראשוניים - מצא את המודול הראשון שיש למשתמש הרשאה אליו
+    loadFirstAvailableModule();
+}
+
+/**
+ * טוען את המודול הראשון שיש למשתמש הרשאה אליו
+ * סדר העדיפויות: בתי עלמין, גושים, חלקות, אחוזות קבר, קברים, לקוחות, רכישות, קבורות
+ */
+function loadFirstAvailableModule() {
+    // רשימת מודולים בסדר עדיפות
+    const moduleOrder = [
+        { module: 'cemeteries', loader: 'loadCemeteries', sidebarItem: 'cemeteriesItem' },
+        { module: 'blocks', loader: 'loadBlocks', sidebarItem: 'blocksItem' },
+        { module: 'plots', loader: 'loadPlots', sidebarItem: 'plotsItem' },
+        { module: 'areaGraves', loader: 'loadAreaGraves', sidebarItem: 'areaGravesItem' },
+        { module: 'graves', loader: 'loadGraves', sidebarItem: 'gravesItem' },
+        { module: 'customers', loader: 'loadCustomers', sidebarItem: 'customersItem' },
+        { module: 'purchases', loader: 'loadPurchases', sidebarItem: 'purchasesItem' },
+        { module: 'burials', loader: 'loadBurials', sidebarItem: 'burialsItem' },
+        { module: 'payments', loader: 'loadPayments', sidebarItem: 'paymentsItem' }
+    ];
+
+    // מצא את המודול הראשון שיש למשתמש הרשאה אליו
+    for (const { module, loader, sidebarItem } of moduleOrder) {
+        if (window.canView && window.canView(module)) {
+            const loaderFunc = window[loader];
+            if (typeof loaderFunc === 'function') {
+                console.log(`📍 טוען מודול ראשון זמין: ${module}`);
+                loaderFunc();
+
+                // סמן את הפריט בסיידבר כפעיל
+                if (typeof setActiveSidebarItem === 'function') {
+                    setActiveSidebarItem(sidebarItem);
+                }
+                return;
+            }
+        }
     }
+
+    console.log('⚠️ אין למשתמש הרשאה לאף מודול');
 }
 
 // הגדרת מאזינים לאירועים

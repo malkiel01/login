@@ -317,10 +317,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
                     </button>
                 </form>
                 
+                <!-- התחברות ביומטרית -->
+                <div id="biometric-login-container" style="display:none;"></div>
+
                 <div class="divider">
                     <span>או</span>
                 </div>
-                
+
                 <!-- כפתור Google Sign-In -->
                 <div id="g_id_onload"
                      data-client_id="420537994881-gqiev5lqkp6gjj51l1arkjd5q09m5vv0.apps.googleusercontent.com"
@@ -593,6 +596,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         //     'minimum_visits' => 2  // להציג רק אחרי 2 ביקורים
         // ]);
     ?>
+
+    <!-- Biometric Authentication -->
+    <script src="/js/biometric-auth.js"></script>
+    <script src="/js/biometric-ui.js"></script>
+    <script>
+        // אתחול התחברות ביומטרית
+        document.addEventListener('DOMContentLoaded', async function() {
+            const container = document.getElementById('biometric-login-container');
+
+            // בדוק אם יש תמיכה ואם המשתמש הגדיר ביומטרי
+            if (window.biometricAuth && window.biometricAuth.isSupported) {
+                const hasPlatformAuth = await window.biometricAuth.isPlatformAuthenticatorAvailable();
+
+                if (hasPlatformAuth) {
+                    // הצג את הכפתור
+                    container.style.display = 'block';
+
+                    window.biometricUI.createLoginButton(
+                        container,
+                        // הצלחה
+                        function(result) {
+                            console.log('Biometric login success:', result);
+                            // הפנה לדשבורד
+                            window.location.href = '/dashboard/';
+                        },
+                        // שגיאה
+                        function(error) {
+                            if (error !== 'User denied permission') {
+                                console.error('Biometric login failed:', error);
+                            }
+                        }
+                    );
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>

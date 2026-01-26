@@ -51,15 +51,16 @@
 }
 
 .tm-header-wrapper {
-    display: flex;
-    align-items: center;
+    display: flex !important;
+    align-items: center !important;
     justify-content: flex-start;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
     direction: rtl;
     position: relative;
     z-index: 1;
-    min-height: 28px;
+    min-height: 32px;
+    vertical-align: middle;
 }
 
 .tm-header-label {
@@ -70,45 +71,51 @@
 }
 
 .tm-sort-icon {
-    font-size: 18px;
-    opacity: 1;
+    font-size: 22px !important;
+    opacity: 1 !important;
     transition: all 0.2s;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
     flex-shrink: 0;
-    display: inline-flex;
+    display: inline-flex !important;
     align-items: center;
+    justify-content: center;
     line-height: 1;
+    min-width: 22px;
+    min-height: 22px;
+    vertical-align: middle;
 }
 
 .tm-header-cell:hover .tm-sort-icon {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
-/* === כפתור תפריט === */
+/* === כפתור תפריט (3 נקודות) === */
 .tm-menu-btn {
-    background: rgba(255, 255, 255, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    color: #ffffff;
-    padding: 2px 6px;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    color: #ffffff !important;
+    padding: 2px 8px !important;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 20px !important;
     line-height: 1;
     transition: all 0.2s;
     font-weight: bold;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.35);
     flex-shrink: 0;
-    display: inline-flex;
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    min-height: 22px;
+    min-width: 28px !important;
+    min-height: 26px !important;
+    vertical-align: middle;
 }
 
 .tm-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.45);
-    transform: scale(1.08);
+    background: rgba(255, 255, 255, 0.5) !important;
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.8);
 }
 
 /* === תפריט עמודה - RTL FIX === */
@@ -215,19 +222,21 @@
     }
 
     .tm-menu-btn {
-        padding: 2px 5px;
-        font-size: 14px;
-        min-width: 20px;
-        min-height: 18px;
+        padding: 2px 6px !important;
+        font-size: 18px !important;
+        min-width: 24px !important;
+        min-height: 22px !important;
     }
 
     .tm-sort-icon {
-        font-size: 15px;
+        font-size: 18px !important;
+        min-width: 18px;
+        min-height: 18px;
     }
 
     .tm-header-wrapper {
-        gap: 4px;
-        min-height: 24px;
+        gap: 6px;
+        min-height: 28px;
     }
 
     .tm-column-menu {

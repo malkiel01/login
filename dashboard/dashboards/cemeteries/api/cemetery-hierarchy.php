@@ -2,33 +2,11 @@
 // cemetery_dashboard/api/cemetery-hierarchy.php
 // API לניהול היררכיית בתי עלמין - משתמש ב-HierarchyManager
 
-// ⚠️ DEBUG - לוגים לקובץ
-error_reporting(E_ALL);
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/debug.log');
-error_log("=== REQUEST START: " . date('Y-m-d H:i:s') . " ===");
-error_log("Action: " . ($_GET['action'] ?? 'none'));
+// אימות והרשאות - חייב להיות מחובר!
+require_once __DIR__ . '/api-auth.php';
 
-try {
-    error_log("Loading api-auth.php...");
-    // אימות והרשאות - חייב להיות מחובר!
-    require_once __DIR__ . '/api-auth.php';
-    error_log("api-auth.php loaded OK");
-
-    error_log("Loading HierarchyManager.php...");
-    require_once '../classes/HierarchyManager.php';
-    error_log("HierarchyManager.php loaded OK");
-
-    error_log("Loading permissions-mapper.php...");
-    require_once '../includes/permissions-mapper.php';
-    error_log("permissions-mapper.php loaded OK");
-} catch (Throwable $e) {
-    error_log("EXCEPTION: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
-    http_response_code(500);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    exit;
-}
+require_once '../classes/HierarchyManager.php';
+require_once '../includes/permissions-mapper.php';
 
 // קבלת פרמטרים
 $action = $_GET['action'] ?? '';

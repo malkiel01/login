@@ -652,7 +652,7 @@ body.dark-theme.color-scheme-green .tm-loading-spinner {
     padding: 2px 6px;
     font-size: 18px;
     color: inherit;
-    opacity: 0.45;
+    opacity: 0.6;
     transition: opacity 0.15s ease;
     border-radius: 4px;
     flex-shrink: 0;
@@ -663,7 +663,7 @@ body.dark-theme.color-scheme-green .tm-loading-spinner {
 }
 
 .tm-header-cell:hover .tm-column-menu-btn {
-    opacity: 0.75;
+    opacity: 0.85;
 }
 
 .tm-column-menu-btn:hover {

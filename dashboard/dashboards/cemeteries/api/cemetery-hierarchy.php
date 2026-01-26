@@ -1,8 +1,9 @@
 <?php
-// ⚠️ DEBUG: הצגת שגיאות - חייב להיות ראשון!
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+// ⚠️ DEBUG: output buffering למניעת בעיית headers
+ob_start();
 error_reporting(E_ALL);
+ini_set('display_errors', 0); // לא להציג - רק לרשום
+ini_set('log_errors', 1);
 
 // cemetery_dashboard/api/cemetery-hierarchy.php
 // API לניהול היררכיית בתי עלמין - משתמש ב-HierarchyManager
@@ -14,15 +15,19 @@ try {
     require_once '../classes/HierarchyManager.php';
     require_once '../includes/permissions-mapper.php';
 } catch (Throwable $e) {
+    ob_end_clean();
     http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage(),
         'file' => $e->getFile(),
-        'line' => $e->getLine()
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString()
     ]);
     exit;
 }
+ob_end_clean();
 
 // קבלת פרמטרים
 $action = $_GET['action'] ?? '';

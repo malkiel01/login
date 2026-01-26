@@ -138,6 +138,9 @@ class TableManager {
             // ⭐ מצב תצוגה לפלאפון (cards/list)
             mobileViewMode: 'list', // 'list' או 'cards'
 
+            // ⭐ מיון רב-שלבי
+            sortLevels: [], // [{colIndex, order: 'asc'/'desc'}]
+
             filteredData: [],
             displayedData: []
         };
@@ -1957,7 +1960,7 @@ class TableManager {
     }
 
     /**
-     * תפריט הגדרות
+     * ⭐ תפריט הגדרות עם תפריטי משנה (submenus)
      */
     _toggleSettingsMenu(e) {
         e.stopPropagation();
@@ -1982,9 +1985,7 @@ class TableManager {
             border: 1px solid var(--border-color, #e5e7eb);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            min-width: 260px;
-            max-height: 500px;
-            overflow-y: auto;
+            min-width: 220px;
             z-index: 1000;
             direction: rtl;
         `;
@@ -1997,33 +1998,531 @@ class TableManager {
             border-bottom: 1px solid var(--border-color, #e5e7eb);
             background: var(--bg-secondary, #f9fafb);
             color: var(--text-primary, #1f2937);
+            border-radius: 8px 8px 0 0;
         `;
         header.textContent = 'הגדרות טבלה';
         menu.appendChild(header);
 
+        const menuItems = document.createElement('div');
+        menuItems.style.cssText = `padding: 8px 0;`;
+
         // ===================================================================
-        // סקשן 1: מצב תצוגה (טעינה) - מוסתר במצב כרטיסים במובייל
+        // פריט 1: עמודות מוצגות (עם submenu)
+        // ===================================================================
+        const columnsItem = this._createSubmenuItem('📊 עמודות מוצגות', () => {
+            return this._buildColumnsSubmenu();
+        });
+        menuItems.appendChild(columnsItem);
+
+        // ===================================================================
+        // פריט 2: מיון (עם submenu)
+        // ===================================================================
+        const sortItem = this._createSubmenuItem('🔢 מיון', () => {
+            return this._buildSortSubmenu();
+        });
+        menuItems.appendChild(sortItem);
+
+        // ===================================================================
+        // פריט 3: מצב תצוגה (עם submenu)
         // ===================================================================
         const isCardsMode = this._isMobileDevice() && this.state.mobileViewMode === 'cards';
-
         if (!isCardsMode) {
-            const displayModeSection = document.createElement('div');
-            displayModeSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+            const displayItem = this._createSubmenuItem('📄 מצב תצוגה', () => {
+                return this._buildDisplayModeSubmenu(menu);
+            });
+            menuItems.appendChild(displayItem);
+        }
 
-            const displayModeTitle = document.createElement('div');
-            displayModeTitle.style.cssText = `font-weight: 600; margin-bottom: 10px; color: var(--text-primary, #1f2937); font-size: 13px;`;
-            displayModeTitle.textContent = '📄 מצב תצוגה';
-            displayModeSection.appendChild(displayModeTitle);
+        // ===================================================================
+        // פריט 4: בחירה מרובה (checkbox ישיר)
+        // ===================================================================
+        const multiSelectItem = document.createElement('label');
+        multiSelectItem.style.cssText = `
+            display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+            cursor: pointer; transition: background 0.15s; color: var(--text-primary, #1f2937);
+        `;
+        multiSelectItem.onmouseover = () => multiSelectItem.style.background = 'var(--bg-secondary, #f3f4f6)';
+        multiSelectItem.onmouseout = () => multiSelectItem.style.background = 'transparent';
 
-        // אופציה 1: דף אחד עם גלילה
+        const multiSelectCheckbox = document.createElement('input');
+        multiSelectCheckbox.type = 'checkbox';
+        multiSelectCheckbox.checked = this.state.multiSelectEnabled;
+        multiSelectCheckbox.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
+        multiSelectCheckbox.onchange = () => {
+            this.state.multiSelectEnabled = multiSelectCheckbox.checked;
+            this.state.selectedRows.clear();
+            this._refreshTable();
+        };
+
+        const multiSelectText = document.createElement('span');
+        multiSelectText.textContent = '☑️ בחירה מרובה';
+
+        multiSelectItem.appendChild(multiSelectCheckbox);
+        multiSelectItem.appendChild(multiSelectText);
+        menuItems.appendChild(multiSelectItem);
+
+        // ===================================================================
+        // פריט 5: תצוגת מובייל (רק בפלאפון)
+        // ===================================================================
+        if (this._isMobileDevice()) {
+            const mobileItem = this._createSubmenuItem('📱 תצוגת מובייל', () => {
+                return this._buildMobileViewSubmenu(menu);
+            });
+            menuItems.appendChild(mobileItem);
+        }
+
+        menu.appendChild(menuItems);
+        document.body.appendChild(menu);
+
+        // סגירה בלחיצה מחוץ לתפריט
+        const closeHandler = (event) => {
+            if (!menu.contains(event.target) && !btn.contains(event.target)) {
+                // סגור גם submenus
+                document.querySelectorAll('.tm-submenu').forEach(s => s.remove());
+                menu.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    }
+
+    /**
+     * ⭐ יצירת פריט תפריט עם submenu
+     */
+    _createSubmenuItem(label, buildSubmenuFn) {
+        const item = document.createElement('div');
+        item.className = 'tm-menu-item-with-submenu';
+        item.style.cssText = `
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px; cursor: pointer; transition: background 0.15s;
+            color: var(--text-primary, #1f2937); position: relative;
+        `;
+
+        const text = document.createElement('span');
+        text.textContent = label;
+
+        const arrow = document.createElement('span');
+        arrow.textContent = '◄';
+        arrow.style.cssText = `opacity: 0.5; font-size: 10px;`;
+
+        item.appendChild(text);
+        item.appendChild(arrow);
+
+        let submenu = null;
+
+        item.onmouseenter = () => {
+            item.style.background = 'var(--bg-secondary, #f3f4f6)';
+
+            // סגור submenus אחרים
+            document.querySelectorAll('.tm-submenu').forEach(s => s.remove());
+
+            // צור submenu
+            submenu = buildSubmenuFn();
+            if (!submenu) return;
+
+            submenu.className = 'tm-submenu';
+
+            // מיקום ה-submenu
+            const itemRect = item.getBoundingClientRect();
+            submenu.style.cssText = `
+                position: fixed;
+                top: ${itemRect.top}px;
+                left: ${itemRect.left - submenu.offsetWidth - 5}px;
+                background: var(--bg-primary, white);
+                border: 1px solid var(--border-color, #e5e7eb);
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                min-width: 250px;
+                max-height: 400px;
+                overflow-y: auto;
+                z-index: 1001;
+                direction: rtl;
+            `;
+
+            document.body.appendChild(submenu);
+
+            // תיקון מיקום אחרי הוספה ל-DOM
+            const submenuRect = submenu.getBoundingClientRect();
+            submenu.style.left = `${itemRect.left - submenuRect.width - 5}px`;
+
+            // וודא שה-submenu לא יוצא מהמסך
+            if (parseFloat(submenu.style.left) < 10) {
+                submenu.style.left = `${itemRect.right + 5}px`;
+            }
+        };
+
+        item.onmouseleave = (e) => {
+            // אל תסגור אם עוברים ל-submenu
+            const relatedTarget = e.relatedTarget;
+            if (submenu && (submenu.contains(relatedTarget) || relatedTarget === submenu)) {
+                return;
+            }
+            item.style.background = 'transparent';
+            if (submenu && !submenu.matches(':hover')) {
+                submenu.remove();
+            }
+        };
+
+        return item;
+    }
+
+    /**
+     * ⭐ בניית submenu עמודות מוצגות
+     */
+    _buildColumnsSubmenu() {
+        const submenu = document.createElement('div');
+        submenu.style.cssText = `padding: 8px 0;`;
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 8px 16px; font-weight: 600; font-size: 13px;
+            color: var(--text-secondary, #6b7280); border-bottom: 1px solid var(--border-color, #e5e7eb);
+        `;
+        header.textContent = 'הצג/הסתר עמודות';
+        submenu.appendChild(header);
+
+        // רשימת עמודות
+        const list = document.createElement('div');
+        list.style.cssText = `padding: 8px 0; max-height: 280px; overflow-y: auto;`;
+
+        this.config.columns.forEach((col, index) => {
+            if (col.type === 'actions') return; // דלג על עמודת פעולות
+
+            const item = document.createElement('label');
+            item.style.cssText = `
+                display: flex; align-items: center; gap: 10px; padding: 8px 16px;
+                cursor: pointer; transition: background 0.15s; font-size: 13px;
+            `;
+            item.onmouseover = () => item.style.background = 'var(--bg-secondary, #f3f4f6)';
+            item.onmouseout = () => item.style.background = 'transparent';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = this.state.columnVisibility[index] !== false;
+            checkbox.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
+            checkbox.onchange = () => {
+                this.state.columnVisibility[index] = checkbox.checked;
+                this._refreshTable();
+                this._saveColumnVisibility();
+            };
+
+            const label = document.createElement('span');
+            label.textContent = col.label || col.field;
+
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            list.appendChild(item);
+        });
+
+        submenu.appendChild(list);
+
+        // כפתורים
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+            padding: 8px 16px; display: flex; gap: 8px; justify-content: center;
+            border-top: 1px solid var(--border-color, #e5e7eb);
+        `;
+
+        const showAllBtn = document.createElement('button');
+        showAllBtn.textContent = 'הצג הכל';
+        showAllBtn.style.cssText = `
+            padding: 6px 12px; border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 12px;
+        `;
+        showAllBtn.onclick = () => {
+            this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = true);
+            this._refreshTable();
+            this._saveColumnVisibility();
+            list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+        };
+
+        const hideAllBtn = document.createElement('button');
+        hideAllBtn.textContent = 'הסתר הכל';
+        hideAllBtn.style.cssText = `
+            padding: 6px 12px; border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 12px;
+        `;
+        hideAllBtn.onclick = () => {
+            this.config.columns.forEach((col, i) => {
+                if (col.type !== 'actions') this.state.columnVisibility[i] = false;
+            });
+            this._refreshTable();
+            this._saveColumnVisibility();
+            list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        };
+
+        actions.appendChild(showAllBtn);
+        actions.appendChild(hideAllBtn);
+        submenu.appendChild(actions);
+
+        return submenu;
+    }
+
+    /**
+     * ⭐ בניית submenu מיון רב-שלבי
+     */
+    _buildSortSubmenu() {
+        const submenu = document.createElement('div');
+        submenu.style.cssText = `padding: 8px 0;`;
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 8px 16px; font-weight: 600; font-size: 13px;
+            color: var(--text-secondary, #6b7280); border-bottom: 1px solid var(--border-color, #e5e7eb);
+        `;
+        header.textContent = 'דרגות מיון (גרור לשינוי סדר)';
+        submenu.appendChild(header);
+
+        // רשימת שלבי מיון קיימים
+        const sortLevelsList = document.createElement('div');
+        sortLevelsList.className = 'tm-sort-levels-list';
+        sortLevelsList.style.cssText = `padding: 8px 0;`;
+
+        const renderSortLevels = () => {
+            sortLevelsList.innerHTML = '';
+
+            if (this.state.sortLevels.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.style.cssText = `padding: 12px 16px; color: var(--text-muted, #9ca3af); font-size: 13px; text-align: center;`;
+                emptyMsg.textContent = 'אין מיון פעיל. בחר עמודה להוספה.';
+                sortLevelsList.appendChild(emptyMsg);
+            } else {
+                this.state.sortLevels.forEach((level, idx) => {
+                    const col = this.config.columns[level.colIndex];
+                    if (!col) return;
+
+                    const levelItem = document.createElement('div');
+                    levelItem.style.cssText = `
+                        display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+                        background: var(--bg-secondary, #f3f4f6); margin: 4px 8px;
+                        border-radius: 6px; font-size: 13px;
+                    `;
+                    levelItem.draggable = true;
+                    levelItem.dataset.sortIndex = idx;
+
+                    // Drag & Drop
+                    levelItem.ondragstart = (e) => {
+                        e.dataTransfer.setData('text/plain', idx);
+                        levelItem.style.opacity = '0.5';
+                    };
+                    levelItem.ondragend = () => levelItem.style.opacity = '1';
+                    levelItem.ondragover = (e) => e.preventDefault();
+                    levelItem.ondrop = (e) => {
+                        e.preventDefault();
+                        const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                        const toIdx = idx;
+                        if (fromIdx !== toIdx) {
+                            const [moved] = this.state.sortLevels.splice(fromIdx, 1);
+                            this.state.sortLevels.splice(toIdx, 0, moved);
+                            renderSortLevels();
+                            this._applyMultiLevelSort();
+                        }
+                    };
+
+                    // מספר דרגה
+                    const rankBadge = document.createElement('span');
+                    rankBadge.style.cssText = `
+                        background: var(--primary-color, #667eea); color: white;
+                        width: 20px; height: 20px; border-radius: 50%; display: flex;
+                        align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
+                    `;
+                    rankBadge.textContent = idx + 1;
+
+                    // שם עמודה
+                    const colName = document.createElement('span');
+                    colName.style.cssText = `flex: 1;`;
+                    colName.textContent = col.label || col.field;
+
+                    // כפתור כיוון
+                    const dirBtn = document.createElement('button');
+                    dirBtn.style.cssText = `
+                        background: none; border: 1px solid var(--border-color, #d1d5db);
+                        border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px;
+                    `;
+                    dirBtn.textContent = level.order === 'asc' ? '▲ עולה' : '▼ יורד';
+                    dirBtn.onclick = () => {
+                        level.order = level.order === 'asc' ? 'desc' : 'asc';
+                        dirBtn.textContent = level.order === 'asc' ? '▲ עולה' : '▼ יורד';
+                        this._applyMultiLevelSort();
+                    };
+
+                    // כפתור הסרה
+                    const removeBtn = document.createElement('button');
+                    removeBtn.style.cssText = `
+                        background: none; border: none; cursor: pointer; color: var(--danger-color, #dc2626);
+                        font-size: 16px; padding: 0 4px;
+                    `;
+                    removeBtn.textContent = '×';
+                    removeBtn.onclick = () => {
+                        this.state.sortLevels.splice(idx, 1);
+                        renderSortLevels();
+                        this._applyMultiLevelSort();
+                    };
+
+                    levelItem.appendChild(rankBadge);
+                    levelItem.appendChild(colName);
+                    levelItem.appendChild(dirBtn);
+                    levelItem.appendChild(removeBtn);
+                    sortLevelsList.appendChild(levelItem);
+                });
+            }
+        };
+
+        renderSortLevels();
+        submenu.appendChild(sortLevelsList);
+
+        // separator
+        const sep = document.createElement('div');
+        sep.style.cssText = `border-top: 1px solid var(--border-color, #e5e7eb); margin: 8px 0;`;
+        submenu.appendChild(sep);
+
+        // הוספת עמודה חדשה
+        const addHeader = document.createElement('div');
+        addHeader.style.cssText = `padding: 8px 16px; font-size: 12px; color: var(--text-secondary, #6b7280);`;
+        addHeader.textContent = 'הוסף עמודה למיון:';
+        submenu.appendChild(addHeader);
+
+        const columnsList = document.createElement('div');
+        columnsList.style.cssText = `max-height: 150px; overflow-y: auto;`;
+
+        this.config.columns.forEach((col, index) => {
+            if (col.type === 'actions' || col.sortable === false) return;
+
+            // בדוק אם כבר במיון
+            const alreadyInSort = this.state.sortLevels.some(l => l.colIndex === index);
+
+            const addItem = document.createElement('div');
+            addItem.style.cssText = `
+                padding: 8px 16px; cursor: ${alreadyInSort ? 'default' : 'pointer'};
+                transition: background 0.15s; font-size: 13px;
+                color: ${alreadyInSort ? 'var(--text-muted, #9ca3af)' : 'var(--text-primary, #1f2937)'};
+            `;
+            if (!alreadyInSort) {
+                addItem.onmouseover = () => addItem.style.background = 'var(--bg-secondary, #f3f4f6)';
+                addItem.onmouseout = () => addItem.style.background = 'transparent';
+                addItem.onclick = () => {
+                    this.state.sortLevels.push({ colIndex: index, order: 'asc' });
+                    renderSortLevels();
+                    this._applyMultiLevelSort();
+                };
+            }
+
+            addItem.innerHTML = `${alreadyInSort ? '✓ ' : '+ '}${col.label || col.field}`;
+            columnsList.appendChild(addItem);
+        });
+
+        submenu.appendChild(columnsList);
+
+        // כפתור נקה הכל
+        if (this.state.sortLevels.length > 0) {
+            const clearBtn = document.createElement('button');
+            clearBtn.style.cssText = `
+                margin: 8px 16px; padding: 6px 12px; width: calc(100% - 32px);
+                border: 1px solid var(--danger-color, #dc2626); border-radius: 4px;
+                background: transparent; color: var(--danger-color, #dc2626);
+                cursor: pointer; font-size: 12px;
+            `;
+            clearBtn.textContent = '🗑️ נקה את כל המיון';
+            clearBtn.onclick = () => {
+                this.state.sortLevels = [];
+                this.state.sortColumn = null;
+                renderSortLevels();
+                this._updateSortIcons();
+                this.loadInitialData();
+            };
+            submenu.appendChild(clearBtn);
+        }
+
+        return submenu;
+    }
+
+    /**
+     * ⭐ החלת מיון רב-שלבי
+     */
+    _applyMultiLevelSort() {
+        if (this.state.sortLevels.length === 0) {
+            this.state.sortColumn = null;
+            this._updateSortIcons();
+            this.loadInitialData();
+            return;
+        }
+
+        // עדכן sortColumn לדרגה הראשונה (לתאימות)
+        this.state.sortColumn = this.state.sortLevels[0].colIndex;
+        this.state.sortOrder = this.state.sortLevels[0].order;
+
+        // מיון לפי כל הדרגות
+        this.state.filteredData.sort((a, b) => {
+            for (const level of this.state.sortLevels) {
+                const col = this.config.columns[level.colIndex];
+                if (!col) continue;
+
+                const field = col.field;
+                let valA = a[field];
+                let valB = b[field];
+
+                if (valA == null && valB == null) continue;
+                if (valA == null) return level.order === 'asc' ? 1 : -1;
+                if (valB == null) return level.order === 'asc' ? -1 : 1;
+
+                let cmp = 0;
+
+                if (col.type === 'number' || typeof valA === 'number') {
+                    const numA = parseFloat(valA) || 0;
+                    const numB = parseFloat(valB) || 0;
+                    cmp = numA - numB;
+                } else if (col.type === 'date') {
+                    const dateA = new Date(valA).getTime() || 0;
+                    const dateB = new Date(valB).getTime() || 0;
+                    cmp = dateA - dateB;
+                } else {
+                    const strA = String(valA).toLowerCase();
+                    const strB = String(valB).toLowerCase();
+                    cmp = strA.localeCompare(strB, 'he');
+                }
+
+                if (cmp !== 0) {
+                    return level.order === 'asc' ? cmp : -cmp;
+                }
+            }
+            return 0;
+        });
+
+        this._updateSortIcons();
+        this.state.currentPage = 1;
+        this.loadInitialData();
+    }
+
+    /**
+     * ⭐ בניית submenu מצב תצוגה
+     */
+    _buildDisplayModeSubmenu(mainMenu) {
+        const submenu = document.createElement('div');
+        submenu.style.cssText = `padding: 8px 0;`;
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 8px 16px; font-weight: 600; font-size: 13px;
+            color: var(--text-secondary, #6b7280); border-bottom: 1px solid var(--border-color, #e5e7eb);
+        `;
+        header.textContent = 'בחר מצב תצוגה';
+        submenu.appendChild(header);
+
+        const content = document.createElement('div');
+        content.style.cssText = `padding: 12px 16px;`;
+
+        // אופציה 1: גלילה
         const infiniteOption = this._createRadioOption(
             'displayMode',
             'infinite',
             'הכל בדף אחד (גלילה)',
             !this.config.showPagination,
-            () => this._setDisplayMode('infinite', menu)
+            () => this._setDisplayMode('infinite', mainMenu)
         );
-        displayModeSection.appendChild(infiniteOption);
+        content.appendChild(infiniteOption);
 
         // אופציה 2: עמודים
         const paginationOption = this._createRadioOption(
@@ -2031,22 +2530,22 @@ class TableManager {
             'pagination',
             'חלוקה לעמודים',
             this.config.showPagination,
-            () => this._setDisplayMode('pagination', menu)
+            () => this._setDisplayMode('pagination', mainMenu)
         );
-        displayModeSection.appendChild(paginationOption);
+        content.appendChild(paginationOption);
 
-        // בחירת כמות לעמוד (מוצג רק במצב עמודים)
+        // בחירת כמות לעמוד
         if (this.config.showPagination) {
             const pageSizeContainer = document.createElement('div');
-            pageSizeContainer.style.cssText = `margin-top: 10px; padding-right: 24px;`;
+            pageSizeContainer.style.cssText = `margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color, #e5e7eb);`;
 
-            const pageSizeLabel = document.createElement('span');
-            pageSizeLabel.textContent = 'שורות בעמוד: ';
-            pageSizeLabel.style.cssText = `font-size: 13px; color: var(--text-secondary, #4b5563);`;
+            const pageSizeLabel = document.createElement('div');
+            pageSizeLabel.textContent = 'שורות בעמוד:';
+            pageSizeLabel.style.cssText = `font-size: 13px; color: var(--text-secondary, #4b5563); margin-bottom: 8px;`;
 
             const pageSizeSelect = document.createElement('select');
             pageSizeSelect.style.cssText = `
-                padding: 4px 8px; border: 1px solid var(--border-color, #d1d5db);
+                width: 100%; padding: 8px; border: 1px solid var(--border-color, #d1d5db);
                 border-radius: 4px; font-size: 13px; cursor: pointer;
             `;
             [25, 50, 100, 200, 500].forEach(num => {
@@ -2061,183 +2560,59 @@ class TableManager {
                 this.config.itemsPerPage = parseInt(pageSizeSelect.value);
                 this.calculateTotalPages();
                 this.goToPage(1);
-                // ⭐ שמירה לפי entity
                 this._saveUserPreference(`${storageKey}_displayMode`, this.config.itemsPerPage);
             };
 
             pageSizeContainer.appendChild(pageSizeLabel);
             pageSizeContainer.appendChild(pageSizeSelect);
-            displayModeSection.appendChild(pageSizeContainer);
+            content.appendChild(pageSizeContainer);
         }
 
-            menu.appendChild(displayModeSection);
-        } // סוף if (!isCardsMode)
+        submenu.appendChild(content);
+        return submenu;
+    }
 
-        // ===================================================================
-        // סקשן 2: בחירה מרובה
-        // ===================================================================
-        const multiSelectSection = document.createElement('div');
-        multiSelectSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
+    /**
+     * ⭐ בניית submenu תצוגת מובייל
+     */
+    _buildMobileViewSubmenu(mainMenu) {
+        const submenu = document.createElement('div');
+        submenu.style.cssText = `padding: 8px 0;`;
 
-        const multiSelectLabel = document.createElement('label');
-        multiSelectLabel.style.cssText = `display: flex; align-items: center; gap: 10px; cursor: pointer;`;
-
-        const multiSelectCheckbox = document.createElement('input');
-        multiSelectCheckbox.type = 'checkbox';
-        multiSelectCheckbox.checked = this.state.multiSelectEnabled;
-        multiSelectCheckbox.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
-        multiSelectCheckbox.onchange = () => {
-            this.state.multiSelectEnabled = multiSelectCheckbox.checked;
-            this.state.selectedRows.clear();
-            this._refreshTable();
-        };
-
-        const multiSelectText = document.createElement('span');
-        multiSelectText.textContent = '☑️ בחירה מרובה';
-        multiSelectText.style.cssText = `font-weight: 500; color: var(--text-primary, #1f2937); font-size: 13px;`;
-
-        multiSelectLabel.appendChild(multiSelectCheckbox);
-        multiSelectLabel.appendChild(multiSelectText);
-        multiSelectSection.appendChild(multiSelectLabel);
-        menu.appendChild(multiSelectSection);
-
-        // ===================================================================
-        // סקשן 3: עמודות (מתקפל)
-        // ===================================================================
-        const columnsSection = document.createElement('div');
-        columnsSection.style.cssText = `border-bottom: 1px solid var(--border-color, #e5e7eb);`;
-
-        // כותרת מתקפלת
-        const columnsHeader = document.createElement('div');
-        columnsHeader.style.cssText = `
-            padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between;
-            align-items: center; font-weight: 600; color: var(--text-primary, #1f2937); font-size: 13px;
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 8px 16px; font-weight: 600; font-size: 13px;
+            color: var(--text-secondary, #6b7280); border-bottom: 1px solid var(--border-color, #e5e7eb);
         `;
-        columnsHeader.innerHTML = `<span>📊 עמודות</span><span class="tm-toggle-arrow">▼</span>`;
+        header.textContent = 'תצוגת מובייל';
+        submenu.appendChild(header);
 
-        // תוכן מתקפל
-        const columnsContent = document.createElement('div');
-        columnsContent.className = 'tm-columns-content';
-        columnsContent.style.cssText = `display: none; padding: 0 0 8px 0;`;
+        const content = document.createElement('div');
+        content.style.cssText = `padding: 12px 16px;`;
 
-        // רשימת עמודות
-        this.config.columns.forEach((col, index) => {
-            const item = document.createElement('label');
-            item.style.cssText = `
-                display: flex; align-items: center; gap: 10px; padding: 6px 16px;
-                cursor: pointer; transition: background 0.2s; color: var(--text-primary, #1f2937); font-size: 13px;
-            `;
-            item.onmouseover = () => item.style.background = 'var(--bg-secondary, #f3f4f6)';
-            item.onmouseout = () => item.style.background = 'transparent';
+        // אופציה 1: רשימה
+        const listOption = this._createRadioOption(
+            'mobileViewMode',
+            'list',
+            '📋 תצוגת רשימה (טבלה)',
+            this.state.mobileViewMode === 'list',
+            () => this._setMobileViewMode('list', mainMenu)
+        );
+        content.appendChild(listOption);
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = this.state.columnVisibility[index];
-            checkbox.style.cssText = `width: 14px; height: 14px; cursor: pointer;`;
-            checkbox.onchange = () => {
-                this.state.columnVisibility[index] = checkbox.checked;
-                this._refreshTable();
-                this._saveColumnVisibility();
-            };
+        // אופציה 2: כרטיסים
+        const cardsOption = this._createRadioOption(
+            'mobileViewMode',
+            'cards',
+            '🃏 תצוגת כרטיסים',
+            this.state.mobileViewMode === 'cards',
+            () => this._setMobileViewMode('cards', mainMenu)
+        );
+        content.appendChild(cardsOption);
 
-            const label = document.createElement('span');
-            label.textContent = col.label || col.field;
-
-            item.appendChild(checkbox);
-            item.appendChild(label);
-            columnsContent.appendChild(item);
-        });
-
-        // כפתורי הצג/הסתר הכל
-        const actions = document.createElement('div');
-        actions.style.cssText = `padding: 8px 16px; display: flex; gap: 8px; justify-content: center;`;
-
-        const showAllBtn = document.createElement('button');
-        showAllBtn.textContent = 'הצג הכל';
-        showAllBtn.style.cssText = `
-            padding: 4px 10px; border: 1px solid var(--border-color, #d1d5db);
-            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 12px;
-        `;
-        showAllBtn.onclick = () => {
-            this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = true);
-            this._refreshTable();
-            this._saveColumnVisibility();
-            columnsContent.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
-        };
-
-        const hideAllBtn = document.createElement('button');
-        hideAllBtn.textContent = 'הסתר הכל';
-        hideAllBtn.style.cssText = `
-            padding: 4px 10px; border: 1px solid var(--border-color, #d1d5db);
-            border-radius: 4px; background: var(--bg-primary, white); cursor: pointer; font-size: 12px;
-        `;
-        hideAllBtn.onclick = () => {
-            this.config.columns.forEach((_, i) => this.state.columnVisibility[i] = false);
-            this._refreshTable();
-            this._saveColumnVisibility();
-            columnsContent.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        };
-
-        actions.appendChild(showAllBtn);
-        actions.appendChild(hideAllBtn);
-        columnsContent.appendChild(actions);
-
-        // Toggle עמודות
-        columnsHeader.onclick = () => {
-            const isVisible = columnsContent.style.display !== 'none';
-            columnsContent.style.display = isVisible ? 'none' : 'block';
-            columnsHeader.querySelector('.tm-toggle-arrow').textContent = isVisible ? '▼' : '▲';
-        };
-
-        columnsSection.appendChild(columnsHeader);
-        columnsSection.appendChild(columnsContent);
-        menu.appendChild(columnsSection);
-
-        // ===================================================================
-        // סקשן 4: תצוגת מובייל (רק בפלאפון)
-        // ===================================================================
-        if (this._isMobileDevice()) {
-            const mobileSection = document.createElement('div');
-            mobileSection.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color, #e5e7eb);`;
-
-            const mobileTitle = document.createElement('div');
-            mobileTitle.style.cssText = `font-weight: 600; margin-bottom: 10px; color: var(--text-primary, #1f2937); font-size: 13px;`;
-            mobileTitle.textContent = '📱 תצוגת מובייל';
-            mobileSection.appendChild(mobileTitle);
-
-            // אופציה 1: תצוגת רשימה (ברירת מחדל)
-            const listOption = this._createRadioOption(
-                'mobileViewMode',
-                'list',
-                '📋 תצוגת רשימה (טבלה)',
-                this.state.mobileViewMode === 'list',
-                () => this._setMobileViewMode('list', menu)
-            );
-            mobileSection.appendChild(listOption);
-
-            // אופציה 2: תצוגת כרטיסים
-            const cardsOption = this._createRadioOption(
-                'mobileViewMode',
-                'cards',
-                '🃏 תצוגת כרטיסים',
-                this.state.mobileViewMode === 'cards',
-                () => this._setMobileViewMode('cards', menu)
-            );
-            mobileSection.appendChild(cardsOption);
-
-            menu.appendChild(mobileSection);
-        }
-
-        document.body.appendChild(menu);
-
-        // סגירה בלחיצה מחוץ לתפריט
-        const closeHandler = (event) => {
-            if (!menu.contains(event.target) && !btn.contains(event.target)) {
-                menu.remove();
-                document.removeEventListener('click', closeHandler);
-            }
-        };
-        setTimeout(() => document.addEventListener('click', closeHandler), 0);
+        submenu.appendChild(content);
+        return submenu;
     }
 
     /**

@@ -2109,8 +2109,27 @@ class TableManager {
         item.appendChild(arrow);
 
         let submenu = null;
+        let closeTimeout = null;
+
+        const closeSubmenu = () => {
+            closeTimeout = setTimeout(() => {
+                if (submenu && document.body.contains(submenu)) {
+                    submenu.remove();
+                    submenu = null;
+                }
+                item.style.background = 'transparent';
+            }, 100); // השהיה קטנה לאפשר מעבר לsubmenu
+        };
+
+        const cancelClose = () => {
+            if (closeTimeout) {
+                clearTimeout(closeTimeout);
+                closeTimeout = null;
+            }
+        };
 
         item.onmouseenter = () => {
+            cancelClose();
             item.style.background = 'var(--bg-secondary, #f3f4f6)';
 
             // סגור submenus אחרים
@@ -2122,12 +2141,11 @@ class TableManager {
 
             submenu.className = 'tm-submenu';
 
-            // מיקום ה-submenu
+            // מיקום ה-submenu - צמוד לפריט (ללא רווח!)
             const itemRect = item.getBoundingClientRect();
             submenu.style.cssText = `
                 position: fixed;
-                top: ${itemRect.top}px;
-                left: ${itemRect.left - submenu.offsetWidth - 5}px;
+                top: ${itemRect.top - 8}px;
                 background: var(--bg-primary, white);
                 border: 1px solid var(--border-color, #e5e7eb);
                 border-radius: 8px;
@@ -2141,27 +2159,22 @@ class TableManager {
 
             document.body.appendChild(submenu);
 
-            // תיקון מיקום אחרי הוספה ל-DOM
+            // תיקון מיקום אחרי הוספה ל-DOM - צמוד לשמאל הפריט
             const submenuRect = submenu.getBoundingClientRect();
-            submenu.style.left = `${itemRect.left - submenuRect.width - 5}px`;
+            let leftPos = itemRect.left - submenuRect.width;
 
-            // וודא שה-submenu לא יוצא מהמסך
-            if (parseFloat(submenu.style.left) < 10) {
-                submenu.style.left = `${itemRect.right + 5}px`;
+            // וודא שה-submenu לא יוצא מהמסך משמאל
+            if (leftPos < 10) {
+                leftPos = itemRect.right; // פתח מימין במקום
             }
+            submenu.style.left = `${leftPos}px`;
+
+            // הוסף events ל-submenu
+            submenu.onmouseenter = cancelClose;
+            submenu.onmouseleave = closeSubmenu;
         };
 
-        item.onmouseleave = (e) => {
-            // אל תסגור אם עוברים ל-submenu
-            const relatedTarget = e.relatedTarget;
-            if (submenu && (submenu.contains(relatedTarget) || relatedTarget === submenu)) {
-                return;
-            }
-            item.style.background = 'transparent';
-            if (submenu && !submenu.matches(':hover')) {
-                submenu.remove();
-            }
-        };
+        item.onmouseleave = closeSubmenu;
 
         return item;
     }
@@ -2272,7 +2285,7 @@ class TableManager {
             padding: 8px 16px; font-weight: 600; font-size: 13px;
             color: var(--text-secondary, #6b7280); border-bottom: 1px solid var(--border-color, #e5e7eb);
         `;
-        header.textContent = 'דרגות מיון (גרור לשינוי סדר)';
+        header.textContent = 'דרגות מיון';
         submenu.appendChild(header);
 
         // רשימת שלבי מיון קיימים
@@ -2295,31 +2308,54 @@ class TableManager {
 
                     const levelItem = document.createElement('div');
                     levelItem.style.cssText = `
-                        display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+                        display: flex; align-items: center; gap: 6px; padding: 8px 12px;
                         background: var(--bg-secondary, #f3f4f6); margin: 4px 8px;
                         border-radius: 6px; font-size: 13px;
                     `;
-                    levelItem.draggable = true;
-                    levelItem.dataset.sortIndex = idx;
 
-                    // Drag & Drop
-                    levelItem.ondragstart = (e) => {
-                        e.dataTransfer.setData('text/plain', idx);
-                        levelItem.style.opacity = '0.5';
-                    };
-                    levelItem.ondragend = () => levelItem.style.opacity = '1';
-                    levelItem.ondragover = (e) => e.preventDefault();
-                    levelItem.ondrop = (e) => {
-                        e.preventDefault();
-                        const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-                        const toIdx = idx;
-                        if (fromIdx !== toIdx) {
-                            const [moved] = this.state.sortLevels.splice(fromIdx, 1);
-                            this.state.sortLevels.splice(toIdx, 0, moved);
+                    // כפתורי למעלה/למטה
+                    const moveControls = document.createElement('div');
+                    moveControls.style.cssText = `display: flex; flex-direction: column; gap: 2px;`;
+
+                    const moveUpBtn = document.createElement('button');
+                    moveUpBtn.style.cssText = `
+                        background: none; border: none; cursor: ${idx === 0 ? 'default' : 'pointer'};
+                        color: ${idx === 0 ? '#ccc' : 'var(--text-secondary, #6b7280)'};
+                        font-size: 10px; padding: 0; line-height: 1;
+                    `;
+                    moveUpBtn.textContent = '▲';
+                    moveUpBtn.disabled = idx === 0;
+                    moveUpBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (idx > 0) {
+                            [this.state.sortLevels[idx - 1], this.state.sortLevels[idx]] =
+                            [this.state.sortLevels[idx], this.state.sortLevels[idx - 1]];
                             renderSortLevels();
                             this._applyMultiLevelSort();
                         }
                     };
+
+                    const moveDownBtn = document.createElement('button');
+                    const isLast = idx === this.state.sortLevels.length - 1;
+                    moveDownBtn.style.cssText = `
+                        background: none; border: none; cursor: ${isLast ? 'default' : 'pointer'};
+                        color: ${isLast ? '#ccc' : 'var(--text-secondary, #6b7280)'};
+                        font-size: 10px; padding: 0; line-height: 1;
+                    `;
+                    moveDownBtn.textContent = '▼';
+                    moveDownBtn.disabled = isLast;
+                    moveDownBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (idx < this.state.sortLevels.length - 1) {
+                            [this.state.sortLevels[idx], this.state.sortLevels[idx + 1]] =
+                            [this.state.sortLevels[idx + 1], this.state.sortLevels[idx]];
+                            renderSortLevels();
+                            this._applyMultiLevelSort();
+                        }
+                    };
+
+                    moveControls.appendChild(moveUpBtn);
+                    moveControls.appendChild(moveDownBtn);
 
                     // מספר דרגה
                     const rankBadge = document.createElement('span');
@@ -2342,7 +2378,8 @@ class TableManager {
                         border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px;
                     `;
                     dirBtn.textContent = level.order === 'asc' ? '▲ עולה' : '▼ יורד';
-                    dirBtn.onclick = () => {
+                    dirBtn.onclick = (e) => {
+                        e.stopPropagation();
                         level.order = level.order === 'asc' ? 'desc' : 'asc';
                         dirBtn.textContent = level.order === 'asc' ? '▲ עולה' : '▼ יורד';
                         this._applyMultiLevelSort();
@@ -2355,12 +2392,14 @@ class TableManager {
                         font-size: 16px; padding: 0 4px;
                     `;
                     removeBtn.textContent = '×';
-                    removeBtn.onclick = () => {
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation();
                         this.state.sortLevels.splice(idx, 1);
                         renderSortLevels();
                         this._applyMultiLevelSort();
                     };
 
+                    levelItem.appendChild(moveControls);
                     levelItem.appendChild(rankBadge);
                     levelItem.appendChild(colName);
                     levelItem.appendChild(dirBtn);

@@ -2099,6 +2099,27 @@ class TableManager {
             menuItems.appendChild(mobileItem);
         }
 
+        // ===================================================================
+        // פריט 6: איפוס העדפות
+        // ===================================================================
+        const resetItem = document.createElement('div');
+        resetItem.style.cssText = `
+            padding: 10px 16px; cursor: pointer; transition: background 0.15s;
+            color: var(--danger-color, #dc2626); border-top: 1px solid var(--border-color, #e5e7eb);
+            margin-top: 8px;
+        `;
+        resetItem.onmouseover = () => resetItem.style.background = 'var(--bg-secondary, #f3f4f6)';
+        resetItem.onmouseout = () => resetItem.style.background = 'transparent';
+        resetItem.textContent = '🔄 איפוס העדפות טבלה';
+        resetItem.onclick = async () => {
+            if (confirm('האם לאפס את כל ההעדפות של הטבלה הזו?\n(רוחב עמודות, נראות עמודות, מיון)')) {
+                await this._resetAllPreferences();
+                menu.remove();
+                document.querySelectorAll('.tm-submenu').forEach(s => s.remove());
+            }
+        };
+        menuItems.appendChild(resetItem);
+
         menu.appendChild(menuItems);
         document.body.appendChild(menu);
 
@@ -3240,6 +3261,45 @@ class TableManager {
 
         await this._saveUserPreference(`${storageKey}_columnVisibility`, JSON.stringify(visibilityByField));
         console.log('TableManager: Column visibility saved for', storageKey);
+    }
+
+    /**
+     * ⭐ איפוס כל ההעדפות של הטבלה
+     */
+    async _resetAllPreferences() {
+        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+
+        try {
+            // מחיקת כל ההעדפות מה-UserSettings
+            if (typeof UserSettings !== 'undefined') {
+                await UserSettings.deleteAsync(`${storageKey}_columnWidths`);
+                await UserSettings.deleteAsync(`${storageKey}_columnVisibility`);
+                await UserSettings.deleteAsync(`${storageKey}_displayMode`);
+                await UserSettings.deleteAsync(`${storageKey}_mobileViewMode`);
+            }
+
+            // איפוס ה-state למצב ברירת מחדל
+            this.config.columns.forEach((col, index) => {
+                this.state.columnWidths[index] = col.width || 'auto';
+                this.state.columnVisibility[index] = true;
+            });
+            this.state.sortLevels = [];
+            this.state.sortColumn = null;
+            this.state.sortOrder = 'asc';
+
+            // רענון הטבלה
+            this._refreshTable();
+            this.loadInitialData();
+
+            console.log('TableManager: All preferences reset for', storageKey);
+
+            // הודעה למשתמש
+            if (typeof showToast === 'function') {
+                showToast('ההעדפות אופסו בהצלחה', 'success');
+            }
+        } catch (error) {
+            console.error('TableManager: Error resetting preferences:', error);
+        }
     }
 
     // ====================================

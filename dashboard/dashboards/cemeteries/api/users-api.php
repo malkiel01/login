@@ -388,12 +388,18 @@ function handleUpdate(PDO $pdo): void {
     $updates = [];
     $params = [];
 
-    $allowedFields = ['name', 'email', 'phone', 'role_id', 'is_active', 'custom_permissions'];
+    $allowedFields = ['name', 'username', 'email', 'phone', 'role_id', 'is_active', 'custom_permissions'];
     foreach ($allowedFields as $field) {
         if (array_key_exists($field, $data)) {
             $updates[] = "{$field} = ?";
             $params[] = $data[$field];
         }
+    }
+
+    // טיפול בסיסמה חדשה
+    if (!empty($data['new_password'])) {
+        $updates[] = "password = ?";
+        $params[] = password_hash($data['new_password'], PASSWORD_DEFAULT);
     }
 
     if (empty($updates)) {
@@ -534,12 +540,20 @@ function saveCustomPermissions(PDO $pdo, int $userId, array $permissions): void 
         VALUES (?, ?, ?)
     ");
 
-    foreach ($permissions as $permission) {
-        $permissionId = $permission['permission_id'] ?? $permission['id'] ?? null;
-        $granted = $permission['granted'] ?? 1;
-
-        if ($permissionId) {
+    foreach ($permissions as $key => $value) {
+        // תמיכה בפורמט permissions[permissionId]=1 (מהטופס)
+        if (is_numeric($key)) {
+            $permissionId = (int)$key;
+            $granted = (int)$value;
             $stmt->execute([$userId, $permissionId, $granted]);
+        }
+        // תמיכה בפורמט מערך אובייקטים
+        elseif (is_array($value)) {
+            $permissionId = $value['permission_id'] ?? $value['id'] ?? null;
+            $granted = $value['granted'] ?? 1;
+            if ($permissionId) {
+                $stmt->execute([$userId, (int)$permissionId, (int)$granted]);
+            }
         }
     }
 }

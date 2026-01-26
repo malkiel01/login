@@ -642,18 +642,19 @@ $canManageRoles = isAdmin() || hasModulePermission('roles', 'view');
 
         // Open user form (create/edit)
         function openUserForm(userId = null) {
+            const popupId = 'user-form-popup-' + Date.now();
             const url = userId
-                ? `/dashboard/dashboards/cemeteries/users/edit.php?id=${userId}`
-                : '/dashboard/dashboards/cemeteries/users/edit.php';
+                ? `/dashboard/dashboards/cemeteries/forms/iframe/userForm-iframe.php?itemId=${userId}&popupId=${popupId}`
+                : `/dashboard/dashboards/cemeteries/forms/iframe/userForm-iframe.php?popupId=${popupId}`;
 
             if (typeof PopupManager !== 'undefined') {
                 PopupManager.create({
-                    id: 'user-form-popup',
+                    id: popupId,
                     type: 'iframe',
                     src: url,
                     title: userId ? 'עריכת משתמש' : 'משתמש חדש',
-                    width: 800,
-                    height: 700,
+                    width: 900,
+                    height: 750,
                     onClose: () => {
                         loadUsers();
                         loadStats();
@@ -663,6 +664,12 @@ $canManageRoles = isAdmin() || hasModulePermission('roles', 'view');
                 window.location.href = url;
             }
         }
+
+        // Refresh function for child iframe
+        window.refreshUsersList = function() {
+            loadUsers();
+            loadStats();
+        };
 
         // Open roles manager
         function openRolesManager() {

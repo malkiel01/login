@@ -1,0 +1,157 @@
+/**
+ * iOS PWA Splash Screen Styles
+ * סגנונות למסך פתיחה ב-PWA
+ */
+
+/* מסך טעינה - מוסתר כברירת מחדל */
+.pwa-splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.pwa-splash-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.pwa-splash-screen.hidden {
+    display: none;
+}
+
+/* לוגו/אייקון */
+.pwa-splash-icon {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 30px;
+    animation: splashIconPulse 2s ease-in-out infinite;
+}
+
+.pwa-splash-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* כותרת */
+.pwa-splash-title {
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* תת-כותרת */
+.pwa-splash-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+/* אנימציית טעינה */
+.pwa-splash-loader {
+    display: flex;
+    gap: 8px;
+}
+
+.pwa-splash-loader span {
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: splashDotBounce 1.4s ease-in-out infinite;
+}
+
+.pwa-splash-loader span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.pwa-splash-loader span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.pwa-splash-loader span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Progress bar (אופציונלי) */
+.pwa-splash-progress {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 30px;
+}
+
+.pwa-splash-progress-bar {
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* אנימציות */
+@keyframes splashIconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes splashDotBounce {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* סטייל לדפדפן - התאמת safe area */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .pwa-splash-screen {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .pwa-splash-screen {
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    }
+}
+
+/* הסתרה לדפדפן רגיל (לא PWA) */
+@media all and (display-mode: browser) {
+    .pwa-splash-screen.auto-hide {
+        display: none;
+    }
+}
+
+/* הצגה רק ב-standalone (PWA) */
+@media all and (display-mode: standalone) {
+    .pwa-splash-screen.pwa-only {
+        display: flex;
+    }
+}

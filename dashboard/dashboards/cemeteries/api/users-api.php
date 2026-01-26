@@ -346,7 +346,7 @@ function handleCreate(PDO $pdo): void {
     $userId = $pdo->lastInsertId();
 
     // שמור סוג דשבורד ב-user_permissions
-    $dashboardType = $data['dashboard_type'] ?? 'cemeteries';
+    $dashboardType = $data['dashboard_type'] ?? 'cemetery_manager';
     saveUserDashboardType($pdo, $userId, $dashboardType);
 
     // הוסף הרשאות מותאמות אם יש

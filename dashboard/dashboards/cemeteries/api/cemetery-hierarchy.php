@@ -2,6 +2,9 @@
 // cemetery_dashboard/api/cemetery-hierarchy.php
 // API לניהול היררכיית בתי עלמין - משתמש ב-HierarchyManager
 
+// Start output buffering to prevent header issues
+ob_start();
+
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
 

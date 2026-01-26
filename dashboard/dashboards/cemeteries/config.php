@@ -9,10 +9,18 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/middleware.php';
 
 // הגדרות ספציפיות לדשבורד בתי העלמין
-define('DASHBOARD_NAME', 'ניהול בתי עלמין');
-define('DASHBOARD_VERSION', '1.0.0');
-define('DASHBOARD_PATH', dirname(__FILE__));
-define('CEMETERY_DASHBOARD_URL', '/dashboards/cemeteries/');
+if (!defined('DASHBOARD_NAME')) {
+    define('DASHBOARD_NAME', 'ניהול בתי עלמין');
+}
+if (!defined('DASHBOARD_VERSION')) {
+    define('DASHBOARD_VERSION', '1.0.0');
+}
+if (!defined('DASHBOARD_PATH')) {
+    define('DASHBOARD_PATH', dirname(__FILE__));
+}
+if (!defined('CEMETERY_DASHBOARD_URL')) {
+    define('CEMETERY_DASHBOARD_URL', '/dashboards/cemeteries/');
+}
 
 // הגדרות סטטוסים לבתי עלמין
 if (!defined('GRAVE_STATUS')) {

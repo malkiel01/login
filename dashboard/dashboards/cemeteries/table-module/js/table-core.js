@@ -166,7 +166,7 @@ class TableManager {
     }
 
     /**
-     * טעינת העדפות משתמש
+     * טעינת העדפות משתמש - מבנה אחיד
      */
     async _loadUserPreferences() {
         if (!this.config.userPreferences.enabled) return;
@@ -176,7 +176,6 @@ class TableManager {
         try {
             if (typeof UserSettings !== 'undefined') {
                 // שימוש בהגדרות המשתמש הגלובליות
-                // ⭐ ברירת מחדל null - רק אם המשתמש בחר במפורש, נשנה את המצב
                 const tableRowsPerPage = await UserSettings.getAsync('tableRowsPerPage', null);
 
                 // החלת העדפות גלובלי - רק אם המשתמש שמר העדפה במפורש
@@ -188,37 +187,46 @@ class TableManager {
                     }
                 }
 
-                // ⭐ טעינת מצב תצוגה לפי entity (עדיפות על גלובלי)
-                const savedDisplayMode = await UserSettings.getAsync(`${storageKey}_displayMode`, null);
-                if (savedDisplayMode !== null) {
-                    const rows = parseInt(savedDisplayMode);
-                    if (rows >= 999999) {
-                        // מצב infinite scroll
-                        this.config.itemsPerPage = 999999;
-                        this.config.showPagination = false;
-                    } else if (rows > 0) {
-                        // מצב pagination
-                        this.config.itemsPerPage = rows;
-                        this.config.showPagination = true;
+                // ⭐ טעינת כל ההעדפות ממבנה אחיד
+                const savedPrefsRaw = await UserSettings.getAsync(`${storageKey}_preferences`, null);
+                console.log('TableManager: Loading unified preferences for', storageKey);
+
+                if (savedPrefsRaw) {
+                    const prefs = typeof savedPrefsRaw === 'string' ? JSON.parse(savedPrefsRaw) : savedPrefsRaw;
+                    console.log('TableManager: Loaded preferences:', prefs);
+
+                    // ⭐ מצב תצוגה
+                    if (prefs.displayMode !== undefined) {
+                        const rows = parseInt(prefs.displayMode);
+                        if (rows >= 999999) {
+                            this.config.itemsPerPage = 999999;
+                            this.config.showPagination = false;
+                        } else if (rows > 0) {
+                            this.config.itemsPerPage = rows;
+                            this.config.showPagination = true;
+                        }
                     }
-                }
 
-                // טעינת רוחב עמודות שנשמר
-                const savedColumnWidths = await UserSettings.getAsync(`${storageKey}_columnWidths`, null);
-                if (savedColumnWidths) {
-                    this._savedColumnWidths = JSON.parse(savedColumnWidths);
-                }
+                    // ⭐ רוחב עמודות
+                    if (prefs.columnWidths) {
+                        this._savedColumnWidths = prefs.columnWidths;
+                    }
 
-                // טעינת נראות עמודות שנשמרה
-                const savedColumnVisibility = await UserSettings.getAsync(`${storageKey}_columnVisibility`, null);
-                if (savedColumnVisibility) {
-                    this._savedColumnVisibility = JSON.parse(savedColumnVisibility);
-                }
+                    // ⭐ נראות עמודות
+                    if (prefs.columnVisibility) {
+                        this._savedColumnVisibility = prefs.columnVisibility;
+                    }
 
-                // ⭐ טעינת מצב תצוגה למובייל
-                const savedMobileViewMode = await UserSettings.getAsync(`${storageKey}_mobileViewMode`, null);
-                if (savedMobileViewMode) {
-                    this.state.mobileViewMode = savedMobileViewMode;
+                    // ⭐ מצב תצוגה למובייל
+                    if (prefs.mobileViewMode) {
+                        this.state.mobileViewMode = prefs.mobileViewMode;
+                    }
+
+                    // ⭐ הגדרות מיון
+                    if (prefs.sortPreferences && prefs.sortPreferences.length > 0) {
+                        this._savedSortPreferences = prefs.sortPreferences;
+                        console.log('TableManager: Sort preferences loaded:', this._savedSortPreferences);
+                    }
                 }
             }
         } catch (error) {
@@ -368,8 +376,36 @@ class TableManager {
             this._buildPaginationFooter(wrapper);
         }
 
+        // ⭐ החלת הגדרות מיון שנשמרו
+        if (this._savedSortPreferences && this._savedSortPreferences.length > 0) {
+            this.state.sortLevels = this._savedSortPreferences
+                .map(pref => {
+                    const colIndex = this.config.columns.findIndex(c => c.field === pref.field);
+                    if (colIndex !== -1) {
+                        return { colIndex, order: pref.order };
+                    }
+                    return null;
+                })
+                .filter(Boolean);
+
+            // עדכון sortColumn לתאימות
+            if (this.state.sortLevels.length > 0) {
+                this.state.sortColumn = this.state.sortLevels[0].colIndex;
+                this.state.sortOrder = this.state.sortLevels[0].order;
+            }
+
+            console.log('TableManager: Restored sort preferences:', this.state.sortLevels);
+        }
+
         // טעינת נתונים ראשונית
         this.loadInitialData();
+
+        // ⭐ עדכון אייקוני מיון לאחר טעינת הנתונים (עם delay לוודא ש-DOM מוכן)
+        if (this.state.sortColumn !== null) {
+            requestAnimationFrame(() => {
+                this._updateSortIcons();
+            });
+        }
     }
 
     /**
@@ -1033,6 +1069,10 @@ class TableManager {
         this._updateSortIcons();
         this.state.currentPage = 1;
         this.loadInitialData();
+
+        // ⭐ עדכון sortLevels ושמירת העדפות
+        this.state.sortLevels = [{ colIndex: this.state.sortColumn, order: this.state.sortOrder }];
+        this._saveSortPreferences();
 
         if (this.config.onSort) {
             this.config.onSort(field, this.state.sortOrder);
@@ -2526,6 +2566,7 @@ class TableManager {
                 renderSortLevels();
                 this._updateSortIcons();
                 this.loadInitialData();
+                this._saveSortPreferences();
             };
             submenu.appendChild(clearBtn);
         }
@@ -2588,6 +2629,9 @@ class TableManager {
         this._updateSortIcons();
         this.state.currentPage = 1;
         this.loadInitialData();
+
+        // ⭐ שמירת העדפות מיון
+        this._saveSortPreferences();
     }
 
     /**
@@ -2655,7 +2699,7 @@ class TableManager {
                 this.config.itemsPerPage = parseInt(pageSizeSelect.value);
                 this.calculateTotalPages();
                 this.goToPage(1);
-                this._saveUserPreference(`${storageKey}_displayMode`, this.config.itemsPerPage);
+                this._saveTablePreferences();
             };
 
             pageSizeContainer.appendChild(pageSizeLabel);
@@ -2755,7 +2799,7 @@ class TableManager {
         }
 
         // שמירת העדפה
-        this._saveUserPreference(`${storageKey}_mobileViewMode`, mode);
+        this._saveTablePreferences();
 
         // רענון תצוגה
         this._refreshMobileView();
@@ -2978,7 +3022,7 @@ class TableManager {
             }
 
             // ⭐ שמור העדפה לפי entity (999999 = infinite scroll)
-            this._saveUserPreference(`${storageKey}_displayMode`, 999999);
+            this._saveTablePreferences();
 
         } else if (mode === 'pagination') {
             // מצב עמודים
@@ -2991,7 +3035,7 @@ class TableManager {
             }
 
             // ⭐ שמור העדפה לפי entity
-            this._saveUserPreference(`${storageKey}_displayMode`, this.config.itemsPerPage);
+            this._saveTablePreferences();
         }
 
         // חישוב מחדש ורענון
@@ -3085,16 +3129,26 @@ class TableManager {
      * עדכון אייקוני מיון
      */
     _updateSortIcons() {
+        console.log('TableManager: _updateSortIcons called, sortColumn:', this.state.sortColumn, 'sortOrder:', this.state.sortOrder);
+
+        if (!this.elements.thead) {
+            console.warn('TableManager: thead not found!');
+            return;
+        }
+
         this.elements.thead.querySelectorAll('.tm-sort-icon').forEach(icon => {
             icon.classList.remove('asc', 'desc');
         });
 
         if (this.state.sortColumn !== null) {
             const th = this.elements.thead.querySelector(`[data-col-index="${this.state.sortColumn}"]`);
+            console.log('TableManager: Looking for th with data-col-index=', this.state.sortColumn, 'found:', !!th);
             if (th) {
                 const icon = th.querySelector('.tm-sort-icon');
+                console.log('TableManager: Found sort icon:', !!icon);
                 if (icon) {
                     icon.classList.add(this.state.sortOrder);
+                    console.log('TableManager: Added class', this.state.sortOrder, 'to icon');
                 }
             }
         }
@@ -3155,7 +3209,7 @@ class TableManager {
             this.goToPage(1);
 
             // ⭐ שמירת העדפה לפי entity
-            this._saveUserPreference(`${storageKey}_displayMode`, this.config.itemsPerPage);
+            this._saveTablePreferences();
         });
     }
 
@@ -3211,7 +3265,7 @@ class TableManager {
     }
 
     /**
-     * שמירת העדפת משתמש
+     * שמירת העדפת משתמש (backward compatibility)
      */
     async _saveUserPreference(key, value) {
         if (!this.config.userPreferences.enabled) return;
@@ -3226,41 +3280,88 @@ class TableManager {
     }
 
     /**
-     * ⭐ שמירת רוחב עמודות למשתמש
+     * ⭐ בניית אובייקט העדפות מאוחד
      */
-    async _saveColumnWidths() {
-        if (!this.config.userPreferences.enabled) return;
+    _buildPreferencesObject() {
+        const prefs = {};
 
-        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
-
-        // בניית אובייקט רוחב עמודות לפי שם שדה
+        // רוחב עמודות
         const widthsByField = {};
         this.config.columns.forEach((col, index) => {
             const fieldName = col.field || `col_${index}`;
             widthsByField[fieldName] = this.state.columnWidths[index];
         });
+        prefs.columnWidths = widthsByField;
 
-        await this._saveUserPreference(`${storageKey}_columnWidths`, JSON.stringify(widthsByField));
-        console.log('TableManager: Column widths saved for', storageKey);
+        // נראות עמודות
+        const visibilityByField = {};
+        this.config.columns.forEach((col, index) => {
+            const fieldName = col.field || `col_${index}`;
+            visibilityByField[fieldName] = this.state.columnVisibility[index];
+        });
+        prefs.columnVisibility = visibilityByField;
+
+        // הגדרות מיון
+        prefs.sortPreferences = this.state.sortLevels.map(level => {
+            const col = this.config.columns[level.colIndex];
+            const fieldName = col?.field || `col_${level.colIndex}`;
+            return { field: fieldName, order: level.order };
+        });
+
+        // מצב תצוגה
+        prefs.displayMode = this.config.itemsPerPage;
+
+        // מצב תצוגה למובייל
+        prefs.mobileViewMode = this.state.mobileViewMode;
+
+        return prefs;
+    }
+
+    /**
+     * ⭐ שמירת כל ההעדפות במבנה אחיד
+     */
+    async _saveTablePreferences() {
+        if (!this.config.userPreferences.enabled) return;
+
+        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+
+        try {
+            if (typeof UserSettings !== 'undefined') {
+                const prefs = this._buildPreferencesObject();
+                await UserSettings.set(`${storageKey}_preferences`, JSON.stringify(prefs));
+                console.log('TableManager: Preferences saved for', storageKey, prefs);
+            }
+        } catch (error) {
+            console.warn('TableManager: Failed to save preferences', error);
+        }
+    }
+
+    /**
+     * ⭐ שמירת רוחב עמודות למשתמש
+     */
+    async _saveColumnWidths() {
+        await this._saveTablePreferences();
     }
 
     /**
      * ⭐ שמירת נראות עמודות למשתמש
      */
     async _saveColumnVisibility() {
-        if (!this.config.userPreferences.enabled) return;
+        await this._saveTablePreferences();
+    }
 
-        const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
+    /**
+     * ⭐ שמירת הגדרות מיון למשתמש
+     */
+    async _saveSortPreferences() {
+        await this._saveTablePreferences();
+    }
 
-        // בניית אובייקט נראות עמודות לפי שם שדה
-        const visibilityByField = {};
-        this.config.columns.forEach((col, index) => {
-            const fieldName = col.field || `col_${index}`;
-            visibilityByField[fieldName] = this.state.columnVisibility[index];
-        });
-
-        await this._saveUserPreference(`${storageKey}_columnVisibility`, JSON.stringify(visibilityByField));
-        console.log('TableManager: Column visibility saved for', storageKey);
+    /**
+     * ⭐ שמירת מצב תצוגה
+     */
+    async _saveDisplayMode() {
+        await this._saveTablePreferences();
     }
 
     /**
@@ -3270,12 +3371,9 @@ class TableManager {
         const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
 
         try {
-            // מחיקת כל ההעדפות מה-UserSettings
+            // מחיקת ההעדפות המאוחדות מה-UserSettings
             if (typeof UserSettings !== 'undefined') {
-                await UserSettings.reset(`${storageKey}_columnWidths`);
-                await UserSettings.reset(`${storageKey}_columnVisibility`);
-                await UserSettings.reset(`${storageKey}_displayMode`);
-                await UserSettings.reset(`${storageKey}_mobileViewMode`);
+                await UserSettings.reset(`${storageKey}_preferences`);
             }
 
             // איפוס ה-state למצב ברירת מחדל

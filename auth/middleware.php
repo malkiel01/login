@@ -188,6 +188,26 @@ function getUserDashboardType(?int $userId = null): string {
 }
 
 /**
+ * קבלת תפקיד המשתמש הנוכחי (למערכת בתי עלמין)
+ * @return string - viewer, editor, manager, cemetery_manager
+ */
+function getCurrentUserRole(): string {
+    $dashboardType = getUserDashboardType();
+
+    // מיפוי dashboard_type לתפקיד
+    $mapping = [
+        'cemetery_manager' => 'cemetery_manager',
+        'admin' => 'cemetery_manager',
+        'manager' => 'manager',
+        'employee' => 'editor',
+        'client' => 'viewer',
+        'default' => 'viewer'
+    ];
+
+    return $mapping[$dashboardType] ?? 'viewer';
+}
+
+/**
  * קבלת רשימת ההרשאות של המשתמש
  * @return array
  */

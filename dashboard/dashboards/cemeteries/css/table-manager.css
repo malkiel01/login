@@ -26,17 +26,19 @@
 .tm-header-cell {
     position: sticky;
     top: 0;
-    padding: 8px 12px !important;
-    font-weight: 600;
-    font-size: 1rem !important;
+    padding: 6px 8px !important;
+    font-weight: 700;
+    font-size: 1.05rem !important;
     text-align: right;
-    border-left: 1px solid var(--border-color);
-    border-bottom: 2px solid var(--border-color);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: none;
     user-select: none;
     white-space: nowrap;
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
     z-index: 100;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .tm-header-cell:first-child {
@@ -66,30 +68,34 @@
 }
 
 .tm-sort-icon {
-    font-size: 12px;
-    opacity: 0.6;
-    transition: opacity 0.2s;
+    font-size: 14px;
+    opacity: 0.85;
+    transition: all 0.2s;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
 }
 
 .tm-header-cell:hover .tm-sort-icon {
     opacity: 1;
+    transform: scale(1.1);
 }
 
 /* === כפתור תפריט === */
 .tm-menu-btn {
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid #e5e7eb;
-    color: inherit;
-    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 4px 6px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1;
-    transition: background 0.2s;
+    transition: all 0.2s;
+    font-weight: bold;
 }
 
 .tm-menu-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.05);
 }
 
 /* === תפריט עמודה - RTL FIX === */

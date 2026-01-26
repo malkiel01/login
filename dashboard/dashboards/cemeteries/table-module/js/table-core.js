@@ -860,16 +860,23 @@ class TableManager {
             menuBtn.className = 'tm-column-menu-btn';
             menuBtn.innerHTML = '⋮';
             menuBtn.style.cssText = `
-                background: none;
-                border: none;
+                background: rgba(255, 255, 255, 0.3);
+                border: 2px solid rgba(255, 255, 255, 0.5);
                 cursor: pointer;
-                padding: 2px 6px;
-                font-size: 14px;
-                color: var(--text-muted, #6b7280);
-                opacity: 0.6;
-                transition: opacity 0.2s, color 0.2s;
-                border-radius: 4px;
+                padding: 2px 8px;
+                font-size: 20px;
+                color: #ffffff;
+                opacity: 1;
+                transition: all 0.2s;
+                border-radius: 5px;
                 flex-shrink: 0;
+                min-width: 28px;
+                min-height: 26px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             `;
             menuBtn.onmouseover = () => {
                 menuBtn.style.opacity = '1';

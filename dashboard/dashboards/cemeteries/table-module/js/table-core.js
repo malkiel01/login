@@ -1535,6 +1535,11 @@ class TableManager {
         // סינון
         this.state.filteredData = this._applyFilters(this.config.data);
 
+        // ⭐ החלת מיון אם יש
+        if (this.state.sortColumn !== null) {
+            this._sortFilteredData();
+        }
+
         // Pagination או infinite scroll
         if (this.config.showPagination) {
             const start = (this.state.currentPage - 1) * this.config.itemsPerPage;
@@ -1549,6 +1554,43 @@ class TableManager {
 
         // ציור
         this.renderRows(false);
+    }
+
+    /**
+     * ⭐ מיון filteredData לפי ההגדרות הנוכחיות (בלי לקרוא ל-loadInitialData)
+     */
+    _sortFilteredData() {
+        const col = this.config.columns[this.state.sortColumn];
+        if (!col) return;
+
+        const field = col.field;
+
+        this.state.filteredData.sort((a, b) => {
+            let valA = a[field];
+            let valB = b[field];
+
+            if (valA == null) return this.state.sortOrder === 'asc' ? 1 : -1;
+            if (valB == null) return this.state.sortOrder === 'asc' ? -1 : 1;
+
+            // לפי סוג
+            if (col.type === 'number' || typeof valA === 'number') {
+                const numA = parseFloat(valA) || 0;
+                const numB = parseFloat(valB) || 0;
+                return this.state.sortOrder === 'asc' ? numA - numB : numB - numA;
+            }
+
+            if (col.type === 'date') {
+                const dateA = new Date(valA).getTime() || 0;
+                const dateB = new Date(valB).getTime() || 0;
+                return this.state.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            }
+
+            // טקסט
+            const strA = String(valA).toLowerCase();
+            const strB = String(valB).toLowerCase();
+            const cmp = strA.localeCompare(strB, 'he');
+            return this.state.sortOrder === 'asc' ? cmp : -cmp;
+        });
     }
 
     /**

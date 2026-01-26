@@ -861,5 +861,90 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         });
     </script>
+    <!-- DEBUG SCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('%c=== DEBUG: customerForm-iframe.php ===', 'background: #10b981; color: white; padding: 5px 10px; font-size: 14px;');
+
+            // 1. בדיקת כותרת סקציה
+            const sectionTitle = document.querySelector('.section-title');
+            if (sectionTitle) {
+                const titleStyles = getComputedStyle(sectionTitle);
+                console.log('📌 Section Title (.section-title):');
+                console.log('   font-weight:', titleStyles.fontWeight);
+                console.log('   font-size:', titleStyles.fontSize);
+                console.log('   color:', titleStyles.color);
+            }
+
+            // 2. בדיקת סקציה
+            const section = document.querySelector('.sortable-section');
+            if (section) {
+                const sectionStyles = getComputedStyle(section);
+                console.log('📦 Section (.sortable-section):');
+                console.log('   padding:', sectionStyles.padding);
+                console.log('   margin:', sectionStyles.margin);
+                console.log('   background:', sectionStyles.background);
+                console.log('   border-radius:', sectionStyles.borderRadius);
+            }
+
+            // 3. בדיקת section-drag-handle
+            const dragHandle = document.querySelector('.section-drag-handle');
+            if (dragHandle) {
+                const handleStyles = getComputedStyle(dragHandle);
+                console.log('🎯 Section Header (.section-drag-handle):');
+                console.log('   padding:', handleStyles.padding);
+                console.log('   background:', handleStyles.background);
+            }
+
+            // 4. בדיקת section-content
+            const sectionContent = document.querySelector('.section-content');
+            if (sectionContent) {
+                const contentStyles = getComputedStyle(sectionContent);
+                console.log('📄 Section Content (.section-content):');
+                console.log('   padding:', contentStyles.padding);
+            }
+
+            // 5. בדיקת כפתורים
+            const btnPrimary = document.querySelector('.btn-primary');
+            const btnSecondary = document.querySelector('.btn-secondary');
+
+            if (btnPrimary) {
+                const primaryStyles = getComputedStyle(btnPrimary);
+                console.log('🟢 Button Primary (.btn-primary):');
+                console.log('   padding:', primaryStyles.padding);
+                console.log('   font-size:', primaryStyles.fontSize);
+                console.log('   background:', primaryStyles.background);
+                console.log('   border-radius:', primaryStyles.borderRadius);
+            }
+
+            if (btnSecondary) {
+                const secondaryStyles = getComputedStyle(btnSecondary);
+                console.log('⚪ Button Secondary (.btn-secondary):');
+                console.log('   padding:', secondaryStyles.padding);
+                console.log('   font-size:', secondaryStyles.fontSize);
+                console.log('   background:', secondaryStyles.background);
+            }
+
+            // 6. בדיקת form-actions
+            const formActions = document.querySelector('.form-actions');
+            if (formActions) {
+                const actionsStyles = getComputedStyle(formActions);
+                console.log('🎬 Form Actions (.form-actions):');
+                console.log('   padding:', actionsStyles.padding);
+                console.log('   gap:', actionsStyles.gap);
+                console.log('   position:', actionsStyles.position);
+                console.log('   bottom:', actionsStyles.bottom);
+            }
+
+            // 7. בדיקת body
+            const bodyStyles = getComputedStyle(document.body);
+            console.log('🌐 Body:');
+            console.log('   padding:', bodyStyles.padding);
+            console.log('   background:', bodyStyles.background);
+            console.log('   data-theme:', document.body.getAttribute('data-theme'));
+
+            console.log('%c=== END DEBUG ===', 'background: #10b981; color: white; padding: 5px 10px;');
+        });
+    </script>
 </body>
 </html>

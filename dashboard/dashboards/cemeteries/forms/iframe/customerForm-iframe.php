@@ -863,77 +863,44 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
     </script>
     <!-- DEBUG SCRIPT - DETAILED -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        function logDebug() {
             console.log('%c=== DEBUG: customerForm-iframe.php ===', 'background: #10b981; color: white; padding: 8px 15px; font-size: 16px; font-weight: bold;');
 
-            // בדיקת CSS files שנטענו
-            console.log('%c📁 CSS Files Loaded:', 'font-weight: bold; color: #f59e0b;');
-            document.querySelectorAll('link[rel="stylesheet"]').forEach((link, i) => {
-                console.log(`   ${i+1}. ${link.href}`);
-            });
+            // בדיקת Theme
+            console.log('%c🎨 Theme Status:', 'font-weight: bold; color: #ec4899;');
+            console.log('   html[data-theme]:', document.documentElement.getAttribute('data-theme'));
+            console.log('   body[data-theme]:', document.body.getAttribute('data-theme'));
+            console.log('   body.classList:', Array.from(document.body.classList).join(', '));
+            console.log('   PopupAPI defined:', typeof PopupAPI !== 'undefined');
 
-            // בדיקת style tags
-            const styleTags = document.querySelectorAll('style');
-            console.log('%c📝 Inline Style Tags:', 'font-weight: bold; color: #ef4444;');
-            console.log(`   Count: ${styleTags.length}`);
-            styleTags.forEach((style, i) => {
-                console.log(`   Tag ${i+1}: ${style.innerHTML.length} characters`);
-            });
-
-            console.log('%c📊 Computed Styles:', 'font-weight: bold; color: #10b981;');
-
-            // Body
-            const body = document.body;
-            const bodyS = getComputedStyle(body);
-            console.log('BODY:', {
-                padding: bodyS.padding,
-                paddingTop: bodyS.paddingTop,
-                paddingRight: bodyS.paddingRight,
-                paddingBottom: bodyS.paddingBottom,
-                paddingLeft: bodyS.paddingLeft,
-                background: bodyS.backgroundColor
-            });
-
-            // Section
-            const section = document.querySelector('.sortable-section');
-            if (section) {
-                const sS = getComputedStyle(section);
-                console.log('.sortable-section:', {
-                    borderRadius: sS.borderRadius,
-                    border: sS.border,
-                    background: sS.backgroundColor
-                });
-            }
-
-            // Section Title
-            const title = document.querySelector('.section-title');
-            if (title) {
-                const tS = getComputedStyle(title);
-                console.log('.section-title:', {
-                    fontSize: tS.fontSize,
-                    fontWeight: tS.fontWeight,
-                    color: tS.color
-                });
-            }
-
-            // Section Content
-            const content = document.querySelector('.section-content');
-            if (content) {
-                const cS = getComputedStyle(content);
-                console.log('.section-content:', {
-                    padding: cS.padding,
-                    background: cS.backgroundColor
-                });
-            }
+            // CSS Variables
+            const rootStyles = getComputedStyle(document.documentElement);
+            console.log('%c🔧 CSS Variables:', 'font-weight: bold; color: #f59e0b;');
+            console.log('   --primary-color:', rootStyles.getPropertyValue('--primary-color'));
+            console.log('   --primary-dark:', rootStyles.getPropertyValue('--primary-dark'));
+            console.log('   --bg-primary:', rootStyles.getPropertyValue('--bg-primary'));
+            console.log('   --bg-secondary:', rootStyles.getPropertyValue('--bg-secondary'));
 
             // Buttons
-            const btn = document.querySelector('.btn');
-            if (btn) {
-                const bS = getComputedStyle(btn);
-                console.log('.btn:', {
-                    padding: bS.padding,
-                    minHeight: bS.minHeight,
-                    fontSize: bS.fontSize
+            const btnPrimary = document.querySelector('.btn-primary');
+            const btnSecondary = document.querySelector('.btn-secondary');
+            console.log('%c🔘 Buttons:', 'font-weight: bold; color: #3b82f6;');
+            if (btnPrimary) {
+                const s = getComputedStyle(btnPrimary);
+                console.log('.btn-primary:', {
+                    background: s.background,
+                    backgroundColor: s.backgroundColor,
+                    color: s.color,
+                    border: s.border
+                });
+            }
+            if (btnSecondary) {
+                const s = getComputedStyle(btnSecondary);
+                console.log('.btn-secondary:', {
+                    background: s.background,
+                    backgroundColor: s.backgroundColor,
+                    color: s.color,
+                    border: s.border
                 });
             }
 
@@ -941,24 +908,34 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             const actions = document.querySelector('.form-actions');
             if (actions) {
                 const aS = getComputedStyle(actions);
+                console.log('%c📋 Form Actions:', 'font-weight: bold; color: #8b5cf6;');
                 console.log('.form-actions:', {
                     position: aS.position,
                     padding: aS.padding,
-                    bottom: aS.bottom,
-                    left: aS.left,
-                    right: aS.right,
-                    background: aS.backgroundColor,
-                    boxShadow: aS.boxShadow
+                    background: aS.backgroundColor
                 });
             }
 
-            // Window size
-            console.log('%c📐 Window Size:', 'font-weight: bold; color: #8b5cf6;');
-            console.log(`   innerWidth: ${window.innerWidth}px`);
-            console.log(`   innerHeight: ${window.innerHeight}px`);
-
             console.log('%c=== END DEBUG ===', 'background: #10b981; color: white; padding: 5px 10px;');
+        }
+
+        // Run immediately
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('%c[DOMContentLoaded]', 'color: gray;');
+            logDebug();
         });
+
+        // Run again after 500ms (after theme should be applied)
+        setTimeout(function() {
+            console.log('%c[After 500ms delay]', 'color: gray;');
+            logDebug();
+        }, 500);
+
+        // Run again after 1500ms
+        setTimeout(function() {
+            console.log('%c[After 1500ms delay]', 'color: gray;');
+            logDebug();
+        }, 1500);
     </script>
 </body>
 </html>

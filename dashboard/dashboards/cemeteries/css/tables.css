@@ -12,17 +12,19 @@
 }
 
 .data-table thead {
-    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .data-table th {
-    padding: 0.625rem 0.75rem;
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text-secondary);
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #ffffff;
     text-align: right;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: none;
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .data-table td {
@@ -264,13 +266,13 @@ body.dark-theme .data-table {
 
 [data-theme="dark"] .data-table thead,
 body.dark-theme .data-table thead {
-    background: linear-gradient(135deg, var(--bg-secondary, #334155) 0%, var(--bg-tertiary, #475569) 100%);
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
 [data-theme="dark"] .data-table th,
 body.dark-theme .data-table th {
-    color: var(--text-primary, #f1f5f9);
-    border-bottom-color: var(--border-color, #475569);
+    color: #ffffff;
+    border-bottom: none;
 }
 
 [data-theme="dark"] .data-table td,

@@ -64,8 +64,8 @@ html, body {
 }
 
 body {
-    padding: 20px;
-    padding-bottom: 0; /* הכפתורים sticky - לא צריך מקום נוסף */
+    padding: 12px;
+    padding-bottom: 0; /* הכפתורים fixed - לא צריך מקום נוסף */
 }
 
 /* ====================================
@@ -98,7 +98,7 @@ body {
 
 .sortable-section {
     background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     border: 2px solid transparent;
     overflow: hidden;
     transition: border-color 0.2s ease;
@@ -133,7 +133,7 @@ body {
     right: 15px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-secondary);
 }
@@ -162,7 +162,7 @@ body {
 }
 
 .section-content {
-    padding: 20px;
+    padding: 15px;
     background: var(--bg-secondary);
 }
 
@@ -270,7 +270,7 @@ textarea {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 16px;
     border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
@@ -279,6 +279,7 @@ textarea {
     font-family: inherit;
     transition: all 0.2s ease;
     text-decoration: none;
+    min-height: 44px;
 }
 
 .btn-primary {
@@ -330,15 +331,22 @@ textarea {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
-    padding: 15px 20px;
+    padding: 12px;
     border-top: 1px solid var(--border-color);
     background: var(--bg-secondary);
     /* קבוע בתחתית - לכל המסכים */
-    position: sticky;
+    position: fixed;
     bottom: 0;
-    margin-top: auto;
-    z-index: 100;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    left: 0;
+    right: 0;
+    margin: 0;
+    border-radius: 0;
+    z-index: 9999;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.form-actions .btn {
+    flex: 1;
 }
 
 /* ====================================
@@ -912,13 +920,9 @@ body.dark-theme .status-pending {
 
 /* ========================================
    18. RESPONSIVE - מובייל
+   סגנונות נוספים למסכים קטנים בלבד
    ======================================== */
 @media screen and (max-width: 768px) {
-    body {
-        padding: 12px;
-        padding-bottom: 0;
-    }
-
     .form-grid {
         grid-template-columns: 1fr !important;
     }
@@ -930,7 +934,6 @@ body.dark-theme .status-pending {
 
     .section-drag-handle {
         cursor: default;
-        /* height defined in popup-sections.css mobile */
     }
 
     .section-toggle-btn {
@@ -944,27 +947,6 @@ body.dark-theme .status-pending {
     textarea {
         font-size: 16px !important; /* מונע zoom באייפון */
         min-height: 44px;
-    }
-
-    .btn {
-        min-height: 44px;
-        padding: 12px 16px;
-    }
-
-    .form-actions {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: 0;
-        padding: 12px;
-        border-radius: 0;
-        z-index: 9999;
-        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .form-actions .btn {
-        flex: 1;
     }
 
     .info-grid {

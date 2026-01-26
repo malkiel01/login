@@ -861,87 +861,101 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         });
     </script>
-    <!-- DEBUG SCRIPT -->
+    <!-- DEBUG SCRIPT - DETAILED -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('%c=== DEBUG: customerForm-iframe.php ===', 'background: #10b981; color: white; padding: 5px 10px; font-size: 14px;');
+            console.log('%c=== DEBUG: customerForm-iframe.php ===', 'background: #10b981; color: white; padding: 8px 15px; font-size: 16px; font-weight: bold;');
 
-            // 1. בדיקת כותרת סקציה
-            const sectionTitle = document.querySelector('.section-title');
-            if (sectionTitle) {
-                const titleStyles = getComputedStyle(sectionTitle);
-                console.log('📌 Section Title (.section-title):');
-                console.log('   font-weight:', titleStyles.fontWeight);
-                console.log('   font-size:', titleStyles.fontSize);
-                console.log('   color:', titleStyles.color);
-            }
+            // בדיקת CSS files שנטענו
+            console.log('%c📁 CSS Files Loaded:', 'font-weight: bold; color: #f59e0b;');
+            document.querySelectorAll('link[rel="stylesheet"]').forEach((link, i) => {
+                console.log(`   ${i+1}. ${link.href}`);
+            });
 
-            // 2. בדיקת סקציה
+            // בדיקת style tags
+            const styleTags = document.querySelectorAll('style');
+            console.log('%c📝 Inline Style Tags:', 'font-weight: bold; color: #ef4444;');
+            console.log(`   Count: ${styleTags.length}`);
+            styleTags.forEach((style, i) => {
+                console.log(`   Tag ${i+1}: ${style.innerHTML.length} characters`);
+            });
+
+            console.log('%c📊 Computed Styles:', 'font-weight: bold; color: #10b981;');
+
+            // Body
+            const body = document.body;
+            const bodyS = getComputedStyle(body);
+            console.log('BODY:', {
+                padding: bodyS.padding,
+                paddingTop: bodyS.paddingTop,
+                paddingRight: bodyS.paddingRight,
+                paddingBottom: bodyS.paddingBottom,
+                paddingLeft: bodyS.paddingLeft,
+                background: bodyS.backgroundColor
+            });
+
+            // Section
             const section = document.querySelector('.sortable-section');
             if (section) {
-                const sectionStyles = getComputedStyle(section);
-                console.log('📦 Section (.sortable-section):');
-                console.log('   padding:', sectionStyles.padding);
-                console.log('   margin:', sectionStyles.margin);
-                console.log('   background:', sectionStyles.background);
-                console.log('   border-radius:', sectionStyles.borderRadius);
+                const sS = getComputedStyle(section);
+                console.log('.sortable-section:', {
+                    borderRadius: sS.borderRadius,
+                    border: sS.border,
+                    background: sS.backgroundColor
+                });
             }
 
-            // 3. בדיקת section-drag-handle
-            const dragHandle = document.querySelector('.section-drag-handle');
-            if (dragHandle) {
-                const handleStyles = getComputedStyle(dragHandle);
-                console.log('🎯 Section Header (.section-drag-handle):');
-                console.log('   padding:', handleStyles.padding);
-                console.log('   background:', handleStyles.background);
+            // Section Title
+            const title = document.querySelector('.section-title');
+            if (title) {
+                const tS = getComputedStyle(title);
+                console.log('.section-title:', {
+                    fontSize: tS.fontSize,
+                    fontWeight: tS.fontWeight,
+                    color: tS.color
+                });
             }
 
-            // 4. בדיקת section-content
-            const sectionContent = document.querySelector('.section-content');
-            if (sectionContent) {
-                const contentStyles = getComputedStyle(sectionContent);
-                console.log('📄 Section Content (.section-content):');
-                console.log('   padding:', contentStyles.padding);
+            // Section Content
+            const content = document.querySelector('.section-content');
+            if (content) {
+                const cS = getComputedStyle(content);
+                console.log('.section-content:', {
+                    padding: cS.padding,
+                    background: cS.backgroundColor
+                });
             }
 
-            // 5. בדיקת כפתורים
-            const btnPrimary = document.querySelector('.btn-primary');
-            const btnSecondary = document.querySelector('.btn-secondary');
-
-            if (btnPrimary) {
-                const primaryStyles = getComputedStyle(btnPrimary);
-                console.log('🟢 Button Primary (.btn-primary):');
-                console.log('   padding:', primaryStyles.padding);
-                console.log('   font-size:', primaryStyles.fontSize);
-                console.log('   background:', primaryStyles.background);
-                console.log('   border-radius:', primaryStyles.borderRadius);
+            // Buttons
+            const btn = document.querySelector('.btn');
+            if (btn) {
+                const bS = getComputedStyle(btn);
+                console.log('.btn:', {
+                    padding: bS.padding,
+                    minHeight: bS.minHeight,
+                    fontSize: bS.fontSize
+                });
             }
 
-            if (btnSecondary) {
-                const secondaryStyles = getComputedStyle(btnSecondary);
-                console.log('⚪ Button Secondary (.btn-secondary):');
-                console.log('   padding:', secondaryStyles.padding);
-                console.log('   font-size:', secondaryStyles.fontSize);
-                console.log('   background:', secondaryStyles.background);
+            // Form Actions
+            const actions = document.querySelector('.form-actions');
+            if (actions) {
+                const aS = getComputedStyle(actions);
+                console.log('.form-actions:', {
+                    position: aS.position,
+                    padding: aS.padding,
+                    bottom: aS.bottom,
+                    left: aS.left,
+                    right: aS.right,
+                    background: aS.backgroundColor,
+                    boxShadow: aS.boxShadow
+                });
             }
 
-            // 6. בדיקת form-actions
-            const formActions = document.querySelector('.form-actions');
-            if (formActions) {
-                const actionsStyles = getComputedStyle(formActions);
-                console.log('🎬 Form Actions (.form-actions):');
-                console.log('   padding:', actionsStyles.padding);
-                console.log('   gap:', actionsStyles.gap);
-                console.log('   position:', actionsStyles.position);
-                console.log('   bottom:', actionsStyles.bottom);
-            }
-
-            // 7. בדיקת body
-            const bodyStyles = getComputedStyle(document.body);
-            console.log('🌐 Body:');
-            console.log('   padding:', bodyStyles.padding);
-            console.log('   background:', bodyStyles.background);
-            console.log('   data-theme:', document.body.getAttribute('data-theme'));
+            // Window size
+            console.log('%c📐 Window Size:', 'font-weight: bold; color: #8b5cf6;');
+            console.log(`   innerWidth: ${window.innerWidth}px`);
+            console.log(`   innerHeight: ${window.innerHeight}px`);
 
             console.log('%c=== END DEBUG ===', 'background: #10b981; color: white; padding: 5px 10px;');
         });

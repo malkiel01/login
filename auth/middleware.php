@@ -394,6 +394,12 @@ function checkPermission(string $action, string $module = 'cemetery'): bool {
         return false;
     }
 
+    // נסה קודם את המערכת החדשה
+    if (hasModulePermission($module, $action)) {
+        return true;
+    }
+
+    // Backward compatibility - מערכת ישנה
     // מיפוי פעולות להרשאות
     $permissionMap = [
         'view' => 'view_' . $module,
@@ -426,4 +432,337 @@ function checkPermission(string $action, string $module = 'cemetery'): bool {
     }
 
     return false;
+}
+
+// ============================================
+// NEW PERMISSIONS SYSTEM - v2.0
+// ============================================
+
+/**
+ * בדיקת הרשאה ספציפית למשתמש (מערכת חדשה)
+ * @param string $module - שם המודול (purchases, customers, burials, etc.)
+ * @param string $action - שם הפעולה (view, create, edit, delete, export)
+ * @return bool
+ */
+function hasModulePermission(string $module, string $action): bool {
+    if (!isLoggedIn()) {
+        return false;
+    }
+
+    $userId = getCurrentUserId();
+    if (!$userId) {
+        return false;
+    }
+
+    // בדוק אם יש הרשאות ב-cache
+    $cacheKey = "permissions_v2_{$userId}";
+    if (isset($_SESSION[$cacheKey])) {
+        $permissions = $_SESSION[$cacheKey];
+        return isset($permissions[$module]) && in_array($action, $permissions[$module]);
+    }
+
+    // טען הרשאות מהDB ושמור ב-cache
+    $permissions = loadUserPermissionsFromDB($userId);
+    $_SESSION[$cacheKey] = $permissions;
+
+    return isset($permissions[$module]) && in_array($action, $permissions[$module]);
+}
+
+/**
+ * טעינת הרשאות המשתמש מהDB
+ * @param int $userId
+ * @return array - מערך של [module => [actions]]
+ */
+function loadUserPermissionsFromDB(int $userId): array {
+    try {
+        $pdo = getDBConnection();
+
+        // בדוק אם טבלת roles קיימת (מערכת חדשה)
+        $stmt = $pdo->prepare("SHOW TABLES LIKE 'roles'");
+        $stmt->execute();
+        if ($stmt->rowCount() === 0) {
+            return []; // מערכת חדשה לא מותקנת
+        }
+
+        // שאילתא מורכבת - שילוב הרשאות תפקיד + הרשאות מותאמות
+        $sql = "
+            SELECT DISTINCT
+                p.module,
+                p.action
+            FROM permissions p
+            INNER JOIN users u ON u.id = :user_id
+            LEFT JOIN role_permissions rp ON rp.permission_id = p.id AND rp.role_id = u.role_id
+            LEFT JOIN user_permissions_extended upe ON upe.permission_id = p.id AND upe.user_id = u.id
+            WHERE
+                -- יש הרשאה מתפקיד ולא נדחתה במפורש
+                (rp.role_id IS NOT NULL AND (upe.granted IS NULL OR upe.granted = 1))
+                -- או הרשאה מותאמת שאושרה
+                OR upe.granted = 1
+            ORDER BY p.module, p.action
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // המר לפורמט [module => [actions]]
+        $permissions = [];
+        foreach ($results as $row) {
+            if (!isset($permissions[$row['module']])) {
+                $permissions[$row['module']] = [];
+            }
+            $permissions[$row['module']][] = $row['action'];
+        }
+
+        return $permissions;
+
+    } catch (Exception $e) {
+        error_log("loadUserPermissionsFromDB error: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * קבלת כל ההרשאות של המשתמש בפירוט
+ * @return array - מערך של [module => [actions]]
+ */
+function getUserPermissionsDetailed(): array {
+    if (!isLoggedIn()) {
+        return [];
+    }
+
+    $userId = getCurrentUserId();
+    if (!$userId) {
+        return [];
+    }
+
+    $cacheKey = "permissions_v2_{$userId}";
+    if (isset($_SESSION[$cacheKey])) {
+        return $_SESSION[$cacheKey];
+    }
+
+    $permissions = loadUserPermissionsFromDB($userId);
+    $_SESSION[$cacheKey] = $permissions;
+
+    return $permissions;
+}
+
+/**
+ * בדיקה אם למשתמש יש הרשאות מותאמות אישית
+ * @return bool
+ */
+function hasCustomPermissions(): bool {
+    if (!isLoggedIn()) {
+        return false;
+    }
+
+    $userId = getCurrentUserId();
+    if (!$userId) {
+        return false;
+    }
+
+    try {
+        $pdo = getDBConnection();
+
+        // בדוק אם עמודת custom_permissions קיימת
+        $stmt = $pdo->prepare("SHOW COLUMNS FROM users LIKE 'custom_permissions'");
+        $stmt->execute();
+        if ($stmt->rowCount() === 0) {
+            return false;
+        }
+
+        $stmt = $pdo->prepare("SELECT custom_permissions FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return (bool)($result['custom_permissions'] ?? false);
+
+    } catch (Exception $e) {
+        error_log("hasCustomPermissions error: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * קבלת תפקיד המשתמש
+ * @return array|null - פרטי התפקיד או null
+ */
+function getUserRole(): ?array {
+    if (!isLoggedIn()) {
+        return null;
+    }
+
+    $userId = getCurrentUserId();
+    if (!$userId) {
+        return null;
+    }
+
+    // בדוק cache
+    if (isset($_SESSION['user_role'])) {
+        return $_SESSION['user_role'];
+    }
+
+    try {
+        $pdo = getDBConnection();
+
+        // בדוק אם טבלת roles קיימת
+        $stmt = $pdo->prepare("SHOW TABLES LIKE 'roles'");
+        $stmt->execute();
+        if ($stmt->rowCount() === 0) {
+            return null;
+        }
+
+        $stmt = $pdo->prepare("
+            SELECT r.*
+            FROM roles r
+            INNER JOIN users u ON u.role_id = r.id
+            WHERE u.id = ?
+        ");
+        $stmt->execute([$userId]);
+        $role = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($role) {
+            $_SESSION['user_role'] = $role;
+        }
+
+        return $role ?: null;
+
+    } catch (Exception $e) {
+        error_log("getUserRole error: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * בדיקה אם המשתמש הוא admin
+ * @return bool
+ */
+function isAdmin(): bool {
+    $role = getUserRole();
+    return $role && $role['name'] === 'admin';
+}
+
+/**
+ * ניקוי cache של הרשאות (קורא לזה אחרי עדכון הרשאות)
+ * @param int|null $userId - אם לא צוין, ינקה למשתמש הנוכחי
+ */
+function clearPermissionsCache(?int $userId = null): void {
+    $userId = $userId ?? getCurrentUserId();
+    if ($userId) {
+        unset($_SESSION["permissions_v2_{$userId}"]);
+        unset($_SESSION['user_role']);
+    }
+}
+
+/**
+ * דרישת הרשאה ספציפית (מערכת חדשה)
+ * @param string $module - שם המודול
+ * @param string $action - שם הפעולה
+ * @param bool $isApi - האם זו קריאת API
+ */
+function requireModulePermission(string $module, string $action, bool $isApi = false): void {
+    requireAuth(null, $isApi);
+
+    // Admin עובר תמיד
+    if (isAdmin()) {
+        return;
+    }
+
+    if (!hasModulePermission($module, $action)) {
+        $displayName = getPermissionDisplayName($module, $action);
+
+        if ($isApi) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Forbidden',
+                'message' => 'אין לך הרשאה לפעולה זו',
+                'required' => "{$module}.{$action}"
+            ]);
+            exit;
+        }
+
+        http_response_code(403);
+        die('
+        <!DOCTYPE html>
+        <html dir="rtl" lang="he">
+        <head>
+            <meta charset="UTF-8">
+            <title>אין הרשאה</title>
+            <style>
+                body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f3f4f6; margin: 0; }
+                .box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+                h1 { color: #dc2626; margin-bottom: 10px; }
+                p { color: #6b7280; }
+                a { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; }
+                a:hover { background: #5a67d8; }
+            </style>
+        </head>
+        <body>
+            <div class="box">
+                <h1>אין הרשאה</h1>
+                <p>אין לך הרשאה לפעולה זו.</p>
+                <p>הרשאה נדרשת: <strong>' . htmlspecialchars($displayName) . '</strong></p>
+                <a href="/dashboard">חזרה לדשבורד</a>
+            </div>
+        </body>
+        </html>
+        ');
+    }
+}
+
+/**
+ * קבלת שם תצוגה של הרשאה
+ * @param string $module
+ * @param string $action
+ * @return string
+ */
+function getPermissionDisplayName(string $module, string $action): string {
+    try {
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare("SELECT display_name FROM permissions WHERE module = ? AND action = ?");
+        $stmt->execute([$module, $action]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['display_name'] ?? "{$module}.{$action}";
+    } catch (Exception $e) {
+        return "{$module}.{$action}";
+    }
+}
+
+/**
+ * קבלת רשימת כל המודולים וההרשאות שלהם
+ * @return array
+ */
+function getAllModulesWithPermissions(): array {
+    try {
+        $pdo = getDBConnection();
+        $stmt = $pdo->query("
+            SELECT module, action, display_name, description, sort_order
+            FROM permissions
+            ORDER BY sort_order, module, action
+        ");
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $modules = [];
+        foreach ($results as $row) {
+            if (!isset($modules[$row['module']])) {
+                $modules[$row['module']] = [
+                    'name' => $row['module'],
+                    'actions' => []
+                ];
+            }
+            $modules[$row['module']]['actions'][$row['action']] = [
+                'name' => $row['action'],
+                'display_name' => $row['display_name'],
+                'description' => $row['description']
+            ];
+        }
+
+        return $modules;
+
+    } catch (Exception $e) {
+        error_log("getAllModulesWithPermissions error: " . $e->getMessage());
+        return [];
+    }
 }

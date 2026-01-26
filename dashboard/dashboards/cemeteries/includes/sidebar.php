@@ -204,13 +204,14 @@
             </div>
         </div>
         
+        <?php if (isAdmin() || hasModulePermission('users', 'view')): ?>
         <div class="management-item">
-            <div class="hierarchy-header disabled">
-                <span class="hierarchy-icon">🔐</span>
-                <span class="hierarchy-title">ניהול הרשאות</span>
-                <span class="badge badge-soon">בקרוב</span>
+            <div class="hierarchy-header" id="usersItem" onclick="handleSidebarClick('usersItem', openUsersManagement)">
+                <span class="hierarchy-icon">👥</span>
+                <span class="hierarchy-title">ניהול משתמשים</span>
             </div>
         </div>
+        <?php endif; ?>
         
         <div class="management-item">
             <div class="hierarchy-header disabled">
@@ -400,6 +401,24 @@ function wrapWithActiveState(originalFunc, itemId) {
 // window.loadCustomers = wrapWithActiveState(window.loadCustomers, 'customersItem');
 
 console.log('✨ מנגנון Sidebar Active State אותחל בהצלחה - גרסה 2.0.0');
+
+/**
+ * פתיחת מסך ניהול משתמשים
+ */
+function openUsersManagement() {
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'users-management-popup',
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/users/',
+            title: 'ניהול משתמשים',
+            width: 1200,
+            height: 800
+        });
+    } else {
+        window.location.href = '/dashboard/dashboards/cemeteries/users/';
+    }
+}
 
 /**
  * אישור התנתקות

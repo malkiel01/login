@@ -2,6 +2,11 @@
 // cemetery_dashboard/api/cemetery-hierarchy.php
 // API לניהול היררכיית בתי עלמין - משתמש ב-HierarchyManager
 
+// ⚠️ DEBUG: הצגת שגיאות - להסיר בפרודקשן!
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
 

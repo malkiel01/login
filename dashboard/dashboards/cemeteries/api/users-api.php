@@ -27,6 +27,26 @@ $pdo = getDBConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+// בדוק אם טבלת roles קיימת ואם עמודות ההרשאות קיימות
+$rolesTableExists = false;
+$usersHasRoleId = false;
+try {
+    $checkTable = $pdo->query("SHOW TABLES LIKE 'roles'");
+    $rolesTableExists = $checkTable->rowCount() > 0;
+
+    // בדוק אם עמודת role_id קיימת בטבלת users
+    $checkColumn = $pdo->query("SHOW COLUMNS FROM users LIKE 'role_id'");
+    $usersHasRoleId = $checkColumn->rowCount() > 0;
+
+    // אם אין role_id, לא נשתמש ב-roles
+    if (!$usersHasRoleId) {
+        $rolesTableExists = false;
+    }
+} catch (Exception $e) {
+    $rolesTableExists = false;
+    $usersHasRoleId = false;
+}
+
 try {
     switch ($action) {
         case 'list':
@@ -81,35 +101,60 @@ function requirePermission(string $action): void {
  * רשימת משתמשים
  */
 function handleList(PDO $pdo): void {
+    global $rolesTableExists;
+
     $roleFilter = $_GET['role_id'] ?? null;
     $statusFilter = $_GET['status'] ?? null;
     $search = $_GET['search'] ?? null;
     $limit = (int)($_GET['limit'] ?? 50);
     $offset = (int)($_GET['offset'] ?? 0);
 
-    $sql = "
-        SELECT
-            u.id,
-            u.username,
-            u.email,
-            u.name,
-            u.phone,
-            u.profile_picture,
-            u.auth_type,
-            u.is_active,
-            u.custom_permissions,
-            u.role_id,
-            u.created_at,
-            u.last_login,
-            r.name as role_name,
-            r.display_name as role_display_name
-        FROM users u
-        LEFT JOIN roles r ON u.role_id = r.id
-        WHERE 1=1
-    ";
+    // בנה שאילתא בהתאם לקיום טבלת roles
+    if ($rolesTableExists) {
+        $sql = "
+            SELECT
+                u.id,
+                u.username,
+                u.email,
+                u.name,
+                u.phone,
+                u.profile_picture,
+                u.auth_type,
+                u.is_active,
+                u.custom_permissions,
+                u.role_id,
+                u.created_at,
+                u.last_login,
+                r.name as role_name,
+                r.display_name as role_display_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE 1=1
+        ";
+    } else {
+        $sql = "
+            SELECT
+                u.id,
+                u.username,
+                u.email,
+                u.name,
+                u.phone,
+                u.profile_picture,
+                u.auth_type,
+                u.is_active,
+                0 as custom_permissions,
+                NULL as role_id,
+                u.created_at,
+                u.last_login,
+                NULL as role_name,
+                NULL as role_display_name
+            FROM users u
+            WHERE 1=1
+        ";
+    }
     $params = [];
 
-    if ($roleFilter) {
+    if ($roleFilter && $rolesTableExists) {
         $sql .= " AND u.role_id = :role_id";
         $params['role_id'] = $roleFilter;
     }
@@ -125,8 +170,10 @@ function handleList(PDO $pdo): void {
     }
 
     // ספירה כללית
-    $countSql = str_replace("SELECT \n            u.id", "SELECT COUNT(*) as total", $sql);
-    $countSql = preg_replace('/LEFT JOIN roles.*$/m', '', $countSql);
+    $countSql = preg_replace('/SELECT\s+.*?\s+FROM/s', 'SELECT COUNT(*) as total FROM', $sql);
+    if ($rolesTableExists) {
+        $countSql = preg_replace('/LEFT JOIN roles.*?WHERE/s', 'WHERE', $countSql);
+    }
     $stmt = $pdo->prepare($countSql);
     $stmt->execute($params);
     $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -157,31 +204,55 @@ function handleList(PDO $pdo): void {
  * פרטי משתמש
  */
 function handleGet(PDO $pdo): void {
+    global $rolesTableExists;
+
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) {
         throw new Exception('נדרש מזהה משתמש');
     }
 
-    $stmt = $pdo->prepare("
-        SELECT
-            u.id,
-            u.username,
-            u.email,
-            u.name,
-            u.phone,
-            u.profile_picture,
-            u.auth_type,
-            u.is_active,
-            u.custom_permissions,
-            u.role_id,
-            u.created_at,
-            u.last_login,
-            r.name as role_name,
-            r.display_name as role_display_name
-        FROM users u
-        LEFT JOIN roles r ON u.role_id = r.id
-        WHERE u.id = ?
-    ");
+    if ($rolesTableExists) {
+        $stmt = $pdo->prepare("
+            SELECT
+                u.id,
+                u.username,
+                u.email,
+                u.name,
+                u.phone,
+                u.profile_picture,
+                u.auth_type,
+                u.is_active,
+                u.custom_permissions,
+                u.role_id,
+                u.created_at,
+                u.last_login,
+                r.name as role_name,
+                r.display_name as role_display_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE u.id = ?
+        ");
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT
+                u.id,
+                u.username,
+                u.email,
+                u.name,
+                u.phone,
+                u.profile_picture,
+                u.auth_type,
+                u.is_active,
+                0 as custom_permissions,
+                NULL as role_id,
+                u.created_at,
+                u.last_login,
+                NULL as role_name,
+                NULL as role_display_name
+            FROM users u
+            WHERE u.id = ?
+        ");
+    }
     $stmt->execute([$id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -189,20 +260,25 @@ function handleGet(PDO $pdo): void {
         throw new Exception('משתמש לא נמצא');
     }
 
-    // קבל הרשאות מותאמות
-    $stmt = $pdo->prepare("
-        SELECT
-            p.id,
-            p.module,
-            p.action,
-            p.display_name,
-            upe.granted
-        FROM user_permissions_extended upe
-        INNER JOIN permissions p ON p.id = upe.permission_id
-        WHERE upe.user_id = ?
-    ");
-    $stmt->execute([$id]);
-    $customPermissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // קבל הרשאות מותאמות (אם הטבלה קיימת)
+    $customPermissions = [];
+    try {
+        $stmt = $pdo->prepare("
+            SELECT
+                p.id,
+                p.module,
+                p.action,
+                p.display_name,
+                upe.granted
+            FROM user_permissions_extended upe
+            INNER JOIN permissions p ON p.id = upe.permission_id
+            WHERE upe.user_id = ?
+        ");
+        $stmt->execute([$id]);
+        $customPermissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // טבלת permissions לא קיימת - התעלם
+    }
 
     $user['custom_permissions_list'] = $customPermissions;
 

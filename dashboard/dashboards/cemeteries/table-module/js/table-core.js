@@ -2076,12 +2076,19 @@ class TableManager {
 
         // סגירה בלחיצה מחוץ לתפריט
         const closeHandler = (event) => {
-            if (!menu.contains(event.target) && !btn.contains(event.target)) {
-                // סגור גם submenus
-                document.querySelectorAll('.tm-submenu').forEach(s => s.remove());
-                menu.remove();
-                document.removeEventListener('click', closeHandler);
+            // בדוק אם הלחיצה בתוך התפריט הראשי
+            if (menu.contains(event.target) || btn.contains(event.target)) {
+                return;
             }
+            // בדוק אם הלחיצה בתוך submenu כלשהו
+            const clickedSubmenu = event.target.closest('.tm-submenu');
+            if (clickedSubmenu) {
+                return;
+            }
+            // סגור הכל
+            document.querySelectorAll('.tm-submenu').forEach(s => s.remove());
+            menu.remove();
+            document.removeEventListener('click', closeHandler);
         };
         setTimeout(() => document.addEventListener('click', closeHandler), 0);
     }

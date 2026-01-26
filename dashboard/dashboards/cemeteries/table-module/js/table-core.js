@@ -2034,31 +2034,59 @@ class TableManager {
         }
 
         // ===================================================================
-        // פריט 4: בחירה מרובה (checkbox ישיר)
+        // פריט 4: בחירה מרובה (toggle switch)
         // ===================================================================
-        const multiSelectItem = document.createElement('label');
+        const multiSelectItem = document.createElement('div');
         multiSelectItem.style.cssText = `
-            display: flex; align-items: center; gap: 10px; padding: 10px 16px;
-            cursor: pointer; transition: background 0.15s; color: var(--text-primary, #1f2937);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px; cursor: pointer; transition: background 0.15s;
+            color: var(--text-primary, #1f2937);
         `;
         multiSelectItem.onmouseover = () => multiSelectItem.style.background = 'var(--bg-secondary, #f3f4f6)';
         multiSelectItem.onmouseout = () => multiSelectItem.style.background = 'transparent';
 
-        const multiSelectCheckbox = document.createElement('input');
-        multiSelectCheckbox.type = 'checkbox';
-        multiSelectCheckbox.checked = this.state.multiSelectEnabled;
-        multiSelectCheckbox.style.cssText = `width: 16px; height: 16px; cursor: pointer;`;
-        multiSelectCheckbox.onchange = () => {
-            this.state.multiSelectEnabled = multiSelectCheckbox.checked;
-            this.state.selectedRows.clear();
-            this._refreshTable();
-        };
-
         const multiSelectText = document.createElement('span');
         multiSelectText.textContent = '☑️ בחירה מרובה';
 
-        multiSelectItem.appendChild(multiSelectCheckbox);
+        // Toggle Switch
+        const toggleWrapper = document.createElement('label');
+        toggleWrapper.style.cssText = `
+            position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;
+        `;
+
+        const toggleInput = document.createElement('input');
+        toggleInput.type = 'checkbox';
+        toggleInput.checked = this.state.multiSelectEnabled;
+        toggleInput.style.cssText = `opacity: 0; width: 0; height: 0;`;
+
+        const toggleSlider = document.createElement('span');
+        const isOn = this.state.multiSelectEnabled;
+        toggleSlider.style.cssText = `
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: ${isOn ? 'var(--primary-color, #667eea)' : '#ccc'};
+            border-radius: 22px; transition: 0.3s;
+        `;
+
+        const toggleKnob = document.createElement('span');
+        toggleKnob.style.cssText = `
+            position: absolute; height: 16px; width: 16px; left: ${isOn ? '21px' : '3px'};
+            bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s;
+        `;
+        toggleSlider.appendChild(toggleKnob);
+
+        toggleInput.onchange = () => {
+            this.state.multiSelectEnabled = toggleInput.checked;
+            this.state.selectedRows.clear();
+            toggleSlider.style.backgroundColor = toggleInput.checked ? 'var(--primary-color, #667eea)' : '#ccc';
+            toggleKnob.style.left = toggleInput.checked ? '21px' : '3px';
+            this._refreshTable();
+        };
+
+        toggleWrapper.appendChild(toggleInput);
+        toggleWrapper.appendChild(toggleSlider);
+
         multiSelectItem.appendChild(multiSelectText);
+        multiSelectItem.appendChild(toggleWrapper);
         menuItems.appendChild(multiSelectItem);
 
         // ===================================================================

@@ -64,6 +64,7 @@ try {
     // GET - Load map data OR list entities
     // =====================================================
     if ($method === 'GET') {
+        requireViewPermission('map');
         $action = $_GET['action'] ?? 'loadMap';
 
         // -------------------------------------------------
@@ -238,6 +239,7 @@ try {
     // POST - Handle file uploads first (before JSON parsing)
     // =====================================================
     if ($method === 'POST' && isset($_FILES['backgroundImage'])) {
+        requireEditPermission('map');
         $entityType = $_POST['entityType'] ?? null;
         $entityId = $_POST['entityId'] ?? null;
 
@@ -318,6 +320,7 @@ try {
     // POST - Save/Update operations (JSON body)
     // =====================================================
     if ($method === 'POST') {
+        requireEditPermission('map');
         $input = json_decode(file_get_contents('php://input'), true);
         $action = $input['action'] ?? '';
 

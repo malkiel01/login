@@ -46,3 +46,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // בדוק התחברות והרשאות
 requireApiDashboard(['cemetery_manager', 'admin']);
+
+/**
+ * בדיקת הרשאה לפעולה על מודול
+ * @param string $module - שם המודול (purchases, customers, etc.)
+ * @param string $action - הפעולה (view, create, edit, delete)
+ */
+function requireApiModulePermission(string $module, string $action): void {
+    // Admin תמיד עובר
+    if (isAdmin()) {
+        return;
+    }
+
+    // בדוק הרשאה
+    if (!hasModulePermission($module, $action)) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Forbidden',
+            'message' => 'אין לך הרשאה לפעולה זו',
+            'required' => "{$module}.{$action}"
+        ]);
+        exit;
+    }
+}
+
+/**
+ * בדיקת הרשאת צפייה למודול - קיצור נוח
+ * @param string $module
+ */
+function requireViewPermission(string $module): void {
+    requireApiModulePermission($module, 'view');
+}
+
+/**
+ * בדיקת הרשאת יצירה למודול
+ * @param string $module
+ */
+function requireCreatePermission(string $module): void {
+    requireApiModulePermission($module, 'create');
+}
+
+/**
+ * בדיקת הרשאת עריכה למודול
+ * @param string $module
+ */
+function requireEditPermission(string $module): void {
+    requireApiModulePermission($module, 'edit');
+}
+
+/**
+ * בדיקת הרשאת מחיקה למודול
+ * @param string $module
+ */
+function requireDeletePermission(string $module): void {
+    requireApiModulePermission($module, 'delete');
+}

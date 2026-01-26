@@ -19,6 +19,7 @@ try {
     switch ($action) {
         // רשימת כל התשלומים
         case 'list':
+            requireViewPermission('payments');
             $search = $_GET['search'] ?? '';
             $plotType = $_GET['plotType'] ?? '';
             $graveType = $_GET['graveType'] ?? '';
@@ -84,6 +85,7 @@ try {
             
         // קבלת תשלום בודד
         case 'get':
+            requireViewPermission('payments');
             if (!$id) {
                 throw new Exception('Payment ID is required');
             }
@@ -432,6 +434,7 @@ try {
             break;
         // הוספת תשלום חדש
         case 'create':
+            requireCreatePermission('payments');
             $data = json_decode(file_get_contents('php://input'), true);
             
             // ולידציה
@@ -483,6 +486,7 @@ try {
             
         // עדכון תשלום
         case 'update':
+            requireEditPermission('payments');
             $data = json_decode(file_get_contents('php://input'), true);
 
             // קבל id מה-query string או מה-body
@@ -527,6 +531,7 @@ try {
             
         // מחיקת תשלום (מחיקה רכה)
         case 'delete':
+            requireDeletePermission('payments');
             if (!$id) {
                 throw new Exception('Payment ID is required');
             }
@@ -549,6 +554,7 @@ try {
             
         // סטטיסטיקות תשלומים
         case 'stats':
+            requireViewPermission('payments');
             $stats = [];
             
             // סה"כ תשלומים לפי סוג חלקה

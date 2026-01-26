@@ -121,6 +121,7 @@
         switch ($action) {
             // רשימת כל הלקוחות
             case 'list':
+                requireViewPermission('customers');
                 $search = $_GET['search'] ?? '';
                 $status = $_GET['status'] ?? '';
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -631,6 +632,7 @@
 
             // קבלת לקוח בודד
             case 'get':
+                requireViewPermission('customers');
                 if (!$id) {
                     throw new Exception('Customer ID is required');
                 }
@@ -660,6 +662,7 @@
                 
             // הוספת לקוח חדש
             case 'create':
+                requireCreatePermission('customers');
                 $data = json_decode(file_get_contents('php://input'), true);
 
                 // ולידציה
@@ -774,6 +777,7 @@
                 
             // עדכון לקוח
             case 'update':
+                requireEditPermission('customers');
                 if (!$id) {
                     throw new Exception('Customer ID is required');
                 }
@@ -916,6 +920,7 @@
                 
             // מחיקת לקוח (מחיקה רכה)
             case 'delete':
+                requireDeletePermission('customers');
                 if (!$id) {
                     throw new Exception('Customer ID is required');
                 }
@@ -941,6 +946,7 @@
                 
             // סטטיסטיקות לקוחות
             case 'stats':
+                requireViewPermission('customers');
                 $stats = [];
                 
                 // סה"כ לקוחות לפי סטטוס

@@ -27,6 +27,7 @@ $id = $_GET['id'] ?? null;
 try {
     switch ($action) {
         case 'list':
+            requireViewPermission('plots');
             $search = $_GET['search'] ?? '';
             $blockId = $_GET['blockId'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -138,10 +139,11 @@ try {
             break;
             
         case 'get':
+            requireViewPermission('plots');
             if (!$id) {
                 throw new Exception('Plot ID is required');
             }
-            
+
             $stmt = $pdo->prepare("
                 SELECT p.*, b.blockNameHe
                 FROM plots p
@@ -193,8 +195,9 @@ try {
             break;
 
         case 'create':
+            requireCreatePermission('plots');
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             if (empty($data['plotNameHe'])) {
                 throw new Exception('שם החלקה (עברית) הוא שדה חובה');
             }
@@ -265,12 +268,13 @@ try {
             break;
             
         case 'update':
+            requireEditPermission('plots');
             if (!$id) {
                 throw new Exception('Plot ID is required');
             }
-            
+
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             if (empty($data['plotNameHe'])) {
                 throw new Exception('שם החלקה (עברית) הוא שדה חובה');
             }
@@ -340,10 +344,11 @@ try {
             break;
             
         case 'delete':
+            requireDeletePermission('plots');
             if (!$id) {
                 throw new Exception('Plot ID is required');
             }
-            
+
             // שלב 1: בדוק אם יש שורות לחלקה
             $stmt = $pdo->prepare("
                 SELECT unicId 
@@ -399,6 +404,7 @@ try {
             break;
         
         case 'stats':
+            requireViewPermission('plots');
             $blockId = $_GET['blockId'] ?? '';
             $stats = [];
             

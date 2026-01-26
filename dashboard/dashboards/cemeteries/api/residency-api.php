@@ -11,25 +11,30 @@ $action = $_GET['action'] ?? '';
 // טיפול בפעולות שונות
 switch ($action) {
     case 'list':
+        requireViewPermission('residency');
         listResidencies();
         break;
-        
+
     case 'get':
+        requireViewPermission('residency');
         getResidency($_GET['id'] ?? '');
         break;
-        
+
     case 'save':
+        requireEditPermission('residency');
         saveResidency();
         break;
-        
+
     case 'delete':
+        requireDeletePermission('residency');
         deleteResidency($_GET['id'] ?? '');
         break;
-        
+
     case 'search':
+        requireViewPermission('residency');
         searchResidencies($_GET['query'] ?? '');
         break;
-        
+
     default:
         echo json_encode(['success' => false, 'error' => 'Invalid action']);
 }

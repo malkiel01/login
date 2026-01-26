@@ -27,6 +27,7 @@ $id = $_GET['id'] ?? null;
 try {
     switch ($action) {
         case 'list':
+            requireViewPermission('blocks');
             $search = $_GET['search'] ?? '';
             $cemeteryId = $_GET['cemeteryId'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -134,10 +135,11 @@ try {
             break;
             
         case 'get':
+            requireViewPermission('blocks');
             if (!$id) {
                 throw new Exception('Block ID is required');
             }
-            
+
             $stmt = $pdo->prepare("
                 SELECT b.*, c.cemeteryNameHe
                 FROM blocks b
@@ -162,8 +164,9 @@ try {
             break;
             
         case 'create':
+            requireCreatePermission('blocks');
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             if (empty($data['blockNameHe'])) {
                 throw new Exception('שם הגוש (עברית) הוא שדה חובה');
             }
@@ -233,12 +236,13 @@ try {
             break;
             
         case 'update':
+            requireEditPermission('blocks');
             if (!$id) {
                 throw new Exception('Block ID is required');
             }
-            
+
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             if (empty($data['blockNameHe'])) {
                 throw new Exception('שם הגוש (עברית) הוא שדה חובה');
             }
@@ -310,10 +314,11 @@ try {
             break;
             
         case 'delete':
+            requireDeletePermission('blocks');
             if (!$id) {
                 throw new Exception('Block ID is required');
             }
-            
+
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM plots WHERE blockId = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $plots = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
@@ -332,6 +337,7 @@ try {
             break;
             
         case 'stats':
+            requireViewPermission('blocks');
             $cemeteryId = $_GET['cemeteryId'] ?? '';
             $stats = [];
             

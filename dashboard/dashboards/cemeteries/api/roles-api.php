@@ -29,24 +29,27 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 try {
     switch ($action) {
         case 'list':
+            requireViewPermission('roles');
             handleList($pdo);
             break;
         case 'get':
+            requireViewPermission('roles');
             handleGet($pdo);
             break;
         case 'permissions':
+            requireViewPermission('roles');
             handlePermissions($pdo);
             break;
         case 'create':
-            requirePermission('create');
+            requireCreatePermission('roles');
             handleCreate($pdo);
             break;
         case 'update':
-            requirePermission('edit');
+            requireEditPermission('roles');
             handleUpdate($pdo);
             break;
         case 'delete':
-            requirePermission('delete');
+            requireDeletePermission('roles');
             handleDelete($pdo);
             break;
         default:

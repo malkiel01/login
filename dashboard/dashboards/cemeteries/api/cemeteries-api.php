@@ -28,6 +28,7 @@ try {
     switch ($action) {
         // רשימת כל בתי העלמין
         case 'list':
+            requireViewPermission('cemeteries');
             $search = $_GET['search'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
@@ -122,6 +123,7 @@ try {
             
         // קבלת בית עלמין בודד
         case 'get':
+            requireViewPermission('cemeteries');
             if (!$id) {
                 throw new Exception('Cemetery ID is required');
             }
@@ -151,6 +153,7 @@ try {
             
         // הוספת בית עלמין חדש
         case 'create':
+            requireCreatePermission('cemeteries');
             $data = json_decode(file_get_contents('php://input'), true);
             
             if (empty($data['cemeteryNameHe'])) {
@@ -206,6 +209,7 @@ try {
             
         // עדכון בית עלמין
         case 'update':
+            requireEditPermission('cemeteries');
             if (!$id) {
                 throw new Exception('Cemetery ID is required');
             }
@@ -265,6 +269,7 @@ try {
             
         // מחיקת בית עלמין
         case 'delete':
+            requireDeletePermission('cemeteries');
             if (!$id) {
                 throw new Exception('Cemetery ID is required');
             }
@@ -289,6 +294,7 @@ try {
             
         // סטטיסטיקות
         case 'stats':
+            requireViewPermission('cemeteries');
             $stats = [];
             
             $stmt = $pdo->query("SELECT COUNT(*) FROM cemeteries WHERE isActive = 1");

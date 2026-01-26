@@ -56,6 +56,7 @@ try {
 try {
     switch ($action) {
         case 'list':
+            requireViewPermission('burials');
             // חישוב offset
             $offset = ($page - 1) * $limit;
 
@@ -162,6 +163,7 @@ try {
             
         // קבלת קבורה בודדת
         case 'get':
+            requireViewPermission('burials');
             if (!$id) {
                 throw new Exception('Burial ID is required');
             }
@@ -193,6 +195,7 @@ try {
         
         // יצירת קבורה חדשה
         case 'create':
+            requireCreatePermission('burials');
             $data = json_decode(file_get_contents('php://input'), true);
             
             // אימות שדות חובה
@@ -279,6 +282,7 @@ try {
         
         // עדכון קבורה
         case 'update':
+            requireEditPermission('burials');
             if (!$id) {
                 throw new Exception('Burial ID is required');
             }
@@ -330,6 +334,7 @@ try {
             break;
         
         case 'delete':
+            requireDeletePermission('burials');
             if (!$id) {
                 throw new Exception('Burial ID is required');
             }
@@ -388,6 +393,7 @@ try {
             
         // סטטיסטיקות קבורות
         case 'stats':
+            requireViewPermission('burials');
             $stats = [];
 
             try {

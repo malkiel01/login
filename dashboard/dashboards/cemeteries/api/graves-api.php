@@ -28,6 +28,7 @@ $id = $_GET['id'] ?? null;
 try {
     switch ($action) {
         case 'list':
+            requireViewPermission('graves');
             $search = $_GET['search'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
@@ -106,10 +107,11 @@ try {
             break;
             
         case 'get':
+            requireViewPermission('graves');
             if (!$id) {
                 throw new Exception('Grave ID is required');
             }
-            
+
             $stmt = $pdo->prepare("
                 SELECT g.*,
                 ag.areaGraveNameHe as area_grave_name,
@@ -132,8 +134,9 @@ try {
             break;
             
         case 'create':
+            requireCreatePermission('graves');
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             if (empty($data['graveNameHe'])) {
                 throw new Exception('שם הקבר הוא שדה חובה');
             }
@@ -196,10 +199,11 @@ try {
             break;
             
         case 'update':
+            requireEditPermission('graves');
             if (!$id) {
                 throw new Exception('Grave ID is required');
             }
-            
+
             $data = json_decode(file_get_contents('php://input'), true);
             $data['updateDate'] = date('Y-m-d H:i:s');
             
@@ -234,13 +238,14 @@ try {
             break;
             
         case 'delete':
+            requireDeletePermission('graves');
             if (!$id) {
                 throw new Exception('Grave ID is required');
             }
-            
+
             $stmt = $pdo->prepare("
-                UPDATE graves 
-                SET isActive = 0, inactiveDate = :date 
+                UPDATE graves
+                SET isActive = 0, inactiveDate = :date
                 WHERE unicId = :id
             ");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
@@ -252,6 +257,7 @@ try {
             break;
             
         case 'stats':
+            requireViewPermission('graves');
             $areaGraveId = $_GET['areaGraveId'] ?? null;
             $stats = [];
             

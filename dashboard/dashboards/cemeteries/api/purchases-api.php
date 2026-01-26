@@ -60,6 +60,7 @@ try {
 try {
     switch ($action) {
         case 'list':
+            requireViewPermission('purchases');
             // חישוב offset
             $offset = ($page - 1) * $limit;
             
@@ -167,6 +168,7 @@ try {
         
         // קבלת רכישה בודדת
         case 'get':
+            requireViewPermission('purchases');
             if (!$id) {
                 throw new Exception('Purchase ID is required');
             }
@@ -197,6 +199,7 @@ try {
             
         // הוספת רכישה חדשה
         case 'create':
+            requireCreatePermission('purchases');
             $data = json_decode(file_get_contents('php://input'), true);
             
             // === דיבאג להבנת השגיאה ===
@@ -343,6 +346,7 @@ try {
             
         // עדכון רכישה
         case 'update':
+            requireEditPermission('purchases');
             if (!$id) {
                 throw new Exception('Purchase ID is required');
             }
@@ -417,10 +421,11 @@ try {
             break;
         
         case 'delete':
+            requireDeletePermission('purchases');
             if (!$id) {
                 throw new Exception('Purchase ID is required');
             }
-            
+
             // קבלת פרטי הרכישה
             $stmt = $pdo->prepare("SELECT graveId, clientId FROM purchases WHERE id = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
@@ -472,6 +477,7 @@ try {
             
         // סטטיסטיקות רכישות
         case 'stats':
+            requireViewPermission('purchases');
             $stats = [];
             
             // סה"כ רכישות לפי סטטוס

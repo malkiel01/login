@@ -21,6 +21,7 @@ require_once __DIR__ . '/api-auth.php';
      switch ($action) {
          // רשימת כל המדינות
          case 'list':
+             requireViewPermission('countries');
              $search = $_GET['search'] ?? '';
              $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
              $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 300;
@@ -75,6 +76,7 @@ require_once __DIR__ . '/api-auth.php';
              
          // קבלת מדינה בודדת
          case 'get':
+             requireViewPermission('countries');
              if (!$id) {
                  throw new Exception('Country ID is required');
              }
@@ -133,8 +135,9 @@ require_once __DIR__ . '/api-auth.php';
              echo json_encode(['success' => true, 'data' => $countries]);
              break;
           case 'create':
+             requireCreatePermission('countries');
              $data = json_decode(file_get_contents('php://input'), true);
-             
+
              // ולידציה
              if (empty($data['countryNameHe']) || empty($data['countryNameEn'])) {
                  throw new Exception('שם המדינה בעברית ובאנגלית הם שדות חובה');
@@ -183,12 +186,13 @@ require_once __DIR__ . '/api-auth.php';
              break;
 
          case 'update':
+             requireEditPermission('countries');
              if (!$id) {
                  throw new Exception('Country ID is required');
              }
-             
+
              $data = json_decode(file_get_contents('php://input'), true);
-             
+
              // ולידציה
              if (empty($data['countryNameHe']) || empty($data['countryNameEn'])) {
                  throw new Exception('שם המדינה בעברית ובאנגלית הם שדות חובה');
@@ -233,10 +237,11 @@ require_once __DIR__ . '/api-auth.php';
              break;
 
          case 'delete':
+             requireDeletePermission('countries');
              if (!$id) {
                  throw new Exception('Country ID is required');
              }
-             
+
              // בדיקה אם יש ערים במדינה
              $stmt = $pdo->prepare("
                  SELECT COUNT(*) FROM cities 

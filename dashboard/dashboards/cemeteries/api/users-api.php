@@ -50,29 +50,31 @@ try {
 try {
     switch ($action) {
         case 'list':
+            requireViewPermission('users');
             handleList($pdo);
             break;
         case 'get':
+            requireViewPermission('users');
             handleGet($pdo);
             break;
         case 'create':
-            requirePermission('create');
+            requireCreatePermission('users');
             handleCreate($pdo);
             break;
         case 'update':
-            requirePermission('edit');
+            requireEditPermission('users');
             handleUpdate($pdo);
             break;
         case 'delete':
-            requirePermission('delete');
+            requireDeletePermission('users');
             handleDelete($pdo);
             break;
         case 'reset_password':
-            requirePermission('edit');
+            requireEditPermission('users');
             handleResetPassword($pdo);
             break;
         case 'update_permissions':
-            requirePermission('edit');
+            requireEditPermission('users');
             handleUpdatePermissions($pdo);
             break;
         default:

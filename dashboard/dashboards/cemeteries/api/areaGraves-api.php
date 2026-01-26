@@ -86,6 +86,7 @@ if (!in_array($orderBy, $allowedOrderFields)) {
 try {
     switch ($action) {
         case 'count':
+            requireViewPermission('areaGraves');
             $lineId = $_GET['lineId'] ?? null;
             
             if (!$lineId) {
@@ -111,6 +112,7 @@ try {
         // רשימת כל אחוזות הקבר
         // =====================================================
         case 'list':
+            requireViewPermission('areaGraves');
             $plotId = $postData['plotId'] ?? $_GET['plotId'] ?? null;
             // תמיכה גם ב-rowId וגם ב-lineId (לתאימות)
             $rowId = $postData['rowId'] ?? $_GET['rowId'] ?? $postData['lineId'] ?? $_GET['lineId'] ?? null;
@@ -244,6 +246,7 @@ try {
         // קבלת אחוזת קבר בודדת
         // =====================================================
         case 'get':
+            requireViewPermission('areaGraves');
             if (!$id) {
                 throw new Exception('Area Grave ID is required');
             }
@@ -282,6 +285,7 @@ try {
         // יצירת אחוזת קבר + קברים
         // =====================================================
         case 'create':
+            requireCreatePermission('areaGraves');
             $data = json_decode(file_get_contents('php://input'), true);
             
             // ולידציה - שדות חובה
@@ -430,6 +434,7 @@ try {
         // עדכון אחוזת קבר + קברים
         // =====================================================
         case 'update':
+            requireEditPermission('areaGraves');
             if (!$id) {
                 throw new Exception('Area Grave ID is required');
             }
@@ -618,10 +623,11 @@ try {
         // מחיקת אחוזת קבר (מחיקה לוגית)
         // =====================================================
         case 'delete':
+            requireDeletePermission('areaGraves');
             if (!$id) {
                 throw new Exception('Area Grave ID is required');
             }
-            
+
             // בדיקה אם יש קברים פעילים באחוזה
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) as count 
@@ -652,6 +658,7 @@ try {
         // סטטיסטיקות אחוזות קבר
         // =====================================================
         case 'stats':
+            requireViewPermission('areaGraves');
             $plotId = $_GET['plotId'] ?? null;
             $stats = [];
             

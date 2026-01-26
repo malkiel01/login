@@ -22,6 +22,7 @@ require_once __DIR__ . '/api-auth.php';
      switch ($action) {
          // רשימת כל הערים
          case 'list':
+             requireViewPermission('cities');
              $search = $_GET['search'] ?? '';
              $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
              $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 500;
@@ -93,6 +94,7 @@ require_once __DIR__ . '/api-auth.php';
              
          // קבלת עיר בודדת
          case 'get':
+             requireViewPermission('cities');
              if (!$id) {
                  throw new Exception('City ID is required');
              }
@@ -200,8 +202,9 @@ require_once __DIR__ . '/api-auth.php';
              break;
              
          case 'create':
+             requireCreatePermission('cities');
              $data = json_decode(file_get_contents('php://input'), true);
-             
+
              // ולידציה
              if (empty($data['cityNameHe']) || empty($data['cityNameEn'])) {
                  throw new Exception('שם העיר בעברית ובאנגלית הם שדות חובה');
@@ -258,12 +261,13 @@ require_once __DIR__ . '/api-auth.php';
              break;
 
          case 'update':
+             requireEditPermission('cities');
              if (!$id) {
                  throw new Exception('City ID is required');
              }
-             
+
              $data = json_decode(file_get_contents('php://input'), true);
-             
+
              // ולידציה
              if (empty($data['cityNameHe']) || empty($data['cityNameEn'])) {
                  throw new Exception('שם העיר בעברית ובאנגלית הם שדות חובה');
@@ -318,10 +322,11 @@ require_once __DIR__ . '/api-auth.php';
              break;
 
          case 'delete':
+             requireDeletePermission('cities');
              if (!$id) {
                  throw new Exception('City ID is required');
              }
-             
+
              // בדוק אם העיר משמשת במקומות אחרים (לדוגמה בלקוחות או הגדרות תושבות)
              $checkUsage = false;
              

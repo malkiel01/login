@@ -539,6 +539,9 @@ function calculateClosingBalance($openingBalance, $movements) {
 
 // ========== נקודת הכניסה הראשית ==========
 
+// בדיקת הרשאות לדוחות
+requireViewPermission('reports');
+
 try {
     // קבלת פרמטרים
     $input = file_get_contents('php://input');

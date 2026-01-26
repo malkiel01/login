@@ -90,13 +90,20 @@ self.addEventListener('activate', async event => {
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
-    
+
     if (!url.protocol.startsWith('http')) {
         return;
     }
-    
+
+    // ===== Share Target Handler =====
+    // טיפול בקבלת שיתופים מאפליקציות אחרות
+    if (url.pathname === '/share-target/' && request.method === 'POST') {
+        event.respondWith(handleShareTarget(request));
+        return;
+    }
+
     // דלג על בקשות API וקבצי PHP
-    if (url.pathname.includes('/api/') || 
+    if (url.pathname.includes('/api/') ||
         url.pathname.includes('.php') ||
         url.pathname.includes('/auth/google-auth.php')) {
         event.respondWith(
@@ -372,4 +379,90 @@ self.addEventListener('fetch', event => {
     }
 });
 
-console.log('[SW] ✨ Service Worker loaded with Background Sync support');
+// ============= Share Target Handler =============
+async function handleShareTarget(request) {
+    console.log('[SW] 📥 Handling share target request');
+
+    try {
+        const formData = await request.formData();
+
+        // חלץ את הנתונים המשותפים
+        const title = formData.get('title') || '';
+        const text = formData.get('text') || '';
+        const url = formData.get('url') || '';
+        const files = formData.getAll('files');
+
+        console.log('[SW] Share data:', { title, text, url, filesCount: files.length });
+
+        // אם יש קבצים, שמור אותם זמנית ב-Cache
+        const sharedFiles = [];
+        if (files && files.length > 0) {
+            const cache = await caches.open('shared-files-cache');
+
+            for (const file of files) {
+                if (file && file.size > 0) {
+                    const fileName = `shared_${Date.now()}_${file.name}`;
+                    const fileUrl = `/shared-files/${fileName}`;
+
+                    // שמור את הקובץ ב-cache
+                    const response = new Response(file, {
+                        headers: {
+                            'Content-Type': file.type,
+                            'Content-Length': file.size
+                        }
+                    });
+
+                    await cache.put(fileUrl, response);
+
+                    sharedFiles.push({
+                        name: file.name,
+                        path: fileUrl,
+                        type: file.type,
+                        size: file.size
+                    });
+                }
+            }
+        }
+
+        // בנה URL עם הפרמטרים
+        const params = new URLSearchParams();
+        if (title) params.set('title', title);
+        if (text) params.set('text', text);
+        if (url) params.set('url', url);
+        if (sharedFiles.length > 0) {
+            params.set('cached_files', JSON.stringify(sharedFiles));
+        }
+
+        const redirectUrl = `/share-target/?${params.toString()}`;
+
+        // הפנה לדף השיתוף
+        return Response.redirect(redirectUrl, 303);
+
+    } catch (error) {
+        console.error('[SW] Share target error:', error);
+        return Response.redirect('/share-target/?error=1', 303);
+    }
+}
+
+// מענה על בקשות לקבצים משותפים מה-cache
+self.addEventListener('fetch', event => {
+    const url = new URL(event.request.url);
+
+    if (url.pathname.startsWith('/shared-files/')) {
+        event.respondWith(
+            caches.open('shared-files-cache').then(cache => {
+                return cache.match(event.request).then(response => {
+                    if (response) {
+                        // מחק מה-cache אחרי שימוש
+                        cache.delete(event.request);
+                        return response;
+                    }
+                    return new Response('File not found', { status: 404 });
+                });
+            })
+        );
+        return;
+    }
+});
+
+console.log('[SW] ✨ Service Worker loaded with Background Sync & Share Target support');

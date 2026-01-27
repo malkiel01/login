@@ -2100,8 +2100,8 @@ class TableManager {
                 bodyCol.style.width = newWidth + 'px';
             }
 
-            // עדכון רוחב הטבלאות
-            this._updateTableWidths();
+            // ⭐ לא לעדכן רוחב טבלה בזמן גרירה - רק בסוף!
+            // זה מונע מהעמודות האחרות להשתנות
         };
 
         const onMouseUp = () => {
@@ -2110,6 +2110,9 @@ class TableManager {
             document.body.style.userSelect = '';
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
+
+            // ⭐ עדכון רוחב הטבלה רק בסוף
+            this._updateTableWidths();
 
             // ⭐ שמירת רוחב עמודות למשתמש
             this._saveColumnWidths();

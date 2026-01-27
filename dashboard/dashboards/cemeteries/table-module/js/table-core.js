@@ -2078,6 +2078,8 @@ class TableManager {
         let startX = 0;
         let startWidth = 0;
         let colIndex = null;
+        let startTableWidth = 0;
+        let lastWidth = 0;
 
         const onMouseMove = (e) => {
             if (!isResizing) return;
@@ -2085,6 +2087,10 @@ class TableManager {
             // RTL: כיוון הפוך - גרירה שמאלה מגדילה, ימינה מקטינה
             const diff = e.pageX - startX;
             const newWidth = Math.max(80, startWidth - diff);
+
+            // חישוב ההפרש מהרוחב האחרון
+            const widthDiff = newWidth - lastWidth;
+            lastWidth = newWidth;
 
             // עדכון state
             this.state.columnWidths[colIndex] = newWidth + 'px';
@@ -2100,8 +2106,16 @@ class TableManager {
                 bodyCol.style.width = newWidth + 'px';
             }
 
-            // ⭐ לא לעדכן רוחב טבלה בזמן גרירה - רק בסוף!
-            // זה מונע מהעמודות האחרות להשתנות
+            // ⭐ עדכון רוחב הטבלה באופן יעיל - רק הוספת ההפרש
+            const newTableWidth = startTableWidth + (newWidth - startWidth);
+            if (this.elements.headerTable) {
+                this.elements.headerTable.style.width = newTableWidth + 'px';
+                this.elements.headerTable.style.minWidth = newTableWidth + 'px';
+            }
+            if (this.elements.bodyTable) {
+                this.elements.bodyTable.style.width = newTableWidth + 'px';
+                this.elements.bodyTable.style.minWidth = newTableWidth + 'px';
+            }
         };
 
         const onMouseUp = () => {
@@ -2110,9 +2124,6 @@ class TableManager {
             document.body.style.userSelect = '';
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
-
-            // ⭐ עדכון רוחב הטבלה רק בסוף
-            this._updateTableWidths();
 
             // ⭐ שמירת רוחב עמודות למשתמש
             this._saveColumnWidths();
@@ -2126,6 +2137,10 @@ class TableManager {
             colIndex = parseInt(currentTh.dataset.colIndex);
             startX = e.pageX;
             startWidth = currentTh.offsetWidth;
+            lastWidth = startWidth;
+
+            // שמירת רוחב הטבלה הנוכחי
+            startTableWidth = this.elements.headerTable ? parseInt(this.elements.headerTable.style.width) || this._calculateTableWidth() : 0;
 
             // מניעת בחירת טקסט בזמן גרירה
             document.body.style.cursor = 'col-resize';

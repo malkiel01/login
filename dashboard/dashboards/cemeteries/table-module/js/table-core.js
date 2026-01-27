@@ -137,6 +137,9 @@ class TableManager {
             selectedRows: new Set(),
             selectPerPage: true, // בחירה לפי עמוד (true) או כללית (false)
             pendingSelectionCount: null, // ספירה זמנית בזמן טעינת "בחר הכל"
+            // ⭐ מצב "בחר הכל" גלובלי (כשselectPerPage=false)
+            selectAllMode: false, // כשtrue = הכל נבחר חוץ מהחריגים
+            excludedRows: new Set(), // פריטים שבוטלו במצב selectAllMode
 
             // ⭐ מצב תצוגה לפלאפון (cards/list)
             mobileViewMode: 'list', // 'list' או 'cards'
@@ -1577,8 +1580,9 @@ class TableManager {
         const rowId = String(rowData.id || rowData.unicId || rowIndex);
         tr.setAttribute('data-row-id', rowId);
 
-        // בדיקת בחירה
-        if (this.state.selectedRows.has(rowId)) {
+        // בדיקת בחירה (תומך במצב selectAllMode)
+        const isSelected = this.isRowSelected(rowId);
+        if (isSelected) {
             tr.classList.add('tm-selected');
         }
 
@@ -1588,7 +1592,7 @@ class TableManager {
             td.className = 'tm-cell tm-checkbox-cell';
             td.innerHTML = `
                 <input type="checkbox" class="tm-row-checkbox"
-                       ${this.state.selectedRows.has(rowId) ? 'checked' : ''}
+                       ${isSelected ? 'checked' : ''}
                        onchange="TableManager.instances.get('${this.instanceId}').toggleRowSelection('${rowId}', this.checked)">
             `;
             tr.appendChild(td);
@@ -3326,8 +3330,8 @@ class TableManager {
             transition: box-shadow 0.2s, transform 0.2s;
         `;
 
-        // בדיקת בחירה
-        if (this.state.selectedRows.has(rowId)) {
+        // בדיקת בחירה (תומך במצב selectAllMode)
+        if (this.isRowSelected(rowId)) {
             card.style.background = 'rgba(102, 126, 234, 0.1)';
             card.style.borderColor = 'var(--primary-color, #667eea)';
         }
@@ -3713,6 +3717,11 @@ class TableManager {
             this.loadInitialData();
         }
 
+        // ⭐ עדכון כפתור "בחר הכל" אחרי מעבר עמוד
+        if (this.state.multiSelectEnabled) {
+            this._updateSelectAllCheckbox();
+        }
+
         if (this.config.onPageChange) {
             this.config.onPageChange(page);
         }
@@ -3882,8 +3891,17 @@ class TableManager {
         // ⭐ הצגת כמות נבחרים (בבחירה מרובה)
         const selectedCountEl = this.elements.paginationFooter.querySelector('.tm-selected-count');
         if (selectedCountEl) {
-            // אם יש ספירה ממתינה (בזמן טעינת "בחר הכל"), השתמש בה
-            const count = this.state.pendingSelectionCount || this.state.selectedRows.size;
+            // חישוב כמות נבחרים
+            let count;
+            if (this.state.pendingSelectionCount) {
+                count = this.state.pendingSelectionCount;
+            } else if (this.state.selectAllMode) {
+                // במצב "בחר הכל" גלובלי: סה"כ פחות חריגים
+                count = serverTotal - this.state.excludedRows.size;
+            } else {
+                count = this.state.selectedRows.size;
+            }
+
             if (this.state.multiSelectEnabled && count > 0) {
                 selectedCountEl.textContent = `(${count.toLocaleString()} נבחרו)`;
                 selectedCountEl.style.display = '';
@@ -4057,7 +4075,28 @@ class TableManager {
     async toggleSelectAll(checked) {
         const serverTotal = this.config.totalItems || 0;
 
-        // ⭐ שלב 1: סמן מיד את כל האייטמים המוצגים כרגע
+        // ⭐ מצב "בחירה כללית" (לא לפי עמוד)
+        if (!this.state.selectPerPage) {
+            if (checked) {
+                // הפעל מצב "בחר הכל" - כל הרשומות נבחרות (גם שלא נטענו)
+                this.state.selectAllMode = true;
+                this.state.excludedRows.clear();
+                this.state.selectedRows.clear(); // לא צריך לשמור IDs ספציפיים
+            } else {
+                // בטל הכל
+                this.state.selectAllMode = false;
+                this.state.excludedRows.clear();
+                this.state.selectedRows.clear();
+            }
+
+            // עדכון מיידי של ה-UI
+            this._updateRowSelections();
+            this._updateSelectAllCheckbox();
+            this._notifySelectionChange();
+            return;
+        }
+
+        // ⭐ מצב "בחירה לפי עמוד" - הלוגיקה הישנה
         const currentDisplayedIds = this.state.displayedData
             .map(row => String(row.id || row.unicId || ''))
             .filter(id => id);
@@ -4065,11 +4104,7 @@ class TableManager {
         if (checked) {
             currentDisplayedIds.forEach(id => this.state.selectedRows.add(id));
         } else {
-            if (this.state.selectPerPage) {
-                currentDisplayedIds.forEach(id => this.state.selectedRows.delete(id));
-            } else {
-                this.state.selectedRows.clear();
-            }
+            currentDisplayedIds.forEach(id => this.state.selectedRows.delete(id));
         }
 
         // עדכון מיידי של ה-UI
@@ -4159,10 +4194,22 @@ class TableManager {
     }
 
     toggleRowSelection(rowId, checked) {
-        if (checked) {
-            this.state.selectedRows.add(rowId);
+        // ⭐ מצב "בחר הכל" גלובלי
+        if (this.state.selectAllMode) {
+            if (checked) {
+                // הסר מהחריגים (חזרה לנבחר)
+                this.state.excludedRows.delete(rowId);
+            } else {
+                // הוסף לחריגים (ביטול בחירה)
+                this.state.excludedRows.add(rowId);
+            }
         } else {
-            this.state.selectedRows.delete(rowId);
+            // מצב רגיל
+            if (checked) {
+                this.state.selectedRows.add(rowId);
+            } else {
+                this.state.selectedRows.delete(rowId);
+            }
         }
 
         const row = this.elements.tbody.querySelector(`[data-row-id="${rowId}"]`);
@@ -4174,10 +4221,21 @@ class TableManager {
         this._notifySelectionChange();
     }
 
+    /**
+     * בדיקה אם שורה נבחרת
+     */
+    isRowSelected(rowId) {
+        if (this.state.selectAllMode) {
+            // במצב "בחר הכל" - נבחר אלא אם בחריגים
+            return !this.state.excludedRows.has(rowId);
+        }
+        return this.state.selectedRows.has(rowId);
+    }
+
     _updateRowSelections() {
         this.elements.tbody.querySelectorAll('.tm-row').forEach(row => {
             const rowId = row.dataset.rowId;
-            const isSelected = this.state.selectedRows.has(rowId);
+            const isSelected = this.isRowSelected(rowId);
 
             row.classList.toggle('tm-selected', isSelected);
 
@@ -4192,13 +4250,21 @@ class TableManager {
         const selectAll = this.elements.thead.querySelector('.tm-select-all');
         if (!selectAll) return;
 
+        // ⭐ מצב "בחר הכל" גלובלי
+        if (this.state.selectAllMode) {
+            // נבחר אם אין חריגים, indeterminate אם יש
+            selectAll.checked = this.state.excludedRows.size === 0;
+            selectAll.indeterminate = this.state.excludedRows.size > 0;
+            return;
+        }
+
         // ספירת אייטמים נבחרים מהעמוד הנוכחי (כמחרוזות!)
         const currentPageIds = this.state.displayedData
             .map(row => String(row.id || row.unicId || ''))
             .filter(id => id);
 
         const displayedCount = currentPageIds.length;
-        const selectedInPage = currentPageIds.filter(id => this.state.selectedRows.has(id)).length;
+        const selectedInPage = currentPageIds.filter(id => this.isRowSelected(id)).length;
 
         // בדיקה לפי אייטמים בעמוד הנוכחי
         selectAll.checked = displayedCount > 0 && selectedInPage === displayedCount;
@@ -4207,18 +4273,52 @@ class TableManager {
 
     _notifySelectionChange() {
         if (this.config.onSelectionChange) {
-            this.config.onSelectionChange(Array.from(this.state.selectedRows));
+            // ⭐ שלח את המידע המלא (תומך ב-selectAllMode)
+            this.config.onSelectionChange(this.getSelectedRows());
         }
         // עדכון פוטר להצגת כמות נבחרים
         this._updateFooterInfo();
     }
 
+    /**
+     * קבלת רשימת שורות נבחרות
+     * @returns {Array|Object} במצב רגיל - מערך IDs, במצב selectAllMode - אובייקט עם מידע
+     */
     getSelectedRows() {
+        // ⭐ במצב "בחר הכל" גלובלי - החזר אובייקט עם מידע מלא
+        if (this.state.selectAllMode) {
+            return {
+                mode: 'selectAll',
+                total: this.config.totalItems || 0,
+                excluded: Array.from(this.state.excludedRows),
+                count: (this.config.totalItems || 0) - this.state.excludedRows.size
+            };
+        }
         return Array.from(this.state.selectedRows);
+    }
+
+    /**
+     * בדיקה אם במצב "בחר הכל" גלובלי
+     */
+    isSelectAllMode() {
+        return this.state.selectAllMode;
+    }
+
+    /**
+     * קבלת מספר הנבחרים
+     */
+    getSelectedCount() {
+        if (this.state.selectAllMode) {
+            return (this.config.totalItems || 0) - this.state.excludedRows.size;
+        }
+        return this.state.selectedRows.size;
     }
 
     clearSelection() {
         this.state.selectedRows.clear();
+        // ⭐ נקה גם את מצב "בחר הכל" והחריגים
+        this.state.selectAllMode = false;
+        this.state.excludedRows.clear();
         this._updateRowSelections();
         this._updateSelectAllCheckbox();
         this._notifySelectionChange();

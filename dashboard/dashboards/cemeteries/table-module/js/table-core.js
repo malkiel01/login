@@ -245,6 +245,14 @@ class TableManager {
                         this._savedColumnOrder = prefs.columnOrder;
                         console.log('TableManager: Column order loaded:', this._savedColumnOrder);
                     }
+
+                    // ⭐ בחירה מרובה
+                    if (prefs.multiSelectEnabled !== undefined) {
+                        this._savedMultiSelectEnabled = prefs.multiSelectEnabled;
+                    }
+                    if (prefs.selectPerPage !== undefined) {
+                        this._savedSelectPerPage = prefs.selectPerPage;
+                    }
                 }
             }
         } catch (error) {
@@ -279,8 +287,15 @@ class TableManager {
         // אתחול סדר עמודות (עם בדיקת הרשאות)
         this._initColumns();
 
-        // אתחול בחירה מרובה
-        this.state.multiSelectEnabled = this.config.multiSelect || false;
+        // אתחול בחירה מרובה (מהעדפות או מconfig)
+        if (this._savedMultiSelectEnabled !== undefined) {
+            this.state.multiSelectEnabled = this._savedMultiSelectEnabled;
+        } else {
+            this.state.multiSelectEnabled = this.config.multiSelect || false;
+        }
+        if (this._savedSelectPerPage !== undefined) {
+            this.state.selectPerPage = this._savedSelectPerPage;
+        }
 
         // חישוב עמודים
         this.calculateTotalPages();
@@ -2510,6 +2525,8 @@ class TableManager {
             toggleSlider.style.backgroundColor = toggleInput.checked ? 'var(--primary-color, #667eea)' : '#ccc';
             toggleKnob.style.left = toggleInput.checked ? '21px' : '3px';
             this._refreshTable();
+            // שמירת העדפות
+            this._saveTablePreferences();
         };
 
         toggleWrapper.appendChild(toggleInput);
@@ -2568,6 +2585,8 @@ class TableManager {
             perPageToggleKnob.style.left = perPageToggleInput.checked ? '19px' : '3px';
             // עדכון צ'קבוקס "בחר הכל"
             this._updateSelectAllCheckbox();
+            // שמירת העדפות
+            this._saveTablePreferences();
         };
 
         perPageToggleWrapper.appendChild(perPageToggleInput);
@@ -3935,6 +3954,10 @@ class TableManager {
             const col = this.config.columns[index];
             return col?.field || `col_${index}`;
         });
+
+        // ⭐ בחירה מרובה
+        prefs.multiSelectEnabled = this.state.multiSelectEnabled;
+        prefs.selectPerPage = this.state.selectPerPage;
 
         return prefs;
     }

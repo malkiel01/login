@@ -3616,6 +3616,9 @@ class TableManager {
                     break;
                 }
 
+                // ⭐ עדכון מיידי של הפוטר אחרי כל batch
+                this._updateFooterInfo();
+
                 // המתנה קצרה למניעת עומס
                 await new Promise(resolve => setTimeout(resolve, 50));
             }

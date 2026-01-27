@@ -2100,8 +2100,16 @@ class TableManager {
             if (bodyCol) {
                 bodyCol.style.width = newWidth + 'px';
             }
+        };
 
-            // ⭐ חישוב רוחב הטבלה המלא מתוך כל העמודות
+        const onMouseUp = () => {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            // ⭐ עדכון רוחב הטבלה בסוף הגרירה
             const newTableWidth = this._calculateTableWidth();
             if (this.elements.headerTable) {
                 this.elements.headerTable.style.width = newTableWidth + 'px';
@@ -2111,14 +2119,6 @@ class TableManager {
                 this.elements.bodyTable.style.width = newTableWidth + 'px';
                 this.elements.bodyTable.style.minWidth = newTableWidth + 'px';
             }
-        };
-
-        const onMouseUp = () => {
-            isResizing = false;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
 
             // ⭐ שמירת רוחב עמודות למשתמש
             this._saveColumnWidths();

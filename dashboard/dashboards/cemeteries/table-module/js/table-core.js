@@ -3703,7 +3703,8 @@ class TableManager {
     /**
      * מעבר לעמוד - 3 מצבים
      */
-    async goToPage(page) {
+    goToPage(page) {
+        console.log(`🚀 goToPage START - NOT BLOCKING`);
         page = Math.max(1, Math.min(page, this.state.totalPages));
         if (page === this.state.currentPage) return;
 
@@ -3721,23 +3722,25 @@ class TableManager {
             }
         }
 
-        // טען נתונים
+        // ⚡ טען נתונים באופן אסינכרוני - ללא await!
         if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
-            // מצב 2 ו-3: טען עמוד מהשרת (יותר מהיר!)
-            await this._fetchPageFromServer(page);
+            // מצב 2 ו-3: טען עמוד מהשרת ברקע
+            console.log(`⚡ Starting async fetch - UI is FREE`);
+            this._fetchPageFromServer(page);
         } else {
             // מצב 1: טען מקומי עם infinite scroll
             this.loadInitialData();
-        }
 
-        // ⭐ עדכון כפתור "בחר הכל" אחרי מעבר עמוד
-        if (this.state.multiSelectEnabled) {
-            this._updateSelectAllCheckbox();
+            // עדכון כפתור "בחר הכל"
+            if (this.state.multiSelectEnabled) {
+                this._updateSelectAllCheckbox();
+            }
         }
 
         if (this.config.onPageChange) {
             this.config.onPageChange(page);
         }
+        console.log(`✅ goToPage END - Function returned immediately`);
     }
 
     /**
@@ -3749,10 +3752,8 @@ class TableManager {
         this.showLoadingIndicator();
 
         try {
-            const fetchStart = performance.now();
             const result = await this.config.onFetchPage(page, this.config.itemsPerPage);
-            const fetchEnd = performance.now();
-            console.log(`⏱️ API Fetch took: ${(fetchEnd - fetchStart).toFixed(2)}ms`);
+            console.log(`📦 Data received, rendering...`);
 
             if (result && result.data) {
                 // עדכון הנתונים
@@ -3791,6 +3792,11 @@ class TableManager {
                     this.state.displayedData = this.state.filteredData;
                     this.renderRows(false);
                     this._updateFooterInfo();
+                }
+
+                // ⭐ עדכון כפתור "בחר הכל" אחרי טעינת הנתונים
+                if (this.state.multiSelectEnabled) {
+                    this._updateSelectAllCheckbox();
                 }
             }
         } catch (error) {

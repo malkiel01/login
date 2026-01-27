@@ -4100,6 +4100,10 @@ class TableManager {
      * טעינת ובחירת אייטמים שנותרו (ברקע)
      */
     async _loadAndSelectRemainingItems(pageStart, pageEnd, expectedPageSize) {
+        // נעילה למניעת כפילות עם infinite scroll
+        if (this.state.isLoading) return;
+        this.state.isLoading = true;
+
         this.showLoadingIndicator();
         try {
             let loadAttempts = 0;
@@ -4126,6 +4130,7 @@ class TableManager {
             this._updateRowSelections();
 
         } finally {
+            this.state.isLoading = false;
             this.state.pendingSelectionCount = null;
             this.hideLoadingIndicator();
             this._notifySelectionChange();

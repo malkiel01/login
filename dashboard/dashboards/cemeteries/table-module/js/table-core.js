@@ -1623,7 +1623,7 @@ class TableManager {
         let overlay = this.elements.wrapper.querySelector('.tm-loading-overlay');
         if (overlay) return;
 
-        // צור overlay שקוף על הטבלה
+        // צור overlay שקוף לגמרי
         overlay = document.createElement('div');
         overlay.className = 'tm-loading-overlay';
         overlay.style.cssText = `
@@ -1632,19 +1632,20 @@ class TableManager {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.5);
+            background: transparent;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(1px);
             pointer-events: none;
         `;
         overlay.innerHTML = `
-            <div class="tm-loading-spinner" style="width: 60px; height: 60px; border-width: 5px;"></div>
-            <div style="margin-top: 20px; font-size: 18px; font-weight: 600; color: var(--primary-color, #667eea); text-shadow: 0 0 10px white, 0 0 20px white;">
-                טוען נתונים...
+            <div style="background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center;">
+                <div class="tm-loading-spinner" style="width: 60px; height: 60px; border-width: 5px;"></div>
+                <div style="margin-top: 20px; font-size: 18px; font-weight: 600; color: var(--primary-color, #667eea);">
+                    טוען נתונים...
+                </div>
             </div>
         `;
 

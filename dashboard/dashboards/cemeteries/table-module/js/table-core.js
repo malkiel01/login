@@ -3724,7 +3724,8 @@ class TableManager {
 
         // ⚡ טען נתונים באופן אסינכרוני - ללא await!
         if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
-            // מצב 2 ו-3: טען עמוד מהשרת ברקע
+            // מצב 2 ו-3: הצג ספינר מיד, טען ברקע
+            this.showLoadingIndicator(); // ⚡ מיידי!
             console.log(`⚡ Starting async fetch - UI is FREE`);
             this._fetchPageFromServer(page);
         } else {
@@ -3749,7 +3750,7 @@ class TableManager {
     async _fetchPageFromServer(page) {
         if (!this.config.onFetchPage) return;
 
-        this.showLoadingIndicator();
+        // ספינר כבר הוצג ב-goToPage!
 
         try {
             const result = await this.config.onFetchPage(page, this.config.itemsPerPage);

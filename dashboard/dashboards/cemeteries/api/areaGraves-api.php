@@ -123,8 +123,20 @@ try {
             error_log("DEBUG areaGraves-api.php - _GET: " . json_encode($_GET));
 
             $offset = ($page - 1) * $limit;
-            
-            $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
+
+            // ⚡ שאילתה מותאמת במקום VIEW - הרבה יותר מהיר!
+            $sql = "SELECT
+                ag.*,
+                r.lineNameHe,
+                p.plotNameHe,
+                b.blockNameHe,
+                c.cemeteryNameHe
+            FROM areaGraves ag
+            LEFT JOIN rows r ON ag.lineId = r.unicId
+            LEFT JOIN plots p ON r.plotId = p.unicId
+            LEFT JOIN blocks b ON p.blockId = b.unicId
+            LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
+            WHERE ag.isActive = 1";
             $params = [];
             
             // סינון לפי plotId

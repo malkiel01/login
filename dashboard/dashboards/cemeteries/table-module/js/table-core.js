@@ -136,6 +136,7 @@ class TableManager {
             multiSelectEnabled: false,
             selectedRows: new Set(),
             selectPerPage: true, // בחירה לפי עמוד (true) או כללית (false)
+            pendingSelectionCount: null, // ספירה זמנית בזמן טעינת "בחר הכל"
 
             // ⭐ מצב תצוגה לפלאפון (cards/list)
             mobileViewMode: 'list', // 'list' או 'cards'
@@ -3857,8 +3858,10 @@ class TableManager {
         // ⭐ הצגת כמות נבחרים (בבחירה מרובה)
         const selectedCountEl = this.elements.paginationFooter.querySelector('.tm-selected-count');
         if (selectedCountEl) {
-            if (this.state.multiSelectEnabled && this.state.selectedRows.size > 0) {
-                selectedCountEl.textContent = `(${this.state.selectedRows.size.toLocaleString()} נבחרו)`;
+            // אם יש ספירה ממתינה (בזמן טעינת "בחר הכל"), השתמש בה
+            const count = this.state.pendingSelectionCount || this.state.selectedRows.size;
+            if (this.state.multiSelectEnabled && count > 0) {
+                selectedCountEl.textContent = `(${count.toLocaleString()} נבחרו)`;
                 selectedCountEl.style.display = '';
             } else {
                 selectedCountEl.style.display = 'none';
@@ -4032,6 +4035,10 @@ class TableManager {
             const pageEnd = Math.min(this.state.currentPage * this.config.itemsPerPage, serverTotal);
             const expectedPageSize = pageEnd - pageStart;
 
+            // ⭐ הצג מיד את הכמות הצפויה בפוטר (לפני שמתחילים לטעון)
+            this.state.pendingSelectionCount = expectedPageSize;
+            this._updateFooterSelectedCount(expectedPageSize);
+
             // בדוק אם יש מספיק נתונים בfilteredData לעמוד הנוכחי
             const currentPageData = this.state.filteredData.slice(pageStart, pageEnd);
 
@@ -4055,6 +4062,9 @@ class TableManager {
                     this.hideLoadingIndicator();
                 }
             }
+
+            // נקה את הסימון הזמני
+            this.state.pendingSelectionCount = null;
         }
 
         // קבלת מזהים של האייטמים בעמוד הנוכחי (כמחרוזות!)
@@ -4078,6 +4088,22 @@ class TableManager {
 
         this._updateRowSelections();
         this._notifySelectionChange();
+    }
+
+    /**
+     * עדכון ספירת נבחרים בפוטר (ישירות, ללא עדכון כל הפוטר)
+     */
+    _updateFooterSelectedCount(count) {
+        if (!this.elements.paginationFooter) return;
+        const selectedCountEl = this.elements.paginationFooter.querySelector('.tm-selected-count');
+        if (selectedCountEl) {
+            if (count > 0) {
+                selectedCountEl.textContent = `(${count.toLocaleString()} נבחרו)`;
+                selectedCountEl.style.display = '';
+            } else {
+                selectedCountEl.style.display = 'none';
+            }
+        }
     }
 
     toggleRowSelection(rowId, checked) {

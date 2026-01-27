@@ -218,16 +218,25 @@ try {
             $stmt->execute();
             
             $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // הוסף ספירת קברים
-            foreach ($areaGraves as &$areaGrave) {
-                $graveStmt = $pdo->prepare("
-                    SELECT COUNT(*) 
-                    FROM graves 
-                    WHERE areaGraveId = :id AND isActive = 1
+
+            // ⚡ הוסף ספירת קברים - שאילתה אחת במקום N שאילתות!
+            if (!empty($areaGraves)) {
+                $areaGraveIds = array_column($areaGraves, 'unicId');
+                $placeholders = rtrim(str_repeat('?,', count($areaGraveIds)), ',');
+
+                $graveCountStmt = $pdo->prepare("
+                    SELECT areaGraveId, COUNT(*) as count
+                    FROM graves
+                    WHERE areaGraveId IN ($placeholders) AND isActive = 1
+                    GROUP BY areaGraveId
                 ");
-                $graveStmt->execute(['id' => $areaGrave['unicId']]);
-                $areaGrave['graves_count'] = $graveStmt->fetchColumn();
+                $graveCountStmt->execute($areaGraveIds);
+                $graveCounts = $graveCountStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+                // הוסף את הספירות למערך
+                foreach ($areaGraves as &$areaGrave) {
+                    $areaGrave['graves_count'] = $graveCounts[$areaGrave['unicId']] ?? 0;
+                }
             }
             
             echo json_encode([

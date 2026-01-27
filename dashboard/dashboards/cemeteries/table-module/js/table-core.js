@@ -1625,13 +1625,17 @@ class TableManager {
             this._sortFilteredData();
         }
 
-        // ⭐ עדכון מספר עמודים לפי הנתונים המסוננים
+        // ⭐ עדכון מספר עמודים
         if (this.config.showPagination) {
-            const filteredTotal = this.state.filteredData.length;
             if (this.config.itemsPerPage >= 999999) {
                 this.state.totalPages = 1;
             } else {
-                this.state.totalPages = Math.max(1, Math.ceil(filteredTotal / this.config.itemsPerPage));
+                // ⭐ אם יש פגינציה בצד שרת, השתמש ב-totalItems האמיתי
+                // אחרת, השתמש בכמות הנתונים המסוננים
+                const totalForPages = this.config.onFetchPage
+                    ? (this.config.totalItems || this.state.filteredData.length)
+                    : this.state.filteredData.length;
+                this.state.totalPages = Math.max(1, Math.ceil(totalForPages / this.config.itemsPerPage));
             }
             // וידוא שהעמוד הנוכחי לא חורג
             if (this.state.currentPage > this.state.totalPages) {
@@ -3619,12 +3623,14 @@ class TableManager {
             // הצג את הנתונים
             this.state.filteredData = this._applyFilters(this.config.data);
 
-            // עדכון totalPages
+            // ⭐ עדכון totalPages לפי סה"כ אמיתי מהשרת
             if (this.config.itemsPerPage >= 999999) {
                 this.state.totalPages = 1;
                 this.state.displayedData = this.state.filteredData;
             } else {
-                this.state.totalPages = Math.max(1, Math.ceil(this.state.filteredData.length / this.config.itemsPerPage));
+                // חשב עמודים לפי סה"כ אמיתי, לא לפי מה שנטען
+                const realTotal = this.config.totalItems || this.state.filteredData.length;
+                this.state.totalPages = Math.max(1, Math.ceil(realTotal / this.config.itemsPerPage));
                 const start = 0;
                 const end = this.config.itemsPerPage;
                 this.state.displayedData = this.state.filteredData.slice(start, end);
@@ -3633,7 +3639,7 @@ class TableManager {
             this.renderRows(false);
             this._updateFooterInfo();
 
-            console.log(`TableManager: Loaded ${this.config.data.length} items for display`);
+            console.log(`TableManager: Loaded ${this.config.data.length} of ${this.config.totalItems} items`);
 
         } catch (error) {
             console.error('TableManager: Error loading data in batches:', error);
@@ -3648,17 +3654,24 @@ class TableManager {
     _updateFooterInfo() {
         if (!this.elements.paginationFooter) return;
 
-        // ⭐ שימוש בכמות נתונים מסוננים, לא סה"כ
-        const filteredTotal = this.state.filteredData ? this.state.filteredData.length : this.config.totalItems;
-        const allTotal = this.config.totalItems;
+        // ⭐ סה"כ אמיתי מהשרת
+        const serverTotal = this.config.totalItems || 0;
+        // ⭐ כמות שנטענה
+        const loadedTotal = this.config.data ? this.config.data.length : 0;
+        // ⭐ כמות לאחר סינון (מתוך הנטען)
+        const filteredTotal = this.state.filteredData ? this.state.filteredData.length : loadedTotal;
+        // ⭐ כמות מוצגת
         const displayed = this.state.displayedData ? this.state.displayedData.length : 0;
 
-        const start = this.config.showPagination && filteredTotal > 0
-            ? (this.state.currentPage - 1) * this.config.itemsPerPage + 1
-            : (filteredTotal > 0 ? 1 : 0);
-        const end = this.config.showPagination
-            ? Math.min(start + displayed - 1, filteredTotal)
-            : displayed;
+        // חישוב טווח המוצג
+        let start, end;
+        if (this.config.showPagination && serverTotal > 0) {
+            start = (this.state.currentPage - 1) * this.config.itemsPerPage + 1;
+            end = Math.min(start + displayed - 1, serverTotal);
+        } else {
+            start = displayed > 0 ? 1 : 0;
+            end = displayed;
+        }
 
         const showing = this.elements.paginationFooter.querySelector('.tm-showing');
         const totalEl = this.elements.paginationFooter.querySelector('.tm-total');
@@ -3666,12 +3679,19 @@ class TableManager {
 
         if (showing) showing.textContent = `מציג ${start}-${end}`;
 
-        // ⭐ הצגת מידע על פילטר אם יש
+        // ⭐ הצגת מידע על סה"כ
         if (totalEl) {
-            if (filteredTotal < allTotal) {
-                totalEl.textContent = `מתוך ${filteredTotal.toLocaleString()} (מסונן מ-${allTotal.toLocaleString()})`;
-            } else {
-                totalEl.textContent = `מתוך ${filteredTotal.toLocaleString()}`;
+            // אם יש פילטר פעיל
+            if (this.state.filters && this.state.filters.size > 0) {
+                totalEl.textContent = `מתוך ${filteredTotal.toLocaleString()} (מסונן מ-${serverTotal.toLocaleString()})`;
+            }
+            // אם נטען רק חלק מהנתונים (500/הכל)
+            else if (loadedTotal < serverTotal) {
+                totalEl.textContent = `מתוך ${serverTotal.toLocaleString()} (נטענו ${loadedTotal.toLocaleString()})`;
+            }
+            // רגיל
+            else {
+                totalEl.textContent = `מתוך ${serverTotal.toLocaleString()}`;
             }
         }
 

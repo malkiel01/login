@@ -309,9 +309,9 @@ class TableManager {
         // קישור אירועים
         this.bindEvents();
 
-        // אתחול Infinite Scroll - במצב 1 (הכל) ומצב 3 (>200)
-        // מצב 2 (≤200) = פגינציה רגילה בלי infinite scroll
-        if (this.config.scrollLoadBatch > 0 && this.config.itemsPerPage > 200) {
+        // אתחול Infinite Scroll - רק במצב 1 (הכל בדף אחד)
+        // מצב 2 (≤200) = פגינציה רגילה, מצב 3 (500) = 2 פעימות אוטומטיות
+        if (this.config.scrollLoadBatch > 0 && this.config.itemsPerPage >= 999999) {
             this.initInfiniteScroll();
         }
 
@@ -869,52 +869,9 @@ class TableManager {
         }
 
         // ═══════════════════════════════════════════════════════════
-        // מצב 2: פגינציה רגילה (≤200) - אין infinite scroll
+        // מצב 2 ו-3: פגינציה - אין infinite scroll (מצב 3 טוען ב-2 פעימות אוטומטיות)
         // ═══════════════════════════════════════════════════════════
-        if (this.config.itemsPerPage <= 200) {
-            this.state.hasMoreData = false;
-            return;
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // מצב 3: פגינציה עם infinite scroll בתוך עמוד (500)
-        // ═══════════════════════════════════════════════════════════
-        const pageStart = (this.state.currentPage - 1) * this.config.itemsPerPage;
-        const pageEnd = pageStart + this.config.itemsPerPage;
-        const maxForThisPage = Math.min(pageEnd, serverTotal) - pageStart;
-
-        // הגענו לסוף העמוד?
-        if (displayedCount >= maxForThisPage) {
-            this.state.hasMoreData = false;
-            return;
-        }
-
-        // צריך לטעון מהשרת?
-        const absoluteDisplayed = pageStart + displayedCount;
-        if (absoluteDisplayed >= this.state.filteredData.length && absoluteDisplayed < serverTotal) {
-            if (this.config.onLoadMore) {
-                this.showLoadingIndicator();
-                try {
-                    await this.config.onLoadMore();
-                    this.state.filteredData = this._applyFilters(this.config.data);
-                } finally {
-                    this.hideLoadingIndicator();
-                }
-            }
-        }
-
-        // טען batch הבא מתוך העמוד
-        const nextStart = pageStart + displayedCount;
-        const nextEnd = Math.min(nextStart + this.config.scrollLoadBatch, pageEnd, this.state.filteredData.length);
-        const nextBatch = this.state.filteredData.slice(nextStart, nextEnd);
-
-        if (nextBatch.length > 0) {
-            this.state.displayedData = [...this.state.displayedData, ...nextBatch];
-            this.renderRows(true);
-        }
-
-        this.state.hasMoreData = this.state.displayedData.length < maxForThisPage;
-        this._updateFooterInfo();
+        this.state.hasMoreData = false;
     }
 
     /**
@@ -1730,7 +1687,7 @@ class TableManager {
 
         } else {
             // ═══════════════════════════════════════════════════════════
-            // מצב 3: פגינציה עם infinite scroll בתוך עמוד (500)
+            // מצב 3: פגינציה עם טעינה ב-2 פעימות (500 = 250+250)
             // ═══════════════════════════════════════════════════════════
             this.state.totalPages = Math.max(1, Math.ceil(serverTotal / this.config.itemsPerPage));
             if (this.state.currentPage > this.state.totalPages) {
@@ -1738,17 +1695,24 @@ class TableManager {
             }
             // התחלה מה-offset של העמוד הנוכחי
             const pageStart = (this.state.currentPage - 1) * this.config.itemsPerPage;
-            const pageEnd = pageStart + this.config.itemsPerPage;
-            // כמה פריטים יש בעמוד הזה (מוגבל ב-filteredData)
-            const pageData = this.state.filteredData.slice(pageStart, pageEnd);
-            // מציגים רק את ה-batch הראשון
-            this.state.displayedData = pageData.slice(0, this.config.scrollLoadBatch);
-            // ⭐ שמירת הנתונים של העמוד הנוכחי לגלילה
-            this.state.currentPageData = pageData;
+            const pageEnd = Math.min(pageStart + this.config.itemsPerPage, serverTotal);
+
+            // ⭐ פעימה ראשונה: 250 פריטים
+            const batchSize = 250;
+            const firstBatchEnd = Math.min(pageStart + batchSize, pageEnd);
+            this.state.displayedData = this.state.filteredData.slice(pageStart, firstBatchEnd);
+
+            // שמירת מידע לפעימה השנייה
             this.state.currentPageStart = pageStart;
-            // יש עוד לטעון אם לא הצגנו את כל העמוד
-            this.state.hasMoreData = this.state.displayedData.length < this.config.itemsPerPage &&
-                                     (pageStart + this.state.displayedData.length) < serverTotal;
+            this.state.currentPageEnd = pageEnd;
+            this.state.hasMoreData = false; // אין infinite scroll - טוענים אוטומטית
+
+            // ⭐ פעימה שנייה: עוד 250 פריטים (אסינכרוני)
+            if (firstBatchEnd < pageEnd) {
+                setTimeout(() => {
+                    this._loadSecondBatch(firstBatchEnd, pageEnd);
+                }, 50); // delay קצר לאפשר לUI להתרנדר
+            }
         }
 
         // ציור
@@ -1756,6 +1720,30 @@ class TableManager {
 
         // ⭐ עדכון footer info
         this._updateFooterInfo();
+    }
+
+    /**
+     * ⭐ מצב 3: טעינת פעימה שנייה (250 נוספים)
+     */
+    async _loadSecondBatch(startIndex, endIndex) {
+        // בדוק אם יש צורך לטעון מהשרת
+        if (startIndex >= this.state.filteredData.length && this.config.onLoadMore) {
+            this.showLoadingIndicator();
+            try {
+                await this.config.onLoadMore();
+                this.state.filteredData = this._applyFilters(this.config.data);
+            } finally {
+                this.hideLoadingIndicator();
+            }
+        }
+
+        // טען את הפעימה השנייה
+        const secondBatch = this.state.filteredData.slice(startIndex, endIndex);
+        if (secondBatch.length > 0) {
+            this.state.displayedData = [...this.state.displayedData, ...secondBatch];
+            this.renderRows(true); // append
+            this._updateFooterInfo();
+        }
     }
 
     /**
@@ -3659,12 +3647,9 @@ class TableManager {
                 this.loadInitialData();
 
             } else if (newValue > 200) {
-                // מצב 3: פגינציה עם infinite scroll בתוך עמוד (500)
+                // מצב 3: פגינציה עם טעינה ב-2 פעימות (500 = 250+250)
                 this.config.showPagination = true;
-                this.state.hasMoreData = true;
-                if (!this._boundHandlers.has('infiniteScroll')) {
-                    this.initInfiniteScroll();
-                }
+                this.state.hasMoreData = false; // אין infinite scroll
                 this.calculateTotalPages();
                 this.loadInitialData();
 
@@ -3699,10 +3684,8 @@ class TableManager {
             this.state.selectedRows.clear();
         }
 
-        // מצב 3: פגינציה עם infinite scroll (>200)
+        // מצב 3: פגינציה עם 2 פעימות (>200) - גלול לראש
         if (this.config.itemsPerPage > 200 && this.config.itemsPerPage < 999999) {
-            this.state.hasMoreData = true;
-            // גלול לראש הטבלה
             if (this.elements.bodyContainer) {
                 this.elements.bodyContainer.scrollTop = 0;
             }

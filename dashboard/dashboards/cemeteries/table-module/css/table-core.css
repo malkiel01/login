@@ -507,7 +507,7 @@ body.dark-theme .tm-loading-spinner {
 
 [data-theme="dark"] .tm-loading-overlay > div,
 body.dark-theme .tm-loading-overlay > div {
-    background: rgba(30, 41, 59, 0.95) !important;
+    text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 16px rgba(0,0,0,0.6) !important;
 }
 
 /* ===================================================================

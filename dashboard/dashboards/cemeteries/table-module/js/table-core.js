@@ -3525,6 +3525,7 @@ class TableManager {
             <div class="tm-pagination-info">
                 <span class="tm-showing">מציג 0-0</span>
                 <span class="tm-total">מתוך 0</span>
+                <span class="tm-selected-count" style="display: none; margin-right: 15px; color: var(--primary-color, #667eea); font-weight: 500;"></span>
             </div>
             <div class="tm-pagination-controls">
                 <button class="tm-page-btn tm-first" title="ראשון">⏮</button>
@@ -3788,6 +3789,17 @@ class TableManager {
 
         if (pageInfo) pageInfo.textContent = `עמוד ${this.state.currentPage} מ-${this.state.totalPages}`;
 
+        // ⭐ הצגת כמות נבחרים (בבחירה מרובה)
+        const selectedCountEl = this.elements.paginationFooter.querySelector('.tm-selected-count');
+        if (selectedCountEl) {
+            if (this.state.multiSelectEnabled && this.state.selectedRows.size > 0) {
+                selectedCountEl.textContent = `(${this.state.selectedRows.size.toLocaleString()} נבחרו)`;
+                selectedCountEl.style.display = '';
+            } else {
+                selectedCountEl.style.display = 'none';
+            }
+        }
+
         // הפעלת/כיבוי כפתורים
         const firstBtn = this.elements.paginationFooter.querySelector('.tm-first');
         const prevBtn = this.elements.paginationFooter.querySelector('.tm-prev');
@@ -4005,6 +4017,8 @@ class TableManager {
         if (this.config.onSelectionChange) {
             this.config.onSelectionChange(Array.from(this.state.selectedRows));
         }
+        // עדכון פוטר להצגת כמות נבחרים
+        this._updateFooterInfo();
     }
 
     getSelectedRows() {

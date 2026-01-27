@@ -173,6 +173,56 @@ class EntityLoader {
         }
     }
 
+    /**
+     * ⭐ טעינת עמוד ספציפי מהשרת (Server-side Pagination)
+     * @param {string} entityType - סוג היישות
+     * @param {number} page - מספר עמוד
+     * @param {number} limit - כמות פריטים בעמוד
+     * @param {string|null} parentId - מזהה הורה (אופציונלי)
+     * @returns {Promise<Object>} {data, totalItems}
+     */
+    static async fetchPage(entityType, page, limit, parentId = null) {
+        const config = ENTITY_CONFIG[entityType];
+
+        if (!config) {
+            throw new Error(`❌ Unknown entity type: ${entityType}`);
+        }
+
+        try {
+            // בניית URL עם פרמטרים
+            let apiUrl = `${config.apiEndpoint}?action=list&limit=${encodeURIComponent(limit)}&page=${encodeURIComponent(page)}`;
+            apiUrl += `&orderBy=${encodeURIComponent(config.defaultOrderBy)}&sortDirection=${encodeURIComponent(config.defaultSortDirection)}`;
+
+            // הוספת parent ID אם קיים
+            if (parentId && config.parentParam) {
+                apiUrl += `&${encodeURIComponent(config.parentParam)}=${encodeURIComponent(parentId)}`;
+            }
+
+            console.log(`📄 Fetching page ${page} with limit ${limit} for ${entityType}`);
+
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                return {
+                    data: result.data,
+                    totalItems: result.pagination?.total || result.data.length
+                };
+            } else {
+                throw new Error(result.error || `Failed to fetch page for ${config.plural}`);
+            }
+
+        } catch (error) {
+            console.error(`❌ Error fetching page for ${entityType}:`, error);
+            throw error;
+        }
+    }
+
     // /**
     //  * טעינת סטטיסטיקות
     //  * @param {string} entityType - סוג היישות

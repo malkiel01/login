@@ -77,6 +77,7 @@ class TableManager {
             onFilter: null,
             onColumnReorder: null,
             onLoadMore: null,
+            onFetchPage: null,  // ⭐ callback לטעינת עמוד מהשרת: (page, limit) => Promise<{data, totalItems}>
             onPageChange: null,
             onSelectionChange: null,
 
@@ -3477,8 +3478,9 @@ class TableManager {
         footer.querySelector('.tm-next').addEventListener('click', () => this.goToPage(this.state.currentPage + 1));
         footer.querySelector('.tm-last').addEventListener('click', () => this.goToPage(this.state.totalPages));
 
-        footer.querySelector('.tm-page-size').addEventListener('change', (e) => {
+        footer.querySelector('.tm-page-size').addEventListener('change', async (e) => {
             const newValue = parseInt(e.target.value);
+            const previousValue = this.config.itemsPerPage;
             this.config.itemsPerPage = newValue;
 
             // ⭐ עדכון showPagination לפי הבחירה
@@ -3489,10 +3491,20 @@ class TableManager {
             }
 
             this.calculateTotalPages();
-
-            // ⭐ חזרה לעמוד 1 וטעינה מחדש (גם אם כבר בעמוד 1)
             this.state.currentPage = 1;
-            this.loadInitialData();
+
+            // ⭐ אם 500 או הכל - טען בשלבים עד שיש מספיק נתונים
+            if (newValue >= 500) {
+                await this._loadDataInBatches(newValue);
+            }
+            // ⭐ אם יש callback לטעינה מהשרת - השתמש בו
+            else if (this.config.onFetchPage) {
+                await this._fetchPageFromServer(1);
+            }
+            // ⭐ אחרת - פגינציה בצד לקוח
+            else {
+                this.loadInitialData();
+            }
 
             // ⭐ שמירת העדפה לפי entity
             this._saveTablePreferences();
@@ -3502,16 +3514,131 @@ class TableManager {
     /**
      * מעבר לעמוד
      */
-    goToPage(page) {
+    async goToPage(page) {
         page = Math.max(1, Math.min(page, this.state.totalPages));
 
         if (page === this.state.currentPage) return;
 
         this.state.currentPage = page;
-        this.loadInitialData();
+
+        // ⭐ אם יש callback לטעינה מהשרת, השתמש בו
+        if (this.config.onFetchPage) {
+            await this._fetchPageFromServer(page);
+        } else {
+            this.loadInitialData();
+        }
 
         if (this.config.onPageChange) {
             this.config.onPageChange(page);
+        }
+    }
+
+    /**
+     * ⭐ טעינת עמוד מהשרת
+     */
+    async _fetchPageFromServer(page) {
+        if (!this.config.onFetchPage) return;
+
+        this.showLoadingIndicator();
+
+        try {
+            const result = await this.config.onFetchPage(page, this.config.itemsPerPage);
+
+            if (result && result.data) {
+                // עדכון הנתונים
+                this.config.data = result.data;
+                this.state.filteredData = this._applyFilters(result.data);
+
+                // עדכון totalItems אם סופק
+                if (result.totalItems !== undefined) {
+                    this.config.totalItems = result.totalItems;
+                }
+
+                // חישוב עמודים מחדש
+                if (this.config.showPagination && this.config.itemsPerPage < 999999) {
+                    this.state.totalPages = Math.max(1, Math.ceil(this.config.totalItems / this.config.itemsPerPage));
+                }
+
+                // הצג את כל הנתונים שהתקבלו (כי זה כבר העמוד הנכון)
+                this.state.displayedData = this.state.filteredData;
+
+                this.renderRows(false);
+                this._updateFooterInfo();
+            }
+        } catch (error) {
+            console.error('TableManager: Error fetching page from server:', error);
+        } finally {
+            this.hideLoadingIndicator();
+        }
+    }
+
+    /**
+     * ⭐ טעינת נתונים בשלבים (עבור 500/הכל)
+     */
+    async _loadDataInBatches(targetAmount) {
+        if (!this.config.onLoadMore) {
+            // אין callback לטעינה - הצג מה שיש
+            this.loadInitialData();
+            return;
+        }
+
+        this.showLoadingIndicator();
+        const isAll = targetAmount >= 999999;
+
+        try {
+            // המשך לטעון עד שיש מספיק נתונים או שאין עוד
+            let loadAttempts = 0;
+            const maxAttempts = 100; // מגבלת ביטחון
+
+            while (loadAttempts < maxAttempts) {
+                loadAttempts++;
+                const currentTotal = this.config.data.length;
+
+                // בדיקה אם יש מספיק נתונים
+                if (!isAll && currentTotal >= targetAmount) {
+                    break;
+                }
+
+                // בדיקה אם הגענו לסוף הנתונים
+                if (currentTotal >= this.config.totalItems) {
+                    break;
+                }
+
+                // טען עוד נתונים
+                console.log(`TableManager: Loading batch ${loadAttempts}, current: ${currentTotal}, target: ${isAll ? 'all' : targetAmount}`);
+
+                const success = await this.config.onLoadMore();
+                if (!success) {
+                    break;
+                }
+
+                // המתנה קצרה למניעת עומס
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            // הצג את הנתונים
+            this.state.filteredData = this._applyFilters(this.config.data);
+
+            // עדכון totalPages
+            if (this.config.itemsPerPage >= 999999) {
+                this.state.totalPages = 1;
+                this.state.displayedData = this.state.filteredData;
+            } else {
+                this.state.totalPages = Math.max(1, Math.ceil(this.state.filteredData.length / this.config.itemsPerPage));
+                const start = 0;
+                const end = this.config.itemsPerPage;
+                this.state.displayedData = this.state.filteredData.slice(start, end);
+            }
+
+            this.renderRows(false);
+            this._updateFooterInfo();
+
+            console.log(`TableManager: Loaded ${this.config.data.length} items for display`);
+
+        } catch (error) {
+            console.error('TableManager: Error loading data in batches:', error);
+        } finally {
+            this.hideLoadingIndicator();
         }
     }
 

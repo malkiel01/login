@@ -337,6 +337,13 @@ class EntityRenderer {
                 return await EntityLoader.appendMoreData(entityType, parentId);
             },
 
+            // ⭐ callback לפגינציה בצד שרת
+            onFetchPage: async (page, limit) => {
+                const state = entityState.getState(entityType);
+                const parentId = config.hasParent ? state.parentId : null;
+                return await EntityLoader.fetchPage(entityType, page, limit, parentId);
+            },
+
             onSort: (field, order) => {
                 if (typeof showToast === 'function') {
                     showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');

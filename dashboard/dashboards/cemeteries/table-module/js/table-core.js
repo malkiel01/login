@@ -2079,8 +2079,6 @@ class TableManager {
         let startX = 0;
         let startWidth = 0;
         let colIndex = null;
-        let startTableWidth = 0;
-        let lastWidth = 0;
 
         const onMouseMove = (e) => {
             if (!isResizing) return;
@@ -2089,12 +2087,8 @@ class TableManager {
             const diff = e.pageX - startX;
             const newWidth = Math.max(80, startWidth - diff);
 
-            // חישוב ההפרש מהרוחב האחרון
-            const widthDiff = newWidth - lastWidth;
-            lastWidth = newWidth;
-
-            // עדכון state
-            this.state.columnWidths[colIndex] = newWidth + 'px';
+            // ⭐ עדכון state עם מספר (לא string) לחישוב נכון
+            this.state.columnWidths[colIndex] = newWidth;
 
             // עדכון דרך colgroup (סנכרון אוטומטי בין header ו-body)
             const headerCol = this.elements.headerColgroup?.querySelector(`col[data-col-index="${colIndex}"]`);
@@ -2107,8 +2101,8 @@ class TableManager {
                 bodyCol.style.width = newWidth + 'px';
             }
 
-            // ⭐ עדכון רוחב הטבלה באופן יעיל - רק הוספת ההפרש
-            const newTableWidth = startTableWidth + (newWidth - startWidth);
+            // ⭐ חישוב רוחב הטבלה המלא מתוך כל העמודות
+            const newTableWidth = this._calculateTableWidth();
             if (this.elements.headerTable) {
                 this.elements.headerTable.style.width = newTableWidth + 'px';
                 this.elements.headerTable.style.minWidth = newTableWidth + 'px';
@@ -2142,10 +2136,6 @@ class TableManager {
             colIndex = parseInt(currentTh.dataset.colIndex);
             startX = e.pageX;
             startWidth = currentTh.offsetWidth;
-            lastWidth = startWidth;
-
-            // שמירת רוחב הטבלה הנוכחי
-            startTableWidth = this.elements.headerTable ? parseInt(this.elements.headerTable.style.width) || this._calculateTableWidth() : 0;
 
             // מניעת בחירת טקסט בזמן גרירה
             document.body.style.cursor = 'col-resize';

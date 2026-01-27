@@ -3704,6 +3704,9 @@ class TableManager {
      * מעבר לעמוד - 3 מצבים
      */
     async goToPage(page) {
+        console.time(`⏱️ goToPage-${page}`);
+        console.log(`🔄 START goToPage: page ${page}, itemsPerPage: ${this.config.itemsPerPage}`);
+
         page = Math.max(1, Math.min(page, this.state.totalPages));
         if (page === this.state.currentPage) return;
 
@@ -3722,6 +3725,7 @@ class TableManager {
         }
 
         // טען נתונים
+        console.log(`📡 About to fetch, onFetchPage: ${!!this.config.onFetchPage}`);
         if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
             // מצב 2 ו-3: טען עמוד מהשרת (יותר מהיר!)
             await this._fetchPageFromServer(page);
@@ -3729,6 +3733,7 @@ class TableManager {
             // מצב 1: טען מקומי עם infinite scroll
             this.loadInitialData();
         }
+        console.log(`✅ Data loaded and rendered`);
 
         // ⭐ עדכון כפתור "בחר הכל" אחרי מעבר עמוד
         if (this.state.multiSelectEnabled) {
@@ -3738,20 +3743,30 @@ class TableManager {
         if (this.config.onPageChange) {
             this.config.onPageChange(page);
         }
+
+        console.timeEnd(`⏱️ goToPage-${page}`);
     }
 
     /**
      * ⭐ טעינת עמוד מהשרת
      */
     async _fetchPageFromServer(page) {
+        console.time(`⏱️ _fetchPageFromServer-${page}`);
         if (!this.config.onFetchPage) return;
 
+        console.log(`📡 Showing loading indicator`);
         this.showLoadingIndicator();
 
         try {
+            console.log(`📞 Calling onFetchPage(${page}, ${this.config.itemsPerPage})`);
+            const fetchStart = performance.now();
             const result = await this.config.onFetchPage(page, this.config.itemsPerPage);
+            const fetchEnd = performance.now();
+            console.log(`⏱️ Fetch took ${(fetchEnd - fetchStart).toFixed(2)}ms`);
 
             if (result && result.data) {
+                console.log(`📦 Received ${result.data.length} items`);
+
                 // עדכון הנתונים
                 this.config.data = result.data;
                 this.state.filteredData = this._applyFilters(result.data);
@@ -3768,32 +3783,48 @@ class TableManager {
 
                 // ⭐ מצב 3 (500): הצג ב-2 פעימות
                 if (this.config.itemsPerPage > 200) {
+                    console.log(`🎯 Mode 3: Rendering in 2 batches`);
                     const batchSize = 250;
                     // פעימה ראשונה
+                    console.log(`🎨 Rendering first batch (${batchSize} items)`);
+                    const render1Start = performance.now();
                     this.state.displayedData = this.state.filteredData.slice(0, batchSize);
                     this.renderRows(false);
                     this._updateFooterInfo();
+                    const render1End = performance.now();
+                    console.log(`⏱️ First render took ${(render1End - render1Start).toFixed(2)}ms`);
 
                     // פעימה שנייה אסינכרונית
                     if (this.state.filteredData.length > batchSize) {
+                        console.log(`⏳ Scheduling second batch (${this.state.filteredData.length - batchSize} items)`);
                         setTimeout(() => {
+                            console.log(`🎨 Rendering second batch`);
+                            const render2Start = performance.now();
                             const secondBatch = this.state.filteredData.slice(batchSize);
                             this.state.displayedData = [...this.state.displayedData, ...secondBatch];
                             this.renderRows(true);
                             this._updateFooterInfo();
+                            const render2End = performance.now();
+                            console.log(`⏱️ Second render took ${(render2End - render2Start).toFixed(2)}ms`);
                         }, 50);
                     }
                 } else {
+                    console.log(`🎯 Mode 2: Rendering all at once (${this.state.filteredData.length} items)`);
+                    const renderStart = performance.now();
                     // מצב 2: הצג הכל מיד
                     this.state.displayedData = this.state.filteredData;
                     this.renderRows(false);
                     this._updateFooterInfo();
+                    const renderEnd = performance.now();
+                    console.log(`⏱️ Render took ${(renderEnd - renderStart).toFixed(2)}ms`);
                 }
             }
         } catch (error) {
             console.error('TableManager: Error fetching page from server:', error);
         } finally {
+            console.log(`✅ Hiding loading indicator`);
             this.hideLoadingIndicator();
+            console.timeEnd(`⏱️ _fetchPageFromServer-${page}`);
         }
     }
 

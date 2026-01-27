@@ -3749,7 +3749,10 @@ class TableManager {
         this.showLoadingIndicator();
 
         try {
+            const fetchStart = performance.now();
             const result = await this.config.onFetchPage(page, this.config.itemsPerPage);
+            const fetchEnd = performance.now();
+            console.log(`⏱️ API Fetch took: ${(fetchEnd - fetchStart).toFixed(2)}ms`);
 
             if (result && result.data) {
                 // עדכון הנתונים

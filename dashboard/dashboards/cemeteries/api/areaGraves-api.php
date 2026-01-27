@@ -208,7 +208,8 @@ try {
             
             // מיון והגבלה
             $sql .= " ORDER BY ag.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
-            
+
+            $queryStart = microtime(true);
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {
                 $stmt->bindValue(":{$key}", $value);
@@ -216,11 +217,15 @@ try {
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
             $stmt->execute();
-            
+
             $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $queryEnd = microtime(true);
+            $mainQueryTime = ($queryEnd - $queryStart) * 1000;
 
             // ⚡ הוסף ספירת קברים - שאילתה אחת במקום N שאילתות!
+            $countQueryTime = 0;
             if (!empty($areaGraves)) {
+                $countStart = microtime(true);
                 $areaGraveIds = array_column($areaGraves, 'unicId');
                 $placeholders = rtrim(str_repeat('?,', count($areaGraveIds)), ',');
 
@@ -237,7 +242,12 @@ try {
                 foreach ($areaGraves as &$areaGrave) {
                     $areaGrave['graves_count'] = $graveCounts[$areaGrave['unicId']] ?? 0;
                 }
+                $countEnd = microtime(true);
+                $countQueryTime = ($countEnd - $countStart) * 1000;
             }
+
+            error_log(sprintf("⏱️ areaGraves API - Main query: %.2fms, Count query: %.2fms, Total: %.2fms",
+                $mainQueryTime, $countQueryTime, $mainQueryTime + $countQueryTime));
             
             echo json_encode([
                 'success' => true,

@@ -199,10 +199,12 @@ class TableManager {
                     // ⭐ מצב תצוגה
                     if (prefs.displayMode !== undefined) {
                         const rows = parseInt(prefs.displayMode);
-                        if (rows >= 999999) {
-                            this.config.itemsPerPage = 999999;
+                        if (rows >= 500) {
+                            // 500 ומעלה = מצב גלילה (infinite scroll) עם הגבלה
+                            this.config.itemsPerPage = rows;
                             this.config.showPagination = false;
                         } else if (rows > 0) {
+                            // מתחת ל-500 = פגינציה רגילה עם כפתורי עמודים
                             this.config.itemsPerPage = rows;
                             this.config.showPagination = true;
                         }
@@ -1674,7 +1676,9 @@ class TableManager {
             this.state.displayedData = this.state.filteredData.slice(start, end);
         } else if (this.config.scrollLoadBatch > 0) {
             this.state.displayedData = this.state.filteredData.slice(0, this.config.scrollLoadBatch);
-            this.state.hasMoreData = this.state.displayedData.length < this.state.filteredData.length;
+            // ⭐ hasMoreData לפי הגבול המבוקש (itemsPerPage או totalItems)
+            const maxToDisplay = Math.min(this.config.itemsPerPage, this.config.totalItems || Infinity);
+            this.state.hasMoreData = this.state.displayedData.length < maxToDisplay;
         } else {
             this.state.displayedData = this.state.filteredData;
         }
@@ -3508,18 +3512,24 @@ class TableManager {
             this.config.itemsPerPage = newValue;
 
             // ⭐ עדכון showPagination לפי הבחירה
-            if (newValue >= 999999) {
+            // 500 ומעלה = מצב גלילה, מתחת = פגינציה
+            if (newValue >= 500) {
                 this.config.showPagination = false;
+                // הפעל infinite scroll אם לא פעיל
+                if (!this._boundHandlers.has('infiniteScroll')) {
+                    this.initInfiniteScroll();
+                }
             } else {
                 this.config.showPagination = true;
             }
 
             this.calculateTotalPages();
             this.state.currentPage = 1;
+            this.state.hasMoreData = true;
 
-            // ⭐ אם 500 או הכל - טען בשלבים עד שיש מספיק נתונים
+            // ⭐ אם 500 או הכל - טען רגיל ותן לגלילה להמשיך
             if (newValue >= 500) {
-                await this._loadDataInBatches(newValue);
+                this.loadInitialData();
             }
             // ⭐ אם יש callback לטעינה מהשרת - השתמש בו
             else if (this.config.onFetchPage) {

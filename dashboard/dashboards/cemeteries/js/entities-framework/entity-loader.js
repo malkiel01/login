@@ -146,18 +146,19 @@ class EntityLoader {
             if (result.success && result.data && result.data.length > 0) {
                 // שמור את הגודל הקודם
                 const previousTotal = state.currentData.length;
-                
+
                 // הוסף נתונים חדשים
                 const updatedData = entityState.appendData(entityType, result.data);
-                
+
                 // עדכון pagination
                 entityState.updatePagination(entityType, nextPage, state.totalPages);
 
-                // עדכן את הטבלה אם קיימת
+                // ⭐ עדכן את הטבלה - שימוש ב-appendData כדי לא לדרוס totalItems
                 if (state.tableInstance) {
-                    state.tableInstance.setData(updatedData);
+                    // appendData רק מוסיף נתונים, לא דורס totalItems
+                    state.tableInstance.appendData(result.data);
                 }
-                
+
                 entityState.setLoading(entityType, false);
                 return true;
                 

@@ -3722,11 +3722,11 @@ class TableManager {
         }
 
         // טען נתונים
-        if (this.config.onFetchPage && this.config.itemsPerPage <= 200) {
-            // מצב 2: פגינציה רגילה - טען מהשרת
+        if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
+            // מצב 2 ו-3: טען עמוד מהשרת (יותר מהיר!)
             await this._fetchPageFromServer(page);
         } else {
-            // מצב 1 ו-3: טען מקומי
+            // מצב 1: טען מקומי עם infinite scroll
             this.loadInitialData();
         }
 
@@ -3766,11 +3766,29 @@ class TableManager {
                     this.state.totalPages = Math.max(1, Math.ceil(this.config.totalItems / this.config.itemsPerPage));
                 }
 
-                // הצג את כל הנתונים שהתקבלו (כי זה כבר העמוד הנכון)
-                this.state.displayedData = this.state.filteredData;
+                // ⭐ מצב 3 (500): הצג ב-2 פעימות
+                if (this.config.itemsPerPage > 200) {
+                    const batchSize = 250;
+                    // פעימה ראשונה
+                    this.state.displayedData = this.state.filteredData.slice(0, batchSize);
+                    this.renderRows(false);
+                    this._updateFooterInfo();
 
-                this.renderRows(false);
-                this._updateFooterInfo();
+                    // פעימה שנייה אסינכרונית
+                    if (this.state.filteredData.length > batchSize) {
+                        setTimeout(() => {
+                            const secondBatch = this.state.filteredData.slice(batchSize);
+                            this.state.displayedData = [...this.state.displayedData, ...secondBatch];
+                            this.renderRows(true);
+                            this._updateFooterInfo();
+                        }, 50);
+                    }
+                } else {
+                    // מצב 2: הצג הכל מיד
+                    this.state.displayedData = this.state.filteredData;
+                    this.renderRows(false);
+                    this._updateFooterInfo();
+                }
             }
         } catch (error) {
             console.error('TableManager: Error fetching page from server:', error);

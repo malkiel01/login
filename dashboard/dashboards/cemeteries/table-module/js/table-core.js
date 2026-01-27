@@ -427,14 +427,6 @@ class TableManager {
         // טעינת נתונים ראשונית
         this.loadInitialData();
 
-        // ⭐ אם itemsPerPage >= 500, צריך טעינה בשלבים
-        // משתמשים ב-setTimeout כדי לתת ל-entityState.setTableInstance להתבצע קודם
-        if (this.config.itemsPerPage >= 500 && this.config.onLoadMore) {
-            setTimeout(() => {
-                this._loadDataInBatches(this.config.itemsPerPage);
-            }, 100);
-        }
-
         // ⭐ עדכון אייקוני מיון לאחר טעינת הנתונים (עם delay לוודא ש-DOM מוכן)
         if (this.state.sortColumn !== null) {
             requestAnimationFrame(() => {
@@ -3667,42 +3659,43 @@ class TableManager {
 
         // ⭐ סה"כ אמיתי מהשרת
         const serverTotal = this.config.totalItems || 0;
-        // ⭐ כמות שנטענה
+        // ⭐ כמות שנטענה בפועל
         const loadedTotal = this.config.data ? this.config.data.length : 0;
         // ⭐ כמות לאחר סינון (מתוך הנטען)
         const filteredTotal = this.state.filteredData ? this.state.filteredData.length : loadedTotal;
-        // ⭐ כמות מוצגת
-        const displayed = this.state.displayedData ? this.state.displayedData.length : 0;
 
-        // חישוב טווח המוצג
-        let start, end;
-        if (this.config.showPagination && serverTotal > 0) {
-            start = (this.state.currentPage - 1) * this.config.itemsPerPage + 1;
-            end = Math.min(start + displayed - 1, serverTotal);
+        // ⭐ חישוב טווח המוצג - לפי מה שאמור להיות, לא מה שנטען בפועל
+        let start, end, total;
+
+        if (this.state.filters && this.state.filters.size > 0) {
+            // יש פילטר - מציג לפי הנתונים המסוננים שנטענו
+            start = filteredTotal > 0 ? 1 : 0;
+            end = filteredTotal;
+            total = filteredTotal;
+        } else if (this.config.showPagination) {
+            // מצב עמודים
+            start = serverTotal > 0 ? (this.state.currentPage - 1) * this.config.itemsPerPage + 1 : 0;
+            end = Math.min(this.state.currentPage * this.config.itemsPerPage, serverTotal);
+            total = serverTotal;
         } else {
-            start = displayed > 0 ? 1 : 0;
-            end = displayed;
+            // מצב הכל/500 - מציג לפי itemsPerPage או סה"כ מהשרת
+            start = serverTotal > 0 ? 1 : 0;
+            end = Math.min(this.config.itemsPerPage, serverTotal);
+            total = serverTotal;
         }
 
         const showing = this.elements.paginationFooter.querySelector('.tm-showing');
         const totalEl = this.elements.paginationFooter.querySelector('.tm-total');
         const pageInfo = this.elements.paginationFooter.querySelector('.tm-page-info');
 
-        if (showing) showing.textContent = `מציג ${start}-${end}`;
+        if (showing) showing.textContent = `מציג ${start.toLocaleString()}-${end.toLocaleString()}`;
 
         // ⭐ הצגת מידע על סה"כ
         if (totalEl) {
-            // אם יש פילטר פעיל
             if (this.state.filters && this.state.filters.size > 0) {
                 totalEl.textContent = `מתוך ${filteredTotal.toLocaleString()} (מסונן מ-${serverTotal.toLocaleString()})`;
-            }
-            // אם נטען רק חלק מהנתונים (500/הכל)
-            else if (loadedTotal < serverTotal) {
-                totalEl.textContent = `מתוך ${serverTotal.toLocaleString()} (נטענו ${loadedTotal.toLocaleString()})`;
-            }
-            // רגיל
-            else {
-                totalEl.textContent = `מתוך ${serverTotal.toLocaleString()}`;
+            } else {
+                totalEl.textContent = `מתוך ${total.toLocaleString()}`;
             }
         }
 

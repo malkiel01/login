@@ -4023,7 +4023,40 @@ class TableManager {
     // בחירה מרובה
     // ====================================
 
-    toggleSelectAll(checked) {
+    async toggleSelectAll(checked) {
+        const serverTotal = this.config.totalItems || 0;
+
+        // ⭐ מצב 3: פגינציה עם infinite scroll (500) - צריך לטעון את כל העמוד לפני בחירה
+        if (checked && this.config.itemsPerPage > 200 && this.config.itemsPerPage < 999999) {
+            const pageStart = (this.state.currentPage - 1) * this.config.itemsPerPage;
+            const pageEnd = Math.min(this.state.currentPage * this.config.itemsPerPage, serverTotal);
+            const expectedPageSize = pageEnd - pageStart;
+
+            // בדוק אם יש מספיק נתונים בfilteredData לעמוד הנוכחי
+            const currentPageData = this.state.filteredData.slice(pageStart, pageEnd);
+
+            if (currentPageData.length < expectedPageSize && this.config.onLoadMore) {
+                // טען את כל הנתונים שחסרים לעמוד הזה
+                this.showLoadingIndicator();
+                try {
+                    let loadAttempts = 0;
+                    while (this.state.filteredData.length < pageEnd && loadAttempts < 50) {
+                        loadAttempts++;
+                        const success = await this.config.onLoadMore();
+                        if (!success) break;
+                        // עדכון filteredData
+                        this.state.filteredData = this._applyFilters(this.config.data);
+                    }
+                    // עדכון displayedData להציג את כל העמוד
+                    this.state.displayedData = this.state.filteredData.slice(pageStart, pageEnd);
+                    this.state.hasMoreData = false; // כל העמוד נטען
+                    this.renderRows(false);
+                } finally {
+                    this.hideLoadingIndicator();
+                }
+            }
+        }
+
         // קבלת מזהים של האייטמים בעמוד הנוכחי (כמחרוזות!)
         const currentPageIds = this.state.displayedData
             .map(row => String(row.id || row.unicId || ''))

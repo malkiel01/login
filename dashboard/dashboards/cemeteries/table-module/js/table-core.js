@@ -425,11 +425,14 @@ class TableManager {
         }
 
         // טעינת נתונים ראשונית
+        this.loadInitialData();
+
         // ⭐ אם itemsPerPage >= 500, צריך טעינה בשלבים
+        // משתמשים ב-setTimeout כדי לתת ל-entityState.setTableInstance להתבצע קודם
         if (this.config.itemsPerPage >= 500 && this.config.onLoadMore) {
-            this._loadDataInBatches(this.config.itemsPerPage);
-        } else {
-            this.loadInitialData();
+            setTimeout(() => {
+                this._loadDataInBatches(this.config.itemsPerPage);
+            }, 100);
         }
 
         // ⭐ עדכון אייקוני מיון לאחר טעינת הנתונים (עם delay לוודא ש-DOM מוכן)

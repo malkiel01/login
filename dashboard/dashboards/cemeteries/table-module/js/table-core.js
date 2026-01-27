@@ -3690,6 +3690,11 @@ class TableManager {
 
         this.state.currentPage = page;
 
+        // ⭐ במצב "בחירה לפי עמוד" - נקה את הבחירות במעבר דף
+        if (this.state.selectPerPage && this.state.multiSelectEnabled) {
+            this.state.selectedRows.clear();
+        }
+
         // מצב 3: פגינציה עם infinite scroll (>200)
         if (this.config.itemsPerPage > 200 && this.config.itemsPerPage < 999999) {
             this.state.hasMoreData = true;

@@ -65,17 +65,18 @@ if (!in_array($sortDirection, ['ASC', 'DESC'])) {
     $sortDirection = 'DESC';
 }
 
-// ⭐ שדות מותרים למיון - מותאמים ל-VIEW!
+// ⭐ שדות מותרים למיון
 $allowedOrderFields = [
-    'areaGraveNameHe',      // ✅ שם נכון מה-view
+    'areaGraveNameHe',
     'unicId',
-    'createDate',           // ✅ שם נכון מה-view (לא createdDate!)
+    'createDate',
     'coordinates',
     'graveType',
     'lineNameHe',
     'plotNameHe',
     'blockNameHe',
-    'cemeteryNameHe'
+    'cemeteryNameHe',
+    'graves_count'          // ספירת קברים
 ];
 
 // ולידציה של שדה המיון
@@ -242,8 +243,20 @@ try {
             $countStmt->execute($params);
             $total = $countStmt->fetchColumn();
 
+            // ⭐ Mapping שדות למיון - זיהוי טבלת המקור
+            $orderByMapping = [
+                'lineNameHe' => 'r.lineNameHe',
+                'plotNameHe' => 'p.plotNameHe',
+                'blockNameHe' => 'b.blockNameHe',
+                'cemeteryNameHe' => 'c.cemeteryNameHe',
+                'graves_count' => 'graves_count' // COUNT - ללא prefix
+            ];
+
+            // אם השדה במיפוי, השתמש בו, אחרת הניח שהוא מ-ag
+            $orderByColumn = $orderByMapping[$orderBy] ?? "ag.{$orderBy}";
+
             // מיון והגבלה
-            $sql .= " ORDER BY ag.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
+            $sql .= " ORDER BY {$orderByColumn} {$sortDirection} LIMIT :limit OFFSET :offset";
 
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

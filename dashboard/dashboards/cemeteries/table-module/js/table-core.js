@@ -135,6 +135,7 @@ class TableManager {
             // בחירה מרובה
             multiSelectEnabled: false,
             selectedRows: new Set(),
+            selectPerPage: true, // בחירה לפי עמוד (true) או כללית (false)
 
             // ⭐ מצב תצוגה לפלאפון (cards/list)
             mobileViewMode: 'list', // 'list' או 'cards'
@@ -2518,6 +2519,70 @@ class TableManager {
         menuItems.appendChild(multiSelectItem);
 
         // ===================================================================
+        // פריט 4.1: בחירה לפי עמוד (מוצג רק אם multiSelect פעיל + יש פגינציה)
+        // ===================================================================
+        const selectPerPageItem = document.createElement('div');
+        selectPerPageItem.className = 'tm-select-per-page-item';
+        selectPerPageItem.style.cssText = `
+            display: ${this.state.multiSelectEnabled && this.config.itemsPerPage < 999999 ? 'flex' : 'none'};
+            align-items: center; justify-content: space-between;
+            padding: 8px 16px 8px 32px; cursor: pointer; transition: background 0.15s;
+            color: var(--text-secondary, #6b7280); font-size: 13px;
+        `;
+        selectPerPageItem.onmouseover = () => selectPerPageItem.style.background = 'var(--bg-secondary, #f3f4f6)';
+        selectPerPageItem.onmouseout = () => selectPerPageItem.style.background = 'transparent';
+
+        const selectPerPageText = document.createElement('span');
+        selectPerPageText.textContent = 'בחירה לפי עמוד';
+
+        // Toggle Switch for selectPerPage
+        const perPageToggleWrapper = document.createElement('label');
+        perPageToggleWrapper.style.cssText = `
+            position: relative; display: inline-block; width: 36px; height: 20px; cursor: pointer;
+        `;
+
+        const perPageToggleInput = document.createElement('input');
+        perPageToggleInput.type = 'checkbox';
+        perPageToggleInput.checked = this.state.selectPerPage;
+        perPageToggleInput.style.cssText = `opacity: 0; width: 0; height: 0;`;
+
+        const perPageToggleSlider = document.createElement('span');
+        const isPerPageOn = this.state.selectPerPage;
+        perPageToggleSlider.style.cssText = `
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: ${isPerPageOn ? 'var(--primary-color, #667eea)' : '#ccc'};
+            border-radius: 20px; transition: 0.3s;
+        `;
+
+        const perPageToggleKnob = document.createElement('span');
+        perPageToggleKnob.style.cssText = `
+            position: absolute; height: 14px; width: 14px; left: ${isPerPageOn ? '19px' : '3px'};
+            bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s;
+        `;
+        perPageToggleSlider.appendChild(perPageToggleKnob);
+
+        perPageToggleInput.onchange = () => {
+            this.state.selectPerPage = perPageToggleInput.checked;
+            perPageToggleSlider.style.backgroundColor = perPageToggleInput.checked ? 'var(--primary-color, #667eea)' : '#ccc';
+            perPageToggleKnob.style.left = perPageToggleInput.checked ? '19px' : '3px';
+            // עדכון צ'קבוקס "בחר הכל"
+            this._updateSelectAllCheckbox();
+        };
+
+        perPageToggleWrapper.appendChild(perPageToggleInput);
+        perPageToggleWrapper.appendChild(perPageToggleSlider);
+
+        selectPerPageItem.appendChild(selectPerPageText);
+        selectPerPageItem.appendChild(perPageToggleWrapper);
+        menuItems.appendChild(selectPerPageItem);
+
+        // עדכון נראות selectPerPage כשמשתנה multiSelect
+        toggleInput.addEventListener('change', () => {
+            const showPerPage = this.state.multiSelectEnabled && this.config.itemsPerPage < 999999;
+            selectPerPageItem.style.display = showPerPage ? 'flex' : 'none';
+        });
+
+        // ===================================================================
         // פריט 5: תצוגת מובייל (רק בפלאפון)
         // ===================================================================
         if (this._isMobileDevice()) {
@@ -3959,13 +4024,23 @@ class TableManager {
     // ====================================
 
     toggleSelectAll(checked) {
+        // קבלת מזהים של האייטמים בעמוד הנוכחי
+        const currentPageIds = this.state.displayedData
+            .map(row => row.id || row.unicId)
+            .filter(id => id);
+
         if (checked) {
-            this.state.displayedData.forEach(row => {
-                const id = row.id || row.unicId;
-                if (id) this.state.selectedRows.add(id);
-            });
+            // בחירת כל האייטמים בעמוד הנוכחי
+            currentPageIds.forEach(id => this.state.selectedRows.add(id));
         } else {
-            this.state.selectedRows.clear();
+            // ביטול בחירה - בהתאם למצב selectPerPage
+            if (this.state.selectPerPage) {
+                // ביטול רק של אייטמים בעמוד הנוכחי
+                currentPageIds.forEach(id => this.state.selectedRows.delete(id));
+            } else {
+                // ביטול כל הבחירות
+                this.state.selectedRows.clear();
+            }
         }
 
         this._updateRowSelections();
@@ -4006,11 +4081,17 @@ class TableManager {
         const selectAll = this.elements.thead.querySelector('.tm-select-all');
         if (!selectAll) return;
 
-        const displayedCount = this.state.displayedData.length;
-        const selectedCount = this.state.selectedRows.size;
+        // ספירת אייטמים נבחרים מהעמוד הנוכחי
+        const currentPageIds = this.state.displayedData
+            .map(row => row.id || row.unicId)
+            .filter(id => id);
 
-        selectAll.checked = displayedCount > 0 && selectedCount >= displayedCount;
-        selectAll.indeterminate = selectedCount > 0 && selectedCount < displayedCount;
+        const displayedCount = currentPageIds.length;
+        const selectedInPage = currentPageIds.filter(id => this.state.selectedRows.has(id)).length;
+
+        // בדיקה לפי אייטמים בעמוד הנוכחי
+        selectAll.checked = displayedCount > 0 && selectedInPage === displayedCount;
+        selectAll.indeterminate = selectedInPage > 0 && selectedInPage < displayedCount;
     }
 
     _notifySelectionChange() {

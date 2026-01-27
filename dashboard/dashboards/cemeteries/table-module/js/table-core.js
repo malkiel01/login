@@ -3634,13 +3634,11 @@ class TableManager {
                 <span class="tm-total">מתוך 0</span>
                 <span class="tm-selected-count" style="display: none; margin-right: 15px; color: var(--primary-color, #667eea); font-weight: 500;"></span>
             </div>
-            <div class="tm-pagination-controls">
+            <div class="tm-pagination-controls" style="display: flex; align-items: center; gap: 8px;">
+                <span class="tm-page-info" style="margin-left: auto;">עמוד 1 מ-1</span>
                 <button class="tm-page-btn tm-first" title="ראשון">⏮</button>
-                <button class="tm-page-btn tm-prev" title="הקודם">◀</button>
-                <span class="tm-page-info">עמוד 1 מ-1</span>
-                <button class="tm-page-btn tm-next" title="הבא">▶</button>
-                <button class="tm-page-btn tm-last" title="אחרון">⏭</button>
-                <select class="tm-page-size">
+                <button class="tm-page-btn tm-prev" title="הקודם">▶</button>
+                <select class="tm-page-size" style="margin: 0 5px;">
                     ${this.config.paginationOptions.map(opt => {
                         const optValue = opt === 'all' ? 999999 : opt;
                         const isSelected = optValue === this.config.itemsPerPage;
@@ -3649,6 +3647,8 @@ class TableManager {
                         </option>`;
                     }).join('')}
                 </select>
+                <button class="tm-page-btn tm-next" title="הבא">◀</button>
+                <button class="tm-page-btn tm-last" title="אחרון">⏭</button>
             </div>
         `;
 

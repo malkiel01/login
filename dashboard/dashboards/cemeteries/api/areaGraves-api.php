@@ -124,18 +124,20 @@ try {
 
             $offset = ($page - 1) * $limit;
 
-            // ⚡ שאילתה מותאמת במקום VIEW - הרבה יותר מהיר!
+            // ⚡ שאילתה אחת עם ספירת קברים - מהיר!
             $sql = "SELECT
                 ag.*,
                 r.lineNameHe,
                 p.plotNameHe,
                 b.blockNameHe,
-                c.cemeteryNameHe
+                c.cemeteryNameHe,
+                COUNT(g.unicId) as graves_count
             FROM areaGraves ag
             LEFT JOIN rows r ON ag.lineId = r.unicId
             LEFT JOIN plots p ON r.plotId = p.unicId
             LEFT JOIN blocks b ON p.blockId = b.unicId
             LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
+            LEFT JOIN graves g ON ag.unicId = g.areaGraveId AND g.isActive = 1
             WHERE ag.isActive = 1";
             $params = [];
             
@@ -212,12 +214,39 @@ try {
                 }
             }
             
-            // ספירה
-            $countSql = str_replace('SELECT ag.*', 'SELECT COUNT(*)', $sql);
+            // GROUP BY לספירת קברים
+            $sql .= " GROUP BY ag.unicId";
+
+            // ספירה - צריך לספור את מספר השורות אחרי GROUP BY
+            $countSql = "SELECT COUNT(DISTINCT ag.unicId) FROM areaGraves ag
+                LEFT JOIN rows r ON ag.lineId = r.unicId
+                LEFT JOIN plots p ON r.plotId = p.unicId
+                LEFT JOIN blocks b ON p.blockId = b.unicId
+                LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
+                WHERE ag.isActive = 1";
+
+            // הוסף את אותם תנאים כמו בשאילתה הראשית
+            if ($plotId) {
+                $countSql .= " AND p.unicId = :plotId";
+            }
+            if ($rowId) {
+                $countSql .= " AND ag.lineId = :rowId";
+            }
+            if (!empty($query)) {
+                $countSql .= " AND (
+                    ag.areaGraveNameHe LIKE :query1 OR
+                    ag.coordinates LIKE :query2 OR
+                    r.lineNameHe LIKE :query3 OR
+                    p.plotNameHe LIKE :query4 OR
+                    b.blockNameHe LIKE :query5 OR
+                    c.cemeteryNameHe LIKE :query6
+                )";
+            }
+
             $countStmt = $pdo->prepare($countSql);
             $countStmt->execute($params);
             $total = $countStmt->fetchColumn();
-            
+
             // מיון והגבלה
             $sql .= " ORDER BY ag.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
 
@@ -234,32 +263,7 @@ try {
             $queryEnd = microtime(true);
             $mainQueryTime = ($queryEnd - $queryStart) * 1000;
 
-            // ⚡ הוסף ספירת קברים - שאילתה אחת במקום N שאילתות!
-            $countQueryTime = 0;
-            if (!empty($areaGraves)) {
-                $countStart = microtime(true);
-                $areaGraveIds = array_column($areaGraves, 'unicId');
-                $placeholders = rtrim(str_repeat('?,', count($areaGraveIds)), ',');
-
-                $graveCountStmt = $pdo->prepare("
-                    SELECT areaGraveId, COUNT(*) as count
-                    FROM graves
-                    WHERE areaGraveId IN ($placeholders) AND isActive = 1
-                    GROUP BY areaGraveId
-                ");
-                $graveCountStmt->execute($areaGraveIds);
-                $graveCounts = $graveCountStmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-                // הוסף את הספירות למערך
-                foreach ($areaGraves as &$areaGrave) {
-                    $areaGrave['graves_count'] = $graveCounts[$areaGrave['unicId']] ?? 0;
-                }
-                $countEnd = microtime(true);
-                $countQueryTime = ($countEnd - $countStart) * 1000;
-            }
-
-            error_log(sprintf("⏱️ areaGraves API - Main query: %.2fms, Count query: %.2fms, Total: %.2fms",
-                $mainQueryTime, $countQueryTime, $mainQueryTime + $countQueryTime));
+            error_log(sprintf("⏱️ areaGraves API - Single query with JOIN: %.2fms", $mainQueryTime));
             
             echo json_encode([
                 'success' => true,

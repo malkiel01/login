@@ -1639,7 +1639,11 @@ class TableManager {
         }
 
         // Pagination או infinite scroll
-        if (this.config.showPagination) {
+        if (this.config.itemsPerPage >= 999999) {
+            // ⭐ "הכל" - הצג את כל הנתונים
+            this.state.displayedData = this.state.filteredData;
+            this.state.hasMoreData = false;
+        } else if (this.config.showPagination) {
             const start = (this.state.currentPage - 1) * this.config.itemsPerPage;
             const end = start + this.config.itemsPerPage;
             this.state.displayedData = this.state.filteredData.slice(start, end);

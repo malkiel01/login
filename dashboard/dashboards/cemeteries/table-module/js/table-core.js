@@ -1619,28 +1619,72 @@ class TableManager {
      * הצגת אינדיקטור טעינה
      */
     showLoadingIndicator() {
-        const existing = this.elements.tbody.querySelector('.tm-loading-indicator');
-        if (existing) return;
+        // בדוק אם כבר יש overlay
+        let overlay = this.elements.wrapper.querySelector('.tm-loading-overlay');
+        if (overlay) return;
 
-        const row = document.createElement('tr');
-        row.className = 'tm-loading-indicator';
-        row.innerHTML = `
-            <td colspan="100" style="text-align: center; padding: 20px;">
-                <div class="tm-loading-spinner"></div>
-                <div style="margin-top: 10px; color: var(--text-muted, #6b7280);">טוען עוד נתונים...</div>
-            </td>
+        // צור overlay מלא על הטבלה
+        overlay = document.createElement('div');
+        overlay.className = 'tm-loading-overlay';
+        overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        `;
+        overlay.innerHTML = `
+            <div class="tm-loading-spinner" style="width: 60px; height: 60px; border-width: 5px;"></div>
+            <div style="margin-top: 20px; font-size: 18px; font-weight: 500; color: var(--primary-color, #667eea);">
+                טוען נתונים...
+            </div>
         `;
 
-        this.elements.tbody.appendChild(row);
+        this.elements.wrapper.style.position = 'relative';
+        this.elements.wrapper.appendChild(overlay);
+
+        // Disable כפתורי פגינציה
+        this._disablePaginationButtons(true);
     }
 
     /**
      * הסרת אינדיקטור טעינה
      */
     hideLoadingIndicator() {
-        const indicator = this.elements.tbody.querySelector('.tm-loading-indicator');
-        if (indicator) {
-            indicator.remove();
+        const overlay = this.elements.wrapper.querySelector('.tm-loading-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+
+        // Enable כפתורי פגינציה
+        this._disablePaginationButtons(false);
+    }
+
+    /**
+     * Disable/Enable כפתורי פגינציה
+     */
+    _disablePaginationButtons(disabled) {
+        if (!this.elements.paginationFooter) return;
+
+        const buttons = this.elements.paginationFooter.querySelectorAll('.tm-page-btn');
+        const select = this.elements.paginationFooter.querySelector('.tm-page-size');
+
+        buttons.forEach(btn => {
+            btn.disabled = disabled;
+            btn.style.opacity = disabled ? '0.5' : '1';
+            btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+        });
+
+        if (select) {
+            select.disabled = disabled;
+            select.style.opacity = disabled ? '0.5' : '1';
         }
     }
 
@@ -3655,11 +3699,31 @@ class TableManager {
         wrapper.appendChild(footer);
         this.elements.paginationFooter = footer;
 
-        // אירועים
-        footer.querySelector('.tm-first').addEventListener('click', () => this.goToPage(1));
-        footer.querySelector('.tm-prev').addEventListener('click', () => this.goToPage(this.state.currentPage - 1));
-        footer.querySelector('.tm-next').addEventListener('click', () => this.goToPage(this.state.currentPage + 1));
-        footer.querySelector('.tm-last').addEventListener('click', () => this.goToPage(this.state.totalPages));
+        // אירועים - עם feedback ויזואלי מיידי
+        const addPageButtonHandler = (btn, callback) => {
+            btn.addEventListener('click', (e) => {
+                if (btn.disabled) return;
+
+                // ⚡ feedback ויזואלי מיידי!
+                btn.style.background = 'var(--primary-color, #667eea)';
+                btn.style.color = 'white';
+                btn.style.transform = 'scale(0.95)';
+
+                // החזר למצב רגיל אחרי רגע
+                setTimeout(() => {
+                    btn.style.background = '';
+                    btn.style.color = '';
+                    btn.style.transform = '';
+                }, 150);
+
+                callback();
+            });
+        };
+
+        addPageButtonHandler(footer.querySelector('.tm-first'), () => this.goToPage(1));
+        addPageButtonHandler(footer.querySelector('.tm-prev'), () => this.goToPage(this.state.currentPage - 1));
+        addPageButtonHandler(footer.querySelector('.tm-next'), () => this.goToPage(this.state.currentPage + 1));
+        addPageButtonHandler(footer.querySelector('.tm-last'), () => this.goToPage(this.state.totalPages));
 
         footer.querySelector('.tm-page-size').addEventListener('change', async (e) => {
             const newValue = parseInt(e.target.value);
@@ -3704,7 +3768,6 @@ class TableManager {
      * מעבר לעמוד - 3 מצבים
      */
     goToPage(page) {
-        console.log(`🚀 goToPage START - NOT BLOCKING`);
         page = Math.max(1, Math.min(page, this.state.totalPages));
         if (page === this.state.currentPage) return;
 
@@ -3726,7 +3789,6 @@ class TableManager {
         if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
             // מצב 2 ו-3: הצג ספינר מיד, טען ברקע
             this.showLoadingIndicator(); // ⚡ מיידי!
-            console.log(`⚡ Starting async fetch - UI is FREE`);
             this._fetchPageFromServer(page);
         } else {
             // מצב 1: טען מקומי עם infinite scroll
@@ -3741,7 +3803,6 @@ class TableManager {
         if (this.config.onPageChange) {
             this.config.onPageChange(page);
         }
-        console.log(`✅ goToPage END - Function returned immediately`);
     }
 
     /**

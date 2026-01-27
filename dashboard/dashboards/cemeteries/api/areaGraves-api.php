@@ -117,11 +117,6 @@ try {
             // תמיכה גם ב-rowId וגם ב-lineId (לתאימות)
             $rowId = $postData['rowId'] ?? $_GET['rowId'] ?? $postData['lineId'] ?? $_GET['lineId'] ?? null;
 
-            // ⭐ הוסף את זה!
-            error_log("DEBUG areaGraves-api.php - plotId received: " . ($plotId ?? 'NULL'));
-            error_log("DEBUG areaGraves-api.php - postData: " . json_encode($postData));
-            error_log("DEBUG areaGraves-api.php - _GET: " . json_encode($_GET));
-
             $offset = ($page - 1) * $limit;
 
             // ⚡ שאילתה אחת עם ספירת קברים - מהיר!
@@ -250,7 +245,6 @@ try {
             // מיון והגבלה
             $sql .= " ORDER BY ag.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
 
-            $queryStart = microtime(true);
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {
                 $stmt->bindValue(":{$key}", $value);
@@ -260,11 +254,7 @@ try {
             $stmt->execute();
 
             $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $queryEnd = microtime(true);
-            $mainQueryTime = ($queryEnd - $queryStart) * 1000;
 
-            error_log(sprintf("⏱️ areaGraves API - Single query with JOIN: %.2fms", $mainQueryTime));
-            
             echo json_encode([
                 'success' => true,
                 'data' => $areaGraves,

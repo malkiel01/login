@@ -1624,6 +1624,20 @@ class TableManager {
             this._sortFilteredData();
         }
 
+        // ⭐ עדכון מספר עמודים לפי הנתונים המסוננים
+        if (this.config.showPagination) {
+            const filteredTotal = this.state.filteredData.length;
+            if (this.config.itemsPerPage >= 999999) {
+                this.state.totalPages = 1;
+            } else {
+                this.state.totalPages = Math.max(1, Math.ceil(filteredTotal / this.config.itemsPerPage));
+            }
+            // וידוא שהעמוד הנוכחי לא חורג
+            if (this.state.currentPage > this.state.totalPages) {
+                this.state.currentPage = this.state.totalPages;
+            }
+        }
+
         // Pagination או infinite scroll
         if (this.config.showPagination) {
             const start = (this.state.currentPage - 1) * this.config.itemsPerPage;
@@ -1638,6 +1652,9 @@ class TableManager {
 
         // ציור
         this.renderRows(false);
+
+        // ⭐ עדכון footer info
+        this._updateFooterInfo();
     }
 
     /**
@@ -3457,10 +3474,13 @@ class TableManager {
         footer.querySelector('.tm-last').addEventListener('click', () => this.goToPage(this.state.totalPages));
 
         footer.querySelector('.tm-page-size').addEventListener('change', (e) => {
-            const storageKey = this.config.userPreferences.storageKey || `table_${this.config.entityType}`;
             this.config.itemsPerPage = parseInt(e.target.value);
             this.calculateTotalPages();
-            this.goToPage(1);
+
+            // ⭐ חזרה לעמוד 1 וטעינה מחדש (גם אם כבר בעמוד 1)
+            this.state.currentPage = 1;
+            this.loadInitialData();
+            this._updateFooterInfo();
 
             // ⭐ שמירת העדפה לפי entity
             this._saveTablePreferences();
@@ -3489,13 +3509,16 @@ class TableManager {
     _updateFooterInfo() {
         if (!this.elements.paginationFooter) return;
 
-        const total = this.config.totalItems;
-        const displayed = this.state.displayedData.length;
-        const start = this.config.showPagination
+        // ⭐ שימוש בכמות נתונים מסוננים, לא סה"כ
+        const filteredTotal = this.state.filteredData ? this.state.filteredData.length : this.config.totalItems;
+        const allTotal = this.config.totalItems;
+        const displayed = this.state.displayedData ? this.state.displayedData.length : 0;
+
+        const start = this.config.showPagination && filteredTotal > 0
             ? (this.state.currentPage - 1) * this.config.itemsPerPage + 1
-            : 1;
+            : (filteredTotal > 0 ? 1 : 0);
         const end = this.config.showPagination
-            ? Math.min(start + this.config.itemsPerPage - 1, total)
+            ? Math.min(start + displayed - 1, filteredTotal)
             : displayed;
 
         const showing = this.elements.paginationFooter.querySelector('.tm-showing');
@@ -3503,7 +3526,16 @@ class TableManager {
         const pageInfo = this.elements.paginationFooter.querySelector('.tm-page-info');
 
         if (showing) showing.textContent = `מציג ${start}-${end}`;
-        if (totalEl) totalEl.textContent = `מתוך ${total.toLocaleString()}`;
+
+        // ⭐ הצגת מידע על פילטר אם יש
+        if (totalEl) {
+            if (filteredTotal < allTotal) {
+                totalEl.textContent = `מתוך ${filteredTotal.toLocaleString()} (מסונן מ-${allTotal.toLocaleString()})`;
+            } else {
+                totalEl.textContent = `מתוך ${filteredTotal.toLocaleString()}`;
+            }
+        }
+
         if (pageInfo) pageInfo.textContent = `עמוד ${this.state.currentPage} מ-${this.state.totalPages}`;
 
         // הפעלת/כיבוי כפתורים

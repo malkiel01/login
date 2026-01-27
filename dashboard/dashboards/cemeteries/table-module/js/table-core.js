@@ -1558,7 +1558,7 @@ class TableManager {
         tr.className = 'tm-row';
         tr.setAttribute('data-row-index', rowIndex);
 
-        const rowId = rowData.id || rowData.unicId || rowIndex;
+        const rowId = String(rowData.id || rowData.unicId || rowIndex);
         tr.setAttribute('data-row-id', rowId);
 
         // בדיקת בחירה
@@ -3294,7 +3294,7 @@ class TableManager {
     _createCard(rowData, rowIndex) {
         const card = document.createElement('div');
         card.className = 'tm-card';
-        const rowId = rowData.id || rowData.unicId || rowIndex;
+        const rowId = String(rowData.id || rowData.unicId || rowIndex);
         card.setAttribute('data-row-id', rowId);
 
         card.style.cssText = `
@@ -4024,9 +4024,9 @@ class TableManager {
     // ====================================
 
     toggleSelectAll(checked) {
-        // קבלת מזהים של האייטמים בעמוד הנוכחי
+        // קבלת מזהים של האייטמים בעמוד הנוכחי (כמחרוזות!)
         const currentPageIds = this.state.displayedData
-            .map(row => row.id || row.unicId)
+            .map(row => String(row.id || row.unicId || ''))
             .filter(id => id);
 
         if (checked) {
@@ -4081,9 +4081,9 @@ class TableManager {
         const selectAll = this.elements.thead.querySelector('.tm-select-all');
         if (!selectAll) return;
 
-        // ספירת אייטמים נבחרים מהעמוד הנוכחי
+        // ספירת אייטמים נבחרים מהעמוד הנוכחי (כמחרוזות!)
         const currentPageIds = this.state.displayedData
-            .map(row => row.id || row.unicId)
+            .map(row => String(row.id || row.unicId || ''))
             .filter(id => id);
 
         const displayedCount = currentPageIds.length;

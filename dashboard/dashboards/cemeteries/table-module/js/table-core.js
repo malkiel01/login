@@ -227,6 +227,12 @@ class TableManager {
                         this._savedSortPreferences = prefs.sortPreferences;
                         console.log('TableManager: Sort preferences loaded:', this._savedSortPreferences);
                     }
+
+                    // ⭐ סדר עמודות
+                    if (prefs.columnOrder && prefs.columnOrder.length > 0) {
+                        this._savedColumnOrder = prefs.columnOrder;
+                        console.log('TableManager: Column order loaded:', this._savedColumnOrder);
+                    }
                 }
             }
         } catch (error) {
@@ -322,6 +328,26 @@ class TableManager {
                 this.state.columnVisibility[index] = isVisible;
             }
         });
+
+        // ⭐ החלת סדר עמודות שמור
+        if (this._savedColumnOrder && this._savedColumnOrder.length > 0) {
+            const newOrder = [];
+            // המר מ-field names ל-indices
+            this._savedColumnOrder.forEach(fieldName => {
+                const index = this.config.columns.findIndex(c => (c.field || `col_${this.config.columns.indexOf(c)}`) === fieldName);
+                if (index !== -1 && !newOrder.includes(index)) {
+                    newOrder.push(index);
+                }
+            });
+            // הוסף עמודות שלא היו בסדר השמור (חדשות)
+            this.config.columns.forEach((col, index) => {
+                if (!newOrder.includes(index)) {
+                    newOrder.push(index);
+                }
+            });
+            this.state.columnOrder = newOrder;
+            console.log('TableManager: Applied saved column order:', newOrder);
+        }
     }
 
     /**
@@ -855,6 +881,17 @@ class TableManager {
         th.className = 'tm-header-cell';
         th.setAttribute('data-col-index', colIndex);
         // רוחב נקבע דרך colgroup - לא צריך להגדיר כאן
+
+        // ⭐ הפעלת גרירה לשינוי סדר עמודות
+        if (this.config.reorderable !== false && col.reorderable !== false) {
+            th.draggable = true;
+            th.addEventListener('dragstart', (e) => this._onColumnDragStart(e, colIndex));
+            th.addEventListener('dragover', (e) => this._onColumnDragOver(e, colIndex));
+            th.addEventListener('dragenter', (e) => this._onColumnDragEnter(e, colIndex));
+            th.addEventListener('dragleave', (e) => this._onColumnDragLeave(e));
+            th.addEventListener('drop', (e) => this._onColumnDrop(e, colIndex));
+            th.addEventListener('dragend', (e) => this._onColumnDragEnd(e));
+        }
 
         // wrapper לתוכן
         const wrapper = document.createElement('div');
@@ -1899,6 +1936,213 @@ class TableManager {
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         }, { signal: this._abortController.signal });
+    }
+
+    // ====================================
+    // גרירת עמודות לשינוי סדר
+    // ====================================
+
+    /**
+     * התחלת גרירת עמודה
+     */
+    _onColumnDragStart(e, colIndex) {
+        // שמירת האינדקס הנגרר
+        this._draggedColumnIndex = colIndex;
+
+        // הגדרת נתוני הגרירה
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', colIndex.toString());
+
+        // סגנון ויזואלי לעמודה הנגררת
+        const th = e.target.closest('th');
+        if (th) {
+            th.classList.add('tm-column-dragging');
+            th.style.opacity = '0.5';
+        }
+
+        console.log('Column drag start:', colIndex);
+    }
+
+    /**
+     * גרירה מעל עמודה
+     */
+    _onColumnDragOver(e, colIndex) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    /**
+     * כניסה לאזור עמודה
+     */
+    _onColumnDragEnter(e, colIndex) {
+        e.preventDefault();
+
+        // אל תסמן את העמודה הנגררת עצמה
+        if (colIndex === this._draggedColumnIndex) return;
+
+        const th = e.target.closest('th');
+        if (th && !th.classList.contains('tm-column-dragging')) {
+            th.classList.add('tm-column-drag-over');
+        }
+    }
+
+    /**
+     * יציאה מאזור עמודה
+     */
+    _onColumnDragLeave(e) {
+        const th = e.target.closest('th');
+        if (th) {
+            th.classList.remove('tm-column-drag-over');
+        }
+    }
+
+    /**
+     * שחרור עמודה - ביצוע החלפה
+     */
+    _onColumnDrop(e, targetColIndex) {
+        e.preventDefault();
+
+        const th = e.target.closest('th');
+        if (th) {
+            th.classList.remove('tm-column-drag-over');
+        }
+
+        const sourceColIndex = this._draggedColumnIndex;
+
+        // אין צורך להחליף אם זו אותה עמודה
+        if (sourceColIndex === targetColIndex || sourceColIndex === undefined) {
+            return;
+        }
+
+        console.log('Column drop:', sourceColIndex, '->', targetColIndex);
+
+        // מציאת המיקומים במערך columnOrder
+        const sourceOrderIndex = this.state.columnOrder.indexOf(sourceColIndex);
+        const targetOrderIndex = this.state.columnOrder.indexOf(targetColIndex);
+
+        if (sourceOrderIndex === -1 || targetOrderIndex === -1) {
+            console.error('Column not found in order array');
+            return;
+        }
+
+        // הסרת העמודה מהמיקום הישן
+        this.state.columnOrder.splice(sourceOrderIndex, 1);
+
+        // הוספת העמודה למיקום החדש
+        // אם המיקום החדש אחרי הישן, צריך להתאים את האינדקס
+        const newTargetIndex = this.state.columnOrder.indexOf(targetColIndex);
+        this.state.columnOrder.splice(newTargetIndex, 0, sourceColIndex);
+
+        console.log('New column order:', this.state.columnOrder);
+
+        // בנייה מחדש של הטבלה
+        this._rebuildTableAfterReorder();
+
+        // שמירת ההעדפות
+        this._saveTablePreferences();
+    }
+
+    /**
+     * סיום גרירה
+     */
+    _onColumnDragEnd(e) {
+        // איפוס סגנונות מכל העמודות
+        const allHeaders = this.elements.thead.querySelectorAll('th');
+        allHeaders.forEach(th => {
+            th.classList.remove('tm-column-dragging', 'tm-column-drag-over');
+            th.style.opacity = '';
+        });
+
+        this._draggedColumnIndex = undefined;
+    }
+
+    /**
+     * בנייה מחדש של הטבלה לאחר שינוי סדר עמודות
+     */
+    _rebuildTableAfterReorder() {
+        // עדכון colgroup
+        this._updateColgroup();
+
+        // בנייה מחדש של שורת הכותרת
+        this._rebuildHeaderRow();
+
+        // רענון השורות בטבלה
+        this.renderRows(false);
+    }
+
+    /**
+     * עדכון colgroup לפי סדר העמודות החדש
+     */
+    _updateColgroup() {
+        const headerColgroup = this.elements.headerTable.querySelector('colgroup');
+        const bodyColgroup = this.elements.bodyTable.querySelector('colgroup');
+
+        if (!headerColgroup || !bodyColgroup) return;
+
+        // מחיקת cols קיימים (חוץ מcheckbox אם קיים)
+        const hasCheckbox = this.state.multiSelectEnabled;
+
+        // שמירת col של checkbox אם קיים
+        const checkboxCol = hasCheckbox ? headerColgroup.querySelector('col:first-child')?.cloneNode(true) : null;
+
+        // ריקון colgroups
+        headerColgroup.innerHTML = '';
+        bodyColgroup.innerHTML = '';
+
+        // החזרת col של checkbox
+        if (checkboxCol) {
+            headerColgroup.appendChild(checkboxCol);
+            bodyColgroup.appendChild(checkboxCol.cloneNode(true));
+        }
+
+        // יצירת cols לפי הסדר החדש
+        this.state.columnOrder.forEach(colIndex => {
+            if (!this.state.columnVisibility[colIndex]) return;
+
+            const col = this.config.columns[colIndex];
+            const width = this.state.columnWidths[colIndex] || col.width || 150;
+
+            const headerCol = document.createElement('col');
+            headerCol.style.width = width + 'px';
+            headerCol.setAttribute('data-col-index', colIndex);
+
+            const bodyCol = headerCol.cloneNode(true);
+
+            headerColgroup.appendChild(headerCol);
+            bodyColgroup.appendChild(bodyCol);
+        });
+    }
+
+    /**
+     * בנייה מחדש של שורת הכותרת לפי סדר חדש
+     */
+    _rebuildHeaderRow() {
+        const headerRow = this.elements.thead.querySelector('tr');
+        if (!headerRow) return;
+
+        // שמירת תא checkbox אם קיים
+        const checkboxCell = this.state.multiSelectEnabled ?
+            headerRow.querySelector('.tm-checkbox-cell')?.cloneNode(true) : null;
+
+        // ריקון השורה
+        headerRow.innerHTML = '';
+
+        // החזרת checkbox
+        if (checkboxCell) {
+            headerRow.appendChild(checkboxCell);
+        }
+
+        // יצירת תאי כותרת לפי הסדר החדש
+        this.state.columnOrder.forEach(colIndex => {
+            if (!this.state.columnVisibility[colIndex]) return;
+
+            const col = this.config.columns[colIndex];
+            const th = this._createHeaderCell(col, colIndex);
+            headerRow.appendChild(th);
+        });
+
+        // עדכון אייקוני מיון
+        this._updateSortIcons();
     }
 
     /**
@@ -3323,6 +3567,12 @@ class TableManager {
 
         // מצב תצוגה למובייל
         prefs.mobileViewMode = this.state.mobileViewMode;
+
+        // ⭐ סדר עמודות
+        prefs.columnOrder = this.state.columnOrder.map(index => {
+            const col = this.config.columns[index];
+            return col?.field || `col_${index}`;
+        });
 
         return prefs;
     }

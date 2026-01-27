@@ -4052,65 +4052,84 @@ class TableManager {
     async toggleSelectAll(checked) {
         const serverTotal = this.config.totalItems || 0;
 
-        // ⭐ מצב 3: פגינציה עם infinite scroll (500) - צריך לטעון את כל העמוד לפני בחירה
+        // ⭐ שלב 1: סמן מיד את כל האייטמים המוצגים כרגע
+        const currentDisplayedIds = this.state.displayedData
+            .map(row => String(row.id || row.unicId || ''))
+            .filter(id => id);
+
+        if (checked) {
+            currentDisplayedIds.forEach(id => this.state.selectedRows.add(id));
+        } else {
+            if (this.state.selectPerPage) {
+                currentDisplayedIds.forEach(id => this.state.selectedRows.delete(id));
+            } else {
+                this.state.selectedRows.clear();
+            }
+        }
+
+        // עדכון מיידי של ה-UI
+        this._updateRowSelections();
+        this._updateSelectAllCheckbox();
+
+        // ⭐ מצב 3: פגינציה עם infinite scroll (500) - טען את השאר ברקע
         if (checked && this.config.itemsPerPage > 200 && this.config.itemsPerPage < 999999) {
             const pageStart = (this.state.currentPage - 1) * this.config.itemsPerPage;
             const pageEnd = Math.min(this.state.currentPage * this.config.itemsPerPage, serverTotal);
             const expectedPageSize = pageEnd - pageStart;
 
-            // ⭐ הצג מיד את הכמות הצפויה בפוטר (לפני שמתחילים לטעון)
+            // הצג מיד את הכמות הצפויה בפוטר
             this.state.pendingSelectionCount = expectedPageSize;
             this._updateFooterSelectedCount(expectedPageSize);
 
-            // בדוק אם יש מספיק נתונים בfilteredData לעמוד הנוכחי
+            // בדוק אם צריך לטעון עוד
             const currentPageData = this.state.filteredData.slice(pageStart, pageEnd);
 
             if (currentPageData.length < expectedPageSize && this.config.onLoadMore) {
-                // טען את כל הנתונים שחסרים לעמוד הזה
-                this.showLoadingIndicator();
-                try {
-                    let loadAttempts = 0;
-                    while (this.state.filteredData.length < pageEnd && loadAttempts < 50) {
-                        loadAttempts++;
-                        const success = await this.config.onLoadMore();
-                        if (!success) break;
-                        // עדכון filteredData
-                        this.state.filteredData = this._applyFilters(this.config.data);
-                    }
-                    // עדכון displayedData להציג את כל העמוד
-                    this.state.displayedData = this.state.filteredData.slice(pageStart, pageEnd);
-                    this.state.hasMoreData = false; // כל העמוד נטען
-                    this.renderRows(false);
-                } finally {
-                    this.hideLoadingIndicator();
-                }
-            }
-
-            // נקה את הסימון הזמני
-            this.state.pendingSelectionCount = null;
-        }
-
-        // קבלת מזהים של האייטמים בעמוד הנוכחי (כמחרוזות!)
-        const currentPageIds = this.state.displayedData
-            .map(row => String(row.id || row.unicId || ''))
-            .filter(id => id);
-
-        if (checked) {
-            // בחירת כל האייטמים בעמוד הנוכחי
-            currentPageIds.forEach(id => this.state.selectedRows.add(id));
-        } else {
-            // ביטול בחירה - בהתאם למצב selectPerPage
-            if (this.state.selectPerPage) {
-                // ביטול רק של אייטמים בעמוד הנוכחי
-                currentPageIds.forEach(id => this.state.selectedRows.delete(id));
+                // טען את השאר ברקע (בלי לחסום את ה-UI)
+                this._loadAndSelectRemainingItems(pageStart, pageEnd, expectedPageSize);
             } else {
-                // ביטול כל הבחירות
-                this.state.selectedRows.clear();
+                this.state.pendingSelectionCount = null;
             }
         }
 
-        this._updateRowSelections();
         this._notifySelectionChange();
+        return; // יציאה מוקדמת - כבר עדכנו את הכל למעלה
+    }
+
+    /**
+     * טעינת ובחירת אייטמים שנותרו (ברקע)
+     */
+    async _loadAndSelectRemainingItems(pageStart, pageEnd, expectedPageSize) {
+        this.showLoadingIndicator();
+        try {
+            let loadAttempts = 0;
+            while (this.state.filteredData.length < pageEnd && loadAttempts < 50) {
+                loadAttempts++;
+                const success = await this.config.onLoadMore();
+                if (!success) break;
+
+                // עדכון filteredData
+                this.state.filteredData = this._applyFilters(this.config.data);
+
+                // סמן את האייטמים החדשים שנטענו
+                const newPageData = this.state.filteredData.slice(pageStart, pageEnd);
+                newPageData.forEach(row => {
+                    const id = String(row.id || row.unicId || '');
+                    if (id) this.state.selectedRows.add(id);
+                });
+            }
+
+            // עדכון displayedData להציג את כל העמוד
+            this.state.displayedData = this.state.filteredData.slice(pageStart, pageEnd);
+            this.state.hasMoreData = false;
+            this.renderRows(false);
+            this._updateRowSelections();
+
+        } finally {
+            this.state.pendingSelectionCount = null;
+            this.hideLoadingIndicator();
+            this._notifySelectionChange();
+        }
     }
 
     /**

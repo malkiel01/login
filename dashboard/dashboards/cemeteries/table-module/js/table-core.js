@@ -799,44 +799,64 @@ class TableManager {
      */
     async _doLoadMoreData() {
         const loadedItems = this.state.displayedData.length;
-        const totalAvailable = this.state.filteredData.length;
+        let totalAvailable = this.state.filteredData.length;
 
-        // בדיקה 1: הגענו לסוף?
-        if (loadedItems >= this.config.totalItems) {
+        // ⭐ חישוב הגבול - לפי itemsPerPage או totalItems
+        const maxToDisplay = Math.min(this.config.itemsPerPage, this.config.totalItems);
+
+        // בדיקה 1: הגענו לגבול המבוקש?
+        if (loadedItems >= maxToDisplay) {
             this.state.hasMoreData = false;
             return;
         }
 
         // בדיקה 2: צריך לקרוא מה-API?
-        if (loadedItems >= totalAvailable) {
+        if (loadedItems >= totalAvailable && totalAvailable < maxToDisplay) {
             if (this.config.onLoadMore) {
                 this.showLoadingIndicator();
 
                 try {
-                    await this.config.onLoadMore();
+                    const success = await this.config.onLoadMore();
+                    if (success) {
+                        // ⭐ עדכון filteredData אחרי הטעינה
+                        this.state.filteredData = this._applyFilters(this.config.data);
+                        totalAvailable = this.state.filteredData.length;
+                    }
                 } catch (error) {
                     console.error('TableManager: Error loading more data:', error);
                 } finally {
                     this.hideLoadingIndicator();
                 }
             }
-            return;
+            // ⭐ אם אין עוד נתונים זמינים, עצור
+            if (loadedItems >= this.state.filteredData.length) {
+                this.state.hasMoreData = this.state.filteredData.length < maxToDisplay;
+                return;
+            }
         }
 
-        // בדיקה 3: יש עוד נתונים ב-filteredData
+        // בדיקה 3: יש עוד נתונים ב-filteredData - טען את ה-batch הבא
         this.showLoadingIndicator();
 
         // המתנה קצרה לשיפור UX
         await new Promise(resolve => setTimeout(resolve, 100));
 
+        // ⭐ חישוב כמה לטעון - עד scrollLoadBatch או עד maxToDisplay
+        const remainingToMax = maxToDisplay - loadedItems;
+        const batchSize = Math.min(this.config.scrollLoadBatch, remainingToMax);
+
         const nextBatch = this.state.filteredData.slice(
             loadedItems,
-            loadedItems + this.config.scrollLoadBatch
+            loadedItems + batchSize
         );
 
         this.state.displayedData = [...this.state.displayedData, ...nextBatch];
 
+        // ⭐ עדכון hasMoreData
+        this.state.hasMoreData = this.state.displayedData.length < maxToDisplay;
+
         this.renderRows(true);
+        this._updateFooterInfo();
         this.hideLoadingIndicator();
     }
 

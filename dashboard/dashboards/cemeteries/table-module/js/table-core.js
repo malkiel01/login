@@ -454,8 +454,14 @@ class TableManager {
             console.log('TableManager: Restored sort preferences:', this.state.sortLevels);
         }
 
-        // טעינת נתונים ראשונית
-        this.loadInitialData();
+        // ⭐ טעינת נתונים ראשונית
+        // במצב server-side - טען מהשרת עם המיון, אחרת טען מקומית
+        if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
+            this.showLoadingIndicator();
+            this._fetchPageFromServer(1);
+        } else {
+            this.loadInitialData();
+        }
 
         // ⭐ עדכון אייקוני מיון לאחר טעינת הנתונים (עם delay לוודא ש-DOM מוכן)
         if (this.state.sortColumn !== null) {
@@ -1111,40 +1117,49 @@ class TableManager {
 
         const field = col.field;
 
-        this.state.filteredData.sort((a, b) => {
-            let valA = a[field];
-            let valB = b[field];
-
-            if (valA == null) return this.state.sortOrder === 'asc' ? 1 : -1;
-            if (valB == null) return this.state.sortOrder === 'asc' ? -1 : 1;
-
-            // לפי סוג
-            if (col.type === 'number' || typeof valA === 'number') {
-                const numA = parseFloat(valA) || 0;
-                const numB = parseFloat(valB) || 0;
-                return this.state.sortOrder === 'asc' ? numA - numB : numB - numA;
-            }
-
-            if (col.type === 'date') {
-                const dateA = new Date(valA).getTime() || 0;
-                const dateB = new Date(valB).getTime() || 0;
-                return this.state.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-            }
-
-            // טקסט
-            const strA = String(valA).toLowerCase();
-            const strB = String(valB).toLowerCase();
-            const cmp = strA.localeCompare(strB, 'he');
-            return this.state.sortOrder === 'asc' ? cmp : -cmp;
-        });
-
-        this._updateSortIcons();
-        this.state.currentPage = 1;
-        this.loadInitialData();
-
         // ⭐ עדכון sortLevels ושמירת העדפות
         this.state.sortLevels = [{ colIndex: this.state.sortColumn, order: this.state.sortOrder }];
         this._saveSortPreferences();
+
+        this._updateSortIcons();
+        this.state.currentPage = 1;
+
+        // ⭐ במצב server-side: שלח לשרת ולא מיון מקומי
+        if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
+            // פגינציה בשרת - טען מחדש מהשרת עם המיון החדש
+            this.showLoadingIndicator();
+            this._fetchPageFromServer(1);
+        } else {
+            // מיון מקומי
+            this.state.filteredData.sort((a, b) => {
+                let valA = a[field];
+                let valB = b[field];
+
+                if (valA == null) return this.state.sortOrder === 'asc' ? 1 : -1;
+                if (valB == null) return this.state.sortOrder === 'asc' ? -1 : 1;
+
+                // לפי סוג
+                if (col.type === 'number' || typeof valA === 'number') {
+                    const numA = parseFloat(valA) || 0;
+                    const numB = parseFloat(valB) || 0;
+                    return this.state.sortOrder === 'asc' ? numA - numB : numB - numA;
+                }
+
+                if (col.type === 'date') {
+                    const dateA = new Date(valA).getTime() || 0;
+                    const dateB = new Date(valB).getTime() || 0;
+                    return this.state.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+                }
+
+                // טקסט
+                const strA = String(valA).toLowerCase();
+                const strB = String(valB).toLowerCase();
+                const cmp = strA.localeCompare(strB, 'he');
+                return this.state.sortOrder === 'asc' ? cmp : -cmp;
+            });
+
+            this.loadInitialData();
+        }
 
         if (this.config.onSort) {
             this.config.onSort(field, this.state.sortOrder);
@@ -3814,7 +3829,19 @@ class TableManager {
         // ספינר כבר הוצג ב-goToPage!
 
         try {
-            const result = await this.config.onFetchPage(page, this.config.itemsPerPage);
+            // ⭐ בניית אובייקט מיון לשליחה לשרת
+            let sortParams = null;
+            if (this.state.sortColumn !== null) {
+                const col = this.config.columns[this.state.sortColumn];
+                if (col && col.field) {
+                    sortParams = {
+                        field: col.field,
+                        order: this.state.sortOrder
+                    };
+                }
+            }
+
+            const result = await this.config.onFetchPage(page, this.config.itemsPerPage, sortParams);
             console.log(`📦 Data received, rendering...`);
 
             if (result && result.data) {

@@ -338,10 +338,10 @@ class EntityRenderer {
             },
 
             // ⭐ callback לפגינציה בצד שרת
-            onFetchPage: async (page, limit) => {
+            onFetchPage: async (page, limit, sortParams = null) => {
                 const state = entityState.getState(entityType);
                 const parentId = config.hasParent ? state.parentId : null;
-                return await EntityLoader.fetchPage(entityType, page, limit, parentId);
+                return await EntityLoader.fetchPage(entityType, page, limit, parentId, sortParams);
             },
 
             onSort: (field, order) => {

@@ -180,9 +180,10 @@ class EntityLoader {
      * @param {number} page - מספר עמוד
      * @param {number} limit - כמות פריטים בעמוד
      * @param {string|null} parentId - מזהה הורה (אופציונלי)
+     * @param {Object|null} sortParams - פרמטרי מיון {field, order}
      * @returns {Promise<Object>} {data, totalItems}
      */
-    static async fetchPage(entityType, page, limit, parentId = null) {
+    static async fetchPage(entityType, page, limit, parentId = null, sortParams = null) {
         const config = ENTITY_CONFIG[entityType];
 
         if (!config) {
@@ -192,14 +193,18 @@ class EntityLoader {
         try {
             // בניית URL עם פרמטרים
             let apiUrl = `${config.apiEndpoint}?action=list&limit=${encodeURIComponent(limit)}&page=${encodeURIComponent(page)}`;
-            apiUrl += `&orderBy=${encodeURIComponent(config.defaultOrderBy)}&sortDirection=${encodeURIComponent(config.defaultSortDirection)}`;
+
+            // ⭐ מיון: השתמש ב-sortParams אם קיים, אחרת ברירת מחדל
+            const orderBy = sortParams?.field || config.defaultOrderBy;
+            const sortDirection = sortParams?.order === 'asc' ? 'ASC' : 'DESC';
+            apiUrl += `&orderBy=${encodeURIComponent(orderBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
 
             // הוספת parent ID אם קיים
             if (parentId && config.parentParam) {
                 apiUrl += `&${encodeURIComponent(config.parentParam)}=${encodeURIComponent(parentId)}`;
             }
 
-            console.log(`📄 Fetching page ${page} with limit ${limit} for ${entityType}`);
+            console.log(`📄 Fetching page ${page} with limit ${limit} for ${entityType}${sortParams ? ` (sorted by ${sortParams.field} ${sortParams.order})` : ''}`);
 
             const response = await fetch(apiUrl);
 

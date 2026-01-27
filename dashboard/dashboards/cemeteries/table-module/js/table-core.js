@@ -3474,13 +3474,21 @@ class TableManager {
         footer.querySelector('.tm-last').addEventListener('click', () => this.goToPage(this.state.totalPages));
 
         footer.querySelector('.tm-page-size').addEventListener('change', (e) => {
-            this.config.itemsPerPage = parseInt(e.target.value);
+            const newValue = parseInt(e.target.value);
+            this.config.itemsPerPage = newValue;
+
+            // ⭐ עדכון showPagination לפי הבחירה
+            if (newValue >= 999999) {
+                this.config.showPagination = false;
+            } else {
+                this.config.showPagination = true;
+            }
+
             this.calculateTotalPages();
 
             // ⭐ חזרה לעמוד 1 וטעינה מחדש (גם אם כבר בעמוד 1)
             this.state.currentPage = 1;
             this.loadInitialData();
-            this._updateFooterInfo();
 
             // ⭐ שמירת העדפה לפי entity
             this._saveTablePreferences();

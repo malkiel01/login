@@ -425,7 +425,12 @@ class TableManager {
         }
 
         // טעינת נתונים ראשונית
-        this.loadInitialData();
+        // ⭐ אם itemsPerPage >= 500, צריך טעינה בשלבים
+        if (this.config.itemsPerPage >= 500 && this.config.onLoadMore) {
+            this._loadDataInBatches(this.config.itemsPerPage);
+        } else {
+            this.loadInitialData();
+        }
 
         // ⭐ עדכון אייקוני מיון לאחר טעינת הנתונים (עם delay לוודא ש-DOM מוכן)
         if (this.state.sortColumn !== null) {

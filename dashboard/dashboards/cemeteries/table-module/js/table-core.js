@@ -998,6 +998,7 @@ class TableManager {
         if (this.config.resizable && col.resizable !== false) {
             const resizeHandle = document.createElement('div');
             resizeHandle.className = 'tm-resize-handle';
+            resizeHandle.draggable = false; // ⭐ למנוע drag על ה-handle
             th.appendChild(resizeHandle);
         }
 
@@ -2131,6 +2132,10 @@ class TableManager {
 
         this.elements.thead.addEventListener('mousedown', (e) => {
             if (!e.target.classList.contains('tm-resize-handle')) return;
+
+            // ⭐ חשוב! עצירת propagation כדי למנוע drag של העמודה
+            e.preventDefault();
+            e.stopPropagation();
 
             isResizing = true;
             currentTh = e.target.closest('.tm-header-cell');

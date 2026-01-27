@@ -1697,21 +1697,28 @@ class TableManager {
             const pageStart = (this.state.currentPage - 1) * this.config.itemsPerPage;
             const pageEnd = Math.min(pageStart + this.config.itemsPerPage, serverTotal);
 
-            // ⭐ פעימה ראשונה: 250 פריטים
-            const batchSize = 250;
-            const firstBatchEnd = Math.min(pageStart + batchSize, pageEnd);
-            this.state.displayedData = this.state.filteredData.slice(pageStart, firstBatchEnd);
-
-            // שמירת מידע לפעימה השנייה
+            // שמירת מידע לטעינה
             this.state.currentPageStart = pageStart;
             this.state.currentPageEnd = pageEnd;
-            this.state.hasMoreData = false; // אין infinite scroll - טוענים אוטומטית
+            this.state.hasMoreData = false;
 
-            // ⭐ פעימה שנייה: עוד 250 פריטים (אסינכרוני)
-            if (firstBatchEnd < pageEnd) {
-                setTimeout(() => {
-                    this._loadSecondBatch(firstBatchEnd, pageEnd);
-                }, 50); // delay קצר לאפשר לUI להתרנדר
+            // ⭐ בדוק אם צריך לטעון מהשרת (הנתונים לא קיימים עדיין)
+            if (pageStart >= this.state.filteredData.length && this.config.onLoadMore) {
+                // צריך לטעון - הפונקציה תטפל ברינדור
+                this._loadMode3Page(pageStart, pageEnd);
+                return; // יציאה מוקדמת - _loadMode3Page יטפל בכל השאר
+            } else {
+                // הנתונים קיימים - הצג פעימה ראשונה
+                const batchSize = 250;
+                const firstBatchEnd = Math.min(pageStart + batchSize, pageEnd);
+                this.state.displayedData = this.state.filteredData.slice(pageStart, firstBatchEnd);
+
+                // פעימה שנייה אסינכרונית
+                if (firstBatchEnd < pageEnd && firstBatchEnd < this.state.filteredData.length) {
+                    setTimeout(() => {
+                        this._loadSecondBatch(firstBatchEnd, Math.min(pageEnd, this.state.filteredData.length));
+                    }, 50);
+                }
             }
         }
 
@@ -1723,21 +1730,44 @@ class TableManager {
     }
 
     /**
+     * ⭐ מצב 3: טעינת עמוד שלם מהשרת (כשהנתונים לא קיימים עדיין)
+     */
+    async _loadMode3Page(pageStart, pageEnd) {
+        this.showLoadingIndicator();
+
+        try {
+            // טען נתונים מהשרת עד שיש מספיק
+            let loadAttempts = 0;
+            while (this.state.filteredData.length < pageEnd && loadAttempts < 50) {
+                loadAttempts++;
+                const success = await this.config.onLoadMore();
+                if (!success) break;
+                this.state.filteredData = this._applyFilters(this.config.data);
+            }
+
+            // פעימה ראשונה: 250 פריטים
+            const batchSize = 250;
+            const firstBatchEnd = Math.min(pageStart + batchSize, pageEnd);
+            this.state.displayedData = this.state.filteredData.slice(pageStart, firstBatchEnd);
+            this.renderRows(false);
+            this._updateFooterInfo();
+
+            // פעימה שנייה אסינכרונית
+            if (firstBatchEnd < pageEnd) {
+                setTimeout(() => {
+                    this._loadSecondBatch(firstBatchEnd, Math.min(pageEnd, this.state.filteredData.length));
+                }, 50);
+            }
+
+        } finally {
+            this.hideLoadingIndicator();
+        }
+    }
+
+    /**
      * ⭐ מצב 3: טעינת פעימה שנייה (250 נוספים)
      */
-    async _loadSecondBatch(startIndex, endIndex) {
-        // בדוק אם יש צורך לטעון מהשרת
-        if (startIndex >= this.state.filteredData.length && this.config.onLoadMore) {
-            this.showLoadingIndicator();
-            try {
-                await this.config.onLoadMore();
-                this.state.filteredData = this._applyFilters(this.config.data);
-            } finally {
-                this.hideLoadingIndicator();
-            }
-        }
-
-        // טען את הפעימה השנייה
+    _loadSecondBatch(startIndex, endIndex) {
         const secondBatch = this.state.filteredData.slice(startIndex, endIndex);
         if (secondBatch.length > 0) {
             this.state.displayedData = [...this.state.displayedData, ...secondBatch];

@@ -80,13 +80,8 @@ class WebPush {
         $salt = random_bytes(16);
 
         // Compute shared secret using ECDH
-        // Use local ephemeral key details (not VAPID key)
-        $sharedSecret = $this->computeECDH(
-            $localDetails['ec']['d'],
-            $localDetails['ec']['x'],
-            $localDetails['ec']['y'],
-            $uaPublic
-        );
+        // Pass the key resource directly (not raw bytes)
+        $sharedSecret = $this->computeECDH($localKey, $uaPublic);
 
         if (!$sharedSecret) {
             error_log("[WebPush] ECDH computation failed");
@@ -158,30 +153,18 @@ class WebPush {
      * Compute ECDH shared secret
      * Uses openssl_pkey_derive for proper elliptic curve Diffie-Hellman
      */
-    private function computeECDH(string $localPrivateKey, string $localX, string $localY, string $peerPublicKey): ?string {
+    private function computeECDH($localKeyResource, string $peerPublicKey): ?string {
         // Extract x,y from peer public key (uncompressed format: 0x04 || x || y)
         $peerX = substr($peerPublicKey, 1, 32);
         $peerY = substr($peerPublicKey, 33, 32);
 
-        // Create PEM for peer public key
+        // Create PEM for peer public key using proper DER encoding
         $peerDer = $this->createECPublicKeyDER($peerX, $peerY);
         $peerPem = "-----BEGIN PUBLIC KEY-----\n" .
                    chunk_split(base64_encode($peerDer), 64, "\n") .
                    "-----END PUBLIC KEY-----\n";
 
-        // Create PEM for our (ephemeral) private key
-        $myPrivateDer = $this->createECPrivateKeyDER($localPrivateKey, $localX, $localY);
-        $myPrivatePem = "-----BEGIN EC PRIVATE KEY-----\n" .
-                        chunk_split(base64_encode($myPrivateDer), 64, "\n") .
-                        "-----END EC PRIVATE KEY-----\n";
-
-        $myPrivateKey = openssl_pkey_get_private($myPrivatePem);
         $peerKey = openssl_pkey_get_public($peerPem);
-
-        if (!$myPrivateKey) {
-            error_log("[WebPush] Failed to load local private key: " . openssl_error_string());
-            return null;
-        }
 
         if (!$peerKey) {
             error_log("[WebPush] Failed to load peer public key: " . openssl_error_string());
@@ -190,7 +173,7 @@ class WebPush {
 
         // Use openssl_pkey_derive for ECDH (PHP 7.3+)
         if (function_exists('openssl_pkey_derive')) {
-            $sharedSecret = openssl_pkey_derive($peerKey, $myPrivateKey, 32);
+            $sharedSecret = openssl_pkey_derive($peerKey, $localKeyResource, 32);
             if ($sharedSecret !== false) {
                 return $sharedSecret;
             }

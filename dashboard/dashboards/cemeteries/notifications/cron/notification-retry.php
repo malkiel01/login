@@ -250,12 +250,12 @@ function sendPushToUser(PDO $pdo, int $userId, string $title, string $body, ?str
         $notificationUrl = "/dashboard/dashboards/cemeteries/notifications/approve.php?id={$notificationId}";
     }
 
-    // Prepare subscription data
+    // Prepare subscription data (DB columns are p256dh_key and auth_key)
     $subscriptionData = [
         'endpoint' => $subscription['endpoint'],
         'keys' => [
-            'p256dh' => $subscription['p256dh'],
-            'auth' => $subscription['auth']
+            'p256dh' => $subscription['p256dh_key'],
+            'auth' => $subscription['auth_key']
         ]
     ];
 

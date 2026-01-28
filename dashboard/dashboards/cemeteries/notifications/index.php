@@ -163,6 +163,37 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
                 </div>
 
                 <div class="form-section">
+                    <h3 class="section-title">בקשת אישור</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="checkbox-label approval-checkbox">
+                                <input type="checkbox" id="requiresApproval" name="requires_approval" onchange="NotificationsManager.toggleApprovalFields()">
+                                <span>דרוש אישור ביומטרי מהמשתמש</span>
+                            </label>
+                            <p class="form-help-text">המשתמש יתבקש לאשר עם טביעת אצבע / Face ID</p>
+                        </div>
+                    </div>
+
+                    <div class="form-row approval-fields" id="approvalFields" style="display: none;">
+                        <div class="form-group">
+                            <label for="approvalMessage">הודעת אישור (אופציונלי)</label>
+                            <textarea id="approvalMessage" name="approval_message" class="form-control" rows="2" placeholder="הודעה שתוצג למשתמש בעת בקשת האישור..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="approvalExpiry">תוקף האישור</label>
+                            <select id="approvalExpiry" name="approval_expiry" class="form-control">
+                                <option value="">ללא הגבלה</option>
+                                <option value="1">שעה אחת</option>
+                                <option value="24">24 שעות</option>
+                                <option value="48">48 שעות</option>
+                                <option value="168">שבוע</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
                     <h3 class="section-title">זמן שליחה</h3>
 
                     <div class="form-row">

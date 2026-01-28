@@ -172,6 +172,20 @@ const NotificationsManager = {
     },
 
     /**
+     * Toggle approval fields visibility
+     */
+    toggleApprovalFields() {
+        const requiresApproval = document.getElementById('requiresApproval').checked;
+        const approvalFields = document.getElementById('approvalFields');
+
+        if (requiresApproval) {
+            approvalFields.style.display = '';
+        } else {
+            approvalFields.style.display = 'none';
+        }
+    },
+
+    /**
      * Load notifications from API
      */
     async loadNotifications() {
@@ -237,6 +251,7 @@ const NotificationsManager = {
                         <span class="type-badge ${notification.notification_type}">
                             ${this.getTypeLabel(notification.notification_type)}
                         </span>
+                        ${notification.requires_approval == 1 ? '<span class="approval-badge requires" title="דרוש אישור ביומטרי">🔐</span>' : ''}
                     </td>
                     <td>${userCount}</td>
                     <td>${scheduledAt}</td>
@@ -325,19 +340,36 @@ const NotificationsManager = {
      */
     renderDeliveryStatus(notificationId, notification, users) {
         const container = document.getElementById(`details-container-${notificationId}`);
+        const requiresApproval = notification.requires_approval == 1;
 
         if (users.length === 0) {
             container.innerHTML = '<div class="no-users-message">לא נמצאו משתמשים</div>';
             return;
         }
 
+        // Calculate stats
+        const deliveredCount = users.filter(u => u.is_delivered > 0).length;
+        const pendingCount = users.filter(u => u.is_delivered === 0 || u.is_delivered === '0').length;
+        const hasAppCount = users.filter(u => u.has_push_subscription > 0).length;
+
+        // Approval stats (if applicable)
+        const approvedCount = requiresApproval ? users.filter(u => u.approval_status === 'approved').length : 0;
+        const rejectedCount = requiresApproval ? users.filter(u => u.approval_status === 'rejected').length : 0;
+        const pendingApprovalCount = requiresApproval ? users.filter(u => !u.approval_status || u.approval_status === 'pending').length : 0;
+
         container.innerHTML = `
             <div class="delivery-status-header">
-                <h4>סטטוס שליחה למשתמשים</h4>
+                <h4>${requiresApproval ? 'סטטוס אישורים' : 'סטטוס שליחה למשתמשים'}</h4>
                 <div class="delivery-stats">
-                    <span class="stat delivered">✓ ${users.filter(u => u.is_delivered > 0).length} נמסר</span>
-                    <span class="stat pending">${users.filter(u => u.is_delivered === 0 || u.is_delivered === '0').length} ממתין</span>
-                    <span class="stat has-app">📱 ${users.filter(u => u.has_push_subscription > 0).length} עם אפליקציה</span>
+                    ${requiresApproval ? `
+                        <span class="stat approved">✓ ${approvedCount} אישרו</span>
+                        <span class="stat rejected">✗ ${rejectedCount} דחו</span>
+                        <span class="stat pending">⏳ ${pendingApprovalCount} ממתינים</span>
+                    ` : `
+                        <span class="stat delivered">✓ ${deliveredCount} נמסר</span>
+                        <span class="stat pending">${pendingCount} ממתין</span>
+                    `}
+                    <span class="stat has-app">📱 ${hasAppCount} עם אפליקציה</span>
                 </div>
             </div>
             <div class="users-delivery-list">
@@ -351,9 +383,7 @@ const NotificationsManager = {
                             ${user.has_push_subscription > 0
                                 ? '<span class="app-badge has-app" title="מותקנת אפליקציה">📱</span>'
                                 : '<span class="app-badge no-app" title="אין אפליקציה מותקנת">🌐</span>'}
-                            ${user.is_delivered > 0
-                                ? '<span class="delivery-badge delivered">✓ נמסר</span>'
-                                : '<span class="delivery-badge pending">⏳ ממתין</span>'}
+                            ${requiresApproval ? this.renderApprovalStatus(user) : this.renderDeliveryBadge(user)}
                         </div>
                         <div class="user-actions">
                             <button class="btn btn-xs btn-primary" onclick="NotificationsManager.resendToUser(${notificationId}, ${user.id})" title="שלח שוב">
@@ -364,6 +394,43 @@ const NotificationsManager = {
                 `).join('')}
             </div>
         `;
+    },
+
+    /**
+     * Render delivery badge
+     */
+    renderDeliveryBadge(user) {
+        return user.is_delivered > 0
+            ? '<span class="delivery-badge delivered">✓ נמסר</span>'
+            : '<span class="delivery-badge pending">⏳ ממתין</span>';
+    },
+
+    /**
+     * Render approval status badge
+     */
+    renderApprovalStatus(user) {
+        const status = user.approval_status || 'pending';
+        const statusLabels = {
+            'pending': { class: 'pending', icon: '⏳', text: 'ממתין לאישור' },
+            'approved': { class: 'approved', icon: '✓', text: 'אושר' },
+            'rejected': { class: 'rejected', icon: '✗', text: 'נדחה' },
+            'expired': { class: 'expired', icon: '⏰', text: 'פג תוקף' }
+        };
+        const s = statusLabels[status] || statusLabels['pending'];
+
+        let html = `<span class="approval-badge ${s.class}">${s.icon} ${s.text}</span>`;
+
+        // Add biometric indicator if approved with biometric
+        if (status === 'approved' && user.biometric_verified > 0) {
+            html += '<span class="biometric-icon" title="אומת ביומטרית">🔐</span>';
+        }
+
+        // Add response time if available
+        if (user.responded_at) {
+            html += `<span class="response-time" style="font-size: 11px; color: var(--text-muted); margin-right: 8px;">${this.formatDateTime(user.responded_at)}</span>`;
+        }
+
+        return html;
     },
 
     /**
@@ -595,6 +662,8 @@ const NotificationsManager = {
         }
 
         // Prepare data
+        const requiresApproval = document.getElementById('requiresApproval').checked;
+
         const data = {
             action: formData.get('id') ? 'update' : 'create',
             id: formData.get('id') || null,
@@ -603,7 +672,10 @@ const NotificationsManager = {
             notification_type: formData.get('notification_type'),
             url: formData.get('url') || null,
             target_users: sendToAll ? ['all'] : Array.from(this.selectedUsers),
-            scheduled_at: null
+            scheduled_at: null,
+            requires_approval: requiresApproval ? 1 : 0,
+            approval_message: requiresApproval ? formData.get('approval_message') : null,
+            approval_expiry: requiresApproval ? formData.get('approval_expiry') : null
         };
 
         if (sendTime === 'scheduled') {

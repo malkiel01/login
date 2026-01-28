@@ -679,6 +679,104 @@ textarea.form-control {
     padding: 20px;
 }
 
+/* Approval Request Styles */
+.approval-checkbox {
+    border-color: #8b5cf6 !important;
+}
+
+.approval-checkbox:has(input:checked) {
+    border-color: #8b5cf6 !important;
+    background: rgba(139, 92, 246, 0.1) !important;
+}
+
+.form-help-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.approval-fields {
+    margin-top: 12px;
+    padding: 16px;
+    background: rgba(139, 92, 246, 0.05);
+    border-radius: 8px;
+    border: 1px dashed rgba(139, 92, 246, 0.3);
+}
+
+/* Approval Status Badges */
+.approval-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.approval-badge.requires {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.approval-badge.approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.approval-badge.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.approval-badge.expired {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Approval Status in Delivery List */
+.approval-status-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.biometric-icon {
+    font-size: 18px;
+}
+
+/* Approval Summary Stats */
+.approval-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.approval-stats .stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: var(--bg-secondary, #f8fafc);
+}
+
+.approval-stats .stat.approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.approval-stats .stat.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.approval-stats .stat.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .notifications-container {

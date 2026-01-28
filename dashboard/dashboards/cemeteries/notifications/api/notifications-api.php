@@ -102,9 +102,44 @@ function createTableIfNeeded(PDO $pdo): void {
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             `sent_at` DATETIME DEFAULT NULL,
             `error_message` TEXT DEFAULT NULL,
+            `requires_approval` TINYINT(1) DEFAULT 0,
+            `approval_message` TEXT DEFAULT NULL,
+            `approval_expires_at` DATETIME DEFAULT NULL,
             INDEX `idx_status_scheduled` (`status`, `scheduled_at`),
             INDEX `idx_created_by` (`created_by`),
             INDEX `idx_created_at` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    // Add approval columns if they don't exist (for existing tables)
+    try {
+        $pdo->exec("ALTER TABLE scheduled_notifications ADD COLUMN `requires_approval` TINYINT(1) DEFAULT 0 AFTER `error_message`");
+    } catch (PDOException $e) { /* Column might already exist */ }
+
+    try {
+        $pdo->exec("ALTER TABLE scheduled_notifications ADD COLUMN `approval_message` TEXT DEFAULT NULL AFTER `requires_approval`");
+    } catch (PDOException $e) { /* Column might already exist */ }
+
+    try {
+        $pdo->exec("ALTER TABLE scheduled_notifications ADD COLUMN `approval_expires_at` DATETIME DEFAULT NULL AFTER `approval_message`");
+    } catch (PDOException $e) { /* Column might already exist */ }
+
+    // Create notification_approvals table
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `notification_approvals` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `notification_id` INT NOT NULL,
+            `user_id` INT NOT NULL,
+            `status` ENUM('pending', 'approved', 'rejected', 'expired') DEFAULT 'pending',
+            `responded_at` DATETIME DEFAULT NULL,
+            `ip_address` VARCHAR(45) DEFAULT NULL,
+            `user_agent` TEXT DEFAULT NULL,
+            `biometric_verified` TINYINT(1) DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY `unique_notification_user` (`notification_id`, `user_id`),
+            INDEX `idx_status` (`status`),
+            INDEX `idx_notification` (`notification_id`),
+            INDEX `idx_user` (`user_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 }
@@ -221,13 +256,23 @@ function handleCreate(PDO $pdo, array $input): void {
     $url = !empty($input['url']) ? trim($input['url']) : null;
     $createdBy = getCurrentUserId();
 
+    // Approval fields
+    $requiresApproval = !empty($input['requires_approval']) ? 1 : 0;
+    $approvalMessage = $requiresApproval && !empty($input['approval_message']) ? trim($input['approval_message']) : null;
+    $approvalExpiry = null;
+    if ($requiresApproval && !empty($input['approval_expiry'])) {
+        $hours = (int)$input['approval_expiry'];
+        $approvalExpiry = date('Y-m-d H:i:s', strtotime("+{$hours} hours"));
+    }
+
     // If scheduled_at is null or empty, send immediately
     $sendNow = empty($scheduledAt);
 
     $stmt = $pdo->prepare("
         INSERT INTO scheduled_notifications
-        (title, body, notification_type, target_users, scheduled_at, url, status, created_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (title, body, notification_type, target_users, scheduled_at, url, status, created_by,
+         requires_approval, approval_message, approval_expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     $status = $sendNow ? 'pending' : 'pending';
@@ -240,14 +285,28 @@ function handleCreate(PDO $pdo, array $input): void {
         $scheduledAt,
         $url,
         $status,
-        $createdBy
+        $createdBy,
+        $requiresApproval,
+        $approvalMessage,
+        $approvalExpiry
     ]);
 
     $notificationId = $pdo->lastInsertId();
 
+    // Create approval records for each user if requires approval
+    if ($requiresApproval) {
+        createApprovalRecords($pdo, $notificationId, $targetUsers);
+    }
+
     // If send now, actually send the notifications
     if ($sendNow) {
-        $sentCount = sendNotifications($pdo, $notificationId, $title, $body, $url, $targetUsers);
+        // For approval notifications, override the URL to point to approval page
+        $notificationUrl = $url;
+        if ($requiresApproval) {
+            $notificationUrl = "/dashboard/dashboards/cemeteries/notifications/approve.php?id={$notificationId}";
+        }
+
+        $sentCount = sendNotifications($pdo, $notificationId, $title, $body, $notificationUrl, $targetUsers);
 
         // Update status to sent
         $pdo->prepare("
@@ -260,14 +319,39 @@ function handleCreate(PDO $pdo, array $input): void {
             'success' => true,
             'id' => (int)$notificationId,
             'sent_count' => $sentCount,
-            'message' => "ההתראה נשלחה ל-{$sentCount} משתמשים"
+            'requires_approval' => $requiresApproval,
+            'message' => $requiresApproval
+                ? "בקשת האישור נשלחה ל-{$sentCount} משתמשים"
+                : "ההתראה נשלחה ל-{$sentCount} משתמשים"
         ]);
     } else {
         echo json_encode([
             'success' => true,
             'id' => (int)$notificationId,
+            'requires_approval' => $requiresApproval,
             'message' => 'ההתראה תוזמנה בהצלחה'
         ]);
+    }
+}
+
+/**
+ * Create approval records for users
+ */
+function createApprovalRecords(PDO $pdo, int $notificationId, array $targetUsers): void {
+    if (in_array('all', $targetUsers)) {
+        // Get all users
+        $users = $pdo->query("SELECT id FROM users WHERE is_active = 1")->fetchAll(PDO::FETCH_COLUMN);
+    } else {
+        $users = $targetUsers;
+    }
+
+    $stmt = $pdo->prepare("
+        INSERT IGNORE INTO notification_approvals (notification_id, user_id, status)
+        VALUES (?, ?, 'pending')
+    ");
+
+    foreach ($users as $userId) {
+        $stmt->execute([$notificationId, $userId]);
     }
 }
 
@@ -464,6 +548,7 @@ function handleGetDeliveryStatus(PDO $pdo): void {
     }
 
     $targetUsers = json_decode($notification['target_users'], true);
+    $requiresApproval = $notification['requires_approval'] ?? 0;
 
     // Get target user IDs
     if (in_array('all', $targetUsers)) {
@@ -473,29 +558,62 @@ function handleGetDeliveryStatus(PDO $pdo): void {
         $userIds = array_map('intval', $targetUsers);
     }
 
-    // Get user details with push subscription status
+    // Get user details with push subscription status and approval status
     $users = [];
     if (!empty($userIds)) {
         $placeholders = implode(',', array_fill(0, count($userIds), '?'));
 
-        // Get users with their push subscription status
-        $stmt = $pdo->prepare("
-            SELECT
-                u.id,
-                u.name,
-                u.username,
-                u.email,
-                (SELECT COUNT(*) FROM push_subscriptions ps WHERE ps.user_id = u.id AND ps.is_active = 1) as has_push_subscription,
-                (SELECT COUNT(*) FROM push_notifications pn
-                 WHERE pn.user_id = u.id
-                 AND pn.title = ?
-                 AND pn.is_delivered = 1) as is_delivered
-            FROM users u
-            WHERE u.id IN ($placeholders)
-            ORDER BY u.name, u.username
-        ");
+        if ($requiresApproval) {
+            // Include approval status for approval notifications
+            $stmt = $pdo->prepare("
+                SELECT
+                    u.id,
+                    u.name,
+                    u.username,
+                    u.email,
+                    (SELECT COUNT(*) FROM push_subscriptions ps WHERE ps.user_id = u.id AND ps.is_active = 1) as has_push_subscription,
+                    (SELECT COUNT(*) FROM push_notifications pn
+                     WHERE pn.user_id = u.id
+                     AND pn.title = ?
+                     AND pn.is_delivered = 1) as is_delivered,
+                    na.status as approval_status,
+                    na.responded_at,
+                    na.biometric_verified
+                FROM users u
+                LEFT JOIN notification_approvals na ON na.user_id = u.id AND na.notification_id = ?
+                WHERE u.id IN ($placeholders)
+                ORDER BY
+                    CASE
+                        WHEN na.status = 'approved' THEN 1
+                        WHEN na.status = 'rejected' THEN 2
+                        WHEN na.status = 'expired' THEN 3
+                        ELSE 4
+                    END,
+                    u.name, u.username
+            ");
 
-        $params = array_merge([$notification['title']], $userIds);
+            $params = array_merge([$notification['title'], $id], $userIds);
+        } else {
+            // Regular notification - no approval status needed
+            $stmt = $pdo->prepare("
+                SELECT
+                    u.id,
+                    u.name,
+                    u.username,
+                    u.email,
+                    (SELECT COUNT(*) FROM push_subscriptions ps WHERE ps.user_id = u.id AND ps.is_active = 1) as has_push_subscription,
+                    (SELECT COUNT(*) FROM push_notifications pn
+                     WHERE pn.user_id = u.id
+                     AND pn.title = ?
+                     AND pn.is_delivered = 1) as is_delivered
+                FROM users u
+                WHERE u.id IN ($placeholders)
+                ORDER BY u.name, u.username
+            ");
+
+            $params = array_merge([$notification['title']], $userIds);
+        }
+
         $stmt->execute($params);
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

@@ -446,6 +446,17 @@ class BiometricAuth {
 // יצירת instance גלובלי
 window.biometricAuth = new BiometricAuth();
 
+// Static method to check availability
+BiometricAuth.isAvailable = function() {
+    return window.biometricAuth && window.biometricAuth.isSupported;
+};
+
+// Shorthand for checking platform authenticator
+BiometricAuth.checkPlatformAuthenticator = async function() {
+    if (!BiometricAuth.isAvailable()) return false;
+    return await window.biometricAuth.isPlatformAuthenticatorAvailable();
+};
+
 // Export
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = BiometricAuth;

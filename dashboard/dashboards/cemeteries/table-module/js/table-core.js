@@ -2100,6 +2100,17 @@ class TableManager {
             if (bodyCol) {
                 bodyCol.style.width = newWidth + 'px';
             }
+
+            // ⭐ עדכון רוחב הטבלה בזמן הגרירה - מונע התרחבות עמודות אחרות בצמצום
+            const newTableWidth = this._calculateTableWidth();
+            if (this.elements.headerTable) {
+                this.elements.headerTable.style.width = newTableWidth + 'px';
+                this.elements.headerTable.style.minWidth = newTableWidth + 'px';
+            }
+            if (this.elements.bodyTable) {
+                this.elements.bodyTable.style.width = newTableWidth + 'px';
+                this.elements.bodyTable.style.minWidth = newTableWidth + 'px';
+            }
         };
 
         const onMouseUp = () => {

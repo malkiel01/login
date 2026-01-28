@@ -240,37 +240,55 @@ self.addEventListener('periodicsync', event => {
 // ============= Push Notifications (משופר) =============
 self.addEventListener('push', event => {
     console.log('[ServiceWorker] Push Received');
-    
+
     let notificationData = {
         title: 'חברה קדישא',
         body: 'יש לך עדכון חדש!',
         icon: '/pwa/icons/android/android-launchericon-192-192.png',
         badge: '/pwa/icons/android/android-launchericon-72-72.png',
         vibrate: [200, 100, 200],
+        requireInteraction: true, // Keep notification visible until user interacts
+        renotify: true,
+        tag: 'notification-' + Date.now(),
         data: {
             dateOfArrival: Date.now(),
             primaryKey: 1
         }
     };
-    
+
     // נסה לפרש את הנתונים אם יש
     if (event.data) {
         try {
             const data = event.data.json();
+            const url = data.url || '/notifications/manager.php';
+            const isApprovalRequest = url.includes('/approve.php');
+
             notificationData = {
                 ...notificationData,
                 title: data.title || notificationData.title,
                 body: data.body || notificationData.body,
-                data: { 
+                tag: 'notification-' + (data.id || Date.now()),
+                // Approval requests stay visible until user interacts
+                requireInteraction: isApprovalRequest || data.requireInteraction || true,
+                data: {
                     ...notificationData.data,
-                    url: data.url || '/notifications/manager.php'
+                    url: url,
+                    isApproval: isApprovalRequest,
+                    id: data.id
                 }
             };
+
+            // Add action buttons for approval requests
+            if (isApprovalRequest) {
+                notificationData.actions = [
+                    { action: 'open', title: 'פתח', icon: '/pwa/icons/action-open.png' }
+                ];
+            }
         } catch (e) {
             notificationData.body = event.data.text();
         }
     }
-    
+
     event.waitUntil(
         self.registration.showNotification(notificationData.title, notificationData)
     );
@@ -279,40 +297,53 @@ self.addEventListener('push', event => {
 // ============= טיפול בלחיצה על התראה (הקוד המקורי שלך) =============
 self.addEventListener('notificationclick', event => {
     console.log('[Service Worker] Notification click received.');
-    
+
     event.notification.close();
-    
+
     // קבל URL מה-data או השתמש בברירת מחדל
     const finalTarget = event.notification.data?.url || '/notifications/manager.php';
-    
+    const isApproval = event.notification.data?.isApproval || finalTarget.includes('/approve.php');
+
     event.waitUntil(
-        clients.matchAll({
-            type: 'window',
-            includeUncontrolled: true
-        }).then(windowClients => {
+        (async () => {
+            // For approval pages, always open in a new standalone window
+            if (isApproval) {
+                console.log('[SW] Opening approval page in standalone window:', finalTarget);
+                if (clients.openWindow) {
+                    return clients.openWindow(finalTarget);
+                }
+            }
+
+            // For other notifications, try to use existing window
+            const windowClients = await clients.matchAll({
+                type: 'window',
+                includeUncontrolled: true
+            });
+
             // בדוק אם יש חלון פתוח
             for (let client of windowClients) {
                 if (client.url.includes(self.location.origin)) {
                     // אם המשתמש בדף login
                     if (client.url.includes('/auth/login.php')) {
-                        return client.focus().then(() => {
-                            client.postMessage({
-                                type: 'REDIRECT_AFTER_LOGIN',
-                                url: finalTarget
-                            });
+                        await client.focus();
+                        client.postMessage({
+                            type: 'REDIRECT_AFTER_LOGIN',
+                            url: finalTarget
                         });
+                        return;
                     } else {
                         // המשתמש מחובר - נווט לדף ההתראות
-                        return client.navigate(finalTarget).then(client => client.focus());
+                        await client.navigate(finalTarget);
+                        return client.focus();
                     }
                 }
             }
-            
+
             // אם אין חלון פתוח
             if (clients.openWindow) {
-                return clients.openWindow('/?redirect_to=' + encodeURIComponent(finalTarget));
+                return clients.openWindow(finalTarget);
             }
-        })
+        })()
     );
 });
 

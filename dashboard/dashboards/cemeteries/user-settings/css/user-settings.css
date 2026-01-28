@@ -474,3 +474,138 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+/* ===================================================================
+   Biometric Section
+   =================================================================== */
+.biometric-section {
+    padding: 8px 0;
+}
+
+.biometric-status {
+    margin-bottom: 16px;
+}
+
+.status-loading,
+.status-success,
+.status-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.status-loading {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.status-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.biometric-unsupported {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.biometric-devices {
+    margin-bottom: 16px;
+}
+
+.biometric-devices h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--settings-text-secondary);
+}
+
+.devices-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.device-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--settings-card-bg);
+    border: 1px solid var(--settings-border);
+    border-radius: 8px;
+}
+
+.device-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.device-name {
+    font-weight: 500;
+    color: var(--settings-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.device-name i {
+    color: var(--settings-primary);
+}
+
+.device-date,
+.device-last-used {
+    font-size: 12px;
+    color: var(--settings-text-secondary);
+}
+
+.btn-device-delete {
+    background: transparent;
+    border: none;
+    color: var(--settings-danger);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.btn-device-delete:hover {
+    background: #fee2e2;
+}
+
+.biometric-actions {
+    margin-top: 12px;
+}
+
+.btn-settings-primary {
+    background: var(--settings-primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-settings-primary:hover {
+    background: var(--settings-primary-hover);
+}

@@ -219,10 +219,46 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                 </div>
             </div>
             <?php endforeach; ?>
+
+            <!-- Biometric Security Section -->
+            <div class="settings-category" data-category="security">
+                <div class="category-header">
+                    <i class="fas fa-fingerprint"></i>
+                    <h3>אבטחה ביומטרית</h3>
+                </div>
+                <div class="category-content">
+                    <div class="biometric-section">
+                        <div class="biometric-status" id="biometricStatus">
+                            <div class="status-loading">
+                                <i class="fas fa-spinner fa-spin"></i> בודק תמיכה...
+                            </div>
+                        </div>
+
+                        <div class="biometric-devices" id="biometricDevices" style="display: none;">
+                            <h4>מכשירים רשומים</h4>
+                            <div class="devices-list" id="devicesList">
+                                <!-- Devices will be loaded here -->
+                            </div>
+                        </div>
+
+                        <div class="biometric-actions" id="biometricActions" style="display: none;">
+                            <button type="button" class="btn-settings btn-settings-primary" onclick="registerBiometric()">
+                                <i class="fas fa-plus"></i> הוסף טביעת אצבע / Face ID
+                            </button>
+                        </div>
+
+                        <div class="biometric-unsupported" id="biometricUnsupported" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>הדפדפן או המכשיר שלך אינם תומכים באימות ביומטרי</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Scripts -->
+    <script src="/js/biometric-auth.js"></script>
     <script src="/dashboard/dashboards/cemeteries/user-settings/js/user-settings-storage.js"></script>
     <script src="/dashboard/dashboards/cemeteries/user-settings/js/user-settings-core.js"></script>
 
@@ -477,7 +513,145 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             // if (synced) {
             //     location.reload();
             // }
+
+            // אתחול סקשן ביומטרי
+            await initBiometricSection();
         });
+
+        // ========================================
+        // ניהול ביומטרי
+        // ========================================
+
+        async function initBiometricSection() {
+            const statusEl = document.getElementById('biometricStatus');
+            const devicesEl = document.getElementById('biometricDevices');
+            const actionsEl = document.getElementById('biometricActions');
+            const unsupportedEl = document.getElementById('biometricUnsupported');
+
+            // בדיקת תמיכה
+            if (!window.biometricAuth || !window.biometricAuth.isSupported) {
+                statusEl.style.display = 'none';
+                unsupportedEl.style.display = 'flex';
+                return;
+            }
+
+            // בדיקת platform authenticator
+            const hasPlatformAuth = await window.biometricAuth.isPlatformAuthenticatorAvailable();
+            if (!hasPlatformAuth) {
+                statusEl.innerHTML = `
+                    <div class="status-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <span>המכשיר שלך תומך ב-WebAuthn אך לא זוהה חיישן ביומטרי מובנה</span>
+                    </div>
+                `;
+            } else {
+                statusEl.innerHTML = `
+                    <div class="status-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>המכשיר תומך באימות ביומטרי</span>
+                    </div>
+                `;
+            }
+
+            // הצגת כפתור הוספה
+            actionsEl.style.display = 'block';
+
+            // טעינת מכשירים רשומים
+            await loadBiometricDevices();
+        }
+
+        async function loadBiometricDevices() {
+            const devicesEl = document.getElementById('biometricDevices');
+            const listEl = document.getElementById('devicesList');
+
+            try {
+                const credentials = await window.biometricAuth.listCredentials();
+
+                if (credentials && credentials.length > 0) {
+                    devicesEl.style.display = 'block';
+                    listEl.innerHTML = credentials.map(cred => `
+                        <div class="device-item">
+                            <div class="device-info">
+                                <span class="device-name">
+                                    <i class="fas fa-fingerprint"></i>
+                                    ${escapeHtml(cred.device_name || 'מכשיר לא ידוע')}
+                                </span>
+                                <span class="device-date">נרשם: ${formatDate(cred.created_at)}</span>
+                                ${cred.last_used_at ? `<span class="device-last-used">שימוש אחרון: ${formatDate(cred.last_used_at)}</span>` : ''}
+                            </div>
+                            <button type="button" class="btn-device-delete" onclick="deleteBiometricDevice('${cred.id}')" title="הסר מכשיר">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                } else {
+                    devicesEl.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading biometric devices:', error);
+            }
+        }
+
+        async function registerBiometric() {
+            const deviceName = prompt('הזן שם למכשיר (אופציונלי):', window.biometricAuth.guessDeviceName());
+            if (deviceName === null) return; // User cancelled
+
+            try {
+                showMessage('מאתחל רישום ביומטרי...', 'info');
+
+                const result = await window.biometricAuth.register(deviceName);
+
+                if (result.success) {
+                    showMessage('הביומטרי נרשם בהצלחה!', 'success');
+                    await loadBiometricDevices();
+                } else if (result.userCancelled) {
+                    showMessage('הרישום בוטל', 'info');
+                } else {
+                    showMessage('שגיאה ברישום: ' + (result.error || 'שגיאה לא ידועה'), 'error');
+                }
+            } catch (error) {
+                console.error('Biometric registration error:', error);
+                showMessage('שגיאה ברישום הביומטרי', 'error');
+            }
+        }
+
+        async function deleteBiometricDevice(credentialId) {
+            if (!confirm('האם להסיר את המכשיר הזה? לא תוכל יותר להשתמש בו לאימות ביומטרי.')) {
+                return;
+            }
+
+            try {
+                const success = await window.biometricAuth.deleteCredential(credentialId);
+
+                if (success) {
+                    showMessage('המכשיר הוסר בהצלחה', 'success');
+                    await loadBiometricDevices();
+                } else {
+                    showMessage('שגיאה בהסרת המכשיר', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting biometric device:', error);
+                showMessage('שגיאה בהסרת המכשיר', 'error');
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('he-IL', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
     </script>
 </body>
 </html>

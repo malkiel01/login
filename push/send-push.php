@@ -9,6 +9,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/WebPush.php';
+require_once __DIR__ . '/push-log.php';
 
 /**
  * Send push notification to a specific user
@@ -20,6 +21,8 @@ require_once __DIR__ . '/WebPush.php';
  * @param array $options Additional options (id, requiresApproval, etc.)
  */
 function sendPushToUser(int $userId, string $title, string $body, ?string $url = null, ?string $icon = null, array $options = []): array {
+    pushLog('SEND', "Starting sendPushToUser", ['userId' => $userId, 'title' => $title]);
+
     $pdo = getDBConnection();
 
     // Get all active subscriptions for user
@@ -30,7 +33,10 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
     $stmt->execute([$userId]);
     $subscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    pushLog('SEND', "Found " . count($subscriptions) . " subscriptions for user $userId");
+
     if (empty($subscriptions)) {
+        pushLog('SEND', "No subscriptions found for user $userId");
         return ['success' => false, 'error' => 'No subscriptions found', 'sent' => 0];
     }
 
@@ -60,22 +66,33 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
     $errors = [];
 
     foreach ($subscriptions as $subscription) {
+        $endpoint = substr($subscription['endpoint'], 0, 60) . '...';
+        pushLog('SEND', "Sending to endpoint: $endpoint");
+
         $result = $webPush->send($subscription, $payload);
 
         if ($result['success']) {
             $sent++;
+            pushLog('SEND', "SUCCESS - sent to subscription ID: " . $subscription['id']);
             // Update last_used_at
             $pdo->prepare("UPDATE push_subscriptions SET last_used_at = NOW() WHERE id = ?")->execute([$subscription['id']]);
         } else {
             $failed++;
             $errors[] = $result['error'];
+            pushLog('ERROR', "FAILED - " . ($result['error'] ?? 'Unknown error'), [
+                'subscriptionId' => $subscription['id'],
+                'httpCode' => $result['httpCode'] ?? null
+            ]);
 
             // If subscription is expired/invalid, mark as inactive
             if (isset($result['httpCode']) && in_array($result['httpCode'], [404, 410])) {
+                pushLog('SEND', "Marking subscription as inactive (HTTP " . $result['httpCode'] . ")");
                 $pdo->prepare("UPDATE push_subscriptions SET is_active = 0 WHERE id = ?")->execute([$subscription['id']]);
             }
         }
     }
+
+    pushLog('SEND', "Completed: sent=$sent, failed=$failed");
 
     return [
         'success' => $sent > 0,

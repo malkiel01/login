@@ -22,10 +22,7 @@ const urlsToCache = [
     '/auth/css/styles.css',
     '/auth/css/style2.css',
     '/dashboard/assets/css/dashboard.css',
-    
-    // JS files
-    '/dashboard/assets/js/dashboard.js',
-    
+
     // Images
     '/pwa/icons/android/android-launchericon-192-192.png',
     '/pwa/icons/android/android-launchericon-512-512.png',

@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../middleware.php';
 require_once __DIR__ . '/WebAuthnManager.php';
+require_once __DIR__ . '/../../push/push-log.php';
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $action = $input['action'] ?? '';
@@ -145,6 +146,9 @@ try {
                 );
 
                 $result['token'] = $tokenData;
+
+                // Push Log - רישום התחברות ביומטרית עם מידע על המכשיר
+                logUserLogin($result['user']['id'], $result['user']['name'] ?? $result['user']['username']);
             }
 
             echo json_encode($result);

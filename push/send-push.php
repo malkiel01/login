@@ -66,33 +66,43 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
     $errors = [];
 
     foreach ($subscriptions as $subscription) {
-        $endpoint = substr($subscription['endpoint'], 0, 60) . '...';
-        pushLog('SEND', "Sending to endpoint: $endpoint");
-
         $result = $webPush->send($subscription, $payload);
+
+        // Log with device info
+        logPushSendResult(
+            $userId,
+            $subscription['id'],
+            $subscription['endpoint'],
+            $result['success'],
+            $result['error'] ?? null,
+            $subscription['user_agent'] ?? null
+        );
 
         if ($result['success']) {
             $sent++;
-            pushLog('SEND', "SUCCESS - sent to subscription ID: " . $subscription['id']);
             // Update last_used_at
             $pdo->prepare("UPDATE push_subscriptions SET last_used_at = NOW() WHERE id = ?")->execute([$subscription['id']]);
         } else {
             $failed++;
-            $errors[] = $result['error'];
-            pushLog('ERROR', "FAILED - " . ($result['error'] ?? 'Unknown error'), [
-                'subscriptionId' => $subscription['id'],
-                'httpCode' => $result['httpCode'] ?? null
-            ]);
+            $errors[] = $result['error'] ?? 'Unknown error';
 
             // If subscription is expired/invalid, mark as inactive
             if (isset($result['httpCode']) && in_array($result['httpCode'], [404, 410])) {
-                pushLog('SEND', "Marking subscription as inactive (HTTP " . $result['httpCode'] . ")");
+                pushLog('CLEANUP', "Marking subscription as inactive (HTTP " . $result['httpCode'] . ")", [
+                    'subscriptionId' => $subscription['id'],
+                    'userId' => $userId
+                ]);
                 $pdo->prepare("UPDATE push_subscriptions SET is_active = 0 WHERE id = ?")->execute([$subscription['id']]);
             }
         }
     }
 
-    pushLog('SEND', "Completed: sent=$sent, failed=$failed");
+    pushLog('SUMMARY', "Notification '$title' completed", [
+        'userId' => $userId,
+        'sent' => $sent,
+        'failed' => $failed,
+        'totalSubscriptions' => count($subscriptions)
+    ]);
 
     return [
         'success' => $sent > 0,

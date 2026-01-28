@@ -22,6 +22,105 @@ function pushLog(string $type, string $message, $data = null): void {
     @file_put_contents(PUSH_LOG_FILE, $logEntry, FILE_APPEND);
 }
 
+/**
+ * Parse User-Agent to get device info
+ */
+function parseUserAgent(?string $ua = null): array {
+    $ua = $ua ?? ($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown');
+
+    $device = 'Unknown';
+    $os = 'Unknown';
+    $browser = 'Unknown';
+
+    // Detect OS
+    if (preg_match('/iPhone|iPad|iPod/i', $ua)) {
+        $os = 'iOS';
+        $device = preg_match('/iPad/i', $ua) ? 'iPad' : 'iPhone';
+    } elseif (preg_match('/Android/i', $ua)) {
+        $os = 'Android';
+        $device = 'Android Phone';
+        if (preg_match('/Mobile/i', $ua) === 0) {
+            $device = 'Android Tablet';
+        }
+    } elseif (preg_match('/Windows/i', $ua)) {
+        $os = 'Windows';
+        $device = 'Desktop';
+    } elseif (preg_match('/Mac OS X/i', $ua)) {
+        $os = 'macOS';
+        $device = 'Desktop';
+    } elseif (preg_match('/Linux/i', $ua)) {
+        $os = 'Linux';
+        $device = 'Desktop';
+    }
+
+    // Detect Browser
+    if (preg_match('/Chrome\/[\d.]+/i', $ua, $m)) {
+        $browser = 'Chrome';
+    } elseif (preg_match('/Safari\/[\d.]+/i', $ua) && !preg_match('/Chrome/i', $ua)) {
+        $browser = 'Safari';
+    } elseif (preg_match('/Firefox\/[\d.]+/i', $ua)) {
+        $browser = 'Firefox';
+    } elseif (preg_match('/Edge\/[\d.]+/i', $ua)) {
+        $browser = 'Edge';
+    }
+
+    return [
+        'device' => $device,
+        'os' => $os,
+        'browser' => $browser,
+        'ua_short' => substr($ua, 0, 100)
+    ];
+}
+
+/**
+ * Log user login
+ */
+function logUserLogin(int $userId, string $username): void {
+    $device = parseUserAgent();
+    pushLog('LOGIN', "User logged in", [
+        'userId' => $userId,
+        'username' => $username,
+        'device' => $device['device'],
+        'os' => $device['os'],
+        'browser' => $device['browser'],
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown'
+    ]);
+}
+
+/**
+ * Log push subscription
+ */
+function logPushSubscription(int $userId, string $endpoint, string $action = 'subscribe'): void {
+    $device = parseUserAgent();
+    $endpointShort = substr($endpoint, 0, 60) . '...';
+    pushLog('SUBSCRIPTION', "$action", [
+        'userId' => $userId,
+        'endpoint' => $endpointShort,
+        'device' => $device['device'],
+        'os' => $device['os'],
+        'browser' => $device['browser']
+    ]);
+}
+
+/**
+ * Log push send result with device info
+ */
+function logPushSendResult(int $userId, int $subscriptionId, string $endpoint, bool $success, ?string $error = null, ?string $userAgent = null): void {
+    $device = parseUserAgent($userAgent);
+    $endpointShort = substr($endpoint, 0, 50) . '...';
+
+    $status = $success ? '✅ DELIVERED' : '❌ FAILED';
+
+    pushLog('PUSH', "$status to user $userId", [
+        'subscriptionId' => $subscriptionId,
+        'endpoint' => $endpointShort,
+        'device' => $device['device'],
+        'os' => $device['os'],
+        'browser' => $device['browser'],
+        'error' => $error
+    ]);
+}
+
 // Only continue if accessed directly
 if (basename($_SERVER['SCRIPT_FILENAME']) !== 'push-log.php') {
     return;

@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../middleware.php';
 require_once __DIR__ . '/OTPManager.php';
+require_once __DIR__ . '/../../push/push-log.php';
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $action = $input['action'] ?? '';
@@ -105,6 +106,9 @@ try {
                             'name' => $user['name'],
                             'username' => $user['username']
                         ];
+
+                        // Push Log - רישום התחברות OTP עם מידע על המכשיר
+                        logUserLogin($user['id'], $user['name'] ?? $user['username']);
                     }
                 }
             }

@@ -5,6 +5,7 @@ require_once '../config.php';
 require_once 'rate-limiter.php';
 require_once 'csrf.php';
 require_once 'audit-logger.php';
+require_once '../push/push-log.php';
 
 // הגדר כותרות JSON
 header('Content-Type: application/json');
@@ -196,6 +197,9 @@ try {
 
     // Audit Log - רישום התחברות מוצלחת דרך Google
     AuditLogger::logLogin($user_id, $username, 'google');
+
+    // Push Log - רישום התחברות עם מידע על המכשיר
+    logUserLogin($user_id, $user_name ?? $username);
 
     // החזרת תגובה
     echo json_encode([

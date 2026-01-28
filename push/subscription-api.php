@@ -13,6 +13,7 @@
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/push-log.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -126,6 +127,12 @@ function handleSubscribe(array $input): void {
     $stmt->execute([$endpoint]);
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Get username for logging
+    $userStmt = $pdo->prepare("SELECT username, name FROM users WHERE id = ?");
+    $userStmt->execute([$userId]);
+    $userInfo = $userStmt->fetch(PDO::FETCH_ASSOC);
+    $username = $userInfo['name'] ?? $userInfo['username'] ?? "User#$userId";
+
     if ($existing) {
         // Update existing subscription
         $stmt = $pdo->prepare("
@@ -134,6 +141,8 @@ function handleSubscribe(array $input): void {
             WHERE id = ?
         ");
         $stmt->execute([$userId, $p256dhKey, $authKey, $userAgent, $existing['id']]);
+
+        logPushSubscription($userId, $endpoint, "REACTIVATED by $username");
 
         echo json_encode([
             'success' => true,
@@ -147,6 +156,8 @@ function handleSubscribe(array $input): void {
             VALUES (?, ?, ?, ?, ?)
         ");
         $stmt->execute([$userId, $endpoint, $p256dhKey, $authKey, $userAgent]);
+
+        logPushSubscription($userId, $endpoint, "NEW SUBSCRIPTION by $username");
 
         echo json_encode([
             'success' => true,
@@ -166,6 +177,16 @@ function handleUnsubscribe(array $input): void {
 
     $endpoint = $input['endpoint'];
     $pdo = getDBConnection();
+
+    // Get user info before deleting
+    $stmt = $pdo->prepare("SELECT ps.user_id, u.name, u.username FROM push_subscriptions ps LEFT JOIN users u ON u.id = ps.user_id WHERE ps.endpoint = ?");
+    $stmt->execute([$endpoint]);
+    $info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($info) {
+        $username = $info['name'] ?? $info['username'] ?? "User#" . $info['user_id'];
+        logPushSubscription($info['user_id'], $endpoint, "UNSUBSCRIBED by $username");
+    }
 
     // Soft delete - mark as inactive
     $stmt = $pdo->prepare("UPDATE push_subscriptions SET is_active = 0 WHERE endpoint = ?");

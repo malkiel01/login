@@ -25,6 +25,7 @@ require_once 'rate-limiter.php';  // Rate Limiting להגנה מ-brute force
 require_once 'csrf.php';          // CSRF Protection
 require_once 'audit-logger.php';  // Audit Logging
 require_once 'token-manager.php'; // Persistent Auth for PWA
+require_once '../push/push-log.php'; // Push notification logging
 // require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
@@ -133,6 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login']) && !$isLocke
 
             // Audit Log - רישום התחברות מוצלחת
             AuditLogger::logLogin($user['id'], $user['username'], 'local');
+
+            // Push Log - רישום התחברות עם מידע על המכשיר
+            logUserLogin($user['id'], $user['name'] ?? $user['username']);
 
             handleLoginRedirect();
             exit;

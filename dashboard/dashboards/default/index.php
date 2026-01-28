@@ -23,10 +23,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דשבורד ברירת מחדל</title>
-    <link rel="stylesheet" href="dashboards/default/assets/css/default.css">
-    <link rel="stylesheet" href="dashboards/default/assets/css_search/search.css">
-    <link rel="stylesheet" href="dashboards/default/assets/css_search/custom-search.css">
-    <link rel="stylesheet" href="dashboards/default/assets/css_search/modal.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css/default.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css_search/search.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css_search/custom-search.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css_search/modal.css">
 </head>
 <body>
 
@@ -119,16 +119,16 @@
     </div>
 
     <!-- Scripts -->
-    <script src="dashboards/default/assets/js/search-config.js"></script>
-    <script src="dashboards/default/assets/templates/deceased-card.js"></script>
-    <script src="dashboards/default/assets/templates/deceased-table.js"></script>
-    <script src="dashboards/default/assets/templates/purchased-card.js"></script>
-    <script src="dashboards/default/assets/templates/purchased-table.js"></script>
-    <script src="dashboards/default/assets/templates/available-card.js"></script>
-    <script src="dashboards/default/assets/templates/available-table.js"></script>
-    <script src="dashboards/default/assets/js/search-api.js"></script>
-    <script src="dashboards/default/assets/js/search-ui.js"></script>
-    <script src="dashboards/default/assets/js/search-main.js"></script>
-    <script src="dashboards/default/assets/js/modal.js"></script>
+    <script src="/dashboard/dashboards/default/assets/js/search-config.js"></script>
+    <script src="/dashboard/dashboards/default/assets/templates/deceased-card.js"></script>
+    <script src="/dashboard/dashboards/default/assets/templates/deceased-table.js"></script>
+    <script src="/dashboard/dashboards/default/assets/templates/purchased-card.js"></script>
+    <script src="/dashboard/dashboards/default/assets/templates/purchased-table.js"></script>
+    <script src="/dashboard/dashboards/default/assets/templates/available-card.js"></script>
+    <script src="/dashboard/dashboards/default/assets/templates/available-table.js"></script>
+    <script src="/dashboard/dashboards/default/assets/js/search-api.js"></script>
+    <script src="/dashboard/dashboards/default/assets/js/search-ui.js"></script>
+    <script src="/dashboard/dashboards/default/assets/js/search-main.js"></script>
+    <script src="/dashboard/dashboards/default/assets/js/modal.js"></script>
 </body>
 </html>

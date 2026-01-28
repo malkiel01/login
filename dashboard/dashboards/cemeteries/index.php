@@ -370,7 +370,7 @@ $isAdminUser = isAdmin();
         });
 
         // האזנה לשינויי הגדרות מהפופאפ
-        window.addEventListener('message', function(event) {
+        window.addEventListener('message', async function(event) {
             if (event.data && event.data.type === 'userSettingChanged') {
                 const { key, value } = event.data;
                 console.log('Setting changed from popup:', key, value);
@@ -380,6 +380,38 @@ $isAdminUser = isAdmin();
                     UserSettings.set(key, value).catch(() => {});
                     // החלה מיידית על הממשק
                     UserSettings.applyToUI();
+                }
+            }
+
+            // בקשת הרשאת התראות מ-iframe
+            if (event.data && event.data.type === 'requestNotificationPermission') {
+                console.log('[Main] Received notification permission request from iframe');
+                try {
+                    const permission = await Notification.requestPermission();
+                    console.log('[Main] Permission result:', permission);
+
+                    // שלח תשובה חזרה ל-iframe
+                    if (event.source) {
+                        event.source.postMessage({
+                            type: 'notificationPermissionResult',
+                            permission: permission
+                        }, '*');
+                    }
+
+                    // אם אושר, רשום ל-push
+                    if (permission === 'granted' && typeof PushSubscriptionManager !== 'undefined') {
+                        const result = await PushSubscriptionManager.subscribe();
+                        console.log('[Main] Push subscription result:', result);
+                    }
+                } catch (error) {
+                    console.error('[Main] Error requesting permission:', error);
+                    if (event.source) {
+                        event.source.postMessage({
+                            type: 'notificationPermissionResult',
+                            permission: 'error',
+                            error: error.message
+                        }, '*');
+                    }
                 }
             }
         });

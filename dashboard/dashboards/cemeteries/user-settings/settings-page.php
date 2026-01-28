@@ -780,33 +780,67 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                     </div>
                 `;
 
-                // בקשת הרשאה אם צריך
-                if (Notification.permission === 'default') {
-                    const permission = await Notification.requestPermission();
-                    if (permission !== 'granted') {
+                // אם אנחנו ב-iframe, שלח הודעה ל-parent
+                if (window.parent && window.parent !== window) {
+                    console.log('[Settings] Sending permission request to parent...');
+
+                    // האזן לתשובה מה-parent
+                    const permissionPromise = new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            window.removeEventListener('message', handler);
+                            reject(new Error('Timeout waiting for permission'));
+                        }, 60000); // דקה לאשר
+
+                        const handler = (event) => {
+                            if (event.data && event.data.type === 'notificationPermissionResult') {
+                                clearTimeout(timeout);
+                                window.removeEventListener('message', handler);
+                                resolve(event.data.permission);
+                            }
+                        };
+                        window.addEventListener('message', handler);
+                    });
+
+                    // שלח בקשה ל-parent
+                    window.parent.postMessage({ type: 'requestNotificationPermission' }, '*');
+
+                    // חכה לתשובה
+                    const permission = await permissionPromise;
+                    console.log('[Settings] Got permission result:', permission);
+
+                    if (permission === 'granted') {
+                        showMessage('התראות הופעלו בהצלחה!', 'success');
+                        await initPushSection();
+                    } else {
                         statusEl.innerHTML = `
                             <div class="status-error">
                                 <i class="fas fa-times-circle"></i>
                                 <span>לא ניתנה הרשאה להתראות</span>
                             </div>
                         `;
-                        return;
-                    }
-                }
-
-                // רישום ל-Push דרך PushSubscriptionManager
-                if (typeof PushSubscriptionManager !== 'undefined') {
-                    const result = await PushSubscriptionManager.subscribe();
-
-                    if (result.success) {
-                        showMessage('התראות הופעלו בהצלחה!', 'success');
-                        // רענון הסקשן
-                        await initPushSection();
-                    } else {
-                        throw new Error(result.error || 'שגיאה בהפעלת התראות');
                     }
                 } else {
-                    throw new Error('PushSubscriptionManager לא זמין');
+                    // לא ב-iframe - בקש ישירות
+                    const permission = await Notification.requestPermission();
+
+                    if (permission === 'granted') {
+                        if (typeof PushSubscriptionManager !== 'undefined') {
+                            const result = await PushSubscriptionManager.subscribe();
+                            if (result.success) {
+                                showMessage('התראות הופעלו בהצלחה!', 'success');
+                                await initPushSection();
+                            } else {
+                                throw new Error(result.error || 'שגיאה בהפעלת התראות');
+                            }
+                        }
+                    } else {
+                        statusEl.innerHTML = `
+                            <div class="status-error">
+                                <i class="fas fa-times-circle"></i>
+                                <span>לא ניתנה הרשאה להתראות</span>
+                            </div>
+                        `;
+                    }
                 }
 
             } catch (error) {

@@ -2087,8 +2087,23 @@ class TableManager {
             const diff = e.pageX - startX;
             const newWidth = Math.max(80, startWidth - diff);
 
+            // 🔍 דיבוג - האם הרחבה או צמצום
+            const isExpanding = newWidth > startWidth;
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`🔄 ${isExpanding ? 'הרחבה ⬅️' : 'צמצום ➡️'} | עמודה ${colIndex}`);
+            console.log(`📏 רוחב התחלתי: ${startWidth}px → רוחב חדש: ${newWidth}px (הפרש: ${newWidth - startWidth}px)`);
+
             // ⭐ עדכון state עם מספר (לא string) לחישוב נכון
             this.state.columnWidths[colIndex] = newWidth;
+
+            // 🔍 דיבוג - רוחב כל העמודות לפני עדכון
+            console.log('📊 רוחבי עמודות לאחר עדכון state:');
+            this.state.columnOrder.forEach((idx, position) => {
+                if (!this.state.columnVisibility[idx]) return;
+                const width = this.state.columnWidths[idx];
+                const marker = idx === colIndex ? '👉' : '  ';
+                console.log(`   ${marker} עמודה ${idx}: ${width}${typeof width === 'number' ? 'px' : ''}`);
+            });
 
             // עדכון דרך colgroup (סנכרון אוטומטי בין header ו-body)
             const headerCol = this.elements.headerColgroup?.querySelector(`col[data-col-index="${colIndex}"]`);
@@ -2103,6 +2118,8 @@ class TableManager {
 
             // ⭐ עדכון רוחב הטבלה בזמן הגרירה - מונע התרחבות עמודות אחרות בצמצום
             const newTableWidth = this._calculateTableWidth();
+            console.log(`📐 רוחב טבלה מחושב: ${newTableWidth}px`);
+
             if (this.elements.headerTable) {
                 this.elements.headerTable.style.width = newTableWidth + 'px';
                 this.elements.headerTable.style.minWidth = newTableWidth + 'px';

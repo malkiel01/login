@@ -20,6 +20,7 @@ if (!isLoggedIn()) {
 try {
     $conn = getDBConnection();
     $userId = getCurrentUserId();
+    $username = $_SESSION['username'] ?? 'user';
 
     // קבלת סוג המכשיר מה-URL או ברירת מחדל
     $deviceType = $_GET['deviceType'] ?? 'auto';
@@ -302,6 +303,7 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
 
     <script>
         const API_URL = '/dashboard/dashboards/cemeteries/user-settings/api/api.php';
+        const USERNAME = '<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>';
 
         // סוג המכשיר הנוכחי
         let currentDeviceType = '<?= $deviceType ?>' === 'auto'
@@ -634,12 +636,28 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
         }
 
         async function registerBiometric() {
-            const deviceName = prompt('הזן שם למכשיר (אופציונלי):', window.biometricAuth.guessDeviceName());
-            if (deviceName === null) return; // User cancelled
-
             try {
+                // בדוק אם כבר יש רישום למכשיר הזה
+                const existingCredentials = await window.biometricAuth.listCredentials();
+                const deviceType = window.biometricAuth.guessDeviceName();
+
+                // בדיקה אם יש כבר credential למכשיר מסוג זה
+                const existingForDevice = existingCredentials.find(cred =>
+                    cred.device_name && cred.device_name.includes(deviceType)
+                );
+
+                if (existingForDevice) {
+                    if (!confirm('כבר קיים אימות ביומטרי למכשיר זה. האם להחליף?')) {
+                        return;
+                    }
+                    // מחק את הישן
+                    await window.biometricAuth.deleteCredential(existingForDevice.id);
+                }
+
                 showMessage('מאתחל רישום ביומטרי...', 'info');
 
+                // שם אוטומטי: mbe - שם משתמש (סוג מכשיר)
+                const deviceName = `mbe - ${USERNAME} (${deviceType})`;
                 const result = await window.biometricAuth.register(deviceName);
 
                 if (result.success) {

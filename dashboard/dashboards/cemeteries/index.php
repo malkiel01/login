@@ -367,6 +367,51 @@ $isAdminUser = isAdmin();
                     console.warn('UserSettings init failed (table may not exist yet):', err.message);
                 });
             }
+
+            // בקשת הרשאת התראות (רק אחרי התחברות!)
+            setTimeout(async function() {
+                // בדוק אם כבר ביקשנו לאחרונה
+                const lastPrompt = localStorage.getItem('last_notification_prompt');
+                const now = Date.now();
+
+                if (lastPrompt && (now - parseInt(lastPrompt)) < 3600000) {
+                    console.log('[Push] כבר ביקשנו הרשאה לאחרונה, מדלג...');
+                    return;
+                }
+
+                // בדוק אם כבר נדחה 3 פעמים
+                const deniedCount = parseInt(localStorage.getItem('notification_denied_count') || '0');
+                if (deniedCount >= 3) {
+                    console.log('[Push] המשתמש דחה 3 פעמים, מפסיק לבקש');
+                    return;
+                }
+
+                // רק אם ההרשאה במצב default
+                if ('Notification' in window && Notification.permission === 'default') {
+                    if (confirm('האם לאפשר התראות מהמערכת?')) {
+                        try {
+                            const permission = await Notification.requestPermission();
+                            console.log('[Push] Permission result:', permission);
+
+                            if (permission === 'granted') {
+                                // עשה subscribe
+                                if (typeof PushSubscriptionManager !== 'undefined') {
+                                    const result = await PushSubscriptionManager.subscribe();
+                                    console.log('[Push] Subscribe result:', result);
+                                }
+                                localStorage.removeItem('notification_denied_count');
+                            } else {
+                                localStorage.setItem('notification_denied_count', deniedCount + 1);
+                            }
+                        } catch (err) {
+                            console.error('[Push] Error:', err);
+                        }
+                    } else {
+                        localStorage.setItem('notification_denied_count', deniedCount + 1);
+                    }
+                    localStorage.setItem('last_notification_prompt', now);
+                }
+            }, 3000); // 3 שניות אחרי טעינת הדף
         });
 
         // האזנה לשינויי הגדרות מהפופאפ

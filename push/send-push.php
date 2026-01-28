@@ -30,7 +30,7 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
 
     $webPush = new WebPush(
         VAPID_PUBLIC_KEY,
-        VAPID_PRIVATE_KEY,
+        VAPID_PRIVATE_KEY_PEM,
         VAPID_SUBJECT
     );
 

@@ -8,12 +8,12 @@
 
 class WebPush {
     private string $publicKey;
-    private string $privateKey;
+    private string $privateKeyPem;
     private string $subject;
 
-    public function __construct(string $publicKey, string $privateKey, string $subject) {
+    public function __construct(string $publicKey, string $privateKeyPem, string $subject) {
         $this->publicKey = $publicKey;
-        $this->privateKey = $privateKey;
+        $this->privateKeyPem = $privateKeyPem;
         $this->subject = $subject;
     }
 
@@ -280,18 +280,7 @@ class WebPush {
      * Sign data with ECDSA private key
      */
     private function signWithPrivateKey(string $data): string {
-        $privateKeyBin = $this->base64UrlDecode($this->privateKey);
-        $publicKeyBin = $this->base64UrlDecode($this->publicKey);
-
-        $x = substr($publicKeyBin, 1, 32);
-        $y = substr($publicKeyBin, 33, 32);
-
-        $der = $this->createECPrivateKeyDER($privateKeyBin, $x, $y);
-        $pem = "-----BEGIN EC PRIVATE KEY-----\n" .
-               chunk_split(base64_encode($der), 64, "\n") .
-               "-----END EC PRIVATE KEY-----\n";
-
-        $key = openssl_pkey_get_private($pem);
+        $key = openssl_pkey_get_private($this->privateKeyPem);
         if (!$key) {
             throw new Exception('Failed to load private key: ' . openssl_error_string());
         }

@@ -609,3 +609,55 @@
 .btn-settings-primary:hover {
     background: var(--settings-primary-hover);
 }
+
+/* ===================================================================
+   Push Notifications Section
+   =================================================================== */
+.push-section {
+    padding: 16px;
+}
+
+.push-status {
+    margin-bottom: 16px;
+}
+
+.push-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.push-test {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed var(--settings-border);
+}
+
+.push-unsupported {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.btn-settings-secondary {
+    background: var(--settings-card-bg);
+    color: var(--settings-text);
+    border: 1px solid var(--settings-border);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-settings-secondary:hover {
+    background: var(--settings-border);
+}

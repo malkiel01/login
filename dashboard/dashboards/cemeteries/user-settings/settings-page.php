@@ -220,6 +220,43 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             </div>
             <?php endforeach; ?>
 
+            <!-- Push Notifications Section -->
+            <div class="settings-category" data-category="push-notifications">
+                <div class="category-header">
+                    <i class="fas fa-bell"></i>
+                    <h3>התראות Push</h3>
+                </div>
+                <div class="category-content">
+                    <div class="push-section">
+                        <div class="push-status" id="pushStatus">
+                            <div class="status-loading">
+                                <i class="fas fa-spinner fa-spin"></i> בודק סטטוס...
+                            </div>
+                        </div>
+
+                        <div class="push-actions" id="pushActions" style="display: none;">
+                            <button type="button" class="btn-settings btn-settings-primary" id="enablePushBtn" onclick="enablePushNotifications()">
+                                <i class="fas fa-bell"></i> הפעל התראות
+                            </button>
+                            <button type="button" class="btn-settings btn-settings-danger" id="disablePushBtn" onclick="disablePushNotifications()" style="display: none;">
+                                <i class="fas fa-bell-slash"></i> בטל התראות
+                            </button>
+                        </div>
+
+                        <div class="push-test" id="pushTest" style="display: none; margin-top: 15px;">
+                            <button type="button" class="btn-settings btn-settings-secondary" onclick="testPushNotification()">
+                                <i class="fas fa-paper-plane"></i> שלח התראת בדיקה
+                            </button>
+                        </div>
+
+                        <div class="push-unsupported" id="pushUnsupported" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>הדפדפן או המכשיר שלך אינם תומכים בהתראות Push</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Biometric Security Section -->
             <div class="settings-category" data-category="security">
                 <div class="category-header">
@@ -258,6 +295,7 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
     </div>
 
     <!-- Scripts -->
+    <script src="/push/push-subscribe.js"></script>
     <script src="/js/biometric-auth.js"></script>
     <script src="/dashboard/dashboards/cemeteries/user-settings/js/user-settings-storage.js"></script>
     <script src="/dashboard/dashboards/cemeteries/user-settings/js/user-settings-core.js"></script>
@@ -514,6 +552,9 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             //     location.reload();
             // }
 
+            // אתחול סקשן Push Notifications
+            await initPushSection();
+
             // אתחול סקשן ביומטרי
             await initBiometricSection();
         });
@@ -652,6 +693,179 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             div.textContent = str;
             return div.innerHTML;
         }
+
+        // ========================================
+        // ניהול Push Notifications
+        // ========================================
+
+        async function initPushSection() {
+            const statusEl = document.getElementById('pushStatus');
+            const actionsEl = document.getElementById('pushActions');
+            const testEl = document.getElementById('pushTest');
+            const unsupportedEl = document.getElementById('pushUnsupported');
+            const enableBtn = document.getElementById('enablePushBtn');
+            const disableBtn = document.getElementById('disablePushBtn');
+
+            // בדיקת תמיכה
+            if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+                statusEl.style.display = 'none';
+                unsupportedEl.style.display = 'flex';
+                return;
+            }
+
+            // בדיקת מצב הרשאות
+            const permission = Notification.permission;
+
+            if (permission === 'denied') {
+                statusEl.innerHTML = `
+                    <div class="status-error">
+                        <i class="fas fa-times-circle"></i>
+                        <span>התראות נחסמו. יש לאפשר התראות בהגדרות הדפדפן.</span>
+                    </div>
+                `;
+                actionsEl.style.display = 'none';
+                return;
+            }
+
+            // בדיקת subscription קיים
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+
+                if (subscription) {
+                    // יש subscription פעיל
+                    statusEl.innerHTML = `
+                        <div class="status-success">
+                            <i class="fas fa-check-circle"></i>
+                            <span>התראות מופעלות במכשיר זה</span>
+                        </div>
+                    `;
+                    enableBtn.style.display = 'none';
+                    disableBtn.style.display = 'inline-flex';
+                    testEl.style.display = 'block';
+                } else {
+                    // אין subscription
+                    statusEl.innerHTML = `
+                        <div class="status-warning">
+                            <i class="fas fa-bell-slash"></i>
+                            <span>התראות לא מופעלות במכשיר זה</span>
+                        </div>
+                    `;
+                    enableBtn.style.display = 'inline-flex';
+                    disableBtn.style.display = 'none';
+                    testEl.style.display = 'none';
+                }
+
+                actionsEl.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error checking push status:', error);
+                statusEl.innerHTML = `
+                    <div class="status-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>שגיאה בבדיקת סטטוס: ${error.message}</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function enablePushNotifications() {
+            const statusEl = document.getElementById('pushStatus');
+
+            try {
+                // עדכון סטטוס
+                statusEl.innerHTML = `
+                    <div class="status-loading">
+                        <i class="fas fa-spinner fa-spin"></i> מפעיל התראות...
+                    </div>
+                `;
+
+                // בקשת הרשאה אם צריך
+                if (Notification.permission === 'default') {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        statusEl.innerHTML = `
+                            <div class="status-error">
+                                <i class="fas fa-times-circle"></i>
+                                <span>לא ניתנה הרשאה להתראות</span>
+                            </div>
+                        `;
+                        return;
+                    }
+                }
+
+                // רישום ל-Push דרך PushSubscriptionManager
+                if (typeof PushSubscriptionManager !== 'undefined') {
+                    const result = await PushSubscriptionManager.subscribe();
+
+                    if (result.success) {
+                        showMessage('התראות הופעלו בהצלחה!', 'success');
+                        // רענון הסקשן
+                        await initPushSection();
+                    } else {
+                        throw new Error(result.error || 'שגיאה בהפעלת התראות');
+                    }
+                } else {
+                    throw new Error('PushSubscriptionManager לא זמין');
+                }
+
+            } catch (error) {
+                console.error('Error enabling push:', error);
+                statusEl.innerHTML = `
+                    <div class="status-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>שגיאה: ${error.message}</span>
+                    </div>
+                `;
+                showMessage('שגיאה בהפעלת התראות: ' + error.message, 'error');
+            }
+        }
+
+        async function disablePushNotifications() {
+            if (!confirm('האם לבטל את ההתראות במכשיר זה?')) {
+                return;
+            }
+
+            try {
+                if (typeof PushSubscriptionManager !== 'undefined') {
+                    const result = await PushSubscriptionManager.unsubscribe();
+
+                    if (result.success) {
+                        showMessage('התראות בוטלו', 'success');
+                        await initPushSection();
+                    } else {
+                        throw new Error(result.error || 'שגיאה בביטול התראות');
+                    }
+                }
+            } catch (error) {
+                console.error('Error disabling push:', error);
+                showMessage('שגיאה בביטול התראות: ' + error.message, 'error');
+            }
+        }
+
+        async function testPushNotification() {
+            try {
+                showMessage('שולח התראת בדיקה...', 'info');
+
+                const response = await fetch('/push/test-push.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('התראת בדיקה נשלחה! ' + (data.sent || 0) + ' מכשירים', 'success');
+                } else {
+                    throw new Error(data.error || 'שגיאה בשליחה');
+                }
+            } catch (error) {
+                console.error('Error sending test push:', error);
+                showMessage('שגיאה בשליחת התראה: ' + error.message, 'error');
+            }
+        }
+
     </script>
 </body>
 </html>

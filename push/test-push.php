@@ -2,14 +2,51 @@
 /**
  * Push Notification Test Script
  * Run this to diagnose push notification issues
+ * Also handles POST requests to send test notifications to current user
  */
-
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/WebPush.php';
+
+// Handle POST request - send test to current user
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    session_start();
+
+    $userId = $_SESSION['user_id'] ?? null;
+
+    if (!$userId) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'User not logged in']);
+        exit;
+    }
+
+    try {
+        require_once __DIR__ . '/send-push.php';
+
+        $result = sendPushToUser(
+            $userId,
+            'בדיקת התראות',
+            'ההתראות עובדות! זו הודעת בדיקה.',
+            '/dashboard/'
+        );
+
+        echo json_encode($result);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// Diagnostic mode (GET request)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 header('Content-Type: text/plain; charset=utf-8');
 

@@ -80,13 +80,6 @@ function getPermissionsScript() {
                             registration = await navigator.serviceWorker.ready;
                         }
                         
-                        let subscription = await registration.pushManager.getSubscription();
-                        
-                        if (subscription) {
-                            alert("כבר רשום ל-Push Notifications!");
-                            return subscription;
-                        }
-                        
                         // Get VAPID key from server config
                         const vapidPublicKey = '{$vapidPublicKey}';
                         if (!vapidPublicKey) {
@@ -94,19 +87,42 @@ function getPermissionsScript() {
                             return false;
                         }
                         const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
-                        
+
+                        let subscription = await registration.pushManager.getSubscription();
+
+                        // Check if existing subscription uses correct VAPID key
+                        if (subscription) {
+                            const existingKey = subscription.options?.applicationServerKey;
+                            if (existingKey) {
+                                const existingKeyArray = new Uint8Array(existingKey);
+                                const keysMatch = convertedVapidKey.length === existingKeyArray.length &&
+                                    convertedVapidKey.every((val, i) => val === existingKeyArray[i]);
+
+                                if (!keysMatch) {
+                                    console.log("VAPID key mismatch! Unsubscribing old subscription...");
+                                    await subscription.unsubscribe();
+                                    subscription = null;
+                                }
+                            }
+                        }
+
+                        if (subscription) {
+                            alert("כבר רשום ל-Push Notifications!");
+                            return subscription;
+                        }
+
                         try {
                             subscription = await registration.pushManager.subscribe({
                                 userVisibleOnly: true,
                                 applicationServerKey: convertedVapidKey
                             });
-                            
+
                             alert("נרשמת בהצלחה ל-Push Notifications!");
                             console.log("Push subscription:", subscription);
                             return subscription;
                         } catch (subError) {
                             // אם נכשל עם VAPID, נסה בלי
-                            console.log("Trying without VAPID key...");
+                            console.log("Trying without VAPID key...", subError);
                             alert("Push Notifications דורש הגדרות מיוחדות בשרת. כרגע רק התראות רגילות זמינות.");
                             return false;
                         }

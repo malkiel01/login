@@ -96,20 +96,39 @@ const PushSubscriptionManager = {
             // Get service worker registration
             const registration = await navigator.serviceWorker.ready;
 
+            // Get VAPID key if not already loaded
+            if (!this.vapidPublicKey) {
+                await this.getVapidKey();
+            }
+
+            if (!this.vapidPublicKey) {
+                return { success: false, error: 'Failed to get VAPID key' };
+            }
+
             // Check for existing subscription
             let subscription = await registration.pushManager.getSubscription();
 
+            if (subscription) {
+                // Check if existing subscription uses the correct VAPID key
+                // If not, unsubscribe and create a new one
+                const currentKey = this.urlBase64ToUint8Array(this.vapidPublicKey);
+                const existingKey = subscription.options?.applicationServerKey;
+
+                if (existingKey) {
+                    const existingKeyArray = new Uint8Array(existingKey);
+                    const keysMatch = currentKey.length === existingKeyArray.length &&
+                        currentKey.every((val, i) => val === existingKeyArray[i]);
+
+                    if (!keysMatch) {
+                        console.log('[Push] VAPID key mismatch! Unsubscribing old subscription...');
+                        await subscription.unsubscribe();
+                        subscription = null;
+                    }
+                }
+            }
+
             if (!subscription) {
-                // Get VAPID key if not already loaded
-                if (!this.vapidPublicKey) {
-                    await this.getVapidKey();
-                }
-
-                if (!this.vapidPublicKey) {
-                    return { success: false, error: 'Failed to get VAPID key' };
-                }
-
-                // Subscribe to push
+                // Subscribe to push with current VAPID key
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
@@ -117,7 +136,7 @@ const PushSubscriptionManager = {
 
                 console.log('[Push] New subscription created');
             } else {
-                console.log('[Push] Using existing subscription');
+                console.log('[Push] Using existing subscription (VAPID key matches)');
             }
 
             // Send subscription to server

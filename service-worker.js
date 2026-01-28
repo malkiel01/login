@@ -4,7 +4,7 @@
  * חייב להיות בשורש האתר!
  */
 
-const CACHE_NAME = 'pwa-cache-v2';
+const CACHE_NAME = 'pwa-cache-v3';
 const API_URL = '/api/notifications.php';
 
 const urlsToCache = [
@@ -238,7 +238,18 @@ self.addEventListener('periodicsync', event => {
 
 // ============= Push Notifications (משופר) =============
 self.addEventListener('push', event => {
-    console.log('[ServiceWorker] Push Received');
+    console.log('[ServiceWorker] ==================');
+    console.log('[ServiceWorker] PUSH EVENT RECEIVED!');
+    console.log('[ServiceWorker] Time:', new Date().toISOString());
+    console.log('[ServiceWorker] Has data:', !!event.data);
+    if (event.data) {
+        try {
+            console.log('[ServiceWorker] Data:', event.data.text());
+        } catch(e) {
+            console.log('[ServiceWorker] Could not read data');
+        }
+    }
+    console.log('[ServiceWorker] ==================');
 
     let notificationData = {
         title: 'חברה קדישא',

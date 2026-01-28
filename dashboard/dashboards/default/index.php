@@ -23,10 +23,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דשבורד ברירת מחדל</title>
-    <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css/default.css">
     <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css_search/search.css">
     <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css_search/custom-search.css">
     <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css_search/modal.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/default/assets/css/default.css">
 </head>
 <body>
 

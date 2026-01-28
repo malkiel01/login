@@ -37,10 +37,23 @@ function getPermissionsScript() {
                         const permission = await Notification.requestPermission();
                         
                         if (permission === "granted") {
-                            alert("התראות הופעלו בהצלחה!");
-                            this.showNotification("התראות מופעלות! 🎉", {
-                                body: "מעולה! עכשיו תקבל התראות מהאפליקציה"
-                            });
+                            console.log("[Permissions] Permission granted! Subscribing to push...");
+
+                            // עשה subscribe אוטומטי דרך PushSubscriptionManager
+                            if (typeof PushSubscriptionManager !== 'undefined') {
+                                const result = await PushSubscriptionManager.subscribe();
+                                console.log("[Permissions] Subscribe result:", result);
+                                if (result.success) {
+                                    this.showNotification("התראות מופעלות! 🎉", {
+                                        body: "מעולה! עכשיו תקבל התראות מהאפליקציה"
+                                    });
+                                }
+                            } else {
+                                console.warn("[Permissions] PushSubscriptionManager not available");
+                                this.showNotification("התראות מופעלות! 🎉", {
+                                    body: "מעולה! עכשיו תקבל התראות מהאפליקציה"
+                                });
+                            }
                             return true;
                         } else {
                             console.log("המשתמש דחה את ההרשאה");

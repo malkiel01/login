@@ -1,0 +1,350 @@
+/* ===================================================================
+   Default Dashboard - Main Styles
+   =================================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #667eea;
+    --primary-dark: #764ba2;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+}
+
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    direction: rtl;
+    text-align: right;
+}
+
+/* ===================================================================
+   Mobile Header
+   =================================================================== */
+.mobile-header {
+    margin: 0 !important;
+    width: 100%;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.user-info-text {
+    line-height: 1.2;
+}
+
+.user-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-email {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.logout-btn {
+    background: var(--error);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* ===================================================================
+   Mobile Responsive
+   =================================================================== */
+@media (max-width: 600px) {
+    .mobile-header {
+        padding: 10px;
+    }
+
+    .user-email {
+        display: none;
+    }
+
+    .logout-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .user-name {
+        font-size: 14px;
+    }
+}
+
+/* ===================================================================
+   Search Type Selector
+   =================================================================== */
+.search-type-selector {
+    padding: 15px;
+    background: var(--bg-primary);
+    margin-bottom: 10px;
+}
+
+.search-type-tabs {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.search-type-tab {
+    flex: 1;
+    min-width: 100px;
+    padding: 15px 10px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-type-tab:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    background: white;
+}
+
+.search-type-tab.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.search-type-tab:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.search-type-tab .icon {
+    font-size: 24px;
+}
+
+.search-type-tab .label {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ===================================================================
+   Search Tabs
+   =================================================================== */
+.search-tabs {
+    display: flex;
+    gap: 10px;
+    padding: 0 15px 15px;
+    background: var(--bg-primary);
+}
+
+.search-tab {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.search-tab:hover {
+    background: #e5e7eb;
+}
+
+.search-tab.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+}
+
+.tab-icon {
+    font-size: 18px;
+}
+
+/* ===================================================================
+   Container & Content
+   =================================================================== */
+.search-container {
+    padding: 15px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ===================================================================
+   Results Section
+   =================================================================== */
+.results-section {
+    padding: 15px;
+    background: var(--bg-secondary);
+}
+
+.results-header {
+    background: var(--bg-primary);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.results-header h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.results-info {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+.results-info strong {
+    color: var(--primary-color);
+}
+
+.view-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.view-btn {
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.view-btn:hover {
+    background: white;
+    border-color: var(--primary-color);
+}
+
+.view-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+#results-container {
+    /* Styles will be added by card/table specific CSS */
+}
+
+/* ===================================================================
+   Loading Spinner
+   =================================================================== */
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===================================================================
+   Utility Classes
+   =================================================================== */
+.text-center {
+    text-align: center;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.p-15 {
+    padding: 15px;
+}

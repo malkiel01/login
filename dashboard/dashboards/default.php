@@ -1,4 +1,4 @@
 <?php
-// פשוט כלול את הקובץ במקום להפנות
-include 'search/index.php';
+// טוען את דשבורד default עם CSS מיועד
+include __DIR__ . '/default/index.php';
 ?>

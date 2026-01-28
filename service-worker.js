@@ -4,7 +4,7 @@
  * חייב להיות בשורש האתר!
  */
 
-const CACHE_NAME = 'pwa-cache-v4';
+const CACHE_NAME = 'pwa-cache-v5';
 const API_URL = '/api/notifications.php';
 
 const urlsToCache = [
@@ -314,20 +314,23 @@ self.addEventListener('push', event => {
     );
 });
 
-// ============= טיפול בלחיצה על התראה (הקוד המקורי שלך) =============
+// ============= טיפול בלחיצה על התראה - פותח מסך ייעודי =============
 self.addEventListener('notificationclick', event => {
     console.log('[Service Worker] Notification click received.');
 
     event.notification.close();
 
-    // קבל URL מה-data או השתמש בברירת מחדל
-    const finalTarget = event.notification.data?.url || '/dashboard/';
-    const isApproval = event.notification.data?.isApproval || finalTarget.includes('/approve.php');
-    const notificationId = event.notification.data?.id;
+    // קבל מידע מההתראה
+    const notificationData = event.notification.data || {};
+    const notificationId = notificationData.id || Date.now();
+    const notificationTitle = event.notification.title || '';
+    const notificationBody = event.notification.body || '';
+    const notificationUrl = notificationData.url || '/dashboard/';
+    const isApproval = notificationData.isApproval || notificationUrl.includes('/approve.php');
 
     event.waitUntil(
         (async () => {
-            // For other notifications, try to use existing window
+            // חפש חלון פתוח
             const windowClients = await clients.matchAll({
                 type: 'window',
                 includeUncontrolled: true
@@ -339,47 +342,42 @@ self.addEventListener('notificationclick', event => {
                     // אם המשתמש בדף login
                     if (client.url.includes('/auth/login.php')) {
                         await client.focus();
-                        // For approval, pass the notification ID to show modal after login
-                        if (isApproval && notificationId) {
-                            client.postMessage({
-                                type: 'REDIRECT_AFTER_LOGIN',
-                                url: '/dashboard/?approval_id=' + notificationId
-                            });
-                        } else {
-                            client.postMessage({
-                                type: 'REDIRECT_AFTER_LOGIN',
-                                url: finalTarget
-                            });
-                        }
+                        // שמור מידע לפתיחת מודל אחרי התחברות
+                        client.postMessage({
+                            type: 'REDIRECT_AFTER_LOGIN',
+                            url: '/dashboard/dashboards/cemeteries/?show_notification=' + notificationId +
+                                 '&notification_title=' + encodeURIComponent(notificationTitle) +
+                                 '&notification_body=' + encodeURIComponent(notificationBody) +
+                                 '&notification_url=' + encodeURIComponent(notificationUrl) +
+                                 '&is_approval=' + (isApproval ? '1' : '0')
+                        });
                         return;
                     } else {
-                        // User is logged in - for approval notifications, show modal
-                        if (isApproval && notificationId) {
-                            await client.focus();
-                            // Small delay to ensure page is ready to receive message
-                            await new Promise(resolve => setTimeout(resolve, 300));
-                            client.postMessage({
-                                type: 'SHOW_APPROVAL',
-                                notificationId: notificationId
-                            });
-                            console.log('[SW] Sent SHOW_APPROVAL message for notification:', notificationId);
-                            return;
-                        } else {
-                            // המשתמש מחובר - נווט לדף ההתראות
-                            await client.navigate(finalTarget);
-                            return client.focus();
-                        }
+                        // המשתמש מחובר - שלח הודעה להצגת מסך ייעודי
+                        await client.focus();
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                        client.postMessage({
+                            type: 'SHOW_NOTIFICATION_MODAL',
+                            notificationId: notificationId,
+                            title: notificationTitle,
+                            body: notificationBody,
+                            url: notificationUrl,
+                            isApproval: isApproval
+                        });
+                        console.log('[SW] Sent SHOW_NOTIFICATION_MODAL message for notification:', notificationId);
+                        return;
                     }
                 }
             }
 
-            // אם אין חלון פתוח - פתח את האפליקציה עם פרמטר להצגת המודל
+            // אם אין חלון פתוח - פתח את האפליקציה עם פרמטרים להצגת המודל
             if (clients.openWindow) {
-                if (isApproval && notificationId) {
-                    return clients.openWindow('/dashboard/?approval_id=' + notificationId);
-                } else {
-                    return clients.openWindow(finalTarget);
-                }
+                const modalUrl = '/dashboard/dashboards/cemeteries/?show_notification=' + notificationId +
+                                 '&notification_title=' + encodeURIComponent(notificationTitle) +
+                                 '&notification_body=' + encodeURIComponent(notificationBody) +
+                                 '&notification_url=' + encodeURIComponent(notificationUrl) +
+                                 '&is_approval=' + (isApproval ? '1' : '0');
+                return clients.openWindow(modalUrl);
             }
         })()
     );

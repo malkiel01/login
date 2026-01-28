@@ -13,9 +13,17 @@ const PushSubscriptionManager = {
      * Initialize push subscription manager
      */
     async init() {
+        console.log('[Push] ========================================');
+        console.log('[Push] PushSubscriptionManager starting...');
+        console.log('[Push] Time:', new Date().toISOString());
+        console.log('[Push] ========================================');
+
         // Check if push is supported
         if (!this.isSupported()) {
-            console.log('[Push] Push notifications not supported');
+            console.log('[Push] Push notifications NOT supported!');
+            console.log('[Push] serviceWorker in navigator:', 'serviceWorker' in navigator);
+            console.log('[Push] PushManager in window:', 'PushManager' in window);
+            console.log('[Push] Notification in window:', 'Notification' in window);
             return false;
         }
 
@@ -237,15 +245,20 @@ const PushSubscriptionManager = {
 };
 
 // Auto-init when DOM is ready
+console.log('[Push] Script loaded, document.readyState =', document.readyState);
 if (document.readyState === 'loading') {
+    console.log('[Push] Waiting for DOMContentLoaded...');
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('[Push] DOMContentLoaded fired, calling init()');
         PushSubscriptionManager.init();
     });
 } else {
+    console.log('[Push] DOM already ready, calling init() immediately');
     PushSubscriptionManager.init();
 }
 
 // Export for use in other modules
 if (typeof window !== 'undefined') {
     window.PushSubscriptionManager = PushSubscriptionManager;
+    console.log('[Push] PushSubscriptionManager exported to window');
 }

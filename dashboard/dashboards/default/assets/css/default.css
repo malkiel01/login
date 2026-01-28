@@ -173,8 +173,8 @@ body::after {
     flex: 1;
     min-width: 100px;
     padding: var(--spacing-md);
-    background: var(--bg-main);
-    border: 2px solid transparent;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
     border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.2s;
@@ -182,11 +182,14 @@ body::after {
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-xs);
+    color: var(--text-dark);
 }
 
 .search-type-tab:hover:not(:disabled) {
     background: var(--bg-hover);
-    border-color: var(--primary-lighter);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
 }
 
 .search-type-tab.active {
@@ -194,11 +197,14 @@ body::after {
     border-color: var(--primary);
     color: white;
     box-shadow: var(--shadow);
+    transform: translateY(-2px);
 }
 
 .search-type-tab:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    background: var(--bg-main);
+    border-color: var(--border);
 }
 
 .search-type-tab .icon {
@@ -207,7 +213,8 @@ body::after {
 
 .search-type-tab .label {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
+    color: inherit;
 }
 
 /* ===================================================================
@@ -218,6 +225,7 @@ body::after {
     background: var(--bg-white);
     padding: var(--spacing-md);
     display: flex;
+    flex-wrap: nowrap;
     gap: var(--spacing-sm);
     border-bottom: 1px solid var(--border);
 }

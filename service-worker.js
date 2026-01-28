@@ -300,8 +300,17 @@ self.addEventListener('push', event => {
         }
     }
 
+    console.log('[ServiceWorker] Showing notification:', notificationData.title);
+    console.log('[ServiceWorker] Notification options:', JSON.stringify(notificationData));
+
     event.waitUntil(
         self.registration.showNotification(notificationData.title, notificationData)
+            .then(() => {
+                console.log('[ServiceWorker] ✅ Notification shown successfully!');
+            })
+            .catch(err => {
+                console.error('[ServiceWorker] ❌ Failed to show notification:', err);
+            })
     );
 });
 

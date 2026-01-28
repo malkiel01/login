@@ -424,37 +424,8 @@ function sendNotifications(PDO $pdo, int $notificationId, string $title, string 
     return $count;
 }
 
-/**
- * Permission helpers
- */
-function requireViewPermission(string $module): void {
-    if (!isAdmin() && !hasModulePermission($module, 'view')) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'אין הרשאת צפייה']);
-        exit;
-    }
-}
-
-function requireCreatePermission(string $module): void {
-    if (!isAdmin() && !hasModulePermission($module, 'create')) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'אין הרשאת יצירה']);
-        exit;
-    }
-}
-
-function requireEditPermission(string $module): void {
-    if (!isAdmin() && !hasModulePermission($module, 'edit')) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'אין הרשאת עריכה']);
-        exit;
-    }
-}
-
-function requireDeletePermission(string $module): void {
-    if (!isAdmin() && !hasModulePermission($module, 'delete')) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'אין הרשאת מחיקה']);
-        exit;
-    }
-}
+// Permission helpers are already defined in api-auth.php:
+// - requireViewPermission()
+// - requireCreatePermission()
+// - requireEditPermission()
+// - requireDeletePermission()

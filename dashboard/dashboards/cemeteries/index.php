@@ -395,5 +395,8 @@ $isAdminUser = isAdmin();
     <script src="/push/listener.js"></script>
     <!-- Web Push Subscription Manager -->
     <script src="/push/push-subscribe.js"></script>
+    <!-- Approval Modal for notifications -->
+    <script src="/js/biometric-auth.js"></script>
+    <script src="/js/approval-modal.js"></script>
 </body>
 </html>

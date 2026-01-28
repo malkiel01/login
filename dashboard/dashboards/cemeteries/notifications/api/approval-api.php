@@ -38,6 +38,9 @@ try {
         case 'get_status':
             handleGetStatus($pdo, $userId);
             break;
+        case 'get_notification':
+            handleGetNotification($pdo, $userId);
+            break;
         default:
             throw new Exception('פעולה לא חוקית');
     }
@@ -174,5 +177,71 @@ function handleGetStatus(PDO $pdo, int $userId): void {
         'status' => $approval['status'],
         'responded_at' => $approval['responded_at'],
         'biometric_verified' => (bool)$approval['biometric_verified']
+    ]);
+}
+
+/**
+ * Get notification details for modal display
+ */
+function handleGetNotification(PDO $pdo, int $userId): void {
+    $notificationId = (int)($_GET['id'] ?? 0);
+
+    if (!$notificationId) {
+        throw new Exception('מזהה התראה חסר');
+    }
+
+    // Get the notification
+    $stmt = $pdo->prepare("
+        SELECT sn.*, u.name as creator_name
+        FROM scheduled_notifications sn
+        LEFT JOIN users u ON u.id = sn.created_by
+        WHERE sn.id = ? AND sn.requires_approval = 1
+    ");
+    $stmt->execute([$notificationId]);
+    $notification = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$notification) {
+        throw new Exception('ההתראה לא נמצאה או אינה דורשת אישור');
+    }
+
+    // Check if user is a target
+    $targetUsers = json_decode($notification['target_users'], true);
+    $isTarget = in_array('all', $targetUsers) || in_array($userId, $targetUsers);
+
+    if (!$isTarget) {
+        throw new Exception('אינך מורשה לצפות בהודעה זו');
+    }
+
+    // Get user's approval status
+    $stmt = $pdo->prepare("
+        SELECT * FROM notification_approvals
+        WHERE notification_id = ? AND user_id = ?
+    ");
+    $stmt->execute([$notificationId, $userId]);
+    $approval = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Check if expired
+    $isExpired = false;
+    if ($notification['approval_expires_at'] && strtotime($notification['approval_expires_at']) < time()) {
+        $isExpired = true;
+        if ($approval && $approval['status'] === 'pending') {
+            $pdo->prepare("UPDATE notification_approvals SET status = 'expired' WHERE id = ?")->execute([$approval['id']]);
+            $approval['status'] = 'expired';
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'notification' => [
+            'id' => $notification['id'],
+            'title' => $notification['title'],
+            'body' => $notification['body'],
+            'approval_message' => $notification['approval_message'],
+            'approval_expires_at' => $notification['approval_expires_at'],
+            'creator_name' => $notification['creator_name'],
+            'created_at' => $notification['created_at']
+        ],
+        'approval' => $approval,
+        'expired' => $isExpired
     ]);
 }

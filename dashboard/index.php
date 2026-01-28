@@ -211,6 +211,10 @@ if (!file_exists($dashboardFile)) {
         echo getTokenInitScript();
         echo getLogoutScript();
         ?>
+
+        <!-- Approval Modal for notifications -->
+        <script src="/js/biometric-auth.js"></script>
+        <script src="/js/approval-modal.js"></script>
     </body>
     </html>
     <?php

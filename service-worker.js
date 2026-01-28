@@ -303,17 +303,10 @@ self.addEventListener('notificationclick', event => {
     // קבל URL מה-data או השתמש בברירת מחדל
     const finalTarget = event.notification.data?.url || '/notifications/manager.php';
     const isApproval = event.notification.data?.isApproval || finalTarget.includes('/approve.php');
+    const notificationId = event.notification.data?.id;
 
     event.waitUntil(
         (async () => {
-            // For approval pages, always open in a new standalone window
-            if (isApproval) {
-                console.log('[SW] Opening approval page in standalone window:', finalTarget);
-                if (clients.openWindow) {
-                    return clients.openWindow(finalTarget);
-                }
-            }
-
             // For other notifications, try to use existing window
             const windowClients = await clients.matchAll({
                 type: 'window',
@@ -326,22 +319,44 @@ self.addEventListener('notificationclick', event => {
                     // אם המשתמש בדף login
                     if (client.url.includes('/auth/login.php')) {
                         await client.focus();
-                        client.postMessage({
-                            type: 'REDIRECT_AFTER_LOGIN',
-                            url: finalTarget
-                        });
+                        // For approval, pass the notification ID to show modal after login
+                        if (isApproval && notificationId) {
+                            client.postMessage({
+                                type: 'REDIRECT_AFTER_LOGIN',
+                                url: '/dashboard/?approval_id=' + notificationId
+                            });
+                        } else {
+                            client.postMessage({
+                                type: 'REDIRECT_AFTER_LOGIN',
+                                url: finalTarget
+                            });
+                        }
                         return;
                     } else {
-                        // המשתמש מחובר - נווט לדף ההתראות
-                        await client.navigate(finalTarget);
-                        return client.focus();
+                        // User is logged in - for approval notifications, show modal
+                        if (isApproval && notificationId) {
+                            await client.focus();
+                            client.postMessage({
+                                type: 'SHOW_APPROVAL',
+                                notificationId: notificationId
+                            });
+                            return;
+                        } else {
+                            // המשתמש מחובר - נווט לדף ההתראות
+                            await client.navigate(finalTarget);
+                            return client.focus();
+                        }
                     }
                 }
             }
 
-            // אם אין חלון פתוח
+            // אם אין חלון פתוח - פתח את האפליקציה עם פרמטר להצגת המודל
             if (clients.openWindow) {
-                return clients.openWindow(finalTarget);
+                if (isApproval && notificationId) {
+                    return clients.openWindow('/dashboard/?approval_id=' + notificationId);
+                } else {
+                    return clients.openWindow(finalTarget);
+                }
             }
         })()
     );

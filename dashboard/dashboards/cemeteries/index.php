@@ -390,5 +390,8 @@ $isAdminUser = isAdmin();
     echo getTokenInitScript();
     echo getLogoutScript();
     ?>
+
+    <!-- Push Notification Listener -->
+    <script src="/push/listener.js"></script>
 </body>
 </html>

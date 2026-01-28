@@ -706,15 +706,86 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
             const enableBtn = document.getElementById('enablePushBtn');
             const disableBtn = document.getElementById('disablePushBtn');
 
-            // בדיקת תמיכה
-            if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+            // בדיקת תמיכה - בדוק גם ב-parent אם אנחנו ב-iframe
+            const hasSupport = ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+            const parentHasSupport = window.parent && window.parent !== window &&
+                ('serviceWorker' in window.parent.navigator) && ('Notification' in window.parent);
+
+            if (!hasSupport && !parentHasSupport) {
                 statusEl.style.display = 'none';
                 unsupportedEl.style.display = 'flex';
                 return;
             }
 
-            // בדיקת מצב הרשאות
-            const permission = Notification.permission;
+            // אם אנחנו ב-iframe, בקש סטטוס מה-parent
+            if (window.parent && window.parent !== window) {
+                console.log('[Settings] In iframe, requesting push status from parent...');
+
+                try {
+                    const pushStatus = await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            window.removeEventListener('message', handler);
+                            reject(new Error('Timeout'));
+                        }, 5000);
+
+                        const handler = (event) => {
+                            if (event.data && event.data.type === 'pushStatusResult') {
+                                clearTimeout(timeout);
+                                window.removeEventListener('message', handler);
+                                resolve(event.data);
+                            }
+                        };
+                        window.addEventListener('message', handler);
+                        window.parent.postMessage({ type: 'getPushStatus' }, '*');
+                    });
+
+                    console.log('[Settings] Got push status from parent:', pushStatus);
+
+                    if (pushStatus.permission === 'denied') {
+                        statusEl.innerHTML = `
+                            <div class="status-error">
+                                <i class="fas fa-times-circle"></i>
+                                <span>התראות נחסמו. יש לאפשר התראות בהגדרות הדפדפן.</span>
+                            </div>
+                        `;
+                        actionsEl.style.display = 'none';
+                        return;
+                    }
+
+                    if (pushStatus.hasSubscription) {
+                        statusEl.innerHTML = `
+                            <div class="status-success">
+                                <i class="fas fa-check-circle"></i>
+                                <span>התראות מופעלות במכשיר זה</span>
+                            </div>
+                        `;
+                        enableBtn.style.display = 'none';
+                        disableBtn.style.display = 'inline-flex';
+                        testEl.style.display = 'block';
+                    } else {
+                        statusEl.innerHTML = `
+                            <div class="status-warning">
+                                <i class="fas fa-bell-slash"></i>
+                                <span>התראות לא מופעלות במכשיר זה</span>
+                            </div>
+                        `;
+                        enableBtn.style.display = 'inline-flex';
+                        disableBtn.style.display = 'none';
+                        testEl.style.display = 'none';
+                    }
+
+                    actionsEl.style.display = 'block';
+                    return;
+
+                } catch (error) {
+                    console.warn('[Settings] Could not get status from parent, trying local:', error);
+                    // המשך לבדיקה מקומית
+                }
+            }
+
+            // בדיקה מקומית (לא ב-iframe או ש-parent לא הגיב)
+            let permission = Notification.permission;
+            console.log('[Settings] Using local permission:', permission);
 
             if (permission === 'denied') {
                 statusEl.innerHTML = `
@@ -733,7 +804,6 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                 const subscription = await registration.pushManager.getSubscription();
 
                 if (subscription) {
-                    // יש subscription פעיל
                     statusEl.innerHTML = `
                         <div class="status-success">
                             <i class="fas fa-check-circle"></i>
@@ -744,7 +814,6 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                     disableBtn.style.display = 'inline-flex';
                     testEl.style.display = 'block';
                 } else {
-                    // אין subscription
                     statusEl.innerHTML = `
                         <div class="status-warning">
                             <i class="fas fa-bell-slash"></i>
@@ -860,9 +929,35 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                 return;
             }
 
+            const statusEl = document.getElementById('pushStatus');
+
             try {
-                if (typeof PushSubscriptionManager !== 'undefined') {
-                    const result = await PushSubscriptionManager.unsubscribe();
+                statusEl.innerHTML = `
+                    <div class="status-loading">
+                        <i class="fas fa-spinner fa-spin"></i> מבטל התראות...
+                    </div>
+                `;
+
+                // אם אנחנו ב-iframe, שלח הודעה ל-parent
+                if (window.parent && window.parent !== window) {
+                    console.log('[Settings] Sending disable push request to parent...');
+
+                    const result = await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            window.removeEventListener('message', handler);
+                            reject(new Error('Timeout'));
+                        }, 10000);
+
+                        const handler = (event) => {
+                            if (event.data && event.data.type === 'disablePushResult') {
+                                clearTimeout(timeout);
+                                window.removeEventListener('message', handler);
+                                resolve(event.data);
+                            }
+                        };
+                        window.addEventListener('message', handler);
+                        window.parent.postMessage({ type: 'disablePushNotifications' }, '*');
+                    });
 
                     if (result.success) {
                         showMessage('התראות בוטלו', 'success');
@@ -870,10 +965,23 @@ $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 
                     } else {
                         throw new Error(result.error || 'שגיאה בביטול התראות');
                     }
+                } else {
+                    // לא ב-iframe - בטל ישירות
+                    if (typeof PushSubscriptionManager !== 'undefined') {
+                        const result = await PushSubscriptionManager.unsubscribe();
+
+                        if (result.success) {
+                            showMessage('התראות בוטלו', 'success');
+                            await initPushSection();
+                        } else {
+                            throw new Error(result.error || 'שגיאה בביטול התראות');
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error disabling push:', error);
                 showMessage('שגיאה בביטול התראות: ' + error.message, 'error');
+                await initPushSection();
             }
         }
 

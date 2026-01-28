@@ -414,6 +414,69 @@ $isAdminUser = isAdmin();
                     }
                 }
             }
+
+            // בקשת סטטוס push מ-iframe
+            if (event.data && event.data.type === 'getPushStatus') {
+                console.log('[Main] Received push status request from iframe');
+                try {
+                    const permission = Notification.permission;
+                    let hasSubscription = false;
+
+                    if ('serviceWorker' in navigator && 'PushManager' in window) {
+                        const registration = await navigator.serviceWorker.ready;
+                        const subscription = await registration.pushManager.getSubscription();
+                        hasSubscription = !!subscription;
+                    }
+
+                    if (event.source) {
+                        event.source.postMessage({
+                            type: 'pushStatusResult',
+                            permission: permission,
+                            hasSubscription: hasSubscription
+                        }, '*');
+                    }
+                    console.log('[Main] Sent push status:', { permission, hasSubscription });
+                } catch (error) {
+                    console.error('[Main] Error getting push status:', error);
+                    if (event.source) {
+                        event.source.postMessage({
+                            type: 'pushStatusResult',
+                            permission: 'error',
+                            hasSubscription: false,
+                            error: error.message
+                        }, '*');
+                    }
+                }
+            }
+
+            // ביטול push מ-iframe
+            if (event.data && event.data.type === 'disablePushNotifications') {
+                console.log('[Main] Received disable push request from iframe');
+                try {
+                    let success = false;
+                    if (typeof PushSubscriptionManager !== 'undefined') {
+                        const result = await PushSubscriptionManager.unsubscribe();
+                        success = result.success;
+                    }
+
+                    if (event.source) {
+                        event.source.postMessage({
+                            type: 'disablePushResult',
+                            success: success
+                        }, '*');
+                    }
+                    console.log('[Main] Disable push result:', success);
+                } catch (error) {
+                    console.error('[Main] Error disabling push:', error);
+                    if (event.source) {
+                        event.source.postMessage({
+                            type: 'disablePushResult',
+                            success: false,
+                            error: error.message
+                        }, '*');
+                    }
+                }
+            }
         });
     </script>
 

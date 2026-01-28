@@ -653,8 +653,27 @@ document.addEventListener('DOMContentLoaded', () => {
 // Listen for messages from service worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
+        console.log('[ApprovalModal] Received SW message:', event.data);
         if (event.data && event.data.type === 'SHOW_APPROVAL') {
-            ApprovalModal.show(event.data.notificationId);
+            const notificationId = event.data.notificationId;
+            console.log('[ApprovalModal] Showing approval modal for notification:', notificationId);
+
+            // Ensure DOM is ready before showing modal
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                ApprovalModal.show(notificationId);
+            } else {
+                document.addEventListener('DOMContentLoaded', () => {
+                    ApprovalModal.show(notificationId);
+                });
+            }
         }
     });
+
+    // Also listen on navigator.serviceWorker.ready for more reliability
+    navigator.serviceWorker.ready.then(registration => {
+        console.log('[ApprovalModal] Service Worker ready, controller:', navigator.serviceWorker.controller ? 'yes' : 'no');
+    });
 }
+
+// Expose globally for debugging
+window.ApprovalModal = ApprovalModal;

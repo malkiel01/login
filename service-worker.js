@@ -186,17 +186,19 @@ async function checkAndShowNotifications() {
             
             // הצג כל התראה
             for (const notif of data.notifications) {
+                const isApproval = notif.requires_approval || notif.isApproval || (notif.url && notif.url.includes('/approve.php'));
                 await self.registration.showNotification(notif.title, {
                     body: notif.body,
                     icon: '/pwa/icons/android/android-launchericon-192-192.png',
                     badge: '/pwa/icons/android/android-launchericon-72-72.png',
                     tag: 'notification-' + notif.id,
-                    data: { 
-                        url: notif.url || '/notifications/manager.php',
+                    data: {
+                        url: notif.url || '/dashboard/',
                         id: notif.id,
+                        isApproval: isApproval,
                         timestamp: Date.now()
                     },
-                    requireInteraction: false,
+                    requireInteraction: isApproval, // Approval notifications stay visible
                     vibrate: [200, 100, 200],
                     renotify: true
                 });
@@ -260,8 +262,9 @@ self.addEventListener('push', event => {
     if (event.data) {
         try {
             const data = event.data.json();
-            const url = data.url || '/notifications/manager.php';
-            const isApprovalRequest = url.includes('/approve.php');
+            const url = data.url || '/dashboard/';
+            // Detect approval by explicit flag OR URL pattern
+            const isApprovalRequest = data.requiresApproval || data.requires_approval || data.isApproval || url.includes('/approve.php');
 
             notificationData = {
                 ...notificationData,
@@ -269,7 +272,7 @@ self.addEventListener('push', event => {
                 body: data.body || notificationData.body,
                 tag: 'notification-' + (data.id || Date.now()),
                 // Approval requests stay visible until user interacts
-                requireInteraction: isApprovalRequest || data.requireInteraction || true,
+                requireInteraction: isApprovalRequest || data.requireInteraction || false,
                 data: {
                     ...notificationData.data,
                     url: url,
@@ -301,7 +304,7 @@ self.addEventListener('notificationclick', event => {
     event.notification.close();
 
     // קבל URL מה-data או השתמש בברירת מחדל
-    const finalTarget = event.notification.data?.url || '/notifications/manager.php';
+    const finalTarget = event.notification.data?.url || '/dashboard/';
     const isApproval = event.notification.data?.isApproval || finalTarget.includes('/approve.php');
     const notificationId = event.notification.data?.id;
 
@@ -336,10 +339,13 @@ self.addEventListener('notificationclick', event => {
                         // User is logged in - for approval notifications, show modal
                         if (isApproval && notificationId) {
                             await client.focus();
+                            // Small delay to ensure page is ready to receive message
+                            await new Promise(resolve => setTimeout(resolve, 300));
                             client.postMessage({
                                 type: 'SHOW_APPROVAL',
                                 notificationId: notificationId
                             });
+                            console.log('[SW] Sent SHOW_APPROVAL message for notification:', notificationId);
                             return;
                         } else {
                             // המשתמש מחובר - נווט לדף ההתראות

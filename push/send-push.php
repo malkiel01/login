@@ -12,8 +12,14 @@ require_once __DIR__ . '/WebPush.php';
 
 /**
  * Send push notification to a specific user
+ * @param int $userId User ID to send to
+ * @param string $title Notification title
+ * @param string $body Notification body
+ * @param string|null $url URL to open when clicked
+ * @param string|null $icon Custom icon URL
+ * @param array $options Additional options (id, requiresApproval, etc.)
  */
-function sendPushToUser(int $userId, string $title, string $body, ?string $url = null, ?string $icon = null): array {
+function sendPushToUser(int $userId, string $title, string $body, ?string $url = null, ?string $icon = null, array $options = []): array {
     $pdo = getDBConnection();
 
     // Get all active subscriptions for user
@@ -34,12 +40,18 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
         VAPID_SUBJECT
     );
 
+    $requiresApproval = !empty($options['requiresApproval']);
+    $notificationId = $options['id'] ?? null;
+
     $payload = json_encode([
         'title' => $title,
         'body' => $body,
         'icon' => $icon ?? '/pwa/icons/android/android-launchericon-192-192.png',
         'badge' => '/pwa/icons/android/android-launchericon-72-72.png',
-        'url' => $url ?? '/',
+        'url' => $url ?? '/dashboard/',
+        'id' => $notificationId,
+        'requiresApproval' => $requiresApproval,
+        'requireInteraction' => $requiresApproval,
         'timestamp' => time()
     ]);
 
@@ -75,14 +87,19 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
 
 /**
  * Send push notification to multiple users
+ * @param array $userIds List of user IDs
+ * @param string $title Notification title
+ * @param string $body Notification body
+ * @param string|null $url URL to open when clicked
+ * @param array $options Additional options (id, requiresApproval, etc.)
  */
-function sendPushToUsers(array $userIds, string $title, string $body, ?string $url = null): array {
+function sendPushToUsers(array $userIds, string $title, string $body, ?string $url = null, array $options = []): array {
     $totalSent = 0;
     $totalFailed = 0;
     $results = [];
 
     foreach ($userIds as $userId) {
-        $result = sendPushToUser($userId, $title, $body, $url);
+        $result = sendPushToUser($userId, $title, $body, $url, null, $options);
         $totalSent += $result['sent'];
         $totalFailed += $result['failed'];
         $results[$userId] = $result;
@@ -99,7 +116,7 @@ function sendPushToUsers(array $userIds, string $title, string $body, ?string $u
 /**
  * Send push notification to all active users
  */
-function sendPushToAll(string $title, string $body, ?string $url = null): array {
+function sendPushToAll(string $title, string $body, ?string $url = null, array $options = []): array {
     $pdo = getDBConnection();
 
     // Get all users with active subscriptions
@@ -112,7 +129,7 @@ function sendPushToAll(string $title, string $body, ?string $url = null): array 
         return ['success' => false, 'error' => 'No subscribed users', 'sent' => 0];
     }
 
-    return sendPushToUsers($userIds, $title, $body, $url);
+    return sendPushToUsers($userIds, $title, $body, $url, $options);
 }
 
 /**
@@ -137,11 +154,23 @@ function processScheduledNotifications(): array {
 
     foreach ($notifications as $notification) {
         $targetUsers = json_decode($notification['target_users'], true);
+        $requiresApproval = !empty($notification['requires_approval']);
+
+        // Build URL - for approval notifications, point to approval page
+        $notificationUrl = $notification['url'];
+        if ($requiresApproval) {
+            $notificationUrl = "/dashboard/dashboards/cemeteries/notifications/approve.php?id={$notification['id']}";
+        }
+
+        $options = [
+            'id' => $notification['id'],
+            'requiresApproval' => $requiresApproval
+        ];
 
         if (in_array('all', $targetUsers)) {
-            $result = sendPushToAll($notification['title'], $notification['body'], $notification['url']);
+            $result = sendPushToAll($notification['title'], $notification['body'], $notificationUrl, $options);
         } else {
-            $result = sendPushToUsers($targetUsers, $notification['title'], $notification['body'], $notification['url']);
+            $result = sendPushToUsers($targetUsers, $notification['title'], $notification['body'], $notificationUrl, $options);
         }
 
         // Update notification status

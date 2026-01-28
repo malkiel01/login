@@ -306,7 +306,7 @@ function handleCreate(PDO $pdo, array $input): void {
             $notificationUrl = "/dashboard/dashboards/cemeteries/notifications/approve.php?id={$notificationId}";
         }
 
-        $sentCount = sendNotifications($pdo, $notificationId, $title, $body, $notificationUrl, $targetUsers);
+        $sentCount = sendNotifications($pdo, $notificationId, $title, $body, $notificationUrl, $targetUsers, $requiresApproval);
 
         // Update status to sent
         $pdo->prepare("
@@ -486,7 +486,7 @@ function validateNotificationInput(array $input): void {
  * Send notifications to users
  * Uses real Web Push notifications + fallback to polling table
  */
-function sendNotifications(PDO $pdo, int $notificationId, string $title, string $body, ?string $url, array $targetUsers): int {
+function sendNotifications(PDO $pdo, int $notificationId, string $title, string $body, ?string $url, array $targetUsers, bool $requiresApproval = false): int {
     $count = 0;
     $pushSent = 0;
 
@@ -501,11 +501,15 @@ function sendNotifications(PDO $pdo, int $notificationId, string $title, string 
 
     // Send real Web Push notifications
     if (!empty($userIds)) {
-        $pushResult = sendPushToUsers($userIds, $title, $body, $url);
+        $pushOptions = [
+            'id' => $notificationId,
+            'requiresApproval' => $requiresApproval
+        ];
+        $pushResult = sendPushToUsers($userIds, $title, $body, $url, $pushOptions);
         $pushSent = $pushResult['sent'] ?? 0;
 
         if ($pushSent > 0) {
-            error_log("Web Push sent successfully to $pushSent devices");
+            error_log("Web Push sent successfully to $pushSent devices" . ($requiresApproval ? " (approval notification)" : ""));
         }
     }
 

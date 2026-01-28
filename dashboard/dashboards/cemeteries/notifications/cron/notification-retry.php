@@ -265,6 +265,7 @@ function sendPushToUser(PDO $pdo, int $userId, string $title, string $body, ?str
         'body' => $body,
         'url' => $notificationUrl,
         'id' => $notificationId,
+        'requiresApproval' => $requiresApproval,
         'requireInteraction' => $requiresApproval
     ]);
 

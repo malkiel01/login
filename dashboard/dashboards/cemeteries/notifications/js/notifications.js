@@ -223,10 +223,13 @@ const NotificationsManager = {
                 : 'מיידית';
 
             return `
-                <tr>
+                <tr class="notification-row" data-notification-id="${notification.id}">
                     <td>
-                        <strong>${this.escapeHtml(notification.title)}</strong>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                        <div class="expandable-title" onclick="NotificationsManager.toggleExpand(${notification.id})">
+                            <span class="expand-icon">▶</span>
+                            <strong>${this.escapeHtml(notification.title)}</strong>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; margin-right: 20px;">
                             ${this.escapeHtml(notification.body.substring(0, 50))}${notification.body.length > 50 ? '...' : ''}
                         </div>
                     </td>
@@ -255,11 +258,175 @@ const NotificationsManager = {
                                     ביטול
                                 </button>
                             ` : ''}
+                            ${window.canDelete ? `
+                                <button class="btn btn-sm btn-outline-danger" onclick="NotificationsManager.deleteNotification(${notification.id})" title="מחיקה מההיסטוריה">
+                                    🗑️
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+                <tr class="notification-details-row" id="details-${notification.id}" style="display: none;">
+                    <td colspan="7">
+                        <div class="notification-details-container" id="details-container-${notification.id}">
+                            <div class="loading-spinner">טוען פרטים...</div>
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
+    },
+
+    /**
+     * Toggle expand notification details
+     */
+    async toggleExpand(id) {
+        const detailsRow = document.getElementById(`details-${id}`);
+        const mainRow = document.querySelector(`tr[data-notification-id="${id}"]`);
+        const expandIcon = mainRow.querySelector('.expand-icon');
+
+        if (detailsRow.style.display === 'none') {
+            detailsRow.style.display = '';
+            expandIcon.textContent = '▼';
+            mainRow.classList.add('expanded');
+
+            // Load details
+            await this.loadDeliveryStatus(id);
+        } else {
+            detailsRow.style.display = 'none';
+            expandIcon.textContent = '▶';
+            mainRow.classList.remove('expanded');
+        }
+    },
+
+    /**
+     * Load delivery status for a notification
+     */
+    async loadDeliveryStatus(id) {
+        const container = document.getElementById(`details-container-${id}`);
+
+        try {
+            const response = await fetch(`${this.apiUrl}?action=get_delivery_status&id=${id}`);
+            const result = await response.json();
+
+            if (result.success) {
+                this.renderDeliveryStatus(id, result.notification, result.users);
+            } else {
+                container.innerHTML = `<div class="error-message">שגיאה: ${result.error}</div>`;
+            }
+        } catch (error) {
+            console.error('Error loading delivery status:', error);
+            container.innerHTML = '<div class="error-message">שגיאה בטעינת פרטים</div>';
+        }
+    },
+
+    /**
+     * Render delivery status per user
+     */
+    renderDeliveryStatus(notificationId, notification, users) {
+        const container = document.getElementById(`details-container-${notificationId}`);
+
+        if (users.length === 0) {
+            container.innerHTML = '<div class="no-users-message">לא נמצאו משתמשים</div>';
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="delivery-status-header">
+                <h4>סטטוס שליחה למשתמשים</h4>
+                <div class="delivery-stats">
+                    <span class="stat delivered">✓ ${users.filter(u => u.is_delivered > 0).length} נמסר</span>
+                    <span class="stat pending">${users.filter(u => u.is_delivered === 0 || u.is_delivered === '0').length} ממתין</span>
+                    <span class="stat has-app">📱 ${users.filter(u => u.has_push_subscription > 0).length} עם אפליקציה</span>
+                </div>
+            </div>
+            <div class="users-delivery-list">
+                ${users.map(user => `
+                    <div class="user-delivery-item">
+                        <div class="user-info">
+                            <span class="user-name">${this.escapeHtml(user.name || user.username)}</span>
+                            <span class="user-email">${this.escapeHtml(user.email || '')}</span>
+                        </div>
+                        <div class="user-status">
+                            ${user.has_push_subscription > 0
+                                ? '<span class="app-badge has-app" title="מותקנת אפליקציה">📱</span>'
+                                : '<span class="app-badge no-app" title="אין אפליקציה מותקנת">🌐</span>'}
+                            ${user.is_delivered > 0
+                                ? '<span class="delivery-badge delivered">✓ נמסר</span>'
+                                : '<span class="delivery-badge pending">⏳ ממתין</span>'}
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn btn-xs btn-primary" onclick="NotificationsManager.resendToUser(${notificationId}, ${user.id})" title="שלח שוב">
+                                שלח שוב
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    /**
+     * Resend notification to specific user
+     */
+    async resendToUser(notificationId, userId) {
+        if (!confirm('האם לשלוח שוב את ההתראה למשתמש זה?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'resend_to_user',
+                    notification_id: notificationId,
+                    user_id: userId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showMessage('ההתראה נשלחה בהצלחה', 'success');
+                // Reload delivery status
+                await this.loadDeliveryStatus(notificationId);
+            } else {
+                this.showMessage(result.error || 'שגיאה בשליחה', 'error');
+            }
+        } catch (error) {
+            console.error('Error resending notification:', error);
+            this.showMessage('שגיאה בשליחה', 'error');
+        }
+    },
+
+    /**
+     * Delete notification from history
+     */
+    async deleteNotification(id) {
+        if (!confirm('האם למחוק את ההתראה מההיסטוריה? פעולה זו לא ניתנת לביטול.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', id })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showMessage('ההתראה נמחקה בהצלחה', 'success');
+                this.loadNotifications();
+            } else {
+                this.showMessage(result.error || 'שגיאה במחיקת ההתראה', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting notification:', error);
+            this.showMessage('שגיאה במחיקת ההתראה', 'error');
+        }
     },
 
     /**

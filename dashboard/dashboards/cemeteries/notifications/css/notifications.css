@@ -492,6 +492,193 @@ textarea.form-control {
     --bg-hover: #334155;
 }
 
+/* Expandable Rows */
+.expandable-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.expand-icon {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    width: 14px;
+}
+
+.notification-row.expanded .expand-icon {
+    transform: rotate(90deg);
+}
+
+.notification-row.expanded {
+    background: var(--bg-secondary, #f8fafc);
+}
+
+.notification-details-row {
+    background: var(--bg-secondary, #f8fafc);
+}
+
+.notification-details-row td {
+    padding: 0;
+}
+
+.notification-details-container {
+    padding: 16px 20px;
+    border-top: 1px dashed var(--border-color, #e2e8f0);
+}
+
+/* Delivery Status */
+.delivery-status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.delivery-status-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.delivery-stats {
+    display: flex;
+    gap: 16px;
+}
+
+.delivery-stats .stat {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--bg-card, #fff);
+}
+
+.delivery-stats .stat.delivered {
+    color: #065f46;
+    background: #d1fae5;
+}
+
+.delivery-stats .stat.pending {
+    color: #92400e;
+    background: #fef3c7;
+}
+
+.delivery-stats .stat.has-app {
+    color: #1e40af;
+    background: #dbeafe;
+}
+
+/* Users Delivery List */
+.users-delivery-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.user-delivery-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 14px;
+    background: var(--bg-card, #fff);
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.user-delivery-item .user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-delivery-item .user-name {
+    display: block;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.user-delivery-item .user-email {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.user-delivery-item .user-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.app-badge {
+    font-size: 16px;
+}
+
+.app-badge.no-app {
+    opacity: 0.4;
+}
+
+.delivery-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.delivery-badge.delivered {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.delivery-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.user-delivery-item .user-actions {
+    flex-shrink: 0;
+}
+
+/* Extra Small Button */
+.btn-xs {
+    padding: 4px 10px;
+    font-size: 11px;
+}
+
+/* Outline Buttons */
+.btn-outline-danger {
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.btn-outline-danger:hover {
+    background: #fee2e2;
+}
+
+/* Loading spinner in details */
+.loading-spinner {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+}
+
+.error-message {
+    color: #ef4444;
+    text-align: center;
+    padding: 20px;
+}
+
+.no-users-message {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 20px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .notifications-container {
@@ -519,5 +706,24 @@ textarea.form-control {
 
     .action-buttons {
         flex-direction: column;
+    }
+
+    .user-delivery-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .user-delivery-item .user-status {
+        justify-content: flex-start;
+    }
+
+    .user-delivery-item .user-actions {
+        align-self: flex-start;
+    }
+
+    .delivery-status-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

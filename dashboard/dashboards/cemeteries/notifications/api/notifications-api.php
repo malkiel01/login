@@ -15,6 +15,7 @@
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/api/api-auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/push/send-push.php';
 
 // בדוק הרשאות לניהול התראות
 if (!isAdmin() && !hasModulePermission('notifications', 'view')) {
@@ -64,6 +65,13 @@ try {
         case 'delete':
             requireDeletePermission('notifications');
             handleDelete($pdo, $input);
+            break;
+        case 'get_delivery_status':
+            handleGetDeliveryStatus($pdo);
+            break;
+        case 'resend_to_user':
+            requireEditPermission('notifications');
+            handleResendToUser($pdo, $input);
             break;
         default:
             throw new Exception('פעולה לא חוקית');
@@ -392,9 +400,11 @@ function validateNotificationInput(array $input): void {
 
 /**
  * Send notifications to users
+ * Uses real Web Push notifications + fallback to polling table
  */
 function sendNotifications(PDO $pdo, int $notificationId, string $title, string $body, ?string $url, array $targetUsers): int {
     $count = 0;
+    $pushSent = 0;
 
     // Get user IDs to send to
     if (in_array('all', $targetUsers)) {
@@ -405,7 +415,17 @@ function sendNotifications(PDO $pdo, int $notificationId, string $title, string 
         $userIds = array_map('intval', $targetUsers);
     }
 
-    // Insert into push_notifications table
+    // Send real Web Push notifications
+    if (!empty($userIds)) {
+        $pushResult = sendPushToUsers($userIds, $title, $body, $url);
+        $pushSent = $pushResult['sent'] ?? 0;
+
+        if ($pushSent > 0) {
+            error_log("Web Push sent successfully to $pushSent devices");
+        }
+    }
+
+    // Also insert into push_notifications table as fallback for polling
     $insertStmt = $pdo->prepare("
         INSERT INTO push_notifications (user_id, title, body, url)
         VALUES (?, ?, ?, ?)
@@ -417,11 +437,121 @@ function sendNotifications(PDO $pdo, int $notificationId, string $title, string 
             $count++;
         } catch (Exception $e) {
             // Log error but continue
-            error_log("Failed to send notification to user $userId: " . $e->getMessage());
+            error_log("Failed to insert notification for user $userId: " . $e->getMessage());
         }
     }
 
     return $count;
+}
+
+/**
+ * Get delivery status per user for a notification
+ */
+function handleGetDeliveryStatus(PDO $pdo): void {
+    $id = (int)($_GET['id'] ?? 0);
+
+    if (!$id) {
+        throw new Exception('מזהה התראה חסר');
+    }
+
+    // Get the notification
+    $stmt = $pdo->prepare("SELECT * FROM scheduled_notifications WHERE id = ?");
+    $stmt->execute([$id]);
+    $notification = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$notification) {
+        throw new Exception('התראה לא נמצאה');
+    }
+
+    $targetUsers = json_decode($notification['target_users'], true);
+
+    // Get target user IDs
+    if (in_array('all', $targetUsers)) {
+        $stmt = $pdo->query("SELECT id FROM users WHERE is_active = 1");
+        $userIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } else {
+        $userIds = array_map('intval', $targetUsers);
+    }
+
+    // Get user details with push subscription status
+    $users = [];
+    if (!empty($userIds)) {
+        $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+
+        // Get users with their push subscription status
+        $stmt = $pdo->prepare("
+            SELECT
+                u.id,
+                u.name,
+                u.username,
+                u.email,
+                (SELECT COUNT(*) FROM push_subscriptions ps WHERE ps.user_id = u.id AND ps.is_active = 1) as has_push_subscription,
+                (SELECT COUNT(*) FROM push_notifications pn
+                 WHERE pn.user_id = u.id
+                 AND pn.title = ?
+                 AND pn.is_delivered = 1) as is_delivered
+            FROM users u
+            WHERE u.id IN ($placeholders)
+            ORDER BY u.name, u.username
+        ");
+
+        $params = array_merge([$notification['title']], $userIds);
+        $stmt->execute($params);
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    echo json_encode([
+        'success' => true,
+        'notification' => $notification,
+        'users' => $users
+    ]);
+}
+
+/**
+ * Resend notification to specific user
+ */
+function handleResendToUser(PDO $pdo, array $input): void {
+    $notificationId = (int)($input['notification_id'] ?? 0);
+    $userId = (int)($input['user_id'] ?? 0);
+
+    if (!$notificationId || !$userId) {
+        throw new Exception('חסרים פרטים');
+    }
+
+    // Get the notification
+    $stmt = $pdo->prepare("SELECT * FROM scheduled_notifications WHERE id = ?");
+    $stmt->execute([$notificationId]);
+    $notification = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$notification) {
+        throw new Exception('התראה לא נמצאה');
+    }
+
+    // Send push notification
+    $pushResult = sendPushToUser(
+        $userId,
+        $notification['title'],
+        $notification['body'],
+        $notification['url']
+    );
+
+    // Insert to push_notifications table
+    $stmt = $pdo->prepare("
+        INSERT INTO push_notifications (user_id, title, body, url)
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->execute([
+        $userId,
+        $notification['title'],
+        $notification['body'],
+        $notification['url']
+    ]);
+
+    echo json_encode([
+        'success' => true,
+        'push_sent' => $pushResult['sent'] ?? 0,
+        'message' => 'ההתראה נשלחה שוב למשתמש'
+    ]);
 }
 
 // Permission helpers are already defined in api-auth.php:

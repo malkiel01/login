@@ -393,5 +393,7 @@ $isAdminUser = isAdmin();
 
     <!-- Push Notification Listener -->
     <script src="/push/listener.js"></script>
+    <!-- Web Push Subscription Manager -->
+    <script src="/push/push-subscribe.js"></script>
 </body>
 </html>

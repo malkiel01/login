@@ -236,6 +236,16 @@
         </div>
         <?php endif; ?>
 
+        <!-- ניהול התראות -->
+        <?php if (isAdmin() || hasModulePermission('notifications', 'view') || hasModulePermission('notifications', 'edit') || hasModulePermission('notifications', 'create')): ?>
+        <div class="management-item">
+            <div class="hierarchy-header" id="notificationsItem" onclick="handleSidebarClick('notificationsItem', openNotificationsManagement)">
+                <span class="hierarchy-icon">🔔</span>
+                <span class="hierarchy-title">ניהול התראות</span>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- ניהול דוחות - בקרוב -->
         <?php if (isAdmin() || hasModulePermission('reports', 'view') || hasModulePermission('reports', 'edit') || hasModulePermission('reports', 'create')): ?>
         <div class="management-item">
@@ -443,6 +453,24 @@ function openUsersManagement() {
         });
     } else {
         window.location.href = '/dashboard/dashboards/cemeteries/users/';
+    }
+}
+
+/**
+ * פתיחת מסך ניהול התראות
+ */
+function openNotificationsManagement() {
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'notifications-management-popup',
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/notifications/',
+            title: 'ניהול התראות',
+            width: 1000,
+            height: 700
+        });
+    } else {
+        window.location.href = '/dashboard/dashboards/cemeteries/notifications/';
     }
 }
 

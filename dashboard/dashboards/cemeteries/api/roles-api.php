@@ -188,7 +188,8 @@ function handlePermissions(PDO $pdo): void {
         'map' => 'מפות',
         'residency' => 'הגדרות תושבות',
         'countries' => 'מדינות',
-        'cities' => 'ערים'
+        'cities' => 'ערים',
+        'notifications' => 'התראות'
     ];
 
     $actionNames = [

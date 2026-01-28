@@ -3,8 +3,13 @@
  * Permissions System - FIXED VERSION
  */
 
+// Include push config to get the correct VAPID key
+require_once __DIR__ . '/../push/config.php';
+
 function getPermissionsScript() {
-    $script = <<<'EOT'
+    // Get the actual VAPID key from push config
+    $vapidPublicKey = defined('VAPID_PUBLIC_KEY') ? VAPID_PUBLIC_KEY : '';
+    $script = <<<EOT
             <script>
             // יצירת אובייקט Permissions גלובלי
             window.Permissions = {
@@ -67,11 +72,12 @@ function getPermissionsScript() {
                             return false;
                         }
                         
-                        let registration = await navigator.serviceWorker.getRegistration();
+                        // Wait for service worker to be ready (fully active)
+                        let registration = await navigator.serviceWorker.ready;
                         if (!registration) {
-                            console.log("רושם Service Worker...");
-                            registration = await navigator.serviceWorker.register("/service-worker.js");
-                            await new Promise(r => setTimeout(r, 1000));
+                            // If no registration at all, register first then wait for ready
+                            await navigator.serviceWorker.register("/service-worker.js");
+                            registration = await navigator.serviceWorker.ready;
                         }
                         
                         let subscription = await registration.pushManager.getSubscription();
@@ -81,9 +87,12 @@ function getPermissionsScript() {
                             return subscription;
                         }
                         
-                        // יצירת VAPID key פשוט לבדיקה
-                        // בproduction צריך ליצור מפתח אמיתי
-                        const vapidPublicKey = 'BIzaSyD2_7N_4CfS9g2O5Sda4Ntz-0LqPgK5nL9-5Tk8GmJQqV3idlBxWwlSMvACDKPAp2oZ2DO3SoFcQu-2s1I8rSE';
+                        // Get VAPID key from server config
+                        const vapidPublicKey = '{$vapidPublicKey}';
+                        if (!vapidPublicKey) {
+                            console.error("VAPID key not configured");
+                            return false;
+                        }
                         const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
                         
                         try {
@@ -144,8 +153,9 @@ function getPermissionsScript() {
                         
                         // נסה דרך Service Worker אם זמין
                         if ('serviceWorker' in navigator && 'PushManager' in window) {
-                            const registration = await navigator.serviceWorker.getRegistration();
-                            if (registration) {
+                            // Wait for service worker to be fully active (not just registered)
+                            const registration = await navigator.serviceWorker.ready;
+                            if (registration && registration.active) {
                                 // סגור התראות קודמות (אופציונלי)
                                 const existingNotifications = await registration.getNotifications();
                                 existingNotifications.forEach(n => n.close());

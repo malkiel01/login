@@ -130,28 +130,14 @@ body.light-theme {
 }
 
 .btn-secondary {
-    background: #f8fafc !important;
-    color: #1e293b !important;
-    border: 1px solid #cbd5e1 !important;
+    background: transparent;
+    color: var(--primary-color, #667eea);
+    border: 2px solid var(--primary-color, #667eea);
 }
 
 .btn-secondary:hover {
-    background: #e2e8f0 !important;
-    border-color: var(--primary-color, #667eea) !important;
-}
-
-/* Dark mode fix for buttons */
-.dark-theme .btn-secondary,
-body.dark-theme .btn-secondary {
-    background: #374151 !important;
-    color: #f3f4f6 !important;
-    border-color: #4b5563 !important;
-}
-
-.dark-theme .btn-secondary:hover,
-body.dark-theme .btn-secondary:hover {
-    background: #4b5563 !important;
-    border-color: var(--primary-color, #667eea) !important;
+    background: var(--primary-color, #667eea);
+    color: white;
 }
 
 .btn-danger {

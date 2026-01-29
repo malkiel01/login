@@ -500,6 +500,7 @@ function sendNotifications(PDO $pdo, int $notificationId, string $title, string 
     }
 
     // Send real Web Push notifications
+    $pushResult = ['results' => []];
     if (!empty($userIds)) {
         $pushOptions = [
             'id' => $notificationId,
@@ -513,15 +514,28 @@ function sendNotifications(PDO $pdo, int $notificationId, string $title, string 
         }
     }
 
-    // Also insert into push_notifications table as fallback for polling
+    // Also insert into push_notifications table
+    // Mark as delivered if Web Push was sent successfully to avoid duplicate notifications
     $insertStmt = $pdo->prepare("
-        INSERT INTO push_notifications (scheduled_notification_id, user_id, title, body, url)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO push_notifications (scheduled_notification_id, user_id, title, body, url, is_delivered, delivered_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
 
     foreach ($userIds as $userId) {
         try {
-            $insertStmt->execute([$notificationId, $userId, $title, $body, $url]);
+            // Check if push was sent successfully to this user
+            $userPushResult = $pushResult['results'][$userId] ?? null;
+            $wasDelivered = $userPushResult && ($userPushResult['sent'] ?? 0) > 0;
+
+            $insertStmt->execute([
+                $notificationId,
+                $userId,
+                $title,
+                $body,
+                $url,
+                $wasDelivered ? 1 : 0,
+                $wasDelivered ? date('Y-m-d H:i:s') : null
+            ]);
             $count++;
         } catch (Exception $e) {
             // Log error but continue

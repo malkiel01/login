@@ -130,26 +130,28 @@ body.light-theme {
 }
 
 .btn-secondary {
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color, #e2e8f0);
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
 }
 
 .btn-secondary:hover {
-    background: var(--bg-secondary);
-    border-color: var(--primary-color);
+    background: #e2e8f0 !important;
+    border-color: var(--primary-color, #667eea) !important;
 }
 
 /* Dark mode fix for buttons */
-.dark-theme .btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border-color: var(--border-color);
+.dark-theme .btn-secondary,
+body.dark-theme .btn-secondary {
+    background: #374151 !important;
+    color: #f3f4f6 !important;
+    border-color: #4b5563 !important;
 }
 
-.dark-theme .btn-secondary:hover {
-    background: var(--bg-tertiary, rgba(255, 255, 255, 0.1));
-    border-color: var(--primary-color);
+.dark-theme .btn-secondary:hover,
+body.dark-theme .btn-secondary:hover {
+    background: #4b5563 !important;
+    border-color: var(--primary-color, #667eea) !important;
 }
 
 .btn-danger {

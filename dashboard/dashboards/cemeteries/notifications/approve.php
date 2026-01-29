@@ -620,50 +620,63 @@ if (!$isDarkMode) {
         let biometricAvailable = false;
         let userHasBiometric = false;
 
-        // Close the popup/iframe using PopupAPI
+        // Close the popup/iframe
         function closeWindow() {
             console.log('[Approve] closeWindow called');
 
-            // Use PopupAPI if available (works in iframe)
-            if (typeof PopupAPI !== 'undefined') {
-                console.log('[Approve] Using PopupAPI.close()');
-                PopupAPI.close();
-                return;
-            }
-
-            // Fallback: try popupClose shortcut
-            if (typeof popupClose === 'function') {
-                console.log('[Approve] Using popupClose()');
-                popupClose();
-                return;
-            }
-
-            // Check if we're in an iframe
-            if (window.parent !== window) {
-                console.log('[Approve] In iframe, trying to close parent popup');
-
-                // Try to close via PopupManager in parent
-                try {
-                    if (window.parent.PopupManager) {
-                        window.parent.PopupManager.closeAll();
-                        return;
-                    }
-                } catch(e) {
-                    console.log('[Approve] PopupManager not accessible:', e);
+            // Method 1: Try parent's PopupManager directly
+            try {
+                if (window.top && window.top.PopupManager) {
+                    console.log('[Approve] Using top.PopupManager.closeAll()');
+                    window.top.PopupManager.closeAll();
+                    return;
                 }
+            } catch(e) {
+                console.log('[Approve] top.PopupManager error:', e);
+            }
 
-                // Send message to parent
-                window.parent.postMessage({ type: 'popup-api', action: 'close' }, '*');
-            } else if (window.opener) {
-                // Opened as popup window
-                window.close();
+            try {
+                if (window.parent && window.parent.PopupManager) {
+                    console.log('[Approve] Using parent.PopupManager.closeAll()');
+                    window.parent.PopupManager.closeAll();
+                    return;
+                }
+            } catch(e) {
+                console.log('[Approve] parent.PopupManager error:', e);
+            }
+
+            // Method 2: Find and click close button in parent
+            try {
+                const parentDoc = window.top.document || window.parent.document;
+                const closeBtn = parentDoc.querySelector('.popup-header-btn.close');
+                if (closeBtn) {
+                    console.log('[Approve] Found close button, clicking');
+                    closeBtn.click();
+                    return;
+                }
+            } catch(e) {
+                console.log('[Approve] Cannot find close button:', e);
+            }
+
+            // Method 3: Hide the popup container directly
+            try {
+                const parentDoc = window.top.document || window.parent.document;
+                const popupOverlay = parentDoc.querySelector('.popup-overlay');
+                if (popupOverlay) {
+                    console.log('[Approve] Found popup overlay, hiding');
+                    popupOverlay.remove();
+                    return;
+                }
+            } catch(e) {
+                console.log('[Approve] Cannot find popup overlay:', e);
+            }
+
+            // Method 4: Navigate back or to dashboard
+            console.log('[Approve] Fallback: navigating back');
+            if (window.history.length > 1) {
+                window.history.back();
             } else {
-                // Navigate back or to dashboard
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = '/dashboard/dashboards/cemeteries/';
-                }
+                window.location.href = '/dashboard/dashboards/cemeteries/';
             }
         }
 

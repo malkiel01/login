@@ -3,7 +3,7 @@
  * My Notifications API
  * API לניהול התראות המשתמש
  *
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -62,60 +62,39 @@ try {
     }
 } catch (Exception $e) {
     error_log('[my-notifications-api] Error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Server error']);
+    echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
 }
 
 /**
  * קבלת התראות שלא נקראו
  */
 function getUnreadNotifications($conn, $userId) {
-    // בדיקה אם העמודה read_at קיימת
-    $hasReadAt = checkReadAtColumn($conn);
-
-    if ($hasReadAt) {
-        // שאילתה עם read_at
-        $sql = "
-            SELECT
-                sn.id,
-                sn.title,
-                sn.body,
-                sn.notification_type,
-                sn.url,
-                sn.created_at,
-                nd.delivered_at,
-                nd.read_at
-            FROM notification_deliveries nd
-            INNER JOIN scheduled_notifications sn ON sn.id = nd.notification_id
-            WHERE nd.user_id = ?
-              AND nd.status = 'delivered'
-              AND nd.read_at IS NULL
-            ORDER BY sn.created_at DESC
-            LIMIT 50
-        ";
-    } else {
-        // fallback - כל ההתראות שנמסרו
-        $sql = "
-            SELECT
-                sn.id,
-                sn.title,
-                sn.body,
-                sn.notification_type,
-                sn.url,
-                sn.created_at,
-                nd.delivered_at,
-                NULL as read_at
-            FROM notification_deliveries nd
-            INNER JOIN scheduled_notifications sn ON sn.id = nd.notification_id
-            WHERE nd.user_id = ?
-              AND nd.status = 'delivered'
-            ORDER BY sn.created_at DESC
-            LIMIT 50
-        ";
-    }
+    $sql = "
+        SELECT
+            id,
+            title,
+            body,
+            url,
+            is_read,
+            is_delivered,
+            created_at,
+            delivered_at,
+            'info' as notification_type
+        FROM push_notifications
+        WHERE user_id = ?
+          AND is_read = 0
+        ORDER BY created_at DESC
+        LIMIT 50
+    ";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([$userId]);
     $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Convert to expected format
+    foreach ($notifications as &$n) {
+        $n['read_at'] = null;
+    }
 
     echo json_encode([
         'success' => true,
@@ -127,22 +106,20 @@ function getUnreadNotifications($conn, $userId) {
  * קבלת היסטוריית התראות
  */
 function getHistoryNotifications($conn, $userId, $offset, $limit) {
-    $hasReadAt = checkReadAtColumn($conn);
-
     $sql = "
         SELECT
-            sn.id,
-            sn.title,
-            sn.body,
-            sn.notification_type,
-            sn.url,
-            sn.created_at,
-            nd.delivered_at" . ($hasReadAt ? ", nd.read_at" : ", NULL as read_at") . "
-        FROM notification_deliveries nd
-        INNER JOIN scheduled_notifications sn ON sn.id = nd.notification_id
-        WHERE nd.user_id = ?
-          AND nd.status = 'delivered'
-        ORDER BY sn.created_at DESC
+            id,
+            title,
+            body,
+            url,
+            is_read,
+            is_delivered,
+            created_at,
+            delivered_at,
+            'info' as notification_type
+        FROM push_notifications
+        WHERE user_id = ?
+        ORDER BY created_at DESC
         LIMIT ? OFFSET ?
     ";
 
@@ -153,6 +130,11 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
     $hasMore = count($notifications) > $limit;
     if ($hasMore) {
         array_pop($notifications); // הסר את האחרון
+    }
+
+    // Convert to expected format
+    foreach ($notifications as &$n) {
+        $n['read_at'] = $n['is_read'] ? $n['delivered_at'] : null;
     }
 
     echo json_encode([
@@ -171,15 +153,12 @@ function markAsRead($conn, $userId, $notificationId) {
         return;
     }
 
-    // וודא שהעמודה קיימת, אם לא - צור אותה
-    ensureReadAtColumn($conn);
-
     $sql = "
-        UPDATE notification_deliveries
-        SET read_at = NOW()
-        WHERE notification_id = ?
+        UPDATE push_notifications
+        SET is_read = 1
+        WHERE id = ?
           AND user_id = ?
-          AND read_at IS NULL
+          AND is_read = 0
     ";
 
     $stmt = $conn->prepare($sql);
@@ -195,15 +174,11 @@ function markAsRead($conn, $userId, $notificationId) {
  * סימון כל ההתראות כנקראו
  */
 function markAllAsRead($conn, $userId) {
-    // וודא שהעמודה קיימת
-    ensureReadAtColumn($conn);
-
     $sql = "
-        UPDATE notification_deliveries
-        SET read_at = NOW()
+        UPDATE push_notifications
+        SET is_read = 1
         WHERE user_id = ?
-          AND status = 'delivered'
-          AND read_at IS NULL
+          AND is_read = 0
     ";
 
     $stmt = $conn->prepare($sql);
@@ -213,44 +188,4 @@ function markAllAsRead($conn, $userId) {
         'success' => true,
         'updated' => $stmt->rowCount()
     ]);
-}
-
-/**
- * בדיקה אם העמודה read_at קיימת
- */
-function checkReadAtColumn($conn) {
-    static $hasColumn = null;
-
-    if ($hasColumn !== null) {
-        return $hasColumn;
-    }
-
-    try {
-        $stmt = $conn->query("SHOW COLUMNS FROM notification_deliveries LIKE 'read_at'");
-        $hasColumn = $stmt->rowCount() > 0;
-    } catch (Exception $e) {
-        $hasColumn = false;
-    }
-
-    return $hasColumn;
-}
-
-/**
- * יצירת העמודה read_at אם לא קיימת
- */
-function ensureReadAtColumn($conn) {
-    if (!checkReadAtColumn($conn)) {
-        try {
-            $conn->exec("
-                ALTER TABLE notification_deliveries
-                ADD COLUMN read_at DATETIME DEFAULT NULL
-                COMMENT 'When the user read this notification'
-                AFTER delivered_at
-            ");
-            // Reset static cache
-            checkReadAtColumn($conn);
-        } catch (Exception $e) {
-            error_log('[my-notifications-api] Failed to add read_at column: ' . $e->getMessage());
-        }
-    }
 }

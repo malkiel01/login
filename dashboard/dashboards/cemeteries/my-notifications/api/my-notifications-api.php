@@ -169,6 +169,10 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
  * מקבל או push_notifications.id או scheduled_notifications.id
  */
 function markAsRead($conn, $userId, $notificationId) {
+    error_log("[markAsRead] ########## MARK AS READ CALLED ##########");
+    error_log("[markAsRead] Raw notification_id: " . var_export($notificationId, true));
+    error_log("[markAsRead] Raw user_id: " . var_export($userId, true));
+
     if (!$notificationId) {
         error_log('[markAsRead] Missing notification_id');
         echo json_encode(['success' => false, 'error' => 'Missing notification_id']);
@@ -179,7 +183,7 @@ function markAsRead($conn, $userId, $notificationId) {
     $notificationIdInt = (int)$notificationId;
     $userIdInt = (int)$userId;
 
-    error_log("[markAsRead] Attempting to mark notification as read - notificationId: $notificationIdInt, userId: $userIdInt");
+    error_log("[markAsRead] Converted - notificationId: $notificationIdInt, userId: $userIdInt");
 
     // נסה קודם לפי scheduled_notification_id (מה שמגיע מה-push)
     $sql = "

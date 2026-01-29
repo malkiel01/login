@@ -198,15 +198,16 @@ class NotificationLogger {
     /**
      * Log notification viewed
      */
-    public function logViewed(int $notificationId, int $userId): int {
-        $deviceInfo = $this->parseUserAgent();
+    public function logViewed(int $notificationId, int $userId, ?string $userAgent = null): int {
+        $ua = $userAgent ?? ($_SERVER['HTTP_USER_AGENT'] ?? null);
+        $deviceInfo = $this->parseUserAgent($ua);
         return $this->log('viewed', [
             'notification_id' => $notificationId,
             'user_id' => $userId,
             'device_type' => $deviceInfo['device'],
             'os' => $deviceInfo['os'],
             'browser' => $deviceInfo['browser'],
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
+            'user_agent' => $ua
         ]);
     }
 
@@ -264,15 +265,16 @@ class NotificationLogger {
     /**
      * Log user approved notification
      */
-    public function logApproved(int $notificationId, int $userId, bool $biometric = false): int {
-        $deviceInfo = $this->parseUserAgent();
+    public function logApproved(int $notificationId, int $userId, bool $biometric = false, ?string $userAgent = null): int {
+        $ua = $userAgent ?? ($_SERVER['HTTP_USER_AGENT'] ?? null);
+        $deviceInfo = $this->parseUserAgent($ua);
         return $this->log('approved', [
             'notification_id' => $notificationId,
             'user_id' => $userId,
             'device_type' => $deviceInfo['device'],
             'os' => $deviceInfo['os'],
             'browser' => $deviceInfo['browser'],
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            'user_agent' => $ua,
             'extra_data' => [
                 'biometric_verified' => $biometric
             ]
@@ -282,15 +284,16 @@ class NotificationLogger {
     /**
      * Log user rejected notification
      */
-    public function logRejected(int $notificationId, int $userId): int {
-        $deviceInfo = $this->parseUserAgent();
+    public function logRejected(int $notificationId, int $userId, ?string $userAgent = null): int {
+        $ua = $userAgent ?? ($_SERVER['HTTP_USER_AGENT'] ?? null);
+        $deviceInfo = $this->parseUserAgent($ua);
         return $this->log('rejected', [
             'notification_id' => $notificationId,
             'user_id' => $userId,
             'device_type' => $deviceInfo['device'],
             'os' => $deviceInfo['os'],
             'browser' => $deviceInfo['browser'],
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
+            'user_agent' => $ua
         ]);
     }
 

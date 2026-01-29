@@ -67,7 +67,7 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/notifications/css/notifications.css?v=10">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/notifications/css/notifications.css?v=11">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="<?php echo implode(' ', $bodyClasses); ?>" style="--font-size-base: <?php echo $fontSize; ?>px;">

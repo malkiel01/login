@@ -67,34 +67,10 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/notifications/css/notifications.css?v=7">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/notifications/css/notifications.css?v=8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="<?php echo implode(' ', $bodyClasses); ?>" style="--font-size-base: <?php echo $fontSize; ?>px;">
-    <script>
-    // DEBUG - CSS Variables
-    document.addEventListener('DOMContentLoaded', function() {
-        const body = document.body;
-        const computed = getComputedStyle(body);
-        console.log('=== DEBUG CSS Variables ===');
-        console.log('Body classes:', body.className);
-        console.log('--primary-color:', computed.getPropertyValue('--primary-color'));
-        console.log('--primary-dark:', computed.getPropertyValue('--primary-dark'));
-        console.log('--bg-tertiary:', computed.getPropertyValue('--bg-tertiary'));
-        console.log('--text-secondary:', computed.getPropertyValue('--text-secondary'));
-
-        // Check btn-secondary computed style
-        const btnSecondary = document.querySelector('.btn-secondary');
-        if (btnSecondary) {
-            const btnStyle = getComputedStyle(btnSecondary);
-            console.log('=== btn-secondary computed styles ===');
-            console.log('background:', btnStyle.background);
-            console.log('backgroundColor:', btnStyle.backgroundColor);
-            console.log('color:', btnStyle.color);
-            console.log('border:', btnStyle.border);
-        }
-    });
-    </script>
     <div class="notifications-container">
         <!-- Page Header -->
         <div class="page-header">

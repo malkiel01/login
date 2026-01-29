@@ -68,6 +68,36 @@ if ($notification['approval_expires_at'] && strtotime($notification['approval_ex
 }
 
 $alreadyResponded = $approval && in_array($approval['status'], ['approved', 'rejected']);
+
+// Load user settings for theme
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/user-settings/api/UserSettingsManager.php';
+
+function detectDeviceType() {
+    if (isset($_COOKIE['deviceType']) && in_array($_COOKIE['deviceType'], ['mobile', 'desktop'])) {
+        return $_COOKIE['deviceType'];
+    }
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $mobileKeywords = ['Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 'BlackBerry', 'Windows Phone'];
+    foreach ($mobileKeywords as $keyword) {
+        if (stripos($userAgent, $keyword) !== false) {
+            return 'mobile';
+        }
+    }
+    return 'desktop';
+}
+
+$detectedDeviceType = detectDeviceType();
+$userSettingsManager = new UserSettingsManager($pdo, $userId, $detectedDeviceType);
+$userPrefs = $userSettingsManager->getAllWithDefaults();
+
+$isDarkMode = isset($userPrefs['darkMode']) && ($userPrefs['darkMode']['value'] === true || $userPrefs['darkMode']['value'] === 'true');
+$colorScheme = isset($userPrefs['colorScheme']) ? $userPrefs['colorScheme']['value'] : 'purple';
+
+$bodyClasses = [];
+$bodyClasses[] = $isDarkMode ? 'dark-theme' : 'light-theme';
+if (!$isDarkMode) {
+    $bodyClasses[] = 'color-scheme-' . $colorScheme;
+}
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -300,43 +330,211 @@ $alreadyResponded = $approval && in_array($approval['status'], ['approved', 'rej
             text-decoration: none;
             font-size: 14px;
         }
+
+        /* Close X button for responded cards */
+        .close-x-btn {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .close-x-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .card-header {
+            position: relative;
+        }
+
+        /* Smaller card for responded/expired */
+        .responded-card {
+            max-width: 380px;
+        }
+
+        .responded-card .card-header {
+            padding: 24px;
+        }
+
+        .responded-card .card-header .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .responded-card .card-body {
+            padding: 24px;
+        }
+
+        /* Dark Theme Support */
+        .dark-theme body,
+        body.dark-theme {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .dark-theme .approval-card {
+            background: #1e293b;
+        }
+
+        .dark-theme .notification-title {
+            color: #f1f5f9;
+        }
+
+        .dark-theme .notification-body {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .dark-theme .approval-message {
+            background: #312e81;
+            color: #c4b5fd;
+            border-right-color: #7c3aed;
+        }
+
+        .dark-theme .meta-info {
+            color: #94a3b8;
+        }
+
+        .dark-theme .btn-reject {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .dark-theme .btn-reject:hover {
+            background: #475569;
+        }
+
+        .dark-theme .status-approved {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+
+        .dark-theme .status-rejected {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .dark-theme .status-expired {
+            background: #374151;
+            color: #9ca3af;
+        }
+
+        .dark-theme .close-btn {
+            color: #94a3b8;
+        }
+
+        .dark-theme .biometric-hint {
+            color: #94a3b8;
+        }
+
+        .dark-theme .expires-warning {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        /* Color Scheme Support */
+        .color-scheme-purple .card-header,
+        .color-scheme-purple body,
+        body.color-scheme-purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .color-scheme-blue .card-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        body.color-scheme-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .color-scheme-green .card-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        body.color-scheme-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .color-scheme-red .card-header {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        body.color-scheme-red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .color-scheme-orange .card-header {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+        body.color-scheme-orange {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .color-scheme-pink .card-header {
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+        }
+        body.color-scheme-pink {
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+        }
+
+        .color-scheme-teal .card-header {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        }
+        body.color-scheme-teal {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        }
     </style>
 </head>
-<body>
-    <div class="approval-card">
+<body class="<?php echo implode(' ', $bodyClasses); ?>" data-theme="<?php echo $isDarkMode ? 'dark' : 'light'; ?>">
+    <div class="approval-card <?php echo ($alreadyResponded || $isExpired) ? 'responded-card' : ''; ?>">
         <div class="card-header">
+            <?php if ($alreadyResponded || $isExpired): ?>
+                <button type="button" class="close-x-btn" onclick="closeWindow()" title="סגור">×</button>
+            <?php endif; ?>
             <div class="icon">🔐</div>
             <h1>בקשת אישור</h1>
             <div class="subtitle">נשלח על ידי <?php echo htmlspecialchars($notification['creator_name'] ?? 'מנהל'); ?></div>
         </div>
 
         <div class="card-body">
-            <?php if ($alreadyResponded): ?>
-                <div class="status-message status-<?php echo $approval['status']; ?>">
+            <?php if ($alreadyResponded || $isExpired): ?>
+                <div class="status-message status-<?php echo $alreadyResponded ? $approval['status'] : 'expired'; ?>">
                     <div class="status-icon">
-                        <?php echo $approval['status'] === 'approved' ? '✓' : '✗'; ?>
+                        <?php
+                        if ($isExpired && !$alreadyResponded) {
+                            echo '⏰';
+                        } else {
+                            echo $approval['status'] === 'approved' ? '✅' : '❌';
+                        }
+                        ?>
                     </div>
                     <strong>
                         <?php
-                        echo $approval['status'] === 'approved'
-                            ? 'אישרת בקשה זו'
-                            : 'דחית בקשה זו';
+                        if ($isExpired && !$alreadyResponded) {
+                            echo 'פג תוקף האישור';
+                        } elseif ($approval['status'] === 'approved') {
+                            echo 'האישור נרשם בהצלחה';
+                        } else {
+                            echo 'הדחייה נרשמה';
+                        }
                         ?>
                     </strong>
-                    <?php if ($approval['responded_at']): ?>
+                    <?php if ($alreadyResponded && $approval['responded_at']): ?>
                         <div style="margin-top: 8px; font-size: 13px;">
                             ב-<?php echo date('d/m/Y H:i', strtotime($approval['responded_at'])); ?>
                         </div>
+                    <?php elseif ($isExpired && $notification['approval_expires_at']): ?>
+                        <div style="margin-top: 8px; font-size: 13px;">
+                            ב-<?php echo date('d/m/Y H:i', strtotime($notification['approval_expires_at'])); ?>
+                        </div>
                     <?php endif; ?>
-                </div>
-
-            <?php elseif ($isExpired): ?>
-                <div class="status-message status-expired">
-                    <div class="status-icon">⏰</div>
-                    <strong>פג תוקף האישור</strong>
-                    <div style="margin-top: 8px; font-size: 13px;">
-                        ב-<?php echo date('d/m/Y H:i', strtotime($notification['approval_expires_at'])); ?>
-                    </div>
                 </div>
 
             <?php else: ?>
@@ -392,9 +590,9 @@ $alreadyResponded = $approval && in_array($approval['status'], ['approved', 'rej
                 <div class="biometric-hint">
                     האישור דורש אימות ביומטרי (טביעת אצבע / Face ID)
                 </div>
-            <?php endif; ?>
 
-            <a href="/dashboard/dashboards/cemeteries/" class="close-btn">חזרה לדשבורד</a>
+                <a href="/dashboard/dashboards/cemeteries/" class="close-btn">חזרה לדשבורד</a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -411,6 +609,34 @@ $alreadyResponded = $approval && in_array($approval['status'], ['approved', 'rej
         const apiUrl = '/dashboard/dashboards/cemeteries/notifications/api/approval-api.php';
         let biometricAvailable = false;
         let userHasBiometric = false;
+
+        // Close the window/tab
+        function closeWindow() {
+            // Try to close the window (works if opened as popup)
+            if (window.opener) {
+                window.close();
+            } else if (window.parent !== window) {
+                // In iframe - send message to parent
+                window.parent.postMessage({ type: 'CLOSE_APPROVAL' }, '*');
+            } else {
+                // Navigate back or to dashboard
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '/dashboard/dashboards/cemeteries/';
+                }
+            }
+        }
+
+        // Allow closing with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const isResponded = <?php echo ($alreadyResponded || $isExpired) ? 'true' : 'false'; ?>;
+                if (isResponded) {
+                    closeWindow();
+                }
+            }
+        });
 
         // Check biometric availability on load
         async function checkBiometricSupport() {

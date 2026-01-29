@@ -104,55 +104,7 @@ body.light-theme {
     color: inherit;
 }
 
-/* Buttons */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
-}
-
-.btn-primary:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
-}
-
-.btn-secondary {
-    background: transparent;
-    color: var(--primary-color, #667eea);
-    border: 2px solid var(--primary-color, #667eea);
-}
-
-.btn-secondary:hover {
-    background: var(--primary-color, #667eea);
-    color: white;
-}
-
-.btn-danger {
-    background: var(--danger-color, #dc2626);
-    color: white;
-}
-
-.btn-danger:hover {
-    filter: brightness(0.9);
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 12px;
-}
+/* Buttons - using central definitions from main.css */
 
 .btn-icon {
     font-size: 18px;

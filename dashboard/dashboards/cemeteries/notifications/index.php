@@ -206,6 +206,20 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
                 </div>
 
                 <div class="form-section">
+                    <h3 class="section-title">פידבק לשולח</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="notifySender" name="notify_sender">
+                                <span>קבל התראה כשההודעה נצפית או נענית</span>
+                            </label>
+                            <p class="form-help-text">תקבל התראה כשהמשתמש יראה את ההודעה, ואם זו הודעת אישור - גם כשיאשר או ידחה</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
                     <h3 class="section-title">זמן שליחה</h3>
 
                     <div class="form-row">

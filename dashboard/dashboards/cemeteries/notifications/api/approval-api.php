@@ -146,6 +146,9 @@ function handleRespond(PDO $pdo, int $userId, array $input, NotificationLogger $
         $logger->logRejected($notificationId, $userId, $userAgent);
     }
 
+    // Send feedback to sender if enabled
+    $logger->sendFeedbackToSender($notificationId, $userId, $response);
+
     // Also keep error_log for backwards compatibility
     error_log("[Approval] User {$userId} {$response} notification {$notificationId}, biometric={$biometricVerified}, markedRead={$markedRead}");
 
@@ -260,6 +263,9 @@ function handleGetNotification(PDO $pdo, int $userId, NotificationLogger $logger
     // Log notification viewed
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
     $logger->logViewed($notificationId, $userId, $userAgent);
+
+    // Send feedback to sender if enabled (first view)
+    $logger->sendFeedbackToSender($notificationId, $userId, 'viewed');
 
     echo json_encode([
         'success' => true,

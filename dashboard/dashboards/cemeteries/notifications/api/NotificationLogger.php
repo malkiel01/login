@@ -578,4 +578,85 @@ class NotificationLogger {
         $stmt->execute([':days' => $daysToKeep]);
         return $stmt->rowCount();
     }
+
+    /**
+     * Send feedback notification to the original sender
+     * @param int $notificationId - The scheduled_notification ID
+     * @param int $userId - The user who triggered the event
+     * @param string $eventType - 'viewed', 'approved', 'rejected'
+     * @return bool
+     */
+    public function sendFeedbackToSender(int $notificationId, int $userId, string $eventType): bool {
+        // Check if feedback was already sent for this event (prevent duplicates)
+        $feedbackEventType = 'feedback_' . $eventType;
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) FROM notification_logs
+            WHERE notification_id = :notification_id
+              AND user_id = :user_id
+              AND event_type = :event_type
+        ");
+        $stmt->execute([
+            ':notification_id' => $notificationId,
+            ':user_id' => $userId,
+            ':event_type' => $feedbackEventType
+        ]);
+        if ($stmt->fetchColumn() > 0) {
+            return false; // Feedback already sent for this event
+        }
+
+        // Get the original notification with notify_sender flag
+        $stmt = $this->conn->prepare("
+            SELECT sn.*, u.name as recipient_name
+            FROM scheduled_notifications sn
+            LEFT JOIN users u ON u.id = :user_id
+            WHERE sn.id = :notification_id
+        ");
+        $stmt->execute([':notification_id' => $notificationId, ':user_id' => $userId]);
+        $notification = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$notification || !$notification['notify_sender']) {
+            return false; // No notification or feedback disabled
+        }
+
+        $senderId = $notification['created_by'];
+        $recipientName = $notification['recipient_name'] ?? 'משתמש';
+        $originalTitle = $notification['title'];
+
+        // Build feedback message based on event type
+        switch ($eventType) {
+            case 'viewed':
+                $feedbackTitle = 'ההודעה שלך נצפתה';
+                $feedbackBody = "{$recipientName} צפה בהודעה: \"{$originalTitle}\"";
+                break;
+            case 'approved':
+                $feedbackTitle = 'ההודעה שלך אושרה ✓';
+                $feedbackBody = "{$recipientName} אישר את ההודעה: \"{$originalTitle}\"";
+                break;
+            case 'rejected':
+                $feedbackTitle = 'ההודעה שלך נדחתה ✗';
+                $feedbackBody = "{$recipientName} דחה את ההודעה: \"{$originalTitle}\"";
+                break;
+            default:
+                return false;
+        }
+
+        // Log that feedback is being sent (to prevent duplicates)
+        $this->log($feedbackEventType, [
+            'notification_id' => $notificationId,
+            'user_id' => $userId,
+            'extra_data' => ['sender_id' => $senderId]
+        ]);
+
+        // Send push notification to the sender
+        require_once $_SERVER['DOCUMENT_ROOT'] . '/push/send-push.php';
+
+        $result = sendPushToUser($senderId, $feedbackTitle, $feedbackBody, [
+            'type' => 'feedback',
+            'original_notification_id' => $notificationId,
+            'event_type' => $eventType,
+            'triggered_by' => $userId
+        ]);
+
+        return $result['success'] ?? false;
+    }
 }

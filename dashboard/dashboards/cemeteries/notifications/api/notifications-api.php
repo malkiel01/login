@@ -267,14 +267,17 @@ function handleCreate(PDO $pdo, array $input, NotificationLogger $logger): void 
         $approvalExpiry = date('Y-m-d H:i:s', strtotime("+{$hours} hours"));
     }
 
+    // Feedback to sender
+    $notifySender = !empty($input['notify_sender']) ? 1 : 0;
+
     // If scheduled_at is null or empty, send immediately
     $sendNow = empty($scheduledAt);
 
     $stmt = $pdo->prepare("
         INSERT INTO scheduled_notifications
         (title, body, notification_type, target_users, scheduled_at, url, status, created_by,
-         requires_approval, approval_message, approval_expires_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         requires_approval, approval_message, approval_expires_at, notify_sender)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     $status = $sendNow ? 'pending' : 'pending';
@@ -290,7 +293,8 @@ function handleCreate(PDO $pdo, array $input, NotificationLogger $logger): void 
         $createdBy,
         $requiresApproval,
         $approvalMessage,
-        $approvalExpiry
+        $approvalExpiry,
+        $notifySender
     ]);
 
     $notificationId = $pdo->lastInsertId();

@@ -213,6 +213,75 @@ window.NotificationModal = {
                 flex-direction: row-reverse;
             }
 
+            /* Dark Theme Support */
+            .dark-theme .notification-modal,
+            [data-theme="dark"] .notification-modal {
+                background: #1e293b;
+            }
+
+            .dark-theme .notification-modal-body h4,
+            [data-theme="dark"] .notification-modal-body h4 {
+                color: #f1f5f9;
+            }
+
+            .dark-theme .notification-modal-body p,
+            [data-theme="dark"] .notification-modal-body p {
+                color: #cbd5e1;
+            }
+
+            .dark-theme .notification-time,
+            [data-theme="dark"] .notification-time {
+                color: #64748b;
+            }
+
+            .dark-theme .notification-modal-footer,
+            [data-theme="dark"] .notification-modal-footer {
+                background: #0f172a;
+                border-top-color: #334155;
+            }
+
+            .dark-theme .btn-notification-close,
+            [data-theme="dark"] .btn-notification-close {
+                background: #334155;
+                color: #e2e8f0;
+            }
+
+            .dark-theme .btn-notification-close:hover,
+            [data-theme="dark"] .btn-notification-close:hover {
+                background: #475569;
+            }
+
+            /* Color Scheme Support */
+            .color-scheme-blue .notification-modal-header,
+            .color-scheme-blue .btn-notification-action {
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            }
+
+            .color-scheme-green .notification-modal-header,
+            .color-scheme-green .btn-notification-action {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            }
+
+            .color-scheme-red .notification-modal-header,
+            .color-scheme-red .btn-notification-action {
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            }
+
+            .color-scheme-orange .notification-modal-header,
+            .color-scheme-orange .btn-notification-action {
+                background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            }
+
+            .color-scheme-pink .notification-modal-header,
+            .color-scheme-pink .btn-notification-action {
+                background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+            }
+
+            .color-scheme-teal .notification-modal-header,
+            .color-scheme-teal .btn-notification-action {
+                background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            }
+
             /* Mobile optimization */
             @media (max-width: 480px) {
                 .notification-modal-overlay {

@@ -66,7 +66,7 @@ window.NotificationModal = {
             }
 
             .notification-modal {
-                background: white;
+                background: var(--bg-primary, white);
                 border-radius: 20px;
                 box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
                 width: 100%;
@@ -91,7 +91,7 @@ window.NotificationModal = {
                 justify-content: space-between;
                 align-items: center;
                 padding: 18px 24px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--primary-dark, #764ba2) 100%);
                 color: white;
             }
 
@@ -140,13 +140,13 @@ window.NotificationModal = {
             .notification-modal-body h4 {
                 margin: 0 0 16px;
                 font-size: 24px;
-                color: #1e293b;
+                color: var(--text-primary, #1e293b);
                 font-weight: 700;
             }
 
             .notification-modal-body p {
                 margin: 0;
-                color: #475569;
+                color: var(--text-secondary, #475569);
                 font-size: 16px;
                 line-height: 1.7;
             }
@@ -154,15 +154,15 @@ window.NotificationModal = {
             .notification-time {
                 margin-top: 20px;
                 font-size: 13px;
-                color: #94a3b8;
+                color: var(--text-tertiary, #94a3b8);
             }
 
             .notification-modal-footer {
                 display: flex;
                 gap: 12px;
                 padding: 20px 24px;
-                background: #f8fafc;
-                border-top: 1px solid #e2e8f0;
+                background: var(--bg-secondary, #f8fafc);
+                border-top: 1px solid var(--border-color, #e2e8f0);
             }
 
             .notification-modal-footer button {
@@ -177,22 +177,22 @@ window.NotificationModal = {
             }
 
             .btn-notification-action {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--primary-dark, #764ba2) 100%);
                 color: white;
             }
 
             .btn-notification-action:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+                box-shadow: 0 6px 20px color-mix(in srgb, var(--primary-color, #667eea) 40%, transparent);
             }
 
             .btn-notification-close {
-                background: #e2e8f0;
-                color: #475569;
+                background: var(--bg-tertiary, #e2e8f0);
+                color: var(--text-secondary, #475569);
             }
 
             .btn-notification-close:hover {
-                background: #cbd5e1;
+                background: var(--border-color, #cbd5e1);
             }
 
             /* Notification types */
@@ -211,80 +211,6 @@ window.NotificationModal = {
             /* RTL Support */
             [dir="rtl"] .notification-modal-footer {
                 flex-direction: row-reverse;
-            }
-
-            /* Dark Theme Support */
-            .dark-theme .notification-modal,
-            [data-theme="dark"] .notification-modal {
-                background: #1e293b;
-            }
-
-            .dark-theme .notification-modal-body h4,
-            [data-theme="dark"] .notification-modal-body h4 {
-                color: #f1f5f9;
-            }
-
-            .dark-theme .notification-modal-body p,
-            [data-theme="dark"] .notification-modal-body p {
-                color: #cbd5e1;
-            }
-
-            .dark-theme .notification-time,
-            [data-theme="dark"] .notification-time {
-                color: #64748b;
-            }
-
-            .dark-theme .notification-modal-footer,
-            [data-theme="dark"] .notification-modal-footer {
-                background: #0f172a;
-                border-top-color: #334155;
-            }
-
-            .dark-theme .btn-notification-close,
-            [data-theme="dark"] .btn-notification-close {
-                background: #334155;
-                color: #e2e8f0;
-            }
-
-            .dark-theme .btn-notification-close:hover,
-            [data-theme="dark"] .btn-notification-close:hover {
-                background: #475569;
-            }
-
-            /* Color Scheme Support */
-            .color-scheme-purple .notification-modal-header,
-            .color-scheme-purple .btn-notification-action {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            }
-
-            .color-scheme-blue .notification-modal-header,
-            .color-scheme-blue .btn-notification-action {
-                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            }
-
-            .color-scheme-green .notification-modal-header,
-            .color-scheme-green .btn-notification-action {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            }
-
-            .color-scheme-red .notification-modal-header,
-            .color-scheme-red .btn-notification-action {
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            }
-
-            .color-scheme-orange .notification-modal-header,
-            .color-scheme-orange .btn-notification-action {
-                background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            }
-
-            .color-scheme-pink .notification-modal-header,
-            .color-scheme-pink .btn-notification-action {
-                background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-            }
-
-            .color-scheme-teal .notification-modal-header,
-            .color-scheme-teal .btn-notification-action {
-                background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
             }
 
             /* Mobile optimization */

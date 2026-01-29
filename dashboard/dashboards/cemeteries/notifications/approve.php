@@ -613,41 +613,58 @@ if (!$isDarkMode) {
     </div>
 
     <script src="/js/biometric-auth.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
     <script>
         const notificationId = <?php echo $notificationId; ?>;
         const apiUrl = '/dashboard/dashboards/cemeteries/notifications/api/approval-api.php';
         let biometricAvailable = false;
         let userHasBiometric = false;
 
-        // Close the window/tab
+        // Close the popup/iframe using PopupAPI
         function closeWindow() {
             console.log('[Approve] closeWindow called');
 
-            // Try multiple methods to close
-            try {
-                // Method 1: Try to close the window directly
-                window.close();
-            } catch(e) {
-                console.log('[Approve] window.close() failed:', e);
+            // Use PopupAPI if available (works in iframe)
+            if (typeof PopupAPI !== 'undefined') {
+                console.log('[Approve] Using PopupAPI.close()');
+                PopupAPI.close();
+                return;
             }
 
-            // If window didn't close, try other methods
-            setTimeout(function() {
-                if (window.opener) {
-                    // Opened as popup
-                    window.close();
-                } else if (window.parent !== window) {
-                    // In iframe - send message to parent
-                    window.parent.postMessage({ type: 'CLOSE_APPROVAL' }, '*');
-                } else {
-                    // Navigate back or to dashboard
-                    if (window.history.length > 1) {
-                        window.history.back();
-                    } else {
-                        window.location.href = '/dashboard/dashboards/cemeteries/';
+            // Fallback: try popupClose shortcut
+            if (typeof popupClose === 'function') {
+                console.log('[Approve] Using popupClose()');
+                popupClose();
+                return;
+            }
+
+            // Check if we're in an iframe
+            if (window.parent !== window) {
+                console.log('[Approve] In iframe, trying to close parent popup');
+
+                // Try to close via PopupManager in parent
+                try {
+                    if (window.parent.PopupManager) {
+                        window.parent.PopupManager.closeAll();
+                        return;
                     }
+                } catch(e) {
+                    console.log('[Approve] PopupManager not accessible:', e);
                 }
-            }, 100);
+
+                // Send message to parent
+                window.parent.postMessage({ type: 'popup-api', action: 'close' }, '*');
+            } else if (window.opener) {
+                // Opened as popup window
+                window.close();
+            } else {
+                // Navigate back or to dashboard
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '/dashboard/dashboards/cemeteries/';
+                }
+            }
         }
 
         // Allow closing with Escape key

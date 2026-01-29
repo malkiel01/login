@@ -21,7 +21,7 @@ window.NotificationModal = {
                 <div class="notification-modal">
                     <div class="notification-modal-header">
                         <h3 class="notification-modal-title">התראה</h3>
-                        <button type="button" class="notification-modal-close" onclick="NotificationModal.close()">×</button>
+                        <button type="button" class="notification-modal-close" onclick="NotificationModal.dismiss()">×</button>
                     </div>
                     <div class="notification-modal-body">
                         <div class="notification-icon" id="notificationIcon">🔔</div>
@@ -248,30 +248,41 @@ window.NotificationModal = {
 
         this.modalElement = document.getElementById('notificationModal');
 
-        // Close on overlay click
+        // Close on overlay click (dismiss only, don't mark as read)
         this.modalElement.addEventListener('click', (e) => {
             if (e.target === this.modalElement) {
-                this.close();
+                this.dismiss();
             }
         });
 
-        // Close on Escape key
+        // Close on Escape key (dismiss only, don't mark as read)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.modalElement && this.modalElement.style.display !== 'none') {
-                this.close();
+                this.dismiss();
             }
         });
 
-        // Add click handlers for close buttons (more reliable than onclick attribute)
-        const closeButtons = this.modalElement.querySelectorAll('.notification-modal-close, .btn-notification-close');
-        closeButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        // X button - dismiss only (don't mark as read)
+        const xButton = this.modalElement.querySelector('.notification-modal-close');
+        if (xButton) {
+            xButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('[NotificationModal] Close button clicked!');
+                console.log('[NotificationModal] X button clicked - dismiss only');
+                this.dismiss();
+            });
+        }
+
+        // "סגור" button - close AND mark as read
+        const closeButton = this.modalElement.querySelector('.btn-notification-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[NotificationModal] Close button clicked - mark as read');
                 this.close();
             });
-        });
+        }
     },
 
     /**
@@ -356,7 +367,23 @@ window.NotificationModal = {
     },
 
     /**
+     * Dismiss the modal without marking as read
+     * Used for X button, Escape key, and overlay click
+     */
+    dismiss() {
+        console.log('[NotificationModal] dismiss() called - closing without marking as read');
+
+        if (this.modalElement) {
+            this.modalElement.style.display = 'none';
+        }
+        // Restore page scroll
+        document.body.style.overflow = '';
+        this.currentData = null;
+    },
+
+    /**
      * Close the modal and mark as read
+     * Used for "סגור" button only
      */
     close() {
         console.log('[NotificationModal] close() called, notificationId:', this.currentData?.notificationId);

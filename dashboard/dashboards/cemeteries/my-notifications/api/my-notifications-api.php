@@ -126,6 +126,7 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
             'info' as notification_type
         FROM push_notifications
         WHERE user_id = ?
+          AND is_read = 1
         ORDER BY created_at DESC
         LIMIT ? OFFSET ?
     ";

@@ -104,6 +104,18 @@ body.light-theme {
     color: inherit;
 }
 
+/* Override btn-secondary in header to use primary color outline */
+.header-actions .btn-secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.header-actions .btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
 /* Buttons - using central definitions from main.css */
 
 .btn-icon {

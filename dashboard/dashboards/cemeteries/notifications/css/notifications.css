@@ -98,27 +98,39 @@ body.light-theme {
 
 .header-actions .btn {
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-width: fit-content;
 }
 
 .header-actions .btn i {
     color: inherit;
+    flex-shrink: 0;
 }
 
 .header-actions .btn-secondary {
-    background: transparent !important;
-    color: var(--primary-color) !important;
-    border: 1px solid var(--primary-color) !important;
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    transition: all 0.2s ease;
 }
 
 .header-actions .btn-secondary:hover {
-    background: color-mix(in srgb, var(--primary-color) 10%, transparent) !important;
+    background: color-mix(in srgb, var(--primary-color) 10%, transparent);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color) 30%, transparent);
 }
 
 .header-actions .btn-primary {
-    background: linear-gradient(135deg, var(--primary-color, #059669), var(--primary-dark, #047857)) !important;
-    color: white !important;
-    border: none !important;
+    background: linear-gradient(135deg, var(--primary-color, #059669), var(--primary-dark, #047857));
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
 }
 
 .header-actions .btn-primary:hover {
@@ -126,8 +138,38 @@ body.light-theme {
 }
 
 .btn-icon {
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
+}
+
+/* Mobile responsive buttons */
+@media (max-width: 768px) {
+    .header-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .header-actions .btn {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
+    .header-actions .btn span {
+        display: inline;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-actions {
+        flex-direction: column;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+    }
 }
 
 /* Form Container */

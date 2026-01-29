@@ -7,6 +7,7 @@
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/api/api-auth.php';
+require_once __DIR__ . '/NotificationLogger.php';
 
 header('Content-Type: application/json');
 
@@ -20,6 +21,7 @@ if (!isLoggedIn()) {
 $pdo = getDBConnection();
 $userId = getCurrentUserId();
 $method = $_SERVER['REQUEST_METHOD'];
+$logger = NotificationLogger::getInstance($pdo);
 
 // Handle JSON body for POST
 $input = [];
@@ -33,13 +35,13 @@ $action = $_GET['action'] ?? $input['action'] ?? '';
 try {
     switch ($action) {
         case 'respond':
-            handleRespond($pdo, $userId, $input);
+            handleRespond($pdo, $userId, $input, $logger);
             break;
         case 'get_status':
-            handleGetStatus($pdo, $userId);
+            handleGetStatus($pdo, $userId, $logger);
             break;
         case 'get_notification':
-            handleGetNotification($pdo, $userId);
+            handleGetNotification($pdo, $userId, $logger);
             break;
         default:
             throw new Exception('פעולה לא חוקית');
@@ -52,7 +54,7 @@ try {
 /**
  * Handle user response (approve/reject)
  */
-function handleRespond(PDO $pdo, int $userId, array $input): void {
+function handleRespond(PDO $pdo, int $userId, array $input, NotificationLogger $logger): void {
     $notificationId = (int)($input['notification_id'] ?? 0);
     $response = $input['response'] ?? ''; // 'approved' or 'rejected'
     $biometricVerified = !empty($input['biometric_verified']);
@@ -137,7 +139,14 @@ function handleRespond(PDO $pdo, int $userId, array $input): void {
     $stmt->execute([$notificationId, $userId]);
     $markedRead = $stmt->rowCount();
 
-    // Log the action
+    // Log the action to notification_logs
+    if ($response === 'approved') {
+        $logger->logApproved($notificationId, $userId, $biometricVerified, $userAgent);
+    } else {
+        $logger->logRejected($notificationId, $userId, $userAgent);
+    }
+
+    // Also keep error_log for backwards compatibility
     error_log("[Approval] User {$userId} {$response} notification {$notificationId}, biometric={$biometricVerified}, markedRead={$markedRead}");
 
     echo json_encode([
@@ -152,7 +161,7 @@ function handleRespond(PDO $pdo, int $userId, array $input): void {
 /**
  * Get approval status for a notification
  */
-function handleGetStatus(PDO $pdo, int $userId): void {
+function handleGetStatus(PDO $pdo, int $userId, NotificationLogger $logger): void {
     $notificationId = (int)($_GET['notification_id'] ?? 0);
 
     if (!$notificationId) {
@@ -182,6 +191,9 @@ function handleGetStatus(PDO $pdo, int $userId): void {
         // Update to expired
         $pdo->prepare("UPDATE notification_approvals SET status = 'expired' WHERE id = ?")->execute([$approval['id']]);
         $approval['status'] = 'expired';
+
+        // Log expiration
+        $logger->logExpired($notificationId, $userId);
     }
 
     echo json_encode([
@@ -195,7 +207,7 @@ function handleGetStatus(PDO $pdo, int $userId): void {
 /**
  * Get notification details for modal display
  */
-function handleGetNotification(PDO $pdo, int $userId): void {
+function handleGetNotification(PDO $pdo, int $userId, NotificationLogger $logger): void {
     $notificationId = (int)($_GET['id'] ?? 0);
 
     if (!$notificationId) {
@@ -239,8 +251,15 @@ function handleGetNotification(PDO $pdo, int $userId): void {
         if ($approval && $approval['status'] === 'pending') {
             $pdo->prepare("UPDATE notification_approvals SET status = 'expired' WHERE id = ?")->execute([$approval['id']]);
             $approval['status'] = 'expired';
+
+            // Log expiration
+            $logger->logExpired($notificationId, $userId);
         }
     }
+
+    // Log notification viewed
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    $logger->logViewed($notificationId, $userId, $userAgent);
 
     echo json_encode([
         'success' => true,

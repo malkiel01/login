@@ -10,6 +10,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/WebPush.php';
 require_once __DIR__ . '/push-log.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/notifications/api/NotificationLogger.php';
 
 /**
  * Send push notification to a specific user
@@ -24,6 +25,8 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
     pushLog('SEND', "Starting sendPushToUser", ['userId' => $userId, 'title' => $title]);
 
     $pdo = getDBConnection();
+    $logger = NotificationLogger::getInstance($pdo);
+    $notificationId = $options['id'] ?? null;
 
     // Get all active subscriptions for user
     $stmt = $pdo->prepare("
@@ -66,9 +69,20 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
     $errors = [];
 
     foreach ($subscriptions as $subscription) {
+        // Log send attempt
+        if ($notificationId) {
+            $logger->logSendAttempt(
+                $notificationId,
+                $userId,
+                $subscription['id'],
+                $subscription['endpoint'],
+                $subscription['user_agent'] ?? null
+            );
+        }
+
         $result = $webPush->send($subscription, $payload);
 
-        // Log with device info
+        // Log with device info (existing push-log)
         logPushSendResult(
             $userId,
             $subscription['id'],
@@ -82,9 +96,24 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
             $sent++;
             // Update last_used_at
             $pdo->prepare("UPDATE push_subscriptions SET last_used_at = NOW() WHERE id = ?")->execute([$subscription['id']]);
+
+            // Log successful delivery
+            if ($notificationId) {
+                $logger->logDelivered($notificationId, $userId, $subscription['id'], $result['httpCode'] ?? 201);
+            }
         } else {
             $failed++;
             $errors[] = $result['error'] ?? 'Unknown error';
+
+            // Log failed delivery
+            if ($notificationId) {
+                $logger->logFailed(
+                    $notificationId,
+                    $userId,
+                    $result['error'] ?? 'Unknown error',
+                    $result['httpCode'] ?? null
+                );
+            }
 
             // If subscription is expired/invalid, mark as inactive
             if (isset($result['httpCode']) && in_array($result['httpCode'], [404, 410])) {
@@ -93,6 +122,9 @@ function sendPushToUser(int $userId, string $title, string $body, ?string $url =
                     'userId' => $userId
                 ]);
                 $pdo->prepare("UPDATE push_subscriptions SET is_active = 0 WHERE id = ?")->execute([$subscription['id']]);
+
+                // Log subscription removal
+                $logger->logSubscriptionRemoved($userId, $subscription['id'], 'HTTP ' . $result['httpCode']);
             }
         }
     }

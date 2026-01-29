@@ -16,6 +16,7 @@
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/api/api-auth.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/push/send-push.php';
+require_once __DIR__ . '/NotificationLogger.php';
 
 // בדוק הרשאות לניהול התראות
 if (!isAdmin() && !hasModulePermission('notifications', 'view')) {
@@ -26,6 +27,7 @@ if (!isAdmin() && !hasModulePermission('notifications', 'view')) {
 
 $pdo = getDBConnection();
 $method = $_SERVER['REQUEST_METHOD'];
+$logger = NotificationLogger::getInstance($pdo);
 
 // Handle JSON body for POST
 $input = [];
@@ -52,7 +54,7 @@ try {
             break;
         case 'create':
             requireCreatePermission('notifications');
-            handleCreate($pdo, $input);
+            handleCreate($pdo, $input, $logger);
             break;
         case 'update':
             requireEditPermission('notifications');
@@ -245,7 +247,7 @@ function handleGetUsers(PDO $pdo): void {
 /**
  * יצירת התראה חדשה
  */
-function handleCreate(PDO $pdo, array $input): void {
+function handleCreate(PDO $pdo, array $input, NotificationLogger $logger): void {
     validateNotificationInput($input);
 
     $title = trim($input['title']);
@@ -292,6 +294,20 @@ function handleCreate(PDO $pdo, array $input): void {
     ]);
 
     $notificationId = $pdo->lastInsertId();
+
+    // Log notification creation
+    $logger->logCreated($notificationId, $createdBy, [
+        'title' => $title,
+        'body' => $body,
+        'notification_type' => $notificationType,
+        'target_users' => $targetUsers,
+        'requires_approval' => $requiresApproval
+    ]);
+
+    // Log scheduled if has scheduled_at
+    if (!$sendNow && $scheduledAt) {
+        $logger->logScheduled($notificationId, $title, $scheduledAt);
+    }
 
     // Create approval records for each user if requires approval
     if ($requiresApproval) {

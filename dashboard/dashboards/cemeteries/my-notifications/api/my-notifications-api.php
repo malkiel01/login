@@ -12,7 +12,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/confi
 require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-init.php';
 
 // בדיקת הרשאות - משתמש מחובר
-if (!isAuthenticated()) {
+if (!isLoggedIn()) {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;

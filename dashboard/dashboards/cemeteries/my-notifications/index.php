@@ -446,8 +446,18 @@ if (!$isDarkMode) {
                 const scheduledId = notification.scheduled_notification_id || extractIdFromUrl(notification.url);
                 const approvalStatus = notification.approval_status;
 
-                // אם ההתראה ממתינה לאישור - פתח את ApprovalModal המלא עם כפתורי אישור/דחייה
+                // אם ההתראה ממתינה לאישור - שלח הודעה לאפליקציה הראשית לפתוח את מסך האישור
                 if (!approvalStatus || approvalStatus === 'pending') {
+                    // בדיקה אם אנחנו בתוך אייפריים
+                    if (window.parent !== window) {
+                        // שליחת הודעה לחלון האב לפתיחת מסך האישור
+                        window.parent.postMessage({
+                            type: 'OPEN_APPROVAL_MODAL',
+                            notificationId: scheduledId
+                        }, '*');
+                        return;
+                    }
+                    // אם לא באייפריים, פתח ישירות
                     if (typeof ApprovalModal !== 'undefined') {
                         ApprovalModal.show(scheduledId);
                         return;

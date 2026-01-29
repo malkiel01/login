@@ -494,6 +494,16 @@ $isAdminUser = isAdmin();
                 }
             }
 
+            // פתיחת מסך אישור מ-iframe (ההתראות שלי)
+            if (event.data && event.data.type === 'OPEN_APPROVAL_MODAL') {
+                console.log('[Main] Received OPEN_APPROVAL_MODAL request from iframe, notificationId:', event.data.notificationId);
+                if (typeof ApprovalModal !== 'undefined' && event.data.notificationId) {
+                    ApprovalModal.show(event.data.notificationId);
+                } else {
+                    console.error('[Main] ApprovalModal not available or missing notificationId');
+                }
+            }
+
             // ביטול push מ-iframe
             if (event.data && event.data.type === 'disablePushNotifications') {
                 console.log('[Main] Received disable push request from iframe');

@@ -4,7 +4,7 @@
  * חייב להיות בשורש האתר!
  */
 
-const CACHE_NAME = 'pwa-cache-v5';
+const CACHE_NAME = 'pwa-cache-v6';
 const API_URL = '/api/notifications.php';
 
 const urlsToCache = [

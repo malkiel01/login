@@ -261,6 +261,17 @@ window.NotificationModal = {
                 this.close();
             }
         });
+
+        // Add click handlers for close buttons (more reliable than onclick attribute)
+        const closeButtons = this.modalElement.querySelectorAll('.notification-modal-close, .btn-notification-close');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[NotificationModal] Close button clicked!');
+                this.close();
+            });
+        });
     },
 
     /**
@@ -268,8 +279,7 @@ window.NotificationModal = {
      * @param {Object} data - Notification data
      */
     show(data) {
-        // DEBUG: הצג בדיוק מה הגיע
-        alert('DEBUG show(): notificationId = ' + (data ? data.notificationId : 'NO DATA'));
+        console.log('[NotificationModal] show() called with notificationId:', data?.notificationId);
 
         this.init();
         this.currentData = data;
@@ -349,8 +359,7 @@ window.NotificationModal = {
      * Close the modal and mark as read
      */
     close() {
-        // DEBUG: הצג בדיוק מה יש ב-currentData
-        alert('DEBUG close(): notificationId = ' + (this.currentData ? this.currentData.notificationId : 'NO DATA'));
+        console.log('[NotificationModal] close() called, notificationId:', this.currentData?.notificationId);
 
         // Mark notification as read if we have an ID
         if (this.currentData && this.currentData.notificationId) {

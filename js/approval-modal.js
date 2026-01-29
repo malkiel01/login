@@ -74,7 +74,7 @@ window.ApprovalModal = {
 
             /* Full screen version - cannot be dismissed */
             .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--primary-dark, #764ba2) 100%);
                 padding: 0;
             }
 
@@ -328,107 +328,6 @@ window.ApprovalModal = {
                 font-size: 16px;
             }
 
-            /* Dark Theme Support */
-            .dark-theme .approval-modal,
-            [data-theme="dark"] .approval-modal {
-                background: #1e293b;
-            }
-
-            .dark-theme .approval-modal-body h4,
-            [data-theme="dark"] .approval-modal-body h4 {
-                color: #f1f5f9;
-            }
-
-            .dark-theme .approval-modal-body p,
-            [data-theme="dark"] .approval-modal-body p {
-                color: #cbd5e1;
-            }
-
-            .dark-theme .approval-extra-message,
-            [data-theme="dark"] .approval-extra-message {
-                background: #334155;
-                color: #e2e8f0;
-            }
-
-            .dark-theme .approval-hint,
-            [data-theme="dark"] .approval-hint {
-                color: #64748b !important;
-            }
-
-            .dark-theme .approval-modal-footer,
-            [data-theme="dark"] .approval-modal-footer {
-                background: #0f172a;
-                border-top-color: #334155;
-            }
-
-            .dark-theme .btn-reject,
-            [data-theme="dark"] .btn-reject {
-                background: #334155;
-                color: #e2e8f0;
-            }
-
-            .dark-theme .btn-reject:hover:not(:disabled),
-            [data-theme="dark"] .btn-reject:hover:not(:disabled) {
-                background: #475569;
-            }
-
-            .dark-theme .approval-loading .spinner,
-            [data-theme="dark"] .approval-loading .spinner {
-                border-color: #334155;
-                border-top-color: #667eea;
-            }
-
-            .dark-theme .approval-loading span,
-            [data-theme="dark"] .approval-loading span {
-                color: #cbd5e1;
-            }
-
-            .dark-theme .approval-responded p,
-            [data-theme="dark"] .approval-responded p {
-                color: #f1f5f9;
-            }
-
-            /* Dark theme for small popup mode */
-            .dark-theme .approval-modal-overlay:not(.approval-fullscreen),
-            [data-theme="dark"] .approval-modal-overlay:not(.approval-fullscreen) {
-                background: rgba(0, 0, 0, 0.8);
-            }
-
-            /* Color Scheme Support - Header gradient based on user's color scheme */
-            .color-scheme-purple .approval-modal-header,
-            .color-scheme-purple .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            }
-
-            .color-scheme-blue .approval-modal-header,
-            .color-scheme-blue .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            }
-
-            .color-scheme-green .approval-modal-header,
-            .color-scheme-green .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            }
-
-            .color-scheme-red .approval-modal-header,
-            .color-scheme-red .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            }
-
-            .color-scheme-orange .approval-modal-header,
-            .color-scheme-orange .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            }
-
-            .color-scheme-pink .approval-modal-header,
-            .color-scheme-pink .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-            }
-
-            .color-scheme-teal .approval-modal-header,
-            .color-scheme-teal .approval-modal-overlay.approval-fullscreen {
-                background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-            }
         `;
         document.head.appendChild(style);
 
@@ -626,7 +525,7 @@ window.ApprovalModal = {
                     margin-bottom: 24px;
                 }
                 .btn-setup-biometric {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--primary-dark, #764ba2) 100%);
                     color: white;
                     border: none;
                     padding: 16px 32px;
@@ -640,7 +539,7 @@ window.ApprovalModal = {
                 }
                 .btn-setup-biometric:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+                    box-shadow: 0 8px 20px color-mix(in srgb, var(--primary-color, #667eea) 40%, transparent);
                 }
                 .setup-hint {
                     font-size: 14px;

@@ -104,6 +104,16 @@ body.light-theme {
     color: inherit;
 }
 
+.header-actions .btn-secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.header-actions .btn-secondary:hover {
+    background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+}
+
 .btn-icon {
     font-size: 18px;
     line-height: 1;

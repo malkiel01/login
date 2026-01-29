@@ -498,6 +498,13 @@ $isAdminUser = isAdmin();
             if (event.data && event.data.type === 'OPEN_APPROVAL_MODAL') {
                 console.log('[Main] Received OPEN_APPROVAL_MODAL request from iframe, notificationId:', event.data.notificationId);
                 if (typeof ApprovalModal !== 'undefined' && event.data.notificationId) {
+                    // הגדרת callback לכשהמודאל ייסגר - לשלוח עדכון לאייפריים
+                    ApprovalModal.onClose = function() {
+                        console.log('[Main] ApprovalModal closed, notifying iframe to refresh');
+                        if (event.source) {
+                            event.source.postMessage({ type: 'REFRESH_NOTIFICATIONS' }, '*');
+                        }
+                    };
                     ApprovalModal.show(event.data.notificationId);
                 } else {
                     console.error('[Main] ApprovalModal not available or missing notificationId');

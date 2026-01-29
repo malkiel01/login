@@ -167,6 +167,15 @@ if (!$isDarkMode) {
             loadHistoryNotifications();
         });
 
+        // האזנה להודעות מהחלון האב (לרענון אחרי אישור/דחיית התראה)
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'REFRESH_NOTIFICATIONS') {
+                console.log('[MyNotifications] Received REFRESH_NOTIFICATIONS, refreshing...');
+                loadUnreadNotifications();
+                loadHistoryNotifications();
+            }
+        });
+
         async function loadUnreadNotifications() {
             const listEl = document.getElementById('unreadList');
             const countEl = document.getElementById('unreadCount');

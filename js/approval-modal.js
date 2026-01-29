@@ -761,6 +761,12 @@ window.ApprovalModal = {
         // Restore page scroll
         document.body.style.overflow = '';
         this.currentNotificationId = null;
+
+        // קריאה ל-callback אם הוגדר (לעדכון אייפריים וכו')
+        if (typeof this.onClose === 'function') {
+            this.onClose();
+            this.onClose = null; // איפוס
+        }
     }
 };
 

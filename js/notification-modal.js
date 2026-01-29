@@ -341,15 +341,48 @@ window.NotificationModal = {
     },
 
     /**
-     * Close the modal
+     * Close the modal and mark as read
      */
     close() {
+        // Mark notification as read if we have an ID
+        if (this.currentData && this.currentData.notificationId) {
+            this.markAsRead(this.currentData.notificationId);
+        }
+
         if (this.modalElement) {
             this.modalElement.style.display = 'none';
         }
         // Restore page scroll
         document.body.style.overflow = '';
         this.currentData = null;
+    },
+
+    /**
+     * Mark notification as read
+     * @param {number|string} notificationId
+     */
+    async markAsRead(notificationId) {
+        try {
+            const response = await fetch('/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    action: 'mark_read',
+                    notification_id: notificationId
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log('[NotificationModal] Marked notification as read:', notificationId);
+                // Update sidebar count if function exists
+                if (typeof updateMyNotificationsCount === 'function') {
+                    updateMyNotificationsCount();
+                }
+            }
+        } catch (e) {
+            console.log('[NotificationModal] Failed to mark as read:', e);
+        }
     }
 };
 

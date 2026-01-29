@@ -36,13 +36,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST)) {
     }
 }
 
+// פונקציה לכתיבה לקובץ לוג משלנו
+function writeLog($message) {
+    $logFile = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/my-notifications/debug.log';
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
+}
+
 // לוג כל בקשה
-error_log("[my-notifications-api] ========== REQUEST ==========");
-error_log("[my-notifications-api] Method: " . $_SERVER['REQUEST_METHOD']);
-error_log("[my-notifications-api] Action: " . $action);
-error_log("[my-notifications-api] User ID: " . $userId);
-error_log("[my-notifications-api] POST data: " . json_encode($_POST));
-error_log("[my-notifications-api] GET data: " . json_encode($_GET));
+writeLog("========== REQUEST ==========");
+writeLog("Method: " . $_SERVER['REQUEST_METHOD']);
+writeLog("Action: " . $action);
+writeLog("User ID: " . $userId);
+writeLog("POST data: " . json_encode($_POST));
+writeLog("GET data: " . json_encode($_GET));
 
 try {
     switch ($action) {
@@ -169,12 +176,12 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
  * מקבל או push_notifications.id או scheduled_notifications.id
  */
 function markAsRead($conn, $userId, $notificationId) {
-    error_log("[markAsRead] ########## MARK AS READ CALLED ##########");
-    error_log("[markAsRead] Raw notification_id: " . var_export($notificationId, true));
-    error_log("[markAsRead] Raw user_id: " . var_export($userId, true));
+    writeLog("########## MARK AS READ CALLED ##########");
+    writeLog("Raw notification_id: " . var_export($notificationId, true));
+    writeLog("Raw user_id: " . var_export($userId, true));
 
     if (!$notificationId) {
-        error_log('[markAsRead] Missing notification_id');
+        writeLog("ERROR: Missing notification_id");
         echo json_encode(['success' => false, 'error' => 'Missing notification_id']);
         return;
     }
@@ -183,7 +190,7 @@ function markAsRead($conn, $userId, $notificationId) {
     $notificationIdInt = (int)$notificationId;
     $userIdInt = (int)$userId;
 
-    error_log("[markAsRead] Converted - notificationId: $notificationIdInt, userId: $userIdInt");
+    writeLog("Converted - notificationId: $notificationIdInt, userId: $userIdInt");
 
     // נסה קודם לפי scheduled_notification_id (מה שמגיע מה-push)
     $sql = "
@@ -198,7 +205,7 @@ function markAsRead($conn, $userId, $notificationId) {
     $stmt->execute([$notificationIdInt, $userIdInt]);
     $updated = $stmt->rowCount();
 
-    error_log("[markAsRead] Updated by scheduled_notification_id: $updated rows");
+    writeLog("Updated by scheduled_notification_id: $updated rows");
 
     // אם לא נמצא, נסה לפי id ישיר
     if ($updated == 0) {
@@ -212,8 +219,10 @@ function markAsRead($conn, $userId, $notificationId) {
         $stmt = $conn->prepare($sql);
         $stmt->execute([$notificationIdInt, $userIdInt]);
         $updated = $stmt->rowCount();
-        error_log("[markAsRead] Updated by direct id: $updated rows");
+        writeLog("Updated by direct id: $updated rows");
     }
+
+    writeLog("RESULT: updated=$updated");
 
     echo json_encode([
         'success' => true,

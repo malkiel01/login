@@ -236,6 +236,19 @@ class NotificationLogger {
     }
 
     /**
+     * Log notification scheduled
+     */
+    public function logScheduled(int $notificationId, string $title, string $scheduledAt): int {
+        return $this->log('scheduled', [
+            'notification_id' => $notificationId,
+            'notification_title' => $title,
+            'extra_data' => [
+                'scheduled_at' => $scheduledAt
+            ]
+        ]);
+    }
+
+    /**
      * Log approval notification sent
      */
     public function logApprovalSent(int $notificationId, int $userId, ?string $expiresAt = null): int {

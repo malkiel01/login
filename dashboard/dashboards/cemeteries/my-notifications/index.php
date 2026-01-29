@@ -60,6 +60,9 @@ if (!$isDarkMode) {
     <!-- Page CSS -->
     <link rel="stylesheet" href="css/my-notifications.css">
 
+    <!-- Approval Modal -->
+    <script src="/js/approval-modal.js"></script>
+
     <style>
         :root {
             --base-font-size: <?= $fontSize ?>px;
@@ -436,11 +439,22 @@ if (!$isDarkMode) {
             const notification = JSON.parse(decodeURIComponent(notificationData));
 
             // בדיקה אם זו התראת אישור
-            const isApprovalNotification = notification.url && notification.url.includes('approve.php');
+            const isApprovalNotification = notification.requires_approval ||
+                (notification.url && notification.url.includes('approve.php'));
 
             if (isApprovalNotification) {
-                // פתיחת מודל אישור
                 const scheduledId = notification.scheduled_notification_id || extractIdFromUrl(notification.url);
+                const approvalStatus = notification.approval_status;
+
+                // אם ההתראה ממתינה לאישור - פתח את ApprovalModal המלא עם כפתורי אישור/דחייה
+                if (!approvalStatus || approvalStatus === 'pending') {
+                    if (typeof ApprovalModal !== 'undefined') {
+                        ApprovalModal.show(scheduledId);
+                        return;
+                    }
+                }
+
+                // אם כבר נענתה - פתח את המודאל הפשוט להצגת סטטוס
                 openApprovalModal(scheduledId, null);
                 return;
             }

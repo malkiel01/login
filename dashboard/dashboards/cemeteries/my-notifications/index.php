@@ -68,6 +68,24 @@ if (!$isDarkMode) {
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>">
     <div class="notifications-page">
+        <!-- Approval Modal Popup -->
+        <div class="approval-modal-overlay" id="approvalModal" style="display: none;">
+            <div class="approval-modal">
+                <div class="approval-modal-header">
+                    <h3 id="modalTitle">פרטי אישור</h3>
+                    <button class="modal-close-btn" onclick="closeApprovalModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="approval-modal-body" id="modalBody">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>טוען...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Header -->
         <div class="page-header">
             <h1><i class="fas fa-bell"></i> ההתראות שלי</h1>
@@ -229,6 +247,29 @@ if (!$isDarkMode) {
             const timeAgo = formatTimeAgo(notification.created_at);
             const isRead = notification.read_at !== null;
 
+            // בדיקה אם זו התראת אישור (URL מכיל approve.php)
+            const isApprovalNotification = notification.url && notification.url.includes('approve.php');
+            let linkHtml = '';
+
+            if (notification.url) {
+                if (isApprovalNotification) {
+                    // התראת אישור - פתיחה במודל פופאפ
+                    const scheduledId = notification.scheduled_notification_id || extractIdFromUrl(notification.url);
+                    linkHtml = `
+                        <button class="notification-link-btn" onclick="openApprovalModal(${scheduledId}, event)">
+                            <i class="fas fa-eye"></i> צפה בפרטים
+                        </button>
+                    `;
+                } else {
+                    // התראה רגילה - ניווט רגיל
+                    linkHtml = `
+                        <a href="${escapeHtml(notification.url)}" class="notification-link">
+                            <i class="fas fa-external-link-alt"></i> פתח
+                        </a>
+                    `;
+                }
+            }
+
             return `
                 <div class="notification-item ${typeClass} ${isRead ? 'read' : 'unread'}" data-id="${notification.id}">
                     <div class="notification-icon">
@@ -240,11 +281,7 @@ if (!$isDarkMode) {
                             <span class="notification-time">${timeAgo}</span>
                         </div>
                         <p class="notification-body">${escapeHtml(notification.body)}</p>
-                        ${notification.url ? `
-                            <a href="${escapeHtml(notification.url)}" class="notification-link">
-                                <i class="fas fa-external-link-alt"></i> פתח
-                            </a>
-                        ` : ''}
+                        ${linkHtml}
                     </div>
                     ${!isHistory && !isRead ? `
                         <button class="btn-mark-read" onclick="markAsRead(${notification.id})" title="סמן כנקרא">
@@ -253,6 +290,12 @@ if (!$isDarkMode) {
                     ` : ''}
                 </div>
             `;
+        }
+
+        // חילוץ ID מה-URL של approve.php
+        function extractIdFromUrl(url) {
+            const match = url.match(/id=(\d+)/);
+            return match ? parseInt(match[1]) : null;
         }
 
         function getTypeIcon(type) {
@@ -339,6 +382,177 @@ if (!$isDarkMode) {
         function refreshNotifications() {
             loadUnreadNotifications();
             loadHistoryNotifications();
+        }
+
+        // ========== Approval Modal Functions ==========
+
+        async function openApprovalModal(notificationId, event) {
+            if (event) event.preventDefault();
+
+            const modal = document.getElementById('approvalModal');
+            const modalBody = document.getElementById('modalBody');
+            const modalTitle = document.getElementById('modalTitle');
+
+            // הצגת המודל עם טעינה
+            modal.style.display = 'flex';
+            modalBody.innerHTML = `
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>טוען פרטי אישור...</span>
+                </div>
+            `;
+
+            try {
+                // קריאה ל-API לקבלת פרטי ההתראה והאישור
+                const response = await fetch(`/dashboard/dashboards/cemeteries/notifications/api/approval-api.php?action=get_notification&id=${notificationId}`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'שגיאה בטעינת הנתונים');
+                }
+
+                const notification = data.notification;
+                const approval = data.approval;
+                const isExpired = data.expired;
+
+                // עדכון הכותרת
+                modalTitle.textContent = notification.title || 'פרטי אישור';
+
+                // בניית התוכן
+                let statusHtml = '';
+                let statusClass = '';
+                let statusIcon = '';
+                let statusText = '';
+
+                if (approval) {
+                    switch (approval.status) {
+                        case 'approved':
+                            statusClass = 'status-approved';
+                            statusIcon = 'fa-check-circle';
+                            statusText = 'אושר';
+                            break;
+                        case 'rejected':
+                            statusClass = 'status-rejected';
+                            statusIcon = 'fa-times-circle';
+                            statusText = 'נדחה';
+                            break;
+                        case 'expired':
+                            statusClass = 'status-expired';
+                            statusIcon = 'fa-clock';
+                            statusText = 'פג תוקף';
+                            break;
+                        default:
+                            statusClass = 'status-pending';
+                            statusIcon = 'fa-hourglass-half';
+                            statusText = 'ממתין לתגובה';
+                    }
+
+                    statusHtml = `
+                        <div class="approval-status ${statusClass}">
+                            <i class="fas ${statusIcon}"></i>
+                            <span>${statusText}</span>
+                        </div>
+                        ${approval.responded_at ? `
+                            <div class="approval-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>תאריך תגובה: ${formatDateTime(approval.responded_at)}</span>
+                            </div>
+                        ` : ''}
+                        ${approval.biometric_verified ? `
+                            <div class="biometric-badge">
+                                <i class="fas fa-fingerprint"></i>
+                                <span>אומת ביומטרית</span>
+                            </div>
+                        ` : ''}
+                    `;
+                } else if (isExpired) {
+                    statusHtml = `
+                        <div class="approval-status status-expired">
+                            <i class="fas fa-clock"></i>
+                            <span>פג תוקף האישור</span>
+                        </div>
+                    `;
+                } else {
+                    statusHtml = `
+                        <div class="approval-status status-pending">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>ממתין לתגובה</span>
+                        </div>
+                    `;
+                }
+
+                modalBody.innerHTML = `
+                    <div class="approval-content">
+                        ${statusHtml}
+                        ${notification.body ? `
+                            <div class="approval-message">
+                                <h4>תוכן ההודעה:</h4>
+                                <p>${escapeHtml(notification.body)}</p>
+                            </div>
+                        ` : ''}
+                        ${notification.approval_message ? `
+                            <div class="approval-message">
+                                <h4>הודעת אישור:</h4>
+                                <p>${escapeHtml(notification.approval_message)}</p>
+                            </div>
+                        ` : ''}
+                        ${notification.creator_name ? `
+                            <div class="approval-meta">
+                                <i class="fas fa-user"></i>
+                                <span>נשלח על ידי: ${escapeHtml(notification.creator_name)}</span>
+                            </div>
+                        ` : ''}
+                        ${notification.approval_expires_at ? `
+                            <div class="approval-meta">
+                                <i class="fas fa-clock"></i>
+                                <span>תוקף: ${formatDateTime(notification.approval_expires_at)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error loading approval:', error);
+                modalBody.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>${error.message || 'שגיאה בטעינת הנתונים'}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function closeApprovalModal() {
+            const modal = document.getElementById('approvalModal');
+            modal.style.display = 'none';
+        }
+
+        // סגירה בלחיצה על הרקע
+        document.getElementById('approvalModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeApprovalModal();
+            }
+        });
+
+        // סגירה ב-ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeApprovalModal();
+            }
+        });
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('he-IL', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         }
     </script>
 </body>

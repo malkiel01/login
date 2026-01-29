@@ -400,6 +400,247 @@
     border-color: var(--border-color-dark, #334155);
 }
 
+/* ========== Approval Modal ========== */
+.approval-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.approval-modal {
+    background: var(--card-bg, #ffffff);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from { transform: scale(0.95) translateY(-10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.approval-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--section-header-bg, #f8fafc);
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.approval-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary, #1e293b);
+}
+
+.modal-close-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background: var(--bg-hover, #f1f5f9);
+    color: var(--text-primary, #1e293b);
+}
+
+.approval-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Approval Content Styles */
+.approval-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.approval-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.approval-status i {
+    font-size: 1.5rem;
+}
+
+.approval-status.status-approved {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2));
+    color: #059669;
+}
+
+.approval-status.status-rejected {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2));
+    color: #dc2626;
+}
+
+.approval-status.status-expired {
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.1), rgba(156, 163, 175, 0.2));
+    color: #6b7280;
+}
+
+.approval-status.status-pending {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.2));
+    color: #d97706;
+}
+
+.approval-date,
+.approval-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--text-secondary, #475569);
+}
+
+.approval-date i,
+.approval-meta i {
+    color: var(--primary-color, #667eea);
+    width: 20px;
+    text-align: center;
+}
+
+.biometric-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    color: var(--primary-color, #667eea);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.approval-message {
+    padding: 14px;
+    background: var(--bg-secondary, #f1f5f9);
+    border-radius: 10px;
+}
+
+.approval-message h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.85rem;
+    color: var(--text-muted, #94a3b8);
+    font-weight: 500;
+}
+
+.approval-message p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-primary, #1e293b);
+    line-height: 1.6;
+}
+
+/* Notification Link Button (for approval notifications) */
+.notification-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: var(--primary-color, #667eea);
+    background: transparent;
+    border: 1px solid var(--primary-color, #667eea);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.notification-link-btn:hover {
+    background: var(--primary-color, #667eea);
+    color: white;
+}
+
+/* Dark Theme Modal */
+.dark-theme .approval-modal {
+    background: var(--card-bg-dark, #1e293b);
+}
+
+.dark-theme .approval-modal-header {
+    background: var(--section-header-bg-dark, #0f172a);
+    border-color: var(--border-color-dark, #334155);
+}
+
+.dark-theme .approval-modal-header h3 {
+    color: var(--text-primary-dark, #e2e8f0);
+}
+
+.dark-theme .modal-close-btn {
+    color: var(--text-muted-dark, #64748b);
+}
+
+.dark-theme .modal-close-btn:hover {
+    background: var(--bg-hover-dark, #334155);
+    color: var(--text-primary-dark, #e2e8f0);
+}
+
+.dark-theme .approval-message {
+    background: var(--bg-secondary-dark, #334155);
+}
+
+.dark-theme .approval-message h4 {
+    color: var(--text-muted-dark, #64748b);
+}
+
+.dark-theme .approval-message p {
+    color: var(--text-primary-dark, #e2e8f0);
+}
+
+.dark-theme .approval-date,
+.dark-theme .approval-meta {
+    color: var(--text-secondary-dark, #94a3b8);
+}
+
+.dark-theme .notification-link-btn {
+    color: var(--primary-light, #818cf8);
+    border-color: var(--primary-light, #818cf8);
+}
+
+.dark-theme .notification-link-btn:hover {
+    background: var(--primary-light, #818cf8);
+    color: var(--card-bg-dark, #1e293b);
+}
+
 /* Mobile Responsive */
 @media (max-width: 640px) {
     .notifications-page {
@@ -449,5 +690,31 @@
 
     .btn-secondary {
         padding: 10px 12px;
+    }
+
+    /* Modal Mobile */
+    .approval-modal-overlay {
+        padding: 10px;
+    }
+
+    .approval-modal {
+        max-height: 90vh;
+    }
+
+    .approval-modal-header {
+        padding: 14px 16px;
+    }
+
+    .approval-modal-body {
+        padding: 16px;
+    }
+
+    .approval-status {
+        padding: 14px;
+        font-size: 1rem;
+    }
+
+    .approval-status i {
+        font-size: 1.3rem;
     }
 }

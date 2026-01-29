@@ -62,7 +62,7 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
     <title>ניהול התראות - <?php echo DASHBOARD_NAME; ?></title>
     <link rel="icon" href="data:,">
 
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css?v=1">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css?v=20260122c">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">

@@ -296,6 +296,38 @@ window.ApprovalModal = {
                 flex-direction: row-reverse;
             }
 
+            /* Small popup mode (non-fullscreen, used for viewing already responded) */
+            .approval-modal-overlay:not(.approval-fullscreen) {
+                background: rgba(0, 0, 0, 0.6);
+                padding: 20px;
+            }
+
+            .approval-modal-overlay:not(.approval-fullscreen) .approval-modal {
+                max-width: 400px;
+                max-height: 90vh;
+                height: auto;
+                border-radius: 16px;
+            }
+
+            .approval-modal-overlay:not(.approval-fullscreen) .approval-modal-body {
+                flex: none;
+                padding: 24px 20px;
+            }
+
+            .approval-modal-overlay:not(.approval-fullscreen) .approval-icon,
+            .approval-modal-overlay:not(.approval-fullscreen) .response-icon {
+                font-size: 48px;
+                margin-bottom: 16px;
+            }
+
+            .approval-modal-overlay:not(.approval-fullscreen) .approval-modal-body h4 {
+                font-size: 20px;
+            }
+
+            .approval-modal-overlay:not(.approval-fullscreen) .approval-modal-body p {
+                font-size: 16px;
+            }
+
             /* Dark Theme Support */
             .dark-theme .approval-modal,
             [data-theme="dark"] .approval-modal {
@@ -354,6 +386,12 @@ window.ApprovalModal = {
             .dark-theme .approval-responded p,
             [data-theme="dark"] .approval-responded p {
                 color: #f1f5f9;
+            }
+
+            /* Dark theme for small popup mode */
+            .dark-theme .approval-modal-overlay:not(.approval-fullscreen),
+            [data-theme="dark"] .approval-modal-overlay:not(.approval-fullscreen) {
+                background: rgba(0, 0, 0, 0.8);
             }
 
             /* Color Scheme Support - Header gradient based on user's color scheme */
@@ -662,7 +700,7 @@ window.ApprovalModal = {
             if (data.success) {
                 // Mark notification as read after successful response
                 await this.markAsRead(this.currentNotificationId);
-                this.showResponded(response);
+                this.showResponded(response, true); // autoClose for fresh responses
             } else {
                 throw new Error(data.error || 'שגיאה');
             }
@@ -724,13 +762,46 @@ window.ApprovalModal = {
     },
 
     /**
-     * Show responded state
+     * Show responded state (as a small popup with X to close)
+     * @param {string} status - 'approved' or 'rejected'
+     * @param {boolean} autoClose - if true, auto-close after 2 seconds (for fresh responses)
      */
-    showResponded(status) {
+    showResponded(status, autoClose = false) {
+        // Hide loading and other content
         document.getElementById('approvalLoading').style.display = 'none';
         document.getElementById('approvalContent').style.display = 'none';
         document.getElementById('approvalError').style.display = 'none';
         document.getElementById('approvalFooter').style.display = 'none';
+
+        // Switch to small popup mode (not fullscreen)
+        this.modalElement.classList.remove('approval-fullscreen');
+        const modalInner = this.modalElement.querySelector('.approval-modal');
+        modalInner.classList.remove('approval-modal-fullscreen');
+
+        // Add close button to header if not exists
+        const header = this.modalElement.querySelector('.approval-modal-header');
+        if (!header.querySelector('.approval-modal-close')) {
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'approval-modal-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.onclick = () => this.close();
+            header.appendChild(closeBtn);
+        } else {
+            header.querySelector('.approval-modal-close').style.display = 'block';
+        }
+
+        // Allow closing on overlay click and escape
+        this.modalElement.onclick = (e) => {
+            if (e.target === this.modalElement) {
+                this.close();
+            }
+        };
+        this._escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.close();
+            }
+        };
+        document.addEventListener('keydown', this._escapeHandler);
 
         const iconEl = document.getElementById('responseIcon');
         const messageEl = document.getElementById('responseMessage');
@@ -747,8 +818,10 @@ window.ApprovalModal = {
 
         document.getElementById('approvalResponded').style.display = 'block';
 
-        // Auto close after 2 seconds
-        setTimeout(() => this.close(), 2000);
+        // Auto close only for fresh responses, not when viewing history
+        if (autoClose) {
+            setTimeout(() => this.close(), 2000);
+        }
     },
 
     /**
@@ -769,6 +842,22 @@ window.ApprovalModal = {
     close() {
         if (this.modalElement) {
             this.modalElement.style.display = 'none';
+            // Reset to fullscreen mode for next use
+            this.modalElement.classList.add('approval-fullscreen');
+            const modalInner = this.modalElement.querySelector('.approval-modal');
+            modalInner.classList.add('approval-modal-fullscreen');
+            // Hide close button
+            const closeBtn = this.modalElement.querySelector('.approval-modal-close');
+            if (closeBtn) {
+                closeBtn.style.display = 'none';
+            }
+            // Remove overlay click handler
+            this.modalElement.onclick = null;
+        }
+        // Remove escape handler
+        if (this._escapeHandler) {
+            document.removeEventListener('keydown', this._escapeHandler);
+            this._escapeHandler = null;
         }
         // Restore page scroll
         document.body.style.overflow = '';

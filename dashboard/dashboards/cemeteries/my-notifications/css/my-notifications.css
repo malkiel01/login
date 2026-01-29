@@ -193,17 +193,17 @@ body.light-theme {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--primary-color, #667eea), var(--primary-dark, #764ba2));
     color: white;
     font-size: 1.1rem;
 }
 
 .notification-item.warning .notification-icon {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: linear-gradient(135deg, var(--warning-color, #f59e0b), #d97706);
 }
 
 .notification-item.urgent .notification-icon {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, var(--danger-color, #ef4444), #dc2626);
 }
 
 /* Notification Content */
@@ -255,6 +255,63 @@ body.light-theme {
 
 .notification-link:hover {
     text-decoration: underline;
+}
+
+/* Approval Badge in Notification List */
+.approval-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.approval-badge i {
+    font-size: 0.85rem;
+}
+
+.approval-badge-approved {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.approval-badge-rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.approval-badge-expired {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+}
+
+.approval-badge-pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
+/* Dark mode approval badges */
+.dark-theme .approval-badge-approved {
+    background: rgba(16, 185, 129, 0.25);
+    color: #6ee7b7;
+}
+
+.dark-theme .approval-badge-rejected {
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+}
+
+.dark-theme .approval-badge-expired {
+    background: rgba(107, 114, 128, 0.25);
+    color: #d1d5db;
+}
+
+.dark-theme .approval-badge-pending {
+    background: rgba(245, 158, 11, 0.25);
+    color: #fcd34d;
 }
 
 /* Mark Read Button */
@@ -457,17 +514,17 @@ body.light-theme {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--primary-color, #667eea), var(--primary-dark, #764ba2));
     color: white;
     font-size: 1.8rem;
 }
 
 .notification-detail-icon.warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: linear-gradient(135deg, var(--warning-color, #f59e0b), #d97706);
 }
 
 .notification-detail-icon.urgent {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, var(--danger-color, #ef4444), #dc2626);
 }
 
 /* Notification Status */

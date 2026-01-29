@@ -268,6 +268,48 @@ if (!$isDarkMode) {
             // שמירת הנתונים ב-data attribute לשימוש בפופאפ
             const notificationData = encodeURIComponent(JSON.stringify(notification));
 
+            // בדיקה אם זו התראת אישור והצגת סטטוס
+            let approvalBadgeHtml = '';
+            if (notification.requires_approval || (notification.url && notification.url.includes('approve.php'))) {
+                const status = notification.approval_status;
+                let badgeClass = '';
+                let badgeIcon = '';
+                let badgeText = '';
+
+                switch (status) {
+                    case 'approved':
+                        badgeClass = 'approval-badge-approved';
+                        badgeIcon = 'fa-check-circle';
+                        badgeText = 'אושר';
+                        break;
+                    case 'rejected':
+                        badgeClass = 'approval-badge-rejected';
+                        badgeIcon = 'fa-times-circle';
+                        badgeText = 'נדחה';
+                        break;
+                    case 'expired':
+                        badgeClass = 'approval-badge-expired';
+                        badgeIcon = 'fa-clock';
+                        badgeText = 'פג תוקף';
+                        break;
+                    default:
+                        badgeClass = 'approval-badge-pending';
+                        badgeIcon = 'fa-hourglass-half';
+                        badgeText = 'ממתין לאישור';
+                }
+
+                const respondedAt = notification.approval_responded_at
+                    ? ` • ${formatTimeAgo(notification.approval_responded_at)}`
+                    : '';
+
+                approvalBadgeHtml = `
+                    <div class="approval-badge ${badgeClass}">
+                        <i class="fas ${badgeIcon}"></i>
+                        <span>${badgeText}${respondedAt}</span>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="notification-item ${typeClass} ${isRead ? 'read' : 'unread'}"
                      data-id="${notification.id}"
@@ -282,6 +324,7 @@ if (!$isDarkMode) {
                             <span class="notification-time">${timeAgo}</span>
                         </div>
                         <p class="notification-body">${escapeHtml(notification.body)}</p>
+                        ${approvalBadgeHtml}
                     </div>
                     ${!isHistory && !isRead ? `
                         <button class="btn-mark-read" onclick="event.stopPropagation(); markAsRead(${notification.id})" title="סמן כנקרא">

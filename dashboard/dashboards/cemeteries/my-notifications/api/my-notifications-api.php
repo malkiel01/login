@@ -71,20 +71,25 @@ try {
 function getUnreadNotifications($conn, $userId) {
     $sql = "
         SELECT
-            id,
-            scheduled_notification_id,
-            title,
-            body,
-            url,
-            is_read,
-            is_delivered,
-            created_at,
-            delivered_at,
-            'info' as notification_type
-        FROM push_notifications
-        WHERE user_id = ?
-          AND is_read = 0
-        ORDER BY created_at DESC
+            pn.id,
+            pn.scheduled_notification_id,
+            pn.title,
+            pn.body,
+            pn.url,
+            pn.is_read,
+            pn.is_delivered,
+            pn.created_at,
+            pn.delivered_at,
+            'info' as notification_type,
+            na.status as approval_status,
+            na.responded_at as approval_responded_at,
+            sn.requires_approval
+        FROM push_notifications pn
+        LEFT JOIN scheduled_notifications sn ON sn.id = pn.scheduled_notification_id
+        LEFT JOIN notification_approvals na ON na.notification_id = pn.scheduled_notification_id AND na.user_id = pn.user_id
+        WHERE pn.user_id = ?
+          AND pn.is_read = 0
+        ORDER BY pn.created_at DESC
         LIMIT 50
     ";
 
@@ -100,6 +105,10 @@ function getUnreadNotifications($conn, $userId) {
             $dt = new DateTime($n['created_at'], new DateTimeZone('America/Boise'));
             $n['created_at'] = $dt->format('c'); // ISO 8601 format
         }
+        if ($n['approval_responded_at']) {
+            $dt = new DateTime($n['approval_responded_at'], new DateTimeZone('America/Boise'));
+            $n['approval_responded_at'] = $dt->format('c');
+        }
     }
 
     echo json_encode([
@@ -114,20 +123,25 @@ function getUnreadNotifications($conn, $userId) {
 function getHistoryNotifications($conn, $userId, $offset, $limit) {
     $sql = "
         SELECT
-            id,
-            scheduled_notification_id,
-            title,
-            body,
-            url,
-            is_read,
-            is_delivered,
-            created_at,
-            delivered_at,
-            'info' as notification_type
-        FROM push_notifications
-        WHERE user_id = ?
-          AND is_read = 1
-        ORDER BY created_at DESC
+            pn.id,
+            pn.scheduled_notification_id,
+            pn.title,
+            pn.body,
+            pn.url,
+            pn.is_read,
+            pn.is_delivered,
+            pn.created_at,
+            pn.delivered_at,
+            'info' as notification_type,
+            na.status as approval_status,
+            na.responded_at as approval_responded_at,
+            sn.requires_approval
+        FROM push_notifications pn
+        LEFT JOIN scheduled_notifications sn ON sn.id = pn.scheduled_notification_id
+        LEFT JOIN notification_approvals na ON na.notification_id = pn.scheduled_notification_id AND na.user_id = pn.user_id
+        WHERE pn.user_id = ?
+          AND pn.is_read = 1
+        ORDER BY pn.created_at DESC
         LIMIT ? OFFSET ?
     ";
 
@@ -147,6 +161,10 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
         if ($n['created_at']) {
             $dt = new DateTime($n['created_at'], new DateTimeZone('America/Boise'));
             $n['created_at'] = $dt->format('c'); // ISO 8601 format
+        }
+        if ($n['approval_responded_at']) {
+            $dt = new DateTime($n['approval_responded_at'], new DateTimeZone('America/Boise'));
+            $n['approval_responded_at'] = $dt->format('c');
         }
     }
 

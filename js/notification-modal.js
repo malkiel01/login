@@ -371,46 +371,61 @@ window.NotificationModal = {
      * @param {number|string} notificationId
      */
     async markAsRead(notificationId) {
-        console.log('[NotificationModal] markAsRead called with ID:', notificationId, 'type:', typeof notificationId);
+        console.log('[NotificationModal] markAsRead called with ID:', notificationId);
 
         if (!notificationId) {
             console.warn('[NotificationModal] No notification ID provided');
             return;
         }
 
-        try {
-            const requestBody = {
-                action: 'mark_read',
-                notification_id: notificationId
-            };
-            console.log('[NotificationModal] Sending request:', requestBody);
-
-            const response = await fetch('/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php', {
+        // קריאה לשני ה-APIs במקביל כדי לוודא שאחד מהם יעבוד
+        const apis = [
+            // API ראשי - מחפש לפי scheduled_notification_id ואחר כך לפי id
+            {
+                url: '/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(requestBody)
-            });
-
-            const responseText = await response.text();
-            console.log('[NotificationModal] Response status:', response.status, 'body:', responseText);
-
-            try {
-                const data = JSON.parse(responseText);
-                if (data.success) {
-                    console.log('[NotificationModal] ✅ Marked notification as read:', notificationId, 'updated:', data.updated);
-                    // Update sidebar count if function exists
-                    if (typeof updateMyNotificationsCount === 'function') {
-                        updateMyNotificationsCount();
-                    }
-                } else {
-                    console.warn('[NotificationModal] ⚠️ API returned error:', data.error);
-                }
-            } catch (parseError) {
-                console.error('[NotificationModal] Failed to parse response:', parseError);
+                body: JSON.stringify({ action: 'mark_read', notification_id: notificationId })
+            },
+            // API משני - מחפש ישירות לפי push_notifications.id
+            {
+                url: '/api/notifications.php',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ action: 'mark_read', notification_id: notificationId })
             }
-        } catch (e) {
-            console.error('[NotificationModal] Failed to mark as read:', e);
+        ];
+
+        let anySuccess = false;
+
+        for (const api of apis) {
+            try {
+                const response = await fetch(api.url, {
+                    method: api.method,
+                    headers: api.headers,
+                    credentials: 'include',
+                    body: api.body
+                });
+
+                const data = await response.json();
+                console.log('[NotificationModal] API response from', api.url, ':', data);
+
+                if (data.success && (data.updated > 0 || data.success === true)) {
+                    anySuccess = true;
+                    console.log('[NotificationModal] ✅ Marked as read via', api.url);
+                }
+            } catch (e) {
+                console.log('[NotificationModal] API call failed for', api.url, ':', e.message);
+            }
+        }
+
+        if (anySuccess) {
+            // Update sidebar count if function exists
+            if (typeof updateMyNotificationsCount === 'function') {
+                updateMyNotificationsCount();
+            }
+        } else {
+            console.warn('[NotificationModal] ⚠️ Failed to mark notification as read');
         }
     }
 };

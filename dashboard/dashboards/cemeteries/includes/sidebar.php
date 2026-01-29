@@ -246,6 +246,15 @@
         </div>
         <?php endif; ?>
 
+        <!-- ההתראות שלי - זמין לכל משתמש מחובר -->
+        <div class="management-item">
+            <div class="hierarchy-header" id="myNotificationsItem" onclick="handleSidebarClick('myNotificationsItem', openMyNotifications)">
+                <span class="hierarchy-icon">📬</span>
+                <span class="hierarchy-title">ההתראות שלי</span>
+                <span class="hierarchy-count unread-indicator" id="myNotificationsCount" style="display: none;">0</span>
+            </div>
+        </div>
+
         <!-- ניהול דוחות - בקרוב -->
         <?php if (isAdmin() || hasModulePermission('reports', 'view') || hasModulePermission('reports', 'edit') || hasModulePermission('reports', 'create')): ?>
         <div class="management-item">
@@ -473,6 +482,57 @@ function openNotificationsManagement() {
         window.location.href = '/dashboard/dashboards/cemeteries/notifications/';
     }
 }
+
+/**
+ * פתיחת מסך ההתראות שלי
+ */
+function openMyNotifications() {
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'my-notifications-popup',
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/my-notifications/',
+            title: 'ההתראות שלי',
+            width: 900,
+            height: 700
+        });
+    } else {
+        window.location.href = '/dashboard/dashboards/cemeteries/my-notifications/';
+    }
+}
+
+/**
+ * עדכון מספר התראות שלא נקראו
+ */
+async function updateMyNotificationsCount() {
+    try {
+        const response = await fetch('/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php?action=get_unread', {
+            credentials: 'include'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            const count = (data.notifications || []).length;
+            const countEl = document.getElementById('myNotificationsCount');
+            if (countEl) {
+                countEl.textContent = count;
+                countEl.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+        }
+    } catch (e) {
+        console.log('[Sidebar] Failed to fetch notifications count');
+    }
+}
+
+// עדכון מספר ההתראות בעת טעינת העמוד
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateMyNotificationsCount);
+} else {
+    updateMyNotificationsCount();
+}
+
+// עדכון כל 60 שניות
+setInterval(updateMyNotificationsCount, 60000);
 
 /**
  * אישור התנתקות

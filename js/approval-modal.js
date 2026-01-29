@@ -564,6 +564,8 @@ window.ApprovalModal = {
             const data = await res.json();
 
             if (data.success) {
+                // Mark notification as read after successful response
+                await this.markAsRead(this.currentNotificationId);
                 this.showResponded(response);
             } else {
                 throw new Error(data.error || 'שגיאה');
@@ -574,6 +576,54 @@ window.ApprovalModal = {
             this.showError(error.message);
             document.getElementById('btnModalApprove').disabled = false;
             document.getElementById('btnModalReject').disabled = false;
+        }
+    },
+
+    /**
+     * Mark notification as read
+     * @param {number|string} notificationId
+     */
+    async markAsRead(notificationId) {
+        console.log('[ApprovalModal] markAsRead called with ID:', notificationId);
+
+        if (!notificationId) return;
+
+        // קריאה לשני ה-APIs כדי לוודא שאחד מהם יעבוד
+        const apis = [
+            {
+                url: '/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'mark_read', notification_id: notificationId })
+            },
+            {
+                url: '/api/notifications.php',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ action: 'mark_read', notification_id: notificationId })
+            }
+        ];
+
+        for (const api of apis) {
+            try {
+                const response = await fetch(api.url, {
+                    method: api.method,
+                    headers: api.headers,
+                    credentials: 'include',
+                    body: api.body
+                });
+                const data = await response.json();
+                if (data.success && data.updated > 0) {
+                    console.log('[ApprovalModal] ✅ Marked as read via', api.url);
+                    // Update sidebar count if function exists
+                    if (typeof updateMyNotificationsCount === 'function') {
+                        updateMyNotificationsCount();
+                    }
+                    break;
+                }
+            } catch (e) {
+                console.log('[ApprovalModal] API call failed for', api.url);
+            }
         }
     },
 

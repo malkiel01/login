@@ -569,27 +569,6 @@
     line-height: 1.6;
 }
 
-/* Notification Link Button (for approval notifications) */
-.notification-link-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 10px;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    color: var(--primary-color, #667eea);
-    background: transparent;
-    border: 1px solid var(--primary-color, #667eea);
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.notification-link-btn:hover {
-    background: var(--primary-color, #667eea);
-    color: white;
-}
 
 /* Dark Theme Modal */
 .dark-theme .approval-modal {
@@ -629,16 +608,6 @@
 .dark-theme .approval-date,
 .dark-theme .approval-meta {
     color: var(--text-secondary-dark, #94a3b8);
-}
-
-.dark-theme .notification-link-btn {
-    color: var(--primary-light, #818cf8);
-    border-color: var(--primary-light, #818cf8);
-}
-
-.dark-theme .notification-link-btn:hover {
-    background: var(--primary-light, #818cf8);
-    color: var(--card-bg-dark, #1e293b);
 }
 
 /* Mobile Responsive */

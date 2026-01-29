@@ -256,9 +256,9 @@ if (!$isDarkMode) {
                     // התראת אישור - פתיחה במודל פופאפ
                     const scheduledId = notification.scheduled_notification_id || extractIdFromUrl(notification.url);
                     linkHtml = `
-                        <button class="notification-link-btn" onclick="openApprovalModal(${scheduledId}, event)">
-                            <i class="fas fa-eye"></i> צפה בפרטים
-                        </button>
+                        <a href="#" class="notification-link" onclick="openApprovalModal(${scheduledId}, event); return false;">
+                            <i class="fas fa-external-link-alt"></i> פתח
+                        </a>
                     `;
                 } else {
                     // התראה רגילה - ניווט רגיל
@@ -388,13 +388,20 @@ if (!$isDarkMode) {
 
         async function openApprovalModal(notificationId, event) {
             if (event) event.preventDefault();
+            console.log('[MyNotifications] openApprovalModal called with id:', notificationId);
 
             const modal = document.getElementById('approvalModal');
             const modalBody = document.getElementById('modalBody');
             const modalTitle = document.getElementById('modalTitle');
 
+            if (!modal) {
+                console.error('[MyNotifications] Modal element not found!');
+                return;
+            }
+
             // הצגת המודל עם טעינה
             modal.style.display = 'flex';
+            console.log('[MyNotifications] Modal displayed');
             modalBody.innerHTML = `
                 <div class="loading-state">
                     <i class="fas fa-spinner fa-spin"></i>

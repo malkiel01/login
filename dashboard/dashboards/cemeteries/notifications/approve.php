@@ -130,9 +130,9 @@ if (!$isDarkMode) {
         }
 
         .approval-card {
-            background: white;
+            background: var(--bg-primary, white);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-xl, 0 20px 60px rgba(0, 0, 0, 0.2));
             max-width: 480px;
             width: 100%;
             overflow: hidden;
@@ -168,17 +168,17 @@ if (!$isDarkMode) {
         .notification-title {
             font-size: 18px;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-primary, #1e293b);
             margin-bottom: 12px;
         }
 
         .notification-body {
             font-size: 15px;
-            color: #475569;
+            color: var(--text-secondary, #475569);
             line-height: 1.6;
             margin-bottom: 20px;
             padding: 16px;
-            background: #f8fafc;
+            background: var(--bg-secondary, #f8fafc);
             border-radius: 12px;
         }
 
@@ -194,7 +194,7 @@ if (!$isDarkMode) {
 
         .meta-info {
             font-size: 13px;
-            color: #64748b;
+            color: var(--text-muted, #64748b);
             margin-bottom: 24px;
         }
 
@@ -206,8 +206,8 @@ if (!$isDarkMode) {
         }
 
         .expires-warning {
-            color: #dc2626;
-            background: #fef2f2;
+            color: var(--danger-color, #dc2626);
+            background: rgba(220, 38, 38, 0.1);
             padding: 10px 14px;
             border-radius: 8px;
             font-size: 13px;
@@ -245,12 +245,12 @@ if (!$isDarkMode) {
         }
 
         .btn-reject {
-            background: #f1f5f9;
-            color: #64748b;
+            background: var(--bg-tertiary, #f1f5f9);
+            color: var(--text-muted, #64748b);
         }
 
         .btn-reject:hover {
-            background: #e2e8f0;
+            background: var(--border-color, #e2e8f0);
         }
 
         .btn:disabled {
@@ -300,7 +300,7 @@ if (!$isDarkMode) {
         }
 
         .loading-spinner {
-            background: white;
+            background: var(--bg-primary, white);
             padding: 30px 40px;
             border-radius: 16px;
             text-align: center;
@@ -309,8 +309,8 @@ if (!$isDarkMode) {
         .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #667eea;
+            border: 3px solid var(--border-color, #e2e8f0);
+            border-top-color: var(--primary-color, #667eea);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 12px;
@@ -322,7 +322,7 @@ if (!$isDarkMode) {
 
         .biometric-hint {
             font-size: 12px;
-            color: #64748b;
+            color: var(--text-muted, #64748b);
             text-align: center;
             margin-top: 16px;
         }
@@ -331,7 +331,7 @@ if (!$isDarkMode) {
             display: block;
             text-align: center;
             margin-top: 20px;
-            color: #64748b;
+            color: var(--text-muted, #64748b);
             text-decoration: none;
             font-size: 14px;
         }

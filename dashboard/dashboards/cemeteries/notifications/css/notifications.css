@@ -1,7 +1,70 @@
 /**
  * Notifications Management Styles
- * @version 1.0.0
+ * @version 1.1.0
+ *
+ * Note: This file uses CSS variables from the main design system (user-preferences.css).
+ * Dark mode is handled automatically by the system - no local overrides needed.
+ *
+ * Semantic Status Colors (defined locally for notification-specific use):
+ * - Success: var(--status-success-bg), var(--status-success-text)
+ * - Warning: var(--status-warning-bg), var(--status-warning-text)
+ * - Danger:  var(--status-danger-bg),  var(--status-danger-text)
+ * - Info:    var(--status-info-bg),    var(--status-info-text)
+ * - Neutral: var(--status-neutral-bg), var(--status-neutral-text)
  */
+
+/* Status Color Variables - Light Mode Defaults */
+:root {
+    /* Success (green) */
+    --status-success-bg: #d1fae5;
+    --status-success-text: #065f46;
+    /* Warning (amber) */
+    --status-warning-bg: #fef3c7;
+    --status-warning-text: #92400e;
+    /* Danger (red) */
+    --status-danger-bg: #fee2e2;
+    --status-danger-text: #991b1b;
+    /* Info (blue) */
+    --status-info-bg: #dbeafe;
+    --status-info-text: #1e40af;
+    /* Neutral (gray) */
+    --status-neutral-bg: #f3f4f6;
+    --status-neutral-text: #6b7280;
+    /* Approval (purple) */
+    --status-approval-bg: #ede9fe;
+    --status-approval-text: #6d28d9;
+}
+
+/* Dark Mode Status Colors */
+.dark-theme,
+[data-theme="dark"] {
+    --status-success-bg: rgba(16, 185, 129, 0.2);
+    --status-success-text: #6ee7b7;
+    --status-warning-bg: rgba(245, 158, 11, 0.2);
+    --status-warning-text: #fcd34d;
+    --status-danger-bg: rgba(239, 68, 68, 0.2);
+    --status-danger-text: #fca5a5;
+    --status-info-bg: rgba(59, 130, 246, 0.2);
+    --status-info-text: #93c5fd;
+    --status-neutral-bg: rgba(107, 114, 128, 0.2);
+    --status-neutral-text: #d1d5db;
+    --status-approval-bg: rgba(139, 92, 246, 0.2);
+    --status-approval-text: #c4b5fd;
+}
+
+/* Body background for iframe - must match dark/light mode */
+body {
+    background: var(--bg-secondary) !important;
+    min-height: 100vh;
+}
+
+body.dark-theme {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%) !important;
+}
+
+body.light-theme {
+    background: var(--bg-secondary) !important;
+}
 
 /* Container */
 .notifications-container {
@@ -48,12 +111,12 @@
 }
 
 .btn-primary {
-    background: var(--primary-color, #667eea);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
 }
 
 .btn-primary:hover {
-    background: var(--primary-hover, #5a6fd6);
+    box-shadow: var(--shadow-md);
     transform: translateY(-1px);
 }
 
@@ -67,12 +130,12 @@
 }
 
 .btn-danger {
-    background: #ef4444;
+    background: var(--danger-color, #dc2626);
     color: white;
 }
 
 .btn-danger:hover {
-    background: #dc2626;
+    filter: brightness(0.9);
 }
 
 .btn-sm {
@@ -87,7 +150,7 @@
 
 /* Form Container */
 .notification-form-container {
-    background: var(--bg-card, #fff);
+    background: var(--bg-primary);
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 24px;
@@ -148,7 +211,7 @@
 }
 
 .required {
-    color: #ef4444;
+    color: var(--danger-color, #dc2626);
 }
 
 /* Form Controls */
@@ -157,7 +220,7 @@
     border: 1px solid var(--border-color, #e2e8f0);
     border-radius: 8px;
     font-size: 14px;
-    background: var(--bg-input, #fff);
+    background: var(--bg-primary);
     color: var(--text-primary);
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -205,15 +268,15 @@ textarea.form-control {
 
 /* Notification Types */
 .type-info {
-    color: #3b82f6;
+    color: var(--info-color, #3b82f6);
 }
 
 .type-warning {
-    color: #f59e0b;
+    color: var(--warning-color, #f97316);
 }
 
 .type-urgent {
-    color: #ef4444;
+    color: var(--danger-color, #dc2626);
 }
 
 /* Users Selection */
@@ -315,7 +378,7 @@ textarea.form-control {
 
 /* Table Container */
 .notifications-table-container {
-    background: var(--bg-card, #fff);
+    background: var(--bg-primary);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color, #e2e8f0);
@@ -375,7 +438,7 @@ textarea.form-control {
 }
 
 .data-table tbody tr:hover {
-    background: var(--bg-hover, #f8fafc);
+    background: var(--bg-tertiary);
 }
 
 /* Status Badges */
@@ -389,23 +452,23 @@ textarea.form-control {
 }
 
 .status-pending {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
 }
 
 .status-sent {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
 }
 
 .status-cancelled {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--status-neutral-bg);
+    color: var(--status-neutral-text);
 }
 
 .status-failed {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
 }
 
 /* Type Badges */
@@ -419,18 +482,18 @@ textarea.form-control {
 }
 
 .type-badge.info {
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
 }
 
 .type-badge.warning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
 }
 
 .type-badge.urgent {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
 }
 
 /* Action Buttons */
@@ -480,17 +543,7 @@ textarea.form-control {
     to { transform: rotate(360deg); }
 }
 
-/* Dark Theme */
-.dark-theme {
-    --bg-card: #1e293b;
-    --bg-secondary: #334155;
-    --bg-input: #1e293b;
-    --border-color: #475569;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --bg-hover: #334155;
-}
+/* Dark Theme - variables inherited from user-preferences.css */
 
 /* Expandable Rows */
 .expandable-title {
@@ -554,22 +607,22 @@ textarea.form-control {
     font-size: 12px;
     padding: 4px 10px;
     border-radius: 20px;
-    background: var(--bg-card, #fff);
+    background: var(--bg-primary);
 }
 
 .delivery-stats .stat.delivered {
-    color: #065f46;
-    background: #d1fae5;
+    color: var(--status-success-text);
+    background: var(--status-success-bg);
 }
 
 .delivery-stats .stat.pending {
-    color: #92400e;
-    background: #fef3c7;
+    color: var(--status-warning-text);
+    background: var(--status-warning-bg);
 }
 
 .delivery-stats .stat.has-app {
-    color: #1e40af;
-    background: #dbeafe;
+    color: var(--status-info-text);
+    background: var(--status-info-bg);
 }
 
 /* Users Delivery List */
@@ -586,7 +639,7 @@ textarea.form-control {
     align-items: center;
     gap: 16px;
     padding: 10px 14px;
-    background: var(--bg-card, #fff);
+    background: var(--bg-primary);
     border-radius: 8px;
     border: 1px solid var(--border-color, #e2e8f0);
 }
@@ -630,13 +683,13 @@ textarea.form-control {
 }
 
 .delivery-badge.delivered {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
 }
 
 .delivery-badge.pending {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
 }
 
 .user-delivery-item .user-actions {
@@ -652,12 +705,12 @@ textarea.form-control {
 /* Outline Buttons */
 .btn-outline-danger {
     background: transparent;
-    color: #ef4444;
-    border: 1px solid #ef4444;
+    color: var(--danger-color, #dc2626);
+    border: 1px solid var(--danger-color, #dc2626);
 }
 
 .btn-outline-danger:hover {
-    background: #fee2e2;
+    background: var(--status-danger-bg);
 }
 
 /* Loading spinner in details */
@@ -668,7 +721,7 @@ textarea.form-control {
 }
 
 .error-message {
-    color: #ef4444;
+    color: var(--danger-color, #dc2626);
     text-align: center;
     padding: 20px;
 }
@@ -715,23 +768,23 @@ textarea.form-control {
 }
 
 .approval-badge.requires {
-    background: #ede9fe;
-    color: #6d28d9;
+    background: var(--status-approval-bg);
+    color: var(--status-approval-text);
 }
 
 .approval-badge.approved {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
 }
 
 .approval-badge.rejected {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
 }
 
 .approval-badge.expired {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--status-neutral-bg);
+    color: var(--status-neutral-text);
 }
 
 /* Approval Status in Delivery List */
@@ -763,18 +816,18 @@ textarea.form-control {
 }
 
 .approval-stats .stat.approved {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
 }
 
 .approval-stats .stat.rejected {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
 }
 
 .approval-stats .stat.pending {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
 }
 
 /* Responsive */

@@ -68,16 +68,34 @@ if (!$isDarkMode) {
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>">
     <div class="notifications-page">
-        <!-- Approval Modal Popup -->
-        <div class="approval-modal-overlay" id="approvalModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
-            <div class="approval-modal" style="background: var(--card-bg, #fff); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 100%; max-height: 80vh; overflow: hidden;">
-                <div class="approval-modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--section-header-bg, #f8fafc); border-bottom: 1px solid var(--border-color, #e2e8f0);">
-                    <h3 id="modalTitle" style="margin: 0; font-size: 1.1rem; color: var(--text-primary, #1e293b);">פרטי אישור</h3>
-                    <button class="modal-close-btn" onclick="closeApprovalModal()" style="width: 36px; height: 36px; border: none; background: transparent; color: var(--text-muted, #94a3b8); cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+        <!-- Notification Detail Modal Popup -->
+        <div class="notification-modal-overlay" id="notificationModal">
+            <div class="notification-modal">
+                <div class="notification-modal-header">
+                    <h3 id="notificationModalTitle">פרטי התראה</h3>
+                    <button class="modal-close-btn" onclick="closeNotificationModal()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="approval-modal-body" id="modalBody" style="padding: 20px; overflow-y: auto;">
+                <div class="notification-modal-body" id="notificationModalBody">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>טוען...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Modal Popup (for approval-specific notifications) -->
+        <div class="notification-modal-overlay" id="approvalModal">
+            <div class="notification-modal">
+                <div class="notification-modal-header">
+                    <h3 id="modalTitle">פרטי אישור</h3>
+                    <button class="modal-close-btn" onclick="closeApprovalModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="notification-modal-body" id="modalBody">
                     <div class="loading-state">
                         <i class="fas fa-spinner fa-spin"></i>
                         <span>טוען...</span>
@@ -247,31 +265,14 @@ if (!$isDarkMode) {
             const timeAgo = formatTimeAgo(notification.created_at);
             const isRead = notification.read_at !== null;
 
-            // בדיקה אם זו התראת אישור (URL מכיל approve.php)
-            const isApprovalNotification = notification.url && notification.url.includes('approve.php');
-            let linkHtml = '';
-
-            if (notification.url) {
-                if (isApprovalNotification) {
-                    // התראת אישור - פתיחה במודל פופאפ
-                    const scheduledId = notification.scheduled_notification_id || extractIdFromUrl(notification.url);
-                    linkHtml = `
-                        <a href="#" class="notification-link" onclick="openApprovalModal(${scheduledId}, event); return false;">
-                            <i class="fas fa-external-link-alt"></i> פתח
-                        </a>
-                    `;
-                } else {
-                    // התראה רגילה - ניווט רגיל
-                    linkHtml = `
-                        <a href="${escapeHtml(notification.url)}" class="notification-link">
-                            <i class="fas fa-external-link-alt"></i> פתח
-                        </a>
-                    `;
-                }
-            }
+            // שמירת הנתונים ב-data attribute לשימוש בפופאפ
+            const notificationData = encodeURIComponent(JSON.stringify(notification));
 
             return `
-                <div class="notification-item ${typeClass} ${isRead ? 'read' : 'unread'}" data-id="${notification.id}">
+                <div class="notification-item ${typeClass} ${isRead ? 'read' : 'unread'}"
+                     data-id="${notification.id}"
+                     data-notification="${notificationData}"
+                     onclick="openNotificationDetail(this)">
                     <div class="notification-icon">
                         <i class="fas ${typeIcon}"></i>
                     </div>
@@ -281,10 +282,9 @@ if (!$isDarkMode) {
                             <span class="notification-time">${timeAgo}</span>
                         </div>
                         <p class="notification-body">${escapeHtml(notification.body)}</p>
-                        ${linkHtml}
                     </div>
                     ${!isHistory && !isRead ? `
-                        <button class="btn-mark-read" onclick="markAsRead(${notification.id})" title="סמן כנקרא">
+                        <button class="btn-mark-read" onclick="event.stopPropagation(); markAsRead(${notification.id})" title="סמן כנקרא">
                             <i class="fas fa-check"></i>
                         </button>
                     ` : ''}
@@ -383,6 +383,124 @@ if (!$isDarkMode) {
             loadUnreadNotifications();
             loadHistoryNotifications();
         }
+
+        // ========== Notification Detail Modal Functions ==========
+
+        function openNotificationDetail(element) {
+            const notificationData = element.getAttribute('data-notification');
+            if (!notificationData) return;
+
+            const notification = JSON.parse(decodeURIComponent(notificationData));
+
+            // בדיקה אם זו התראת אישור
+            const isApprovalNotification = notification.url && notification.url.includes('approve.php');
+
+            if (isApprovalNotification) {
+                // פתיחת מודל אישור
+                const scheduledId = notification.scheduled_notification_id || extractIdFromUrl(notification.url);
+                openApprovalModal(scheduledId, null);
+                return;
+            }
+
+            // פתיחת מודל התראה רגילה
+            const modal = document.getElementById('notificationModal');
+            const modalTitle = document.getElementById('notificationModalTitle');
+            const modalBody = document.getElementById('notificationModalBody');
+
+            modalTitle.textContent = notification.title || 'פרטי התראה';
+
+            const typeIcon = getTypeIcon(notification.notification_type);
+            const typeClass = notification.notification_type || 'info';
+            const isRead = notification.read_at !== null;
+            const createdDate = formatDateTime(notification.created_at);
+
+            let statusHtml = '';
+            if (isRead) {
+                statusHtml = `
+                    <div class="notification-status status-read">
+                        <i class="fas fa-check-circle"></i>
+                        <span>נקראה</span>
+                    </div>
+                `;
+            } else {
+                statusHtml = `
+                    <div class="notification-status status-unread">
+                        <i class="fas fa-bell"></i>
+                        <span>לא נקראה</span>
+                    </div>
+                `;
+            }
+
+            let urlHtml = '';
+            if (notification.url) {
+                urlHtml = `
+                    <div class="notification-detail-action">
+                        <a href="${escapeHtml(notification.url)}" class="btn btn-primary" target="_blank">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>פתח קישור</span>
+                        </a>
+                    </div>
+                `;
+            }
+
+            modalBody.innerHTML = `
+                <div class="notification-detail-content">
+                    <div class="notification-detail-icon ${typeClass}">
+                        <i class="fas ${typeIcon}"></i>
+                    </div>
+
+                    ${statusHtml}
+
+                    <div class="notification-detail-message">
+                        <h4>תוכן ההתראה:</h4>
+                        <p>${escapeHtml(notification.body) || 'אין תוכן'}</p>
+                    </div>
+
+                    <div class="notification-detail-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>תאריך: ${createdDate}</span>
+                        </div>
+                        ${notification.delivered_at ? `
+                            <div class="meta-item">
+                                <i class="fas fa-check"></i>
+                                <span>נמסרה: ${formatDateTime(notification.delivered_at)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    ${urlHtml}
+
+                    ${!isRead ? `
+                        <div class="notification-detail-action">
+                            <button class="btn btn-secondary" onclick="markAsReadAndClose(${notification.id})">
+                                <i class="fas fa-check"></i>
+                                <span>סמן כנקראה</span>
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeNotificationModal() {
+            const modal = document.getElementById('notificationModal');
+            modal.style.display = 'none';
+        }
+
+        async function markAsReadAndClose(notificationId) {
+            await markAsRead(notificationId);
+            closeNotificationModal();
+        }
+
+        // Event listeners for notification modal
+        document.getElementById('notificationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNotificationModal();
+            }
+        });
 
         // ========== Approval Modal Functions ==========
 

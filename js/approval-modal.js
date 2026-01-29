@@ -84,9 +84,9 @@ window.ApprovalModal = {
             }
 
             .approval-modal {
-                background: white;
+                background: var(--bg-primary, white);
                 border-radius: 16px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                box-shadow: var(--shadow-xl, 0 20px 60px rgba(0, 0, 0, 0.3));
                 width: 100%;
                 max-width: 400px;
                 max-height: 90vh;
@@ -146,8 +146,8 @@ window.ApprovalModal = {
                 justify-content: space-between;
                 align-items: center;
                 padding: 16px 20px;
-                border-bottom: 1px solid #e2e8f0;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-bottom: 1px solid var(--border-color, #e2e8f0);
+                background: linear-gradient(135deg, var(--primary-color, #667eea) 0%, var(--primary-dark, #764ba2) 100%);
                 color: white;
             }
 
@@ -186,19 +186,19 @@ window.ApprovalModal = {
             .approval-modal-body h4 {
                 margin: 0 0 12px;
                 font-size: 20px;
-                color: #1e293b;
+                color: var(--text-primary, #1e293b);
             }
 
             .approval-modal-body p {
                 margin: 0;
-                color: #475569;
+                color: var(--text-secondary, #475569);
                 line-height: 1.6;
             }
 
             .approval-extra-message {
                 margin-top: 16px !important;
                 padding: 12px;
-                background: #f1f5f9;
+                background: var(--bg-tertiary, #f1f5f9);
                 border-radius: 8px;
                 font-style: italic;
             }
@@ -206,15 +206,15 @@ window.ApprovalModal = {
             .approval-hint {
                 margin-top: 12px !important;
                 font-size: 13px;
-                color: #94a3b8 !important;
+                color: var(--text-muted, #94a3b8) !important;
             }
 
             .approval-modal-footer {
                 display: flex;
                 gap: 12px;
                 padding: 16px 20px;
-                border-top: 1px solid #e2e8f0;
-                background: #f8fafc;
+                border-top: 1px solid var(--border-color, #e2e8f0);
+                background: var(--bg-secondary, #f8fafc);
             }
 
             .approval-modal-footer button {
@@ -233,7 +233,7 @@ window.ApprovalModal = {
             }
 
             .btn-approve {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                background: linear-gradient(135deg, var(--success-color, #10b981) 0%, #059669 100%);
                 color: white;
             }
 
@@ -243,12 +243,12 @@ window.ApprovalModal = {
             }
 
             .btn-reject {
-                background: #f1f5f9;
-                color: #64748b;
+                background: var(--bg-tertiary, #f1f5f9);
+                color: var(--text-muted, #64748b);
             }
 
             .btn-reject:hover:not(:disabled) {
-                background: #e2e8f0;
+                background: var(--border-color, #e2e8f0);
             }
 
             .approval-modal-footer button:disabled {
@@ -267,8 +267,8 @@ window.ApprovalModal = {
             .approval-loading .spinner {
                 width: 40px;
                 height: 40px;
-                border: 3px solid #e2e8f0;
-                border-top-color: #667eea;
+                border: 3px solid var(--border-color, #e2e8f0);
+                border-top-color: var(--primary-color, #667eea);
                 border-radius: 50%;
                 animation: spin 0.8s linear infinite;
             }
@@ -288,7 +288,7 @@ window.ApprovalModal = {
             }
 
             .approval-error {
-                color: #ef4444;
+                color: var(--danger-color, #ef4444);
             }
 
             /* RTL Support */

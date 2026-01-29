@@ -1,7 +1,24 @@
 /**
  * My Notifications - CSS
- * @version 1.0.0
+ * @version 1.2.0
+ *
+ * Note: Uses CSS variables from main design system (user-preferences.css).
+ * Dark mode is handled by the parent system - minimal local overrides.
  */
+
+/* Body background for iframe - must match dark/light mode */
+body {
+    background: var(--bg-secondary) !important;
+    min-height: 100vh;
+}
+
+body.dark-theme {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%) !important;
+}
+
+body.light-theme {
+    background: var(--bg-secondary) !important;
+}
 
 .notifications-page {
     max-width: 800px;
@@ -59,7 +76,7 @@
 }
 
 .btn-secondary:hover {
-    background: var(--bg-hover, #e2e8f0);
+    background: var(--bg-tertiary);
 }
 
 .btn-icon {
@@ -78,13 +95,13 @@
 }
 
 .btn-icon:hover {
-    background: var(--bg-hover, #e2e8f0);
+    background: var(--bg-tertiary);
     transform: rotate(180deg);
 }
 
 /* Sections */
 .notifications-section {
-    background: var(--card-bg, #ffffff);
+    background: var(--bg-primary);
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     margin-bottom: 24px;
@@ -96,7 +113,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    background: var(--section-header-bg, #f8fafc);
+    background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
@@ -138,6 +155,7 @@
     border-bottom: 1px solid var(--border-color, #e2e8f0);
     transition: background-color 0.2s ease;
     position: relative;
+    cursor: pointer;
 }
 
 .notification-item:last-child {
@@ -145,7 +163,7 @@
 }
 
 .notification-item:hover {
-    background: var(--bg-hover, #f8fafc);
+    background: var(--bg-tertiary);
 }
 
 .notification-item.unread {
@@ -245,7 +263,7 @@
     height: 36px;
     border-radius: 50%;
     border: 2px solid var(--border-color, #e2e8f0);
-    background: var(--card-bg, #ffffff);
+    background: var(--bg-primary);
     color: var(--text-muted, #94a3b8);
     cursor: pointer;
     display: flex;
@@ -305,7 +323,7 @@
     align-items: center;
     justify-content: center;
     padding: 48px 20px;
-    color: var(--error-color, #ef4444);
+    color: var(--danger-color, #dc2626);
     gap: 12px;
 }
 
@@ -334,84 +352,28 @@
     opacity: 0.85;
 }
 
-/* Dark Theme */
-.dark-theme .notifications-page {
-    color: var(--text-primary-dark, #e2e8f0);
-}
-
-.dark-theme .page-header h1 {
-    color: var(--text-primary-dark, #e2e8f0);
-}
-
+/* Dark Theme - Uses system variables from user-preferences.css */
+/* The system automatically overrides --bg-primary, --bg-secondary, etc. in dark mode */
 .dark-theme .notifications-section {
-    background: var(--card-bg-dark, #1e293b);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.dark-theme .section-header {
-    background: var(--section-header-bg-dark, #0f172a);
-    border-color: var(--border-color-dark, #334155);
-}
-
-.dark-theme .section-header h2 {
-    color: var(--text-primary-dark, #e2e8f0);
-}
-
-.dark-theme .notification-item {
-    border-color: var(--border-color-dark, #334155);
-}
-
-.dark-theme .notification-item:hover {
-    background: var(--bg-hover-dark, #334155);
+    box-shadow: var(--shadow-lg);
 }
 
 .dark-theme .notification-item.unread {
     background: linear-gradient(90deg, rgba(102, 126, 234, 0.15), transparent);
 }
 
-.dark-theme .notification-title {
-    color: var(--text-primary-dark, #e2e8f0);
-}
-
-.dark-theme .notification-body {
-    color: var(--text-secondary-dark, #94a3b8);
-}
-
-.dark-theme .btn-secondary {
-    background: var(--bg-secondary-dark, #334155);
-    color: var(--text-secondary-dark, #94a3b8);
-}
-
-.dark-theme .btn-secondary:hover {
-    background: var(--bg-hover-dark, #475569);
-}
-
-.dark-theme .btn-icon {
-    background: var(--bg-secondary-dark, #334155);
-    color: var(--text-secondary-dark, #94a3b8);
-}
-
-.dark-theme .btn-mark-read {
-    background: var(--card-bg-dark, #1e293b);
-    border-color: var(--border-color-dark, #334155);
-}
-
-.dark-theme .load-more-container {
-    border-color: var(--border-color-dark, #334155);
-}
-
-/* ========== Approval Modal ========== */
-.approval-modal-overlay {
+/* ========== Notification Modal (General) ========== */
+.notification-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 9999;
     padding: 20px;
     animation: fadeIn 0.2s ease;
 }
@@ -421,8 +383,8 @@
     to { opacity: 1; }
 }
 
-.approval-modal {
-    background: var(--card-bg, #ffffff);
+.notification-modal {
+    background: var(--bg-primary);
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-width: 500px;
@@ -439,19 +401,20 @@
     to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-.approval-modal-header {
+.notification-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    background: var(--section-header-bg, #f8fafc);
+    background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
-.approval-modal-header h3 {
+.notification-modal-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: var(--text-primary, #1e293b);
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 .modal-close-btn {
@@ -470,13 +433,131 @@
 }
 
 .modal-close-btn:hover {
-    background: var(--bg-hover, #f1f5f9);
-    color: var(--text-primary, #1e293b);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
-.approval-modal-body {
+.notification-modal-body {
     padding: 20px;
     overflow-y: auto;
+}
+
+/* Notification Detail Content */
+.notification-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.notification-detail-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 1.8rem;
+}
+
+.notification-detail-icon.warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.notification-detail-icon.urgent {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* Notification Status */
+.notification-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.notification-status i {
+    font-size: 1.2rem;
+}
+
+.notification-status.status-read {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2));
+    color: #059669;
+}
+
+.notification-status.status-unread {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.2));
+    color: #d97706;
+}
+
+/* Notification Message */
+.notification-detail-message {
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+
+.notification-detail-message h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.notification-detail-message p {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Notification Meta */
+.notification-detail-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-detail-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.notification-detail-meta .meta-item i {
+    color: var(--primary-color, #667eea);
+    width: 20px;
+    text-align: center;
+}
+
+/* Notification Actions */
+.notification-detail-action {
+    padding-top: 8px;
+}
+
+.notification-detail-action .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color, #667eea), var(--primary-dark, #764ba2));
+    color: white;
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
 
 /* Approval Content Styles */
@@ -570,45 +651,8 @@
 }
 
 
-/* Dark Theme Modal */
-.dark-theme .approval-modal {
-    background: var(--card-bg-dark, #1e293b);
-}
-
-.dark-theme .approval-modal-header {
-    background: var(--section-header-bg-dark, #0f172a);
-    border-color: var(--border-color-dark, #334155);
-}
-
-.dark-theme .approval-modal-header h3 {
-    color: var(--text-primary-dark, #e2e8f0);
-}
-
-.dark-theme .modal-close-btn {
-    color: var(--text-muted-dark, #64748b);
-}
-
-.dark-theme .modal-close-btn:hover {
-    background: var(--bg-hover-dark, #334155);
-    color: var(--text-primary-dark, #e2e8f0);
-}
-
-.dark-theme .approval-message {
-    background: var(--bg-secondary-dark, #334155);
-}
-
-.dark-theme .approval-message h4 {
-    color: var(--text-muted-dark, #64748b);
-}
-
-.dark-theme .approval-message p {
-    color: var(--text-primary-dark, #e2e8f0);
-}
-
-.dark-theme .approval-date,
-.dark-theme .approval-meta {
-    color: var(--text-secondary-dark, #94a3b8);
-}
+/* Dark Theme Modal - Uses system variables */
+/* The system automatically changes variable values in dark mode */
 
 /* Mobile Responsive */
 @media (max-width: 640px) {
@@ -662,20 +706,26 @@
     }
 
     /* Modal Mobile */
-    .approval-modal-overlay {
+    .notification-modal-overlay {
         padding: 10px;
     }
 
-    .approval-modal {
+    .notification-modal {
         max-height: 90vh;
     }
 
-    .approval-modal-header {
+    .notification-modal-header {
         padding: 14px 16px;
     }
 
-    .approval-modal-body {
+    .notification-modal-body {
         padding: 16px;
+    }
+
+    .notification-detail-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 1.5rem;
     }
 
     .approval-status {

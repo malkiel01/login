@@ -89,16 +89,16 @@ if (!$isDarkMode) {
             </div>
         </div>
 
-        <!-- Approval Modal Popup (for approval-specific notifications) -->
-        <div class="notification-modal-overlay" id="approvalModal">
+        <!-- Approval Status Modal (for already responded notifications) -->
+        <div class="notification-modal-overlay" id="approvalStatusModal">
             <div class="notification-modal">
                 <div class="notification-modal-header">
-                    <h3 id="modalTitle">פרטי אישור</h3>
-                    <button class="modal-close-btn" onclick="closeApprovalModal()">
+                    <h3 id="approvalStatusTitle">פרטי אישור</h3>
+                    <button class="modal-close-btn" onclick="closeApprovalStatusModal()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="notification-modal-body" id="modalBody">
+                <div class="notification-modal-body" id="approvalStatusBody">
                     <div class="loading-state">
                         <i class="fas fa-spinner fa-spin"></i>
                         <span>טוען...</span>
@@ -559,15 +559,15 @@ if (!$isDarkMode) {
             }
         });
 
-        // ========== Approval Modal Functions ==========
+        // ========== Approval Status Modal Functions (for already responded notifications) ==========
 
         async function openApprovalModal(notificationId, event) {
             if (event) event.preventDefault();
-            console.log('[MyNotifications] openApprovalModal called with id:', notificationId);
+            console.log('[MyNotifications] openApprovalModal (status) called with id:', notificationId);
 
-            const modal = document.getElementById('approvalModal');
-            const modalBody = document.getElementById('modalBody');
-            const modalTitle = document.getElementById('modalTitle');
+            const modal = document.getElementById('approvalStatusModal');
+            const modalBody = document.getElementById('approvalStatusBody');
+            const modalTitle = document.getElementById('approvalStatusTitle');
 
             if (!modal) {
                 console.error('[MyNotifications] Modal element not found!');
@@ -711,15 +711,15 @@ if (!$isDarkMode) {
             }
         }
 
-        function closeApprovalModal() {
-            const modal = document.getElementById('approvalModal');
+        function closeApprovalStatusModal() {
+            const modal = document.getElementById('approvalStatusModal');
             modal.style.display = 'none';
         }
 
         // סגירה בלחיצה על הרקע
-        document.getElementById('approvalModal').addEventListener('click', function(e) {
+        document.getElementById('approvalStatusModal').addEventListener('click', function(e) {
             if (e.target === this) {
-                closeApprovalModal();
+                closeApprovalStatusModal();
             }
         });
 

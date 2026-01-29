@@ -176,11 +176,19 @@ class WebAuthnManager {
             json_encode($transports)
         ]);
 
-        // עדכון biometric_enabled
-        $this->pdo->prepare("UPDATE users SET biometric_enabled = TRUE WHERE id = ?")->execute([$userId]);
+        // עדכון biometric_enabled (לא קריטי - אם נכשל לא נזרוק שגיאה)
+        try {
+            $this->pdo->prepare("UPDATE users SET biometric_enabled = TRUE WHERE id = ?")->execute([$userId]);
+        } catch (Exception $e) {
+            // התעלם - לא קריטי
+        }
 
-        // מחיקת challenge
-        $this->deleteChallenge($userId, 'registration');
+        // מחיקת challenge (לא קריטי)
+        try {
+            $this->deleteChallenge($userId, 'registration');
+        } catch (Exception $e) {
+            // התעלם
+        }
 
         return [
             'success' => true,
@@ -479,14 +487,19 @@ class WebAuthnManager {
             WHERE user_id = ? AND credential_id = ?
         ");
         $stmt->execute([$userId, $credentialId]);
+        $deleted = $stmt->rowCount() > 0;
 
-        // בדוק אם יש עוד credentials
-        $remaining = $this->getUserCredentials($userId);
-        if (empty($remaining)) {
-            $this->pdo->prepare("UPDATE users SET biometric_enabled = FALSE WHERE id = ?")->execute([$userId]);
+        // בדוק אם יש עוד credentials (לא קריטי)
+        try {
+            $remaining = $this->getUserCredentials($userId);
+            if (empty($remaining)) {
+                $this->pdo->prepare("UPDATE users SET biometric_enabled = FALSE WHERE id = ?")->execute([$userId]);
+            }
+        } catch (Exception $e) {
+            // התעלם - לא קריטי
         }
 
-        return $stmt->rowCount() > 0;
+        return $deleted;
     }
 
     /**

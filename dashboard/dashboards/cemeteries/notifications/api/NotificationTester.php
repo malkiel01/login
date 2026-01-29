@@ -65,7 +65,7 @@ class NotificationTester {
         ]);
 
         // Log test started
-        $this->logger->logTestStarted($this->runId, $config);
+        $this->logger->logTestStarted($this->runId, $this->createdBy, $config);
     }
 
     /**

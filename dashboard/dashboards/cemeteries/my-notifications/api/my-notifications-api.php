@@ -36,21 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST)) {
     }
 }
 
-// פונקציה לכתיבה לקובץ לוג משלנו
-function writeLog($message) {
-    $logFile = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/my-notifications/debug.log';
-    $timestamp = date('Y-m-d H:i:s');
-    file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
-}
-
-// לוג כל בקשה
-writeLog("========== REQUEST ==========");
-writeLog("Method: " . $_SERVER['REQUEST_METHOD']);
-writeLog("Action: " . $action);
-writeLog("User ID: " . $userId);
-writeLog("POST data: " . json_encode($_POST));
-writeLog("GET data: " . json_encode($_GET));
-
 try {
     switch ($action) {
         case 'get_unread':
@@ -176,12 +161,7 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
  * מקבל או push_notifications.id או scheduled_notifications.id
  */
 function markAsRead($conn, $userId, $notificationId) {
-    writeLog("########## MARK AS READ CALLED ##########");
-    writeLog("Raw notification_id: " . var_export($notificationId, true));
-    writeLog("Raw user_id: " . var_export($userId, true));
-
     if (!$notificationId) {
-        writeLog("ERROR: Missing notification_id");
         echo json_encode(['success' => false, 'error' => 'Missing notification_id']);
         return;
     }
@@ -189,8 +169,6 @@ function markAsRead($conn, $userId, $notificationId) {
     // Convert to integer for proper comparison
     $notificationIdInt = (int)$notificationId;
     $userIdInt = (int)$userId;
-
-    writeLog("Converted - notificationId: $notificationIdInt, userId: $userIdInt");
 
     // נסה קודם לפי scheduled_notification_id (מה שמגיע מה-push)
     $sql = "
@@ -205,8 +183,6 @@ function markAsRead($conn, $userId, $notificationId) {
     $stmt->execute([$notificationIdInt, $userIdInt]);
     $updated = $stmt->rowCount();
 
-    writeLog("Updated by scheduled_notification_id: $updated rows");
-
     // אם לא נמצא, נסה לפי id ישיר
     if ($updated == 0) {
         $sql = "
@@ -219,10 +195,7 @@ function markAsRead($conn, $userId, $notificationId) {
         $stmt = $conn->prepare($sql);
         $stmt->execute([$notificationIdInt, $userIdInt]);
         $updated = $stmt->rowCount();
-        writeLog("Updated by direct id: $updated rows");
     }
-
-    writeLog("RESULT: updated=$updated");
 
     echo json_encode([
         'success' => true,

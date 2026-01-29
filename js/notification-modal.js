@@ -252,6 +252,11 @@ window.NotificationModal = {
             }
 
             /* Color Scheme Support */
+            .color-scheme-purple .notification-modal-header,
+            .color-scheme-purple .btn-notification-action {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
             .color-scheme-blue .notification-modal-header,
             .color-scheme-blue .btn-notification-action {
                 background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);

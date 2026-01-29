@@ -357,6 +357,11 @@ window.ApprovalModal = {
             }
 
             /* Color Scheme Support - Header gradient based on user's color scheme */
+            .color-scheme-purple .approval-modal-header,
+            .color-scheme-purple .approval-modal-overlay.approval-fullscreen {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
             .color-scheme-blue .approval-modal-header,
             .color-scheme-blue .approval-modal-overlay.approval-fullscreen {
                 background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);

@@ -268,6 +268,8 @@ window.NotificationModal = {
      * @param {Object} data - Notification data
      */
     show(data) {
+        console.log('[NotificationModal] show() called with data:', data);
+
         this.init();
         this.currentData = data;
 
@@ -275,6 +277,8 @@ window.NotificationModal = {
         const body = data.body || '';
         const url = data.url || '/dashboard/';
         const isApproval = data.isApproval || false;
+
+        console.log('[NotificationModal] Stored currentData with notificationId:', this.currentData.notificationId);
 
         // If this is an approval notification, use ApprovalModal instead
         if (isApproval && data.notificationId && typeof ApprovalModal !== 'undefined') {
@@ -344,9 +348,14 @@ window.NotificationModal = {
      * Close the modal and mark as read
      */
     close() {
+        console.log('[NotificationModal] Close called, currentData:', this.currentData);
+
         // Mark notification as read if we have an ID
         if (this.currentData && this.currentData.notificationId) {
+            console.log('[NotificationModal] Marking notification as read:', this.currentData.notificationId);
             this.markAsRead(this.currentData.notificationId);
+        } else {
+            console.warn('[NotificationModal] No notificationId in currentData');
         }
 
         if (this.modalElement) {
@@ -362,26 +371,46 @@ window.NotificationModal = {
      * @param {number|string} notificationId
      */
     async markAsRead(notificationId) {
+        console.log('[NotificationModal] markAsRead called with ID:', notificationId, 'type:', typeof notificationId);
+
+        if (!notificationId) {
+            console.warn('[NotificationModal] No notification ID provided');
+            return;
+        }
+
         try {
+            const requestBody = {
+                action: 'mark_read',
+                notification_id: notificationId
+            };
+            console.log('[NotificationModal] Sending request:', requestBody);
+
             const response = await fetch('/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({
-                    action: 'mark_read',
-                    notification_id: notificationId
-                })
+                body: JSON.stringify(requestBody)
             });
-            const data = await response.json();
-            if (data.success) {
-                console.log('[NotificationModal] Marked notification as read:', notificationId);
-                // Update sidebar count if function exists
-                if (typeof updateMyNotificationsCount === 'function') {
-                    updateMyNotificationsCount();
+
+            const responseText = await response.text();
+            console.log('[NotificationModal] Response status:', response.status, 'body:', responseText);
+
+            try {
+                const data = JSON.parse(responseText);
+                if (data.success) {
+                    console.log('[NotificationModal] ✅ Marked notification as read:', notificationId, 'updated:', data.updated);
+                    // Update sidebar count if function exists
+                    if (typeof updateMyNotificationsCount === 'function') {
+                        updateMyNotificationsCount();
+                    }
+                } else {
+                    console.warn('[NotificationModal] ⚠️ API returned error:', data.error);
                 }
+            } catch (parseError) {
+                console.error('[NotificationModal] Failed to parse response:', parseError);
             }
         } catch (e) {
-            console.log('[NotificationModal] Failed to mark as read:', e);
+            console.error('[NotificationModal] Failed to mark as read:', e);
         }
     }
 };

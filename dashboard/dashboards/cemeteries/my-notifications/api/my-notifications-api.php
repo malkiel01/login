@@ -162,9 +162,16 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
  */
 function markAsRead($conn, $userId, $notificationId) {
     if (!$notificationId) {
+        error_log('[markAsRead] Missing notification_id');
         echo json_encode(['success' => false, 'error' => 'Missing notification_id']);
         return;
     }
+
+    // Convert to integer for proper comparison
+    $notificationIdInt = (int)$notificationId;
+    $userIdInt = (int)$userId;
+
+    error_log("[markAsRead] Attempting to mark notification as read - notificationId: $notificationIdInt, userId: $userIdInt");
 
     // נסה קודם לפי scheduled_notification_id (מה שמגיע מה-push)
     $sql = "
@@ -176,8 +183,10 @@ function markAsRead($conn, $userId, $notificationId) {
     ";
 
     $stmt = $conn->prepare($sql);
-    $stmt->execute([$notificationId, $userId]);
+    $stmt->execute([$notificationIdInt, $userIdInt]);
     $updated = $stmt->rowCount();
+
+    error_log("[markAsRead] Updated by scheduled_notification_id: $updated rows");
 
     // אם לא נמצא, נסה לפי id ישיר
     if ($updated == 0) {
@@ -189,13 +198,16 @@ function markAsRead($conn, $userId, $notificationId) {
               AND is_read = 0
         ";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$notificationId, $userId]);
+        $stmt->execute([$notificationIdInt, $userIdInt]);
         $updated = $stmt->rowCount();
+        error_log("[markAsRead] Updated by direct id: $updated rows");
     }
 
     echo json_encode([
         'success' => true,
-        'updated' => $updated
+        'updated' => $updated,
+        'notification_id' => $notificationIdInt,
+        'user_id' => $userIdInt
     ]);
 }
 

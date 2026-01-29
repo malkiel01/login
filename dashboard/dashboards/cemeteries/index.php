@@ -435,18 +435,18 @@ $isAdminUser = isAdmin();
                     const permission = await Notification.requestPermission();
                     console.log('[Main] Permission result:', permission);
 
-                    // שלח תשובה חזרה ל-iframe
+                    // אם אושר, רשום ל-push לפני שליחת התשובה!
+                    if (permission === 'granted' && typeof PushSubscriptionManager !== 'undefined') {
+                        const result = await PushSubscriptionManager.subscribe();
+                        console.log('[Main] Push subscription result:', result);
+                    }
+
+                    // שלח תשובה חזרה ל-iframe (אחרי ה-subscribe!)
                     if (event.source) {
                         event.source.postMessage({
                             type: 'notificationPermissionResult',
                             permission: permission
                         }, '*');
-                    }
-
-                    // אם אושר, רשום ל-push
-                    if (permission === 'granted' && typeof PushSubscriptionManager !== 'undefined') {
-                        const result = await PushSubscriptionManager.subscribe();
-                        console.log('[Main] Push subscription result:', result);
                     }
                 } catch (error) {
                     console.error('[Main] Error requesting permission:', error);

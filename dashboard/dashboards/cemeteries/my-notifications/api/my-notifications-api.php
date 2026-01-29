@@ -36,6 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST)) {
     }
 }
 
+// לוג כל בקשה
+error_log("[my-notifications-api] ========== REQUEST ==========");
+error_log("[my-notifications-api] Method: " . $_SERVER['REQUEST_METHOD']);
+error_log("[my-notifications-api] Action: " . $action);
+error_log("[my-notifications-api] User ID: " . $userId);
+error_log("[my-notifications-api] POST data: " . json_encode($_POST));
+error_log("[my-notifications-api] GET data: " . json_encode($_GET));
+
 try {
     switch ($action) {
         case 'get_unread':

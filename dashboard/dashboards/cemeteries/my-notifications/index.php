@@ -401,7 +401,9 @@ if (!$isDarkMode) {
 
             // הצגת המודל עם טעינה
             modal.style.display = 'flex';
-            console.log('[MyNotifications] Modal displayed');
+            console.log('[MyNotifications] Modal displayed, modal element:', modal);
+            console.log('[MyNotifications] Modal computed style display:', getComputedStyle(modal).display);
+            console.log('[MyNotifications] Modal computed style zIndex:', getComputedStyle(modal).zIndex);
             modalBody.innerHTML = `
                 <div class="loading-state">
                     <i class="fas fa-spinner fa-spin"></i>
@@ -411,10 +413,13 @@ if (!$isDarkMode) {
 
             try {
                 // קריאה ל-API לקבלת פרטי ההתראה והאישור
+                console.log('[MyNotifications] Fetching notification data...');
                 const response = await fetch(`/dashboard/dashboards/cemeteries/notifications/api/approval-api.php?action=get_notification&id=${notificationId}`, {
                     credentials: 'include'
                 });
+                console.log('[MyNotifications] Response status:', response.status);
                 const data = await response.json();
+                console.log('[MyNotifications] Response data:', data);
 
                 if (!data.success) {
                     throw new Error(data.error || 'שגיאה בטעינת הנתונים');

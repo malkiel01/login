@@ -68,20 +68,29 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/notifications/css/notifications.css?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="<?php echo implode(' ', $bodyClasses); ?>" style="--font-size-base: <?php echo $fontSize; ?>px;">
     <div class="notifications-container">
         <!-- Page Header -->
         <div class="page-header">
             <h1 class="page-title">ניהול התראות</h1>
-            <?php if ($canCreate): ?>
             <div class="header-actions">
+                <a href="logs.php" class="btn btn-secondary">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>מרכז לוגים</span>
+                </a>
+                <a href="test-automation.php" class="btn btn-secondary">
+                    <i class="fas fa-vial"></i>
+                    <span>בדיקת אוטומציה</span>
+                </a>
+                <?php if ($canCreate): ?>
                 <button type="button" class="btn btn-primary" onclick="NotificationsManager.openCreateForm()">
                     <span class="btn-icon">+</span>
                     יצירת התראה חדשה
                 </button>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
         </div>
 
         <!-- Create/Edit Form -->

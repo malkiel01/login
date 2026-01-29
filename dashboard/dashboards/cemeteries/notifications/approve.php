@@ -124,6 +124,11 @@ if (!$isDarkMode) {
             padding: 20px;
         }
 
+        /* Popup style for responded/expired notifications */
+        body.popup-mode {
+            background: rgba(0, 0, 0, 0.6);
+        }
+
         .approval-card {
             background: white;
             border-radius: 20px;
@@ -382,6 +387,10 @@ if (!$isDarkMode) {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         }
 
+        body.dark-theme.popup-mode {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
         .dark-theme .approval-card {
             background: #1e293b;
         }
@@ -492,7 +501,7 @@ if (!$isDarkMode) {
         }
     </style>
 </head>
-<body class="<?php echo implode(' ', $bodyClasses); ?>" data-theme="<?php echo $isDarkMode ? 'dark' : 'light'; ?>">
+<body class="<?php echo implode(' ', $bodyClasses); ?> <?php echo ($alreadyResponded || $isExpired) ? 'popup-mode' : ''; ?>" data-theme="<?php echo $isDarkMode ? 'dark' : 'light'; ?>">
     <div class="approval-card <?php echo ($alreadyResponded || $isExpired) ? 'responded-card' : ''; ?>">
         <div class="card-header">
             <?php if ($alreadyResponded || $isExpired): ?>
@@ -612,20 +621,33 @@ if (!$isDarkMode) {
 
         // Close the window/tab
         function closeWindow() {
-            // Try to close the window (works if opened as popup)
-            if (window.opener) {
+            console.log('[Approve] closeWindow called');
+
+            // Try multiple methods to close
+            try {
+                // Method 1: Try to close the window directly
                 window.close();
-            } else if (window.parent !== window) {
-                // In iframe - send message to parent
-                window.parent.postMessage({ type: 'CLOSE_APPROVAL' }, '*');
-            } else {
-                // Navigate back or to dashboard
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = '/dashboard/dashboards/cemeteries/';
-                }
+            } catch(e) {
+                console.log('[Approve] window.close() failed:', e);
             }
+
+            // If window didn't close, try other methods
+            setTimeout(function() {
+                if (window.opener) {
+                    // Opened as popup
+                    window.close();
+                } else if (window.parent !== window) {
+                    // In iframe - send message to parent
+                    window.parent.postMessage({ type: 'CLOSE_APPROVAL' }, '*');
+                } else {
+                    // Navigate back or to dashboard
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = '/dashboard/dashboards/cemeteries/';
+                    }
+                }
+            }, 100);
         }
 
         // Allow closing with Escape key

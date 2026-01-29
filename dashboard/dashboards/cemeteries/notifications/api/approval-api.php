@@ -126,13 +126,25 @@ function handleRespond(PDO $pdo, int $userId, array $input): void {
         $stmt->execute([$notificationId, $userId, $response, $ipAddress, $userAgent, $biometricVerified ? 1 : 0]);
     }
 
+    // Mark the push notification as read
+    $stmt = $pdo->prepare("
+        UPDATE push_notifications
+        SET is_read = 1
+        WHERE scheduled_notification_id = ?
+          AND user_id = ?
+          AND is_read = 0
+    ");
+    $stmt->execute([$notificationId, $userId]);
+    $markedRead = $stmt->rowCount();
+
     // Log the action
-    error_log("[Approval] User {$userId} {$response} notification {$notificationId}, biometric={$biometricVerified}");
+    error_log("[Approval] User {$userId} {$response} notification {$notificationId}, biometric={$biometricVerified}, markedRead={$markedRead}");
 
     echo json_encode([
         'success' => true,
         'status' => $response,
         'biometric_verified' => $biometricVerified,
+        'marked_read' => $markedRead,
         'message' => $response === 'approved' ? 'האישור נרשם בהצלחה' : 'הדחייה נרשמה'
     ]);
 }

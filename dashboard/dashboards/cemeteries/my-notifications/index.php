@@ -69,15 +69,15 @@ if (!$isDarkMode) {
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>">
     <div class="notifications-page">
         <!-- Approval Modal Popup -->
-        <div class="approval-modal-overlay" id="approvalModal" style="display: none;">
-            <div class="approval-modal">
-                <div class="approval-modal-header">
-                    <h3 id="modalTitle">פרטי אישור</h3>
-                    <button class="modal-close-btn" onclick="closeApprovalModal()">
+        <div class="approval-modal-overlay" id="approvalModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+            <div class="approval-modal" style="background: var(--card-bg, #fff); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 100%; max-height: 80vh; overflow: hidden;">
+                <div class="approval-modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--section-header-bg, #f8fafc); border-bottom: 1px solid var(--border-color, #e2e8f0);">
+                    <h3 id="modalTitle" style="margin: 0; font-size: 1.1rem; color: var(--text-primary, #1e293b);">פרטי אישור</h3>
+                    <button class="modal-close-btn" onclick="closeApprovalModal()" style="width: 36px; height: 36px; border: none; background: transparent; color: var(--text-muted, #94a3b8); cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="approval-modal-body" id="modalBody">
+                <div class="approval-modal-body" id="modalBody" style="padding: 20px; overflow-y: auto;">
                     <div class="loading-state">
                         <i class="fas fa-spinner fa-spin"></i>
                         <span>טוען...</span>

@@ -72,6 +72,7 @@ function getUnreadNotifications($conn, $userId) {
     $sql = "
         SELECT
             id,
+            scheduled_notification_id,
             title,
             body,
             url,
@@ -91,9 +92,14 @@ function getUnreadNotifications($conn, $userId) {
     $stmt->execute([$userId]);
     $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Convert to expected format
+    // Convert to expected format with UTC timezone
     foreach ($notifications as &$n) {
         $n['read_at'] = null;
+        // Convert to ISO format with timezone for proper JS parsing
+        if ($n['created_at']) {
+            $dt = new DateTime($n['created_at'], new DateTimeZone('America/Boise'));
+            $n['created_at'] = $dt->format('c'); // ISO 8601 format
+        }
     }
 
     echo json_encode([
@@ -109,6 +115,7 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
     $sql = "
         SELECT
             id,
+            scheduled_notification_id,
             title,
             body,
             url,
@@ -132,9 +139,14 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
         array_pop($notifications); // הסר את האחרון
     }
 
-    // Convert to expected format
+    // Convert to expected format with UTC timezone
     foreach ($notifications as &$n) {
         $n['read_at'] = $n['is_read'] ? $n['delivered_at'] : null;
+        // Convert to ISO format with timezone for proper JS parsing
+        if ($n['created_at']) {
+            $dt = new DateTime($n['created_at'], new DateTimeZone('America/Boise'));
+            $n['created_at'] = $dt->format('c'); // ISO 8601 format
+        }
     }
 
     echo json_encode([
@@ -146,6 +158,7 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
 
 /**
  * סימון התראה כנקראה
+ * מקבל או push_notifications.id או scheduled_notifications.id
  */
 function markAsRead($conn, $userId, $notificationId) {
     if (!$notificationId) {
@@ -153,20 +166,36 @@ function markAsRead($conn, $userId, $notificationId) {
         return;
     }
 
+    // נסה קודם לפי scheduled_notification_id (מה שמגיע מה-push)
     $sql = "
         UPDATE push_notifications
         SET is_read = 1
-        WHERE id = ?
+        WHERE scheduled_notification_id = ?
           AND user_id = ?
           AND is_read = 0
     ";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([$notificationId, $userId]);
+    $updated = $stmt->rowCount();
+
+    // אם לא נמצא, נסה לפי id ישיר
+    if ($updated == 0) {
+        $sql = "
+            UPDATE push_notifications
+            SET is_read = 1
+            WHERE id = ?
+              AND user_id = ?
+              AND is_read = 0
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$notificationId, $userId]);
+        $updated = $stmt->rowCount();
+    }
 
     echo json_encode([
         'success' => true,
-        'updated' => $stmt->rowCount()
+        'updated' => $updated
     ]);
 }
 

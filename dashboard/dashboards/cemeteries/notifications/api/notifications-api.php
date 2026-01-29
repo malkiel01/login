@@ -515,13 +515,13 @@ function sendNotifications(PDO $pdo, int $notificationId, string $title, string 
 
     // Also insert into push_notifications table as fallback for polling
     $insertStmt = $pdo->prepare("
-        INSERT INTO push_notifications (user_id, title, body, url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO push_notifications (scheduled_notification_id, user_id, title, body, url)
+        VALUES (?, ?, ?, ?, ?)
     ");
 
     foreach ($userIds as $userId) {
         try {
-            $insertStmt->execute([$userId, $title, $body, $url]);
+            $insertStmt->execute([$notificationId, $userId, $title, $body, $url]);
             $count++;
         } catch (Exception $e) {
             // Log error but continue

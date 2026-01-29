@@ -268,7 +268,8 @@ window.NotificationModal = {
      * @param {Object} data - Notification data
      */
     show(data) {
-        console.log('[NotificationModal] show() called with data:', data);
+        // DEBUG: הצג בדיוק מה הגיע
+        alert('DEBUG show(): notificationId = ' + (data ? data.notificationId : 'NO DATA'));
 
         this.init();
         this.currentData = data;
@@ -348,7 +349,8 @@ window.NotificationModal = {
      * Close the modal and mark as read
      */
     close() {
-        console.log('[NotificationModal] Close called, currentData:', this.currentData);
+        // DEBUG: הצג בדיוק מה יש ב-currentData
+        alert('DEBUG close(): notificationId = ' + (this.currentData ? this.currentData.notificationId : 'NO DATA'));
 
         // Mark notification as read if we have an ID
         if (this.currentData && this.currentData.notificationId) {

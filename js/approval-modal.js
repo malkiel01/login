@@ -358,12 +358,32 @@ window.ApprovalModal = {
         this.init();
         this.currentNotificationId = notificationId;
 
+        // Check if modal body was corrupted by showNoBiometricMessage()
+        // If so, we need to recreate the modal
+        const approvalLoading = document.getElementById('approvalLoading');
+        if (!approvalLoading) {
+            console.warn('[ApprovalModal] Modal body elements missing, recreating modal...');
+            // Remove the corrupted modal
+            if (this.modalElement) {
+                this.modalElement.remove();
+                this.modalElement = null;
+            }
+            // Reinitialize
+            this.init();
+        }
+
         // Reset state
         document.getElementById('approvalLoading').style.display = 'flex';
         document.getElementById('approvalContent').style.display = 'none';
         document.getElementById('approvalResponded').style.display = 'none';
         document.getElementById('approvalError').style.display = 'none';
         document.getElementById('approvalFooter').style.display = 'flex';
+
+        // Reset button states - fix for buttons staying disabled from previous attempts
+        const btnApprove = document.getElementById('btnModalApprove');
+        const btnReject = document.getElementById('btnModalReject');
+        if (btnApprove) btnApprove.disabled = false;
+        if (btnReject) btnReject.disabled = false;
 
         // Push history state to block back navigation
         history.pushState({ approvalModal: true }, '', window.location.href);
@@ -450,7 +470,16 @@ window.ApprovalModal = {
         }
 
         // Check if user has biometric registered
-        const hasBiometric = await window.biometricAuth.userHasBiometric();
+        let hasBiometric = false;
+        try {
+            hasBiometric = await window.biometricAuth.userHasBiometric();
+        } catch (e) {
+            console.error('[ApprovalModal] Error checking biometric:', e);
+            this.showError('שגיאה בבדיקת אימות ביומטרי. נסה שוב.');
+            btnApprove.disabled = false;
+            btnReject.disabled = false;
+            return;
+        }
         if (!hasBiometric) {
             // Show message and redirect to settings
             this.showNoBiometricMessage();

@@ -369,7 +369,7 @@ class NotificationService {
         $stmt = $this->pdo->query("
             SELECT * FROM scheduled_notifications
             WHERE status = 'pending'
-            AND (scheduled_at IS NULL OR scheduled_at <= NOW())
+            AND (scheduled_at IS NULL OR scheduled_at <= UTC_TIMESTAMP())
             ORDER BY created_at ASC
             LIMIT 10
         ");

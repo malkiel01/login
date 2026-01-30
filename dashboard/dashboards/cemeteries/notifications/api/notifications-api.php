@@ -254,9 +254,17 @@ function handleCreate(PDO $pdo, array $input, NotificationLogger $logger): void 
     $body = trim($input['body']);
     $notificationType = $input['notification_type'] ?? 'info';
     $targetUsers = $input['target_users'] ?? [];
-    $scheduledAt = $input['scheduled_at'] ?? null;
+    $scheduledAtRaw = $input['scheduled_at'] ?? null;
     $url = !empty($input['url']) ? trim($input['url']) : null;
     $createdBy = getCurrentUserId();
+
+    // Convert ISO 8601 datetime to UTC for database storage
+    $scheduledAt = null;
+    if (!empty($scheduledAtRaw)) {
+        $dt = new DateTime($scheduledAtRaw);
+        $dt->setTimezone(new DateTimeZone('UTC'));
+        $scheduledAt = $dt->format('Y-m-d H:i:s');
+    }
 
     // Approval fields
     $requiresApproval = !empty($input['requires_approval']) ? 1 : 0;
@@ -404,8 +412,16 @@ function handleUpdate(PDO $pdo, array $input): void {
     $body = trim($input['body']);
     $notificationType = $input['notification_type'] ?? 'info';
     $targetUsers = $input['target_users'] ?? [];
-    $scheduledAt = $input['scheduled_at'] ?? null;
+    $scheduledAtRaw = $input['scheduled_at'] ?? null;
     $url = !empty($input['url']) ? trim($input['url']) : null;
+
+    // Convert ISO 8601 datetime to UTC for database storage
+    $scheduledAt = null;
+    if (!empty($scheduledAtRaw)) {
+        $dt = new DateTime($scheduledAtRaw);
+        $dt->setTimezone(new DateTimeZone('UTC'));
+        $scheduledAt = $dt->format('Y-m-d H:i:s');
+    }
 
     $stmt = $pdo->prepare("
         UPDATE scheduled_notifications

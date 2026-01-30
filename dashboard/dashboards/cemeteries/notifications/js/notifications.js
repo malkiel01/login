@@ -233,7 +233,7 @@ const NotificationsManager = {
             const userCount = targetUsers.includes('all') ? 'כל המשתמשים' : `${targetUsers.length} משתמשים`;
 
             const scheduledAt = notification.scheduled_at
-                ? this.formatDateTime(notification.scheduled_at)
+                ? this.formatDateTime(notification.scheduled_at, true) // scheduled_at is UTC
                 : 'מיידית';
 
             return `
@@ -523,10 +523,13 @@ const NotificationsManager = {
 
     /**
      * Format datetime for display
+     * @param {string} dateStr - The datetime string
+     * @param {boolean} isUtc - Whether the input is in UTC (like scheduled_at)
      */
-    formatDateTime(dateStr) {
+    formatDateTime(dateStr, isUtc = false) {
         if (!dateStr) return '-';
-        const date = new Date(dateStr);
+        // If UTC, append 'Z' to parse correctly
+        const date = new Date(isUtc ? dateStr + 'Z' : dateStr);
         return date.toLocaleDateString('he-IL') + ' ' + date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
     },
 
@@ -594,9 +597,15 @@ const NotificationsManager = {
         // Set schedule
         if (notification.scheduled_at) {
             document.querySelector('input[name="send_time"][value="scheduled"]').checked = true;
-            const date = new Date(notification.scheduled_at);
-            document.getElementById('scheduleDate').value = date.toISOString().split('T')[0];
-            document.getElementById('scheduleTime').value = date.toTimeString().slice(0, 5);
+            // scheduled_at is stored in UTC, parse it as UTC and display in local time
+            const utcDate = new Date(notification.scheduled_at + 'Z'); // Add Z to indicate UTC
+            const year = utcDate.getFullYear();
+            const month = String(utcDate.getMonth() + 1).padStart(2, '0');
+            const day = String(utcDate.getDate()).padStart(2, '0');
+            const hours = String(utcDate.getHours()).padStart(2, '0');
+            const minutes = String(utcDate.getMinutes()).padStart(2, '0');
+            document.getElementById('scheduleDate').value = `${year}-${month}-${day}`;
+            document.getElementById('scheduleTime').value = `${hours}:${minutes}`;
             this.toggleScheduleFields();
         } else {
             document.querySelector('input[name="send_time"][value="now"]').checked = true;
@@ -684,7 +693,10 @@ const NotificationsManager = {
         if (sendTime === 'scheduled') {
             const date = formData.get('schedule_date');
             const time = formData.get('schedule_time');
-            data.scheduled_at = `${date} ${time}:00`;
+            // Convert local time to UTC for server storage
+            const localDate = new Date(`${date}T${time}:00`);
+            // Send as ISO string (UTC format)
+            data.scheduled_at = localDate.toISOString();
         }
 
         try {

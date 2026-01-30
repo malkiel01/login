@@ -199,10 +199,11 @@ function processScheduledNotifications(): array {
     $pdo = getDBConnection();
 
     // Get pending notifications that are due
+    // Note: scheduled_at is stored in UTC, so compare against UTC_TIMESTAMP()
     $stmt = $pdo->query("
         SELECT * FROM scheduled_notifications
         WHERE status = 'pending'
-        AND (scheduled_at IS NULL OR scheduled_at <= NOW())
+        AND (scheduled_at IS NULL OR scheduled_at <= UTC_TIMESTAMP())
         ORDER BY created_at ASC
         LIMIT 10
     ");

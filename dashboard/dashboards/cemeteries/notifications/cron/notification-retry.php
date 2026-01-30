@@ -114,7 +114,7 @@ function processScheduledNotifications(PDO $pdo, array &$stats): void {
     $stmt = $pdo->prepare("
         SELECT * FROM scheduled_notifications
         WHERE status = 'pending'
-        AND (scheduled_at IS NULL OR scheduled_at <= NOW())
+        AND (scheduled_at IS NULL OR scheduled_at <= UTC_TIMESTAMP())
         LIMIT 50
     ");
     $stmt->execute();

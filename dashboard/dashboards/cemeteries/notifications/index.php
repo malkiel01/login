@@ -86,6 +86,11 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
                     <span class="btn-text-full">בדיקת אוטומציה</span>
                     <span class="btn-text-short">אוטומציה</span>
                 </a>
+                <a href="my-feedbacks.php" class="btn btn-secondary">
+                    <span class="btn-icon">📬</span>
+                    <span class="btn-text-full">פידבקים שקיבלתי</span>
+                    <span class="btn-text-short">פידבקים</span>
+                </a>
                 <?php if ($canCreate): ?>
                 <button type="button" class="btn btn-primary" onclick="NotificationsManager.openCreateForm()">
                     <span class="btn-icon">+</span>

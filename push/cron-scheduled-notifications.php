@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /**
  * Cron Job: Process Scheduled Notifications

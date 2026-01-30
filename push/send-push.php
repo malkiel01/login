@@ -10,7 +10,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/WebPush.php';
 require_once __DIR__ . '/push-log.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/notifications/api/NotificationLogger.php';
+require_once __DIR__ . '/../dashboard/dashboards/cemeteries/notifications/api/NotificationLogger.php';
 
 /**
  * Send push notification to a specific user

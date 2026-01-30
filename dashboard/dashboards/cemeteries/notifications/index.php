@@ -315,6 +315,6 @@ $canDelete = isAdmin() || hasModulePermission('notifications', 'delete');
         window.canDelete = <?php echo $canDelete ? 'true' : 'false'; ?>;
         window.currentUserId = <?php echo $userId; ?>;
     </script>
-    <script src="/dashboard/dashboards/cemeteries/notifications/js/notifications.js?v=1"></script>
+    <script src="/dashboard/dashboards/cemeteries/notifications/js/notifications.js?v=2"></script>
 </body>
 </html>

@@ -14,7 +14,7 @@ class NotificationLogger {
         if ($conn) {
             $this->conn = $conn;
         } else {
-            require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+            require_once __DIR__ . '/../../config.php';
             $this->conn = getDBConnection();
         }
         $this->ensureTableExists();
@@ -648,15 +648,24 @@ class NotificationLogger {
         ]);
 
         // Send push notification to the sender
-        require_once $_SERVER['DOCUMENT_ROOT'] . '/push/send-push.php';
+        require_once __DIR__ . '/../../../../../push/send-push.php';
 
-        $result = sendPushToUser($senderId, $feedbackTitle, $feedbackBody, [
-            'type' => 'feedback',
-            'original_notification_id' => $notificationId,
-            'event_type' => $eventType,
-            'triggered_by' => $userId
-        ]);
+        $result = sendPushToUser(
+            $senderId,
+            $feedbackTitle,
+            $feedbackBody,
+            null,  // url
+            null,  // icon
+            [      // options
+                'type' => 'feedback',
+                'original_notification_id' => $notificationId,
+                'event_type' => $eventType,
+                'triggered_by' => $userId
+            ]
+        );
 
-        return $result['success'] ?? false;
+        error_log("[Feedback] Sending to sender {$senderId}: {$feedbackTitle} - Result: " . json_encode($result));
+
+        return $result['sent'] > 0;
     }
 }

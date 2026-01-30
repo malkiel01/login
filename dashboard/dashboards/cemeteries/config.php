@@ -3,10 +3,10 @@
 // קונפיג מקומי לדשבורד שמשתמש בקונפיג הראשי
 
 // טוען את הקונפיג הראשי של הפרויקט
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+require_once __DIR__ . '/../../../config.php';
 
 // טוען את מערכת ההרשאות המרכזית
-require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/middleware.php';
+require_once __DIR__ . '/../../../auth/middleware.php';
 
 // הגדרות ספציפיות לדשבורד בתי העלמין
 if (!defined('DASHBOARD_NAME')) {

@@ -13,7 +13,7 @@
  */
 
 // טען את הקונפיג (שמכיל את middleware)
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+require_once __DIR__ . '/../config.php';
 
 // הגדר headers ל-API
 header('Content-Type: application/json; charset=utf-8');

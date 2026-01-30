@@ -28,17 +28,17 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // טען את הקונפיג הראשי
 if (!function_exists('getDBConnection')) {
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+    require_once __DIR__ . '/../config.php';
 }
 
 // טען את הגדרות הדשבורדים
 if (!defined('DASHBOARD_TYPES')) {
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/config.php';
+    require_once __DIR__ . '/../dashboard/config.php';
 }
 
 // טען את מנהל ה-Tokens
 if (!function_exists('getTokenManager')) {
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-manager.php';
+    require_once __DIR__ . '/token-manager.php';
 }
 
 /**

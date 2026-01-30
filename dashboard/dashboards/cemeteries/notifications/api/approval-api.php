@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/api/api-auth.php';
+require_once __DIR__ . '/../../api/api-auth.php';
 require_once __DIR__ . '/NotificationLogger.php';
 
 header('Content-Type: application/json');

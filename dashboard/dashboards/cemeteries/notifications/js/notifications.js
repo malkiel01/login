@@ -663,6 +663,8 @@ const NotificationsManager = {
 
         // Prepare data
         const requiresApproval = document.getElementById('requiresApproval').checked;
+        const notifySenderCheckbox = document.getElementById('notifySender');
+        const notifySender = notifySenderCheckbox ? notifySenderCheckbox.checked : false;
 
         const data = {
             action: formData.get('id') ? 'update' : 'create',
@@ -675,7 +677,8 @@ const NotificationsManager = {
             scheduled_at: null,
             requires_approval: requiresApproval ? 1 : 0,
             approval_message: requiresApproval ? formData.get('approval_message') : null,
-            approval_expiry: requiresApproval ? formData.get('approval_expiry') : null
+            approval_expiry: requiresApproval ? formData.get('approval_expiry') : null,
+            notify_sender: notifySender ? 1 : 0
         };
 
         if (sendTime === 'scheduled') {

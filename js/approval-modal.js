@@ -372,6 +372,26 @@ window.ApprovalModal = {
             this.init();
         }
 
+        // Clear any leftover event handlers from previous showResponded()
+        if (this._escapeHandler) {
+            document.removeEventListener('keydown', this._escapeHandler);
+            this._escapeHandler = null;
+        }
+        this.modalElement.onclick = null;
+
+        // Reset to fullscreen mode (may have been changed by showResponded())
+        this.modalElement.classList.add('approval-fullscreen');
+        const modalInner = this.modalElement.querySelector('.approval-modal');
+        if (modalInner) {
+            modalInner.classList.add('approval-modal-fullscreen');
+        }
+
+        // Hide close button if visible from previous showResponded()
+        const closeBtn = this.modalElement.querySelector('.approval-modal-close');
+        if (closeBtn) {
+            closeBtn.style.display = 'none';
+        }
+
         // Reset state
         document.getElementById('approvalLoading').style.display = 'flex';
         document.getElementById('approvalContent').style.display = 'none';
@@ -533,6 +553,9 @@ window.ApprovalModal = {
                     <span>🔧</span> הגדרת אימות ביומטרי
                 </button>
                 <p class="setup-hint">לאחר ההגדרה, חזור לכאן לאישור הבקשה</p>
+                <button type="button" class="btn-back-to-approval" onclick="ApprovalModal.backToApproval()">
+                    ← חזור לבקשת האישור
+                </button>
             </div>
         `;
 
@@ -575,8 +598,38 @@ window.ApprovalModal = {
                     color: #94a3b8 !important;
                     margin-top: 16px !important;
                 }
+                .btn-back-to-approval {
+                    background: transparent;
+                    border: 1px solid #cbd5e1;
+                    color: #64748b;
+                    padding: 12px 24px;
+                    font-size: 16px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    margin-top: 16px;
+                    transition: all 0.2s;
+                }
+                .btn-back-to-approval:hover {
+                    background: #f1f5f9;
+                    border-color: #94a3b8;
+                }
             `;
             document.head.appendChild(style);
+        }
+    },
+
+    /**
+     * Go back to approval buttons from no-biometric screen
+     */
+    backToApproval() {
+        // Recreate the modal to restore original state
+        if (this.modalElement) {
+            this.modalElement.remove();
+            this.modalElement = null;
+        }
+        // Re-show the modal
+        if (this.currentNotificationId) {
+            this.show(this.currentNotificationId);
         }
     },
 

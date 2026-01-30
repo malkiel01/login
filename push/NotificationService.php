@@ -151,9 +151,9 @@ class NotificationService {
 
         $stmt = $this->pdo->prepare("
             INSERT INTO scheduled_notifications
-            (title, body, notification_type, target_users, scheduled_at, url, status, created_by,
+            (title, body, notification_type, message_type, target_users, scheduled_at, url, status, created_by,
              requires_approval, approval_message, approval_expires_at, notify_sender)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $status = empty($scheduledAt) ? 'pending' : 'pending';
@@ -161,7 +161,8 @@ class NotificationService {
         $result = $stmt->execute([
             $title,
             $body,
-            $level,  // notification_type in DB is actually the level
+            $level,        // notification_type = level (info/warning/urgent)
+            $type,         // message_type = type (info/approval/feedback)
             json_encode($targets),
             $scheduledAt,
             $url,

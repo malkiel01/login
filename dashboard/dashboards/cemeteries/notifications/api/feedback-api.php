@@ -42,6 +42,7 @@ function handleList(PDO $pdo, int $userId): void {
     $offset = ($page - 1) * $limit;
 
     // Get feedbacks where current user is the sender
+    // Use CAST to convert JSON value to integer for comparison
     $stmt = $pdo->prepare("
         SELECT
             nl.id,
@@ -49,7 +50,7 @@ function handleList(PDO $pdo, int $userId): void {
             nl.user_id as triggered_by_user_id,
             nl.event_type,
             nl.created_at,
-            JSON_EXTRACT(nl.extra_data, '$.sender_id') as sender_id,
+            CAST(JSON_EXTRACT(nl.extra_data, '$.sender_id') AS UNSIGNED) as sender_id,
             sn.title as notification_title,
             sn.body as notification_body,
             u.name as triggered_by_name,
@@ -58,7 +59,7 @@ function handleList(PDO $pdo, int $userId): void {
         LEFT JOIN scheduled_notifications sn ON sn.id = nl.notification_id
         LEFT JOIN users u ON u.id = nl.user_id
         WHERE nl.event_type LIKE 'feedback_%'
-          AND JSON_EXTRACT(nl.extra_data, '$.sender_id') = ?
+          AND CAST(JSON_EXTRACT(nl.extra_data, '$.sender_id') AS UNSIGNED) = ?
         ORDER BY nl.created_at DESC
         LIMIT ? OFFSET ?
     ");
@@ -70,7 +71,7 @@ function handleList(PDO $pdo, int $userId): void {
         SELECT COUNT(*)
         FROM notification_logs
         WHERE event_type LIKE 'feedback_%'
-          AND JSON_EXTRACT(extra_data, '$.sender_id') = ?
+          AND CAST(JSON_EXTRACT(extra_data, '$.sender_id') AS UNSIGNED) = ?
     ");
     $countStmt->execute([$userId]);
     $total = $countStmt->fetchColumn();
@@ -113,7 +114,7 @@ function handleStats(PDO $pdo, int $userId): void {
             COUNT(*) as count
         FROM notification_logs
         WHERE event_type LIKE 'feedback_%'
-          AND JSON_EXTRACT(extra_data, '$.sender_id') = ?
+          AND CAST(JSON_EXTRACT(extra_data, '$.sender_id') AS UNSIGNED) = ?
         GROUP BY event_type
     ");
     $stmt->execute([$userId]);
@@ -124,7 +125,7 @@ function handleStats(PDO $pdo, int $userId): void {
         SELECT COUNT(DISTINCT notification_id)
         FROM notification_logs
         WHERE event_type LIKE 'feedback_%'
-          AND JSON_EXTRACT(extra_data, '$.sender_id') = ?
+          AND CAST(JSON_EXTRACT(extra_data, '$.sender_id') AS UNSIGNED) = ?
     ");
     $notifStmt->execute([$userId]);
     $uniqueNotifications = $notifStmt->fetchColumn();

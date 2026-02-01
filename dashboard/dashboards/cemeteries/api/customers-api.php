@@ -686,12 +686,27 @@
                     throw new Exception('לא ניתן לקשר בן/בת זוג למצב משפחתי ריק או רווק');
                 }
 
-                // בדיקת כפל תעודת זהות
+                // בדיקת כפל תעודת זהות - בלקוחות קיימים ובבקשות ממתינות
                 if (!empty($data['numId'])) {
+                    // בדיקה 1: בלקוחות קיימים
                     $stmt = $pdo->prepare("SELECT unicId FROM customers WHERE numId = :numId AND isActive = 1");
                     $stmt->execute(['numId' => $data['numId']]);
                     if ($stmt->fetch()) {
                         throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
+                    }
+
+                    // בדיקה 2: בבקשות ממתינות לאישור
+                    $stmt = $pdo->prepare("
+                        SELECT id, unicId FROM pending_entity_operations
+                        WHERE entity_type = 'customers'
+                          AND action = 'create'
+                          AND status = 'pending'
+                          AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.numId')) = ?
+                    ");
+                    $stmt->execute([$data['numId']]);
+                    $pendingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($pendingRecord) {
+                        throw new Exception('כבר קיימת בקשה ממתינה ליצירת לקוח עם תעודת זהות זו (מזהה בקשה: ' . $pendingRecord['id'] . ')');
                     }
                 }
 

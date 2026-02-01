@@ -2758,41 +2758,38 @@ class TableManager {
         menu.appendChild(menuItems);
         document.body.appendChild(menu);
 
-        // מיקום התפריט עם בדיקת גבולות viewport
-        requestAnimationFrame(() => {
+        // פונקציה למיקום התפריט בתוך ה-viewport
+        const positionMenu = () => {
+            if (!menu || !document.body.contains(menu)) return;
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
             const menuRect = menu.getBoundingClientRect();
-            const padding = 10;
+            const pad = 10;
 
-            // מיקום אופקי - התחל מהכפתור
-            let leftPos = rect.left;
-
-            // אם יוצא מימין - דחוף שמאלה
-            if (leftPos + menuRect.width > viewportWidth - padding) {
-                leftPos = viewportWidth - menuRect.width - padding;
-            }
-
-            // אם יוצא משמאל - דחוף ימינה
-            if (leftPos < padding) {
-                leftPos = padding;
-            }
+            // מיקום אופקי
+            let left = rect.left;
+            if (left + menuRect.width > vw - pad) left = vw - menuRect.width - pad;
+            if (left < pad) left = pad;
 
             // מיקום אנכי - מתחת לכפתור
-            let topPos = rect.bottom + 5;
+            let top = rect.bottom + 5;
+            if (top + menuRect.height > vh - pad) top = rect.top - menuRect.height - 5;
+            if (top < pad) top = pad;
 
-            // אם יוצא מלמטה - פתח מעל הכפתור
-            if (topPos + menuRect.height > viewportHeight - padding) {
-                topPos = rect.top - menuRect.height - 5;
-            }
+            // כפה על התפריט להיות בתוך המסך
+            left = Math.max(pad, Math.min(left, vw - menuRect.width - pad));
+            top = Math.max(pad, Math.min(top, vh - menuRect.height - pad));
 
-            // אם עדיין יוצא מלמעלה - דחוף למטה
-            if (topPos < padding) {
-                topPos = padding;
-            }
+            menu.style.setProperty('left', `${Math.round(left)}px`, 'important');
+            menu.style.setProperty('top', `${Math.round(top)}px`, 'important');
+            menu.style.setProperty('visibility', 'visible', 'important');
+        };
 
-            menu.style.left = `${Math.round(leftPos)}px`;
-            menu.style.top = `${Math.round(topPos)}px`;
-            menu.style.visibility = 'visible';
-        });
+        // הפעל מיקום בכמה דרכים
+        requestAnimationFrame(positionMenu);
+        setTimeout(positionMenu, 0);
+        setTimeout(positionMenu, 50);
 
         // סגירה בלחיצה מחוץ לתפריט
         const closeHandler = (event) => {
@@ -2895,48 +2892,40 @@ class TableManager {
 
             document.body.appendChild(submenu);
 
-            // חכה לרינדור ואז מקם
-            requestAnimationFrame(() => {
+            // פונקציה למיקום התפריט בתוך ה-viewport
+            const positionSubmenu = () => {
+                if (!submenu || !document.body.contains(submenu)) return;
+
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
                 const itemRect = item.getBoundingClientRect();
                 const submenuRect = submenu.getBoundingClientRect();
-                const padding = 10;
+                const pad = 10;
 
                 // === מיקום אופקי ===
-                let leftPos = itemRect.left - submenuRect.width; // נסה לפתוח משמאל
-
-                // אם יוצא משמאל - פתח מימין
-                if (leftPos < padding) {
-                    leftPos = itemRect.right;
-                }
-
-                // אם יוצא מימין - דחוף פנימה
-                if (leftPos + submenuRect.width > viewportWidth - padding) {
-                    leftPos = viewportWidth - submenuRect.width - padding;
-                }
-
-                // אם עדיין יוצא משמאל - דחוף פנימה
-                if (leftPos < padding) {
-                    leftPos = padding;
-                }
+                let left = itemRect.left - submenuRect.width;
+                if (left < pad) left = itemRect.right;
+                if (left + submenuRect.width > vw - pad) left = vw - submenuRect.width - pad;
+                if (left < pad) left = pad;
 
                 // === מיקום אנכי ===
-                let topPos = itemRect.top;
+                let top = itemRect.top;
+                if (top + submenuRect.height > vh - pad) top = vh - submenuRect.height - pad;
+                if (top < pad) top = pad;
 
-                // אם יוצא מלמטה - דחוף למעלה
-                if (topPos + submenuRect.height > viewportHeight - padding) {
-                    topPos = viewportHeight - submenuRect.height - padding;
-                }
+                // כפה על ה-submenu להיות בתוך המסך
+                left = Math.max(pad, Math.min(left, vw - submenuRect.width - pad));
+                top = Math.max(pad, Math.min(top, vh - submenuRect.height - pad));
 
-                // אם יוצא מלמעלה - דחוף למטה
-                if (topPos < padding) {
-                    topPos = padding;
-                }
+                submenu.style.setProperty('left', `${Math.round(left)}px`, 'important');
+                submenu.style.setProperty('top', `${Math.round(top)}px`, 'important');
+                submenu.style.setProperty('visibility', 'visible', 'important');
+            };
 
-                // עדכן מיקום והצג
-                submenu.style.left = `${Math.round(leftPos)}px`;
-                submenu.style.top = `${Math.round(topPos)}px`;
-                submenu.style.visibility = 'visible';
-            });
+            // הפעל מיקום בכמה דרכים לוודא שזה עובד
+            requestAnimationFrame(positionSubmenu);
+            setTimeout(positionSubmenu, 0);
+            setTimeout(positionSubmenu, 50);
 
             // הוסף events ל-submenu
             submenu.onmouseenter = cancelClose;

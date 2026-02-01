@@ -2767,9 +2767,13 @@ class TableManager {
             const menuRect = menu.getBoundingClientRect();
             const pad = 10;
 
+            // השתמש ברוחב המדוד או ב-fallback אם עדיין 0
+            const actualWidth = menuRect.width > 0 ? menuRect.width : menuWidth;
+            const actualHeight = menuRect.height > 0 ? menuRect.height : 400;
+
             // RTL: התפריט צריך להסתיים בצד ימין של הכפתור
             // מיקום אופקי - התחל מימין הכפתור פחות רוחב התפריט
-            let left = rect.right - menuRect.width;
+            let left = rect.right - actualWidth;
 
             // אם יוצא משמאל - דחוף ימינה
             if (left < pad) {
@@ -2777,28 +2781,26 @@ class TableManager {
             }
 
             // אם יוצא מימין - דחוף שמאלה
-            if (left + menuRect.width > vw - pad) {
-                left = vw - menuRect.width - pad;
+            if (left + actualWidth > vw - pad) {
+                left = vw - actualWidth - pad;
             }
 
             // מיקום אנכי - מתחת לכפתור
             let top = rect.bottom + 5;
-            if (top + menuRect.height > vh - pad) top = rect.top - menuRect.height - 5;
+            if (top + actualHeight > vh - pad) top = rect.top - actualHeight - 5;
             if (top < pad) top = pad;
 
             // כפה על התפריט להיות בתוך המסך
-            left = Math.max(pad, Math.min(left, vw - menuRect.width - pad));
-            top = Math.max(pad, Math.min(top, vh - menuRect.height - pad));
+            left = Math.max(pad, Math.min(left, vw - actualWidth - pad));
+            top = Math.max(pad, Math.min(top, vh - actualHeight - pad));
 
             menu.style.setProperty('left', `${Math.round(left)}px`, 'important');
             menu.style.setProperty('top', `${Math.round(top)}px`, 'important');
             menu.style.setProperty('visibility', 'visible', 'important');
         };
 
-        // הפעל מיקום בכמה דרכים
-        requestAnimationFrame(positionMenu);
-        setTimeout(positionMenu, 0);
-        setTimeout(positionMenu, 50);
+        // הפעל מיקום - setTimeout(100) מאפשר לתפריט להתרנדר קודם
+        setTimeout(positionMenu, 100);
 
         // סגירה בלחיצה מחוץ לתפריט
         const closeHandler = (event) => {
@@ -2912,15 +2914,19 @@ class TableManager {
                 const pad = 10;
                 const mobile = vw <= 768;
 
+                // השתמש ברוחב המדוד או ב-fallback
+                const actualWidth = submenuRect.width > 0 ? submenuRect.width : (mobile ? 200 : 250);
+                const actualHeight = submenuRect.height > 0 ? submenuRect.height : 300;
+
                 let left, top;
 
                 if (mobile) {
                     // במובייל - מרכז את התפריט על המסך
-                    left = (vw - submenuRect.width) / 2;
-                    top = (vh - submenuRect.height) / 2;
+                    left = (vw - actualWidth) / 2;
+                    top = (vh - actualHeight) / 2;
                 } else {
                     // בדסקטופ - נסה לפתוח משמאל לפריט
-                    left = itemRect.left - submenuRect.width;
+                    left = itemRect.left - actualWidth;
 
                     // אם יוצא משמאל - פתח מימין
                     if (left < pad) {
@@ -2928,26 +2934,24 @@ class TableManager {
                     }
 
                     // אם יוצא מימין - דחוף שמאלה
-                    if (left + submenuRect.width > vw - pad) {
-                        left = vw - submenuRect.width - pad;
+                    if (left + actualWidth > vw - pad) {
+                        left = vw - actualWidth - pad;
                     }
 
                     top = itemRect.top;
                 }
 
                 // כפה על ה-submenu להיות בתוך המסך
-                left = Math.max(pad, Math.min(left, vw - submenuRect.width - pad));
-                top = Math.max(pad, Math.min(top, vh - submenuRect.height - pad));
+                left = Math.max(pad, Math.min(left, vw - actualWidth - pad));
+                top = Math.max(pad, Math.min(top, vh - actualHeight - pad));
 
                 submenu.style.setProperty('left', `${Math.round(left)}px`, 'important');
                 submenu.style.setProperty('top', `${Math.round(top)}px`, 'important');
                 submenu.style.setProperty('visibility', 'visible', 'important');
             };
 
-            // הפעל מיקום בכמה דרכים לוודא שזה עובד
-            requestAnimationFrame(positionSubmenu);
-            setTimeout(positionSubmenu, 0);
-            setTimeout(positionSubmenu, 50);
+            // הפעל מיקום - setTimeout(100) מאפשר לתפריט להתרנדר קודם
+            setTimeout(positionSubmenu, 100);
 
             // הוסף events ל-submenu
             submenu.onmouseenter = cancelClose;

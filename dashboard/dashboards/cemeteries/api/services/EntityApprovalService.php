@@ -683,38 +683,106 @@ class EntityApprovalService
     {
         switch ($action) {
             case 'create':
-                $unicId = uniqid('', true);
-                $stmt = $this->pdo->prepare("
-                    INSERT INTO customers (unicId, typeId, numId, firstName, lastName,
-                                          phone, phoneMobile, email, gender, maritalStatus,
-                                          nameFather, nameMother, countryId, cityId,
-                                          residencyType, statusCustomer, association,
-                                          isActive, createDate)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
-                ");
-                $stmt->execute([
-                    $unicId,
-                    $data['typeId'] ?? 1,
-                    $data['numId'] ?? '',
-                    $data['firstName'] ?? '',
-                    $data['lastName'] ?? '',
-                    $data['phone'] ?? null,
-                    $data['phoneMobile'] ?? null,
-                    $data['email'] ?? null,
-                    $data['gender'] ?? null,
-                    $data['maritalStatus'] ?? null,
-                    $data['nameFather'] ?? null,
-                    $data['nameMother'] ?? null,
-                    $data['countryId'] ?? null,
-                    $data['cityId'] ?? null,
-                    $data['residencyType'] ?? 1,
-                    $data['statusCustomer'] ?? 1,
-                    $data['association'] ?? 1
-                ]);
-                return ['entityId' => $unicId];
+                // Use unicId from data if exists (created in API), otherwise generate
+                $unicId = $data['unicId'] ?? uniqid('customer_', true);
+
+                // Build dynamic insert based on available fields
+                $fields = [
+                    'unicId', 'typeId', 'numId', 'firstName', 'lastName', 'oldName', 'nom',
+                    'gender', 'nameFather', 'nameMother', 'maritalStatus', 'dateBirth',
+                    'countryBirth', 'countryBirthId', 'age', 'resident', 'countryId', 'cityId',
+                    'address', 'phone', 'phoneMobile', 'statusCustomer', 'spouse', 'comment',
+                    'association', 'dateBirthHe', 'tourist', 'createDate', 'updateDate'
+                ];
+
+                $insertFields = ['isActive'];
+                $insertValues = ['1'];
+                $params = [];
+
+                // Always include unicId
+                $insertFields[] = 'unicId';
+                $insertValues[] = ':unicId';
+                $params['unicId'] = $unicId;
+
+                foreach ($fields as $field) {
+                    if ($field === 'unicId') continue; // Already added
+                    if (isset($data[$field])) {
+                        $insertFields[] = $field;
+                        $insertValues[] = ":$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+
+                $sql = "INSERT INTO customers (" . implode(', ', $insertFields) . ")
+                        VALUES (" . implode(', ', $insertValues) . ")";
+
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute($params);
+
+                $clientId = $this->pdo->lastInsertId();
+
+                // Handle spouse bidirectional update (same as customers-api.php)
+                if (!empty($data['spouse'])) {
+                    $maritalStatus = $data['maritalStatus'] ?? null;
+                    $spouseMaritalStatus = ($maritalStatus == 'נשוי') ? 'נשואה' :
+                                           (($maritalStatus == 'נשואה') ? 'נשוי' : $maritalStatus);
+
+                    $updateSpouseStmt = $this->pdo->prepare("
+                        UPDATE customers
+                        SET spouse = :newClientId, maritalStatus = :maritalStatus, updateDate = :updateDate
+                        WHERE unicId = :spouseId
+                    ");
+                    $updateSpouseStmt->execute([
+                        'newClientId' => $unicId,
+                        'maritalStatus' => $spouseMaritalStatus,
+                        'updateDate' => date('Y-m-d H:i:s'),
+                        'spouseId' => $data['spouse']
+                    ]);
+                }
+
+                return ['entityId' => $unicId, 'id' => $clientId];
 
             case 'edit':
+                if (!$entityId) {
+                    throw new Exception('Entity ID is required for edit');
+                }
+
+                $fields = [
+                    'typeId', 'numId', 'firstName', 'lastName', 'oldName', 'nom',
+                    'gender', 'nameFather', 'nameMother', 'maritalStatus', 'dateBirth',
+                    'countryBirth', 'countryBirthId', 'age', 'resident', 'countryId', 'cityId',
+                    'address', 'phone', 'phoneMobile', 'statusCustomer', 'spouse', 'comment',
+                    'association', 'dateBirthHe', 'tourist', 'updateDate'
+                ];
+
+                $updateFields = [];
+                $params = ['id' => $entityId];
+
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+
+                if (empty($updateFields)) {
+                    return ['entityId' => $entityId];
+                }
+
+                $sql = "UPDATE customers SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute($params);
+
+                return ['entityId' => $entityId];
+
             case 'delete':
+                if (!$entityId) {
+                    throw new Exception('Entity ID is required for delete');
+                }
+
+                $stmt = $this->pdo->prepare("UPDATE customers SET isActive = 0, inactiveDate = :date WHERE unicId = :id");
+                $stmt->execute(['id' => $entityId, 'date' => date('Y-m-d H:i:s')]);
+
                 return ['entityId' => $entityId];
         }
 

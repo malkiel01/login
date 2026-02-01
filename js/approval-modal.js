@@ -820,6 +820,10 @@ window.ApprovalModal = {
             header.style.display = 'none';
         }
 
+        // Update phone status bar color (theme-color meta tag)
+        // The iframe's meta tag doesn't affect the parent, so we update the parent's
+        this._updateThemeColor();
+
         // Get modal body and remove padding for full-screen iframe
         const body = document.querySelector('.approval-modal-body');
         body.style.padding = '0';
@@ -1012,6 +1016,8 @@ window.ApprovalModal = {
             const iframe = document.getElementById('entityApproveFrame');
             if (iframe) iframe.src = 'about:blank';
         }
+        // Restore original theme-color
+        this._restoreThemeColor();
         // Restore page scroll
         document.body.style.overflow = '';
         this.currentNotificationId = null;
@@ -1022,6 +1028,55 @@ window.ApprovalModal = {
         if (typeof this.onClose === 'function') {
             this.onClose();
             this.onClose = null; // איפוס
+        }
+    },
+
+    /**
+     * Update phone status bar color based on current theme
+     * Theme colors from Design Center (user-preferences.css)
+     */
+    _updateThemeColor() {
+        // Save original theme-color
+        const existingMeta = document.querySelector('meta[name="theme-color"]');
+        if (existingMeta) {
+            this._originalThemeColor = existingMeta.getAttribute('content');
+        }
+
+        // Determine theme color based on body classes
+        const body = document.body;
+        const isDarkMode = body.classList.contains('dark-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
+        const isGreen = body.classList.contains('color-scheme-green') || document.documentElement.getAttribute('data-color-scheme') === 'green';
+
+        let themeColor;
+        if (isDarkMode) {
+            themeColor = '#374151'; // Dark mode gray
+        } else if (isGreen) {
+            themeColor = '#059669'; // Green
+        } else {
+            themeColor = '#667eea'; // Purple (default)
+        }
+
+        // Update or create meta tag
+        if (existingMeta) {
+            existingMeta.setAttribute('content', themeColor);
+        } else {
+            const meta = document.createElement('meta');
+            meta.name = 'theme-color';
+            meta.content = themeColor;
+            document.head.appendChild(meta);
+        }
+    },
+
+    /**
+     * Restore original theme-color
+     */
+    _restoreThemeColor() {
+        if (this._originalThemeColor) {
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) {
+                meta.setAttribute('content', this._originalThemeColor);
+            }
+            this._originalThemeColor = null;
         }
     }
 };

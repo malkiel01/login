@@ -213,6 +213,13 @@
         overflow: visible !important;
     }
 
+    /* ביטול גובה קבוע במובייל - גובה אוטומטי */
+    .pending-section .table-wrapper {
+        height: auto !important;
+        min-height: auto !important;
+        max-height: 300px !important;
+    }
+
     .pending-section-header {
         margin-bottom: 8px;
     }

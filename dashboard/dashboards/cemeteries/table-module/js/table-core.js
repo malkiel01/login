@@ -2813,7 +2813,8 @@ class TableManager {
             }
         };
 
-        item.onmouseenter = () => {
+        // פונקציה לפתיחת submenu - משותפת ל-hover ו-click
+        const openSubmenu = () => {
             cancelClose();
             item.style.background = 'var(--bg-secondary, #f3f4f6)';
 
@@ -2828,6 +2829,14 @@ class TableManager {
 
             // מיקום ה-submenu - צמוד לפריט (ללא רווח!)
             const itemRect = item.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const isMobile = viewportWidth <= 768;
+
+            // במובייל - הגבל גודל ומקם במרכז
+            const maxHeight = isMobile ? Math.min(300, viewportHeight - 40) : 400;
+            const minWidth = isMobile ? Math.min(220, viewportWidth - 20) : 250;
+
             submenu.style.cssText = `
                 position: fixed;
                 top: ${itemRect.top - 8}px;
@@ -2835,8 +2844,9 @@ class TableManager {
                 border: 1px solid var(--border-color, #e5e7eb);
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                min-width: 250px;
-                max-height: 400px;
+                min-width: ${minWidth}px;
+                max-width: ${viewportWidth - 20}px;
+                max-height: ${maxHeight}px;
                 overflow-y: auto;
                 z-index: 1001;
                 direction: rtl;
@@ -2846,8 +2856,6 @@ class TableManager {
 
             // תיקון מיקום אחרי הוספה ל-DOM - התחשבות בגבולות המסך
             const submenuRect = submenu.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
 
             // חישוב מיקום אופקי
             let leftPos = itemRect.left - submenuRect.width;
@@ -2860,6 +2868,11 @@ class TableManager {
             // וודא שלא יוצא מימין
             if (leftPos + submenuRect.width > viewportWidth - 10) {
                 leftPos = viewportWidth - submenuRect.width - 10;
+            }
+
+            // במובייל - מרכז אופקית אם עדיין חורג
+            if (isMobile && (leftPos < 10 || leftPos + submenuRect.width > viewportWidth - 10)) {
+                leftPos = (viewportWidth - submenuRect.width) / 2;
             }
 
             // חישוב מיקום אנכי
@@ -2883,7 +2896,23 @@ class TableManager {
             submenu.onmouseleave = closeSubmenu;
         };
 
+        // Desktop: hover לפתיחה
+        item.onmouseenter = openSubmenu;
         item.onmouseleave = closeSubmenu;
+
+        // Mobile: click לפתיחה (toggle)
+        item.onclick = (e) => {
+            e.stopPropagation();
+            if (submenu && document.body.contains(submenu)) {
+                // כבר פתוח - סגור
+                submenu.remove();
+                submenu = null;
+                item.style.background = 'transparent';
+            } else {
+                // סגור - פתח
+                openSubmenu();
+            }
+        };
 
         return item;
     }

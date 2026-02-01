@@ -375,6 +375,9 @@ window.ApprovalModal = {
             console.log('[ApprovalModal] Notification data received:', JSON.stringify(notification, null, 2));
             console.log('[ApprovalModal] URL field:', notification.url);
 
+            // TEMP DEBUG: Visual alert for debugging
+            alert('DEBUG: URL = ' + (notification.url || 'NULL'));
+
             // Check if already responded
             if (data.approval && ['approved', 'rejected'].includes(data.approval.status)) {
                 // Use templates if available, otherwise fallback to old modal

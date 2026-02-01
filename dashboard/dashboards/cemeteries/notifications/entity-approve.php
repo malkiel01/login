@@ -476,10 +476,15 @@ if (isset($_GET['embed'])) {
             flex-direction: column;
         }
 
+        body.embed-mode .card-header {
+            padding: 16px 20px;
+        }
+
         body.embed-mode .card-body {
             flex: 1;
             overflow-y: auto;
-            padding-bottom: 100px; /* Space for fixed buttons */
+            padding: 16px 20px;
+            padding-bottom: 140px; /* Space for fixed buttons + biometric notice */
         }
 
         body.embed-mode .actions {
@@ -493,11 +498,12 @@ if (isset($_GET['embed'])) {
             border-top: 1px solid var(--border-color);
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             z-index: 100;
+            flex-direction: row !important; /* Always in one row */
         }
 
         body.embed-mode .biometric-notice {
             position: fixed;
-            bottom: 80px;
+            bottom: 70px;
             left: 0;
             right: 0;
             background: var(--bg-primary);

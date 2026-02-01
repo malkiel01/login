@@ -105,6 +105,10 @@ $bodyClasses[] = $isDarkMode ? 'dark-theme' : 'light-theme';
 if (!$isDarkMode) {
     $bodyClasses[] = 'color-scheme-' . $colorScheme;
 }
+// Add embed mode class when loaded in iframe
+if (isset($_GET['embed'])) {
+    $bodyClasses[] = 'embed-mode';
+}
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -453,6 +457,64 @@ if (!$isDarkMode) {
             .actions {
                 flex-direction: column;
             }
+        }
+
+        /* Embed mode - full screen, no card styling, sticky buttons */
+        body.embed-mode {
+            padding: 0;
+            align-items: stretch;
+            justify-content: stretch;
+            background: var(--bg-primary);
+        }
+
+        body.embed-mode .approval-card {
+            max-width: none;
+            border-radius: 0;
+            box-shadow: none;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.embed-mode .card-body {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 100px; /* Space for fixed buttons */
+        }
+
+        body.embed-mode .actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0;
+            padding: 16px 20px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        body.embed-mode .biometric-notice {
+            position: fixed;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            background: var(--bg-primary);
+            padding: 8px 20px;
+            z-index: 99;
+        }
+
+        body.embed-mode .rejection-form {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 101;
         }
     </style>
 </head>

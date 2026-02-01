@@ -805,10 +805,10 @@ window.ApprovalModal = {
         document.getElementById('approvalError').style.display = 'none';
         document.getElementById('approvalFooter').style.display = 'none'; // Hide default buttons - iframe has its own
 
-        // Update header title
-        const titleEl = this.modalElement.querySelector('.approval-modal-title');
-        if (titleEl) {
-            titleEl.textContent = 'אישור פעולה';
+        // Hide modal header - the iframe has its own header
+        const header = this.modalElement.querySelector('.approval-modal-header');
+        if (header) {
+            header.style.display = 'none';
         }
 
         // Get modal body
@@ -969,6 +969,11 @@ window.ApprovalModal = {
             const closeBtn = this.modalElement.querySelector('.approval-modal-close');
             if (closeBtn) {
                 closeBtn.style.display = 'none';
+            }
+            // Restore header (might have been hidden for iframe mode)
+            const header = this.modalElement.querySelector('.approval-modal-header');
+            if (header) {
+                header.style.display = '';
             }
             // Remove overlay click handler
             this.modalElement.onclick = null;

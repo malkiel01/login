@@ -2844,15 +2844,39 @@ class TableManager {
 
             document.body.appendChild(submenu);
 
-            // תיקון מיקום אחרי הוספה ל-DOM - צמוד לשמאל הפריט
+            // תיקון מיקום אחרי הוספה ל-DOM - התחשבות בגבולות המסך
             const submenuRect = submenu.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // חישוב מיקום אופקי
             let leftPos = itemRect.left - submenuRect.width;
 
             // וודא שה-submenu לא יוצא מהמסך משמאל
             if (leftPos < 10) {
                 leftPos = itemRect.right; // פתח מימין במקום
             }
+
+            // וודא שלא יוצא מימין
+            if (leftPos + submenuRect.width > viewportWidth - 10) {
+                leftPos = viewportWidth - submenuRect.width - 10;
+            }
+
+            // חישוב מיקום אנכי
+            let topPos = itemRect.top - 8;
+
+            // וודא שה-submenu לא יוצא מלמטה
+            if (topPos + submenuRect.height > viewportHeight - 10) {
+                topPos = viewportHeight - submenuRect.height - 10;
+            }
+
+            // וודא שה-submenu לא יוצא מלמעלה
+            if (topPos < 10) {
+                topPos = 10;
+            }
+
             submenu.style.left = `${leftPos}px`;
+            submenu.style.top = `${topPos}px`;
 
             // הוסף events ל-submenu
             submenu.onmouseenter = cancelClose;

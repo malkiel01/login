@@ -33,6 +33,23 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
+
+            // ⭐ פרמטרי מיון - רק עמודות מורשות
+            $allowedSortColumns = [
+                'cemeteryNameHe', 'cemeteryNameEn', 'cemeteryCode',
+                'createDate', 'availableSum', 'savedSum', 'purchasedSum',
+                'buriedSum', 'graveSum'
+            ];
+            $orderBy = $_GET['orderBy'] ?? 'createDate';
+            $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
+
+            // וולידציה
+            if (!in_array($orderBy, $allowedSortColumns)) {
+                $orderBy = 'createDate';
+            }
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+                $sortDirection = 'DESC';
+            }
             
             // בניית השאילתה הראשית
             // $sql = "SELECT c.* FROM cemeteries c WHERE c.isActive = 1";
@@ -88,8 +105,8 @@ try {
             $totalAllSql = "SELECT COUNT(*) FROM cemeteries WHERE isActive = 1";
             $totalAll = $pdo->query($totalAllSql)->fetchColumn();
             
-            // הוספת מיון ועימוד
-            $sql .= " ORDER BY c.createDate DESC LIMIT :limit OFFSET :offset";
+            // ⭐ הוספת מיון ועימוד - דינמי לפי פרמטרים
+            $sql .= " ORDER BY c.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

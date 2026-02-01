@@ -2539,18 +2539,29 @@ class TableManager {
         const viewportHeight = window.innerHeight;
         const isMobile = viewportWidth <= 768;
         const menuWidth = isMobile ? Math.min(260, viewportWidth - 20) : 220;
+        const pad = 10;
+
+        // חישוב מיקום מראש - לפני יצירת התפריט
+        // RTL: התפריט צריך להסתיים בצד ימין של הכפתור
+        let menuLeft = rect.right - menuWidth;
+        if (menuLeft < pad) menuLeft = pad;
+        if (menuLeft + menuWidth > viewportWidth - pad) menuLeft = viewportWidth - menuWidth - pad;
+
+        let menuTop = rect.bottom + 5;
+        if (menuTop + 400 > viewportHeight - pad) menuTop = rect.top - 400 - 5;
+        if (menuTop < pad) menuTop = pad;
 
         const menu = document.createElement('div');
         menu.className = 'tm-settings-menu';
         menu.style.cssText = `
             position: fixed;
-            visibility: hidden;
+            left: ${menuLeft}px;
+            top: ${menuTop}px;
             background: var(--bg-primary, white);
             border: 1px solid var(--border-color, #e5e7eb);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            min-width: ${menuWidth}px;
-            max-width: ${viewportWidth - 20}px;
+            width: ${menuWidth}px;
             max-height: ${viewportHeight - 20}px;
             overflow-y: auto;
             z-index: 10000;
@@ -2758,50 +2769,6 @@ class TableManager {
         menu.appendChild(menuItems);
         document.body.appendChild(menu);
 
-        // פונקציה למיקום התפריט בתוך ה-viewport
-        const positionMenu = () => {
-            if (!menu || !document.body.contains(menu)) return;
-
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const menuRect = menu.getBoundingClientRect();
-            const pad = 10;
-
-            // השתמש ברוחב המדוד או ב-fallback אם עדיין 0
-            const actualWidth = menuRect.width > 0 ? menuRect.width : menuWidth;
-            const actualHeight = menuRect.height > 0 ? menuRect.height : 400;
-
-            // RTL: התפריט צריך להסתיים בצד ימין של הכפתור
-            // מיקום אופקי - התחל מימין הכפתור פחות רוחב התפריט
-            let left = rect.right - actualWidth;
-
-            // אם יוצא משמאל - דחוף ימינה
-            if (left < pad) {
-                left = pad;
-            }
-
-            // אם יוצא מימין - דחוף שמאלה
-            if (left + actualWidth > vw - pad) {
-                left = vw - actualWidth - pad;
-            }
-
-            // מיקום אנכי - מתחת לכפתור
-            let top = rect.bottom + 5;
-            if (top + actualHeight > vh - pad) top = rect.top - actualHeight - 5;
-            if (top < pad) top = pad;
-
-            // כפה על התפריט להיות בתוך המסך
-            left = Math.max(pad, Math.min(left, vw - actualWidth - pad));
-            top = Math.max(pad, Math.min(top, vh - actualHeight - pad));
-
-            menu.style.setProperty('left', `${Math.round(left)}px`, 'important');
-            menu.style.setProperty('top', `${Math.round(top)}px`, 'important');
-            menu.style.setProperty('visibility', 'visible', 'important');
-        };
-
-        // הפעל מיקום - setTimeout(100) מאפשר לתפריט להתרנדר קודם
-        setTimeout(positionMenu, 100);
-
         // סגירה בלחיצה מחוץ לתפריט
         const closeHandler = (event) => {
             // בדוק אם הלחיצה בתוך התפריט הראשי
@@ -2880,78 +2847,48 @@ class TableManager {
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             const isMobile = viewportWidth <= 768;
-            const maxHeight = isMobile ? Math.min(300, viewportHeight - 40) : 400;
-            const maxWidth = isMobile ? viewportWidth - 20 : 350;
+            const itemRect = item.getBoundingClientRect();
+            const pad = 10;
 
-            // סגנון בסיסי - מיקום יתעדכן אחרי רינדור
+            // הגדר מידות ידועות מראש
+            const subWidth = isMobile ? Math.min(220, viewportWidth - 20) : 250;
+            const subHeight = isMobile ? Math.min(300, viewportHeight - 40) : 350;
+
+            // חשב מיקום מראש
+            let subLeft, subTop;
+
+            if (isMobile) {
+                // במובייל - מרכז את התפריט על המסך
+                subLeft = (viewportWidth - subWidth) / 2;
+                subTop = (viewportHeight - subHeight) / 2;
+            } else {
+                // בדסקטופ - נסה לפתוח משמאל לפריט
+                subLeft = itemRect.left - subWidth;
+                if (subLeft < pad) subLeft = itemRect.right;
+                if (subLeft + subWidth > viewportWidth - pad) subLeft = viewportWidth - subWidth - pad;
+                subTop = itemRect.top;
+            }
+
+            // כפה להיות בתוך המסך
+            subLeft = Math.max(pad, Math.min(subLeft, viewportWidth - subWidth - pad));
+            subTop = Math.max(pad, Math.min(subTop, viewportHeight - subHeight - pad));
+
             submenu.style.cssText = `
                 position: fixed;
-                top: 0;
-                left: 0;
-                visibility: hidden;
+                left: ${subLeft}px;
+                top: ${subTop}px;
                 background: var(--bg-primary, white);
                 border: 1px solid var(--border-color, #e5e7eb);
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                min-width: ${isMobile ? 200 : 250}px;
-                max-width: ${maxWidth}px;
-                max-height: ${maxHeight}px;
+                width: ${subWidth}px;
+                max-height: ${subHeight}px;
                 overflow-y: auto;
                 z-index: 10001;
                 direction: rtl;
             `;
 
             document.body.appendChild(submenu);
-
-            // פונקציה למיקום התפריט בתוך ה-viewport
-            const positionSubmenu = () => {
-                if (!submenu || !document.body.contains(submenu)) return;
-
-                const vw = window.innerWidth;
-                const vh = window.innerHeight;
-                const itemRect = item.getBoundingClientRect();
-                const submenuRect = submenu.getBoundingClientRect();
-                const pad = 10;
-                const mobile = vw <= 768;
-
-                // השתמש ברוחב המדוד או ב-fallback
-                const actualWidth = submenuRect.width > 0 ? submenuRect.width : (mobile ? 200 : 250);
-                const actualHeight = submenuRect.height > 0 ? submenuRect.height : 300;
-
-                let left, top;
-
-                if (mobile) {
-                    // במובייל - מרכז את התפריט על המסך
-                    left = (vw - actualWidth) / 2;
-                    top = (vh - actualHeight) / 2;
-                } else {
-                    // בדסקטופ - נסה לפתוח משמאל לפריט
-                    left = itemRect.left - actualWidth;
-
-                    // אם יוצא משמאל - פתח מימין
-                    if (left < pad) {
-                        left = itemRect.right;
-                    }
-
-                    // אם יוצא מימין - דחוף שמאלה
-                    if (left + actualWidth > vw - pad) {
-                        left = vw - actualWidth - pad;
-                    }
-
-                    top = itemRect.top;
-                }
-
-                // כפה על ה-submenu להיות בתוך המסך
-                left = Math.max(pad, Math.min(left, vw - actualWidth - pad));
-                top = Math.max(pad, Math.min(top, vh - actualHeight - pad));
-
-                submenu.style.setProperty('left', `${Math.round(left)}px`, 'important');
-                submenu.style.setProperty('top', `${Math.round(top)}px`, 'important');
-                submenu.style.setProperty('visibility', 'visible', 'important');
-            };
-
-            // הפעל מיקום - setTimeout(100) מאפשר לתפריט להתרנדר קודם
-            setTimeout(positionSubmenu, 100);
 
             // הוסף events ל-submenu
             submenu.onmouseenter = cancelClose;

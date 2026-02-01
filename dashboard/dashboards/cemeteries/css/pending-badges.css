@@ -229,12 +229,27 @@ tr.has-pending-operation:hover {
     border-radius: 12px;
     margin-bottom: 20px;
     overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* מצב מכווץ */
+.pending-customers-section.collapsed {
+    display: none;
 }
 
 .pending-customers-header {
     background: rgba(251, 191, 36, 0.15);
     border-bottom: 1px solid rgba(251, 191, 36, 0.3);
     padding: 14px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.pending-customers-header:hover {
+    background: rgba(251, 191, 36, 0.25);
 }
 
 .pending-customers-header h3 {
@@ -251,6 +266,26 @@ tr.has-pending-operation:hover {
     color: #f59e0b;
 }
 
+/* חץ לכיווץ/הרחבה */
+.pending-toggle-icon {
+    width: 20px;
+    height: 20px;
+    color: #92400e;
+    transition: transform 0.3s ease;
+}
+
+.pending-customers-section.section-collapsed .pending-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.pending-customers-section.section-collapsed .pending-customers-body {
+    display: none;
+}
+
+.pending-customers-section.section-collapsed .pending-customers-header {
+    border-bottom: none;
+}
+
 .pending-count {
     background: #f59e0b;
     color: white;
@@ -261,9 +296,21 @@ tr.has-pending-operation:hover {
     margin-right: 4px;
 }
 
+/* גוף הטבלה עם גלילה */
+.pending-customers-body {
+    max-height: 220px; /* כ-4 שורות */
+    overflow-y: auto;
+}
+
 .pending-customers-table {
     width: 100%;
     border-collapse: collapse;
+}
+
+.pending-customers-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .pending-customers-table th {
@@ -336,6 +383,108 @@ tr.has-pending-operation:hover {
     background: rgba(239, 68, 68, 0.1);
 }
 
+/* כפתור ממתינים בהדר (כשהסקשן מכווץ) */
+.btn-pending-toggle {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.btn-pending-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
+}
+
+.btn-pending-toggle svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-pending-toggle .pending-btn-count {
+    background: white;
+    color: #d97706;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+/* הצגת כפתור כשהסקשן מכווץ */
+.pending-customers-section.collapsed ~ .table-container .btn-pending-toggle,
+body:has(.pending-customers-section.collapsed) .btn-pending-toggle {
+    display: inline-flex;
+}
+
+/* רספונסיביות מובייל */
+@media (max-width: 768px) {
+    .pending-customers-section {
+        margin: 10px;
+        border-radius: 10px;
+    }
+
+    .pending-customers-header {
+        padding: 12px 14px;
+    }
+
+    .pending-customers-header h3 {
+        font-size: 14px;
+        gap: 8px;
+    }
+
+    .pending-customers-header h3 svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .pending-customers-body {
+        max-height: 180px; /* קצת יותר קטן במובייל */
+    }
+
+    .pending-customers-table th,
+    .pending-customers-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    /* הסתרת עמודות פחות חשובות במובייל */
+    .pending-customers-table th:nth-child(4),
+    .pending-customers-table td:nth-child(4),
+    .pending-customers-table th:nth-child(5),
+    .pending-customers-table td:nth-child(5),
+    .pending-customers-table th:nth-child(7),
+    .pending-customers-table td:nth-child(7) {
+        display: none;
+    }
+
+    .pending-customers-table .btn {
+        padding: 5px 6px;
+    }
+
+    .pending-customers-table .btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .approval-progress {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+
+    .pending-count {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+}
+
 /* Dark theme - pending customers section */
 .dark-theme .pending-customers-section {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
@@ -347,7 +496,15 @@ tr.has-pending-operation:hover {
     border-color: rgba(251, 191, 36, 0.2);
 }
 
+.dark-theme .pending-customers-header:hover {
+    background: rgba(251, 191, 36, 0.18);
+}
+
 .dark-theme .pending-customers-header h3 {
+    color: #fbbf24;
+}
+
+.dark-theme .pending-toggle-icon {
     color: #fbbf24;
 }
 
@@ -386,4 +543,12 @@ tr.has-pending-operation:hover {
 
 .dark-theme .pending-customers-table .btn-danger:hover {
     background: rgba(239, 68, 68, 0.15);
+}
+
+.dark-theme .btn-pending-toggle {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.dark-theme .btn-pending-toggle .pending-btn-count {
+    background: rgba(255, 255, 255, 0.9);
 }

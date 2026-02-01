@@ -133,12 +133,16 @@
                 $allowedSortColumns = [
                     'firstName', 'lastName', 'fullNameHe', 'numId',
                     'phone', 'phoneMobile', 'email', 'createDate',
-                    'statusCustomer', 'city', 'address', 'birthDate'
+                    'statusCustomer', 'city', 'address', 'birthDate', 'dateBirth'
                 ];
                 $orderBy = $_GET['orderBy'] ?? 'createDate';
                 $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
                 if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
                 if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
+
+                // ⭐ מיון רב-שלבי - תמיכה במערך של רמות מיון
+                $sortLevelsParam = $_GET['sortLevels'] ?? null;
+                $multiLevelOrderBy = '';
 
                 // 🆕 פילטרים מתקדמים
                 $filters = [];
@@ -398,8 +402,37 @@
                 $totalAllSql = "SELECT COUNT(*) FROM customers WHERE isActive = 1";
                 $totalAll = $pdo->query($totalAllSql)->fetchColumn();
                 
-                // ⭐ הוספת מיון ועימוד
-                $sql .= " ORDER BY c.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
+                // ⭐ מיון רב-שלבי - בניית ORDER BY
+                $orderByClause = '';
+                if ($sortLevelsParam) {
+                    // נסה לפרסר כ-JSON
+                    $sortLevels = is_string($sortLevelsParam) ? json_decode($sortLevelsParam, true) : $sortLevelsParam;
+
+                    if (is_array($sortLevels) && count($sortLevels) > 0) {
+                        $orderByClauses = [];
+                        foreach ($sortLevels as $level) {
+                            $field = $level['field'] ?? '';
+                            $levelOrder = strtoupper($level['order'] ?? 'ASC') === 'ASC' ? 'ASC' : 'DESC';
+
+                            // וודא שהשדה מותר
+                            if (in_array($field, $allowedSortColumns)) {
+                                $orderByClauses[] = "c.{$field} {$levelOrder}";
+                            }
+                        }
+
+                        if (count($orderByClauses) > 0) {
+                            $orderByClause = implode(', ', $orderByClauses);
+                        }
+                    }
+                }
+
+                // אם אין מיון רב-שלבי - השתמש במיון בודד (תאימות לאחור)
+                if (empty($orderByClause)) {
+                    $orderByClause = "c.{$orderBy} {$sortDirection}";
+                }
+
+                // הוספת מיון ועימוד
+                $sql .= " ORDER BY {$orderByClause} LIMIT :limit OFFSET :offset";
                 
                 $stmt = $pdo->prepare($sql);
                 foreach ($params as $key => $value) {

@@ -41,6 +41,9 @@ try {
             if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
             if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
 
+            // ⭐ מיון רב-שלבי - תמיכה במערך של רמות מיון
+            $sortLevelsParam = $_GET['sortLevels'] ?? null;
+
             $sql = "SELECT p.* FROM plots_view p WHERE isActive = 1";            
 
             $params = [];
@@ -109,7 +112,36 @@ try {
             $totalAllStmt->execute($totalAllParams);
             $totalAll = $totalAllStmt->fetchColumn();
             
-            $sql .= " ORDER BY p.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
+            // ⭐ מיון רב-שלבי - בניית ORDER BY
+            $orderByClause = '';
+            if ($sortLevelsParam) {
+                // נסה לפרסר כ-JSON
+                $sortLevels = is_string($sortLevelsParam) ? json_decode($sortLevelsParam, true) : $sortLevelsParam;
+
+                if (is_array($sortLevels) && count($sortLevels) > 0) {
+                    $orderByClauses = [];
+                    foreach ($sortLevels as $level) {
+                        $field = $level['field'] ?? '';
+                        $levelOrder = strtoupper($level['order'] ?? 'ASC') === 'ASC' ? 'ASC' : 'DESC';
+
+                        // וודא שהשדה מותר
+                        if (in_array($field, $allowedSortColumns)) {
+                            $orderByClauses[] = "p.{$field} {$levelOrder}";
+                        }
+                    }
+
+                    if (count($orderByClauses) > 0) {
+                        $orderByClause = implode(', ', $orderByClauses);
+                    }
+                }
+            }
+
+            // אם אין מיון רב-שלבי - השתמש במיון בודד (תאימות לאחור)
+            if (empty($orderByClause)) {
+                $orderByClause = "p.{$orderBy} {$sortDirection}";
+            }
+
+            $sql .= " ORDER BY {$orderByClause} LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

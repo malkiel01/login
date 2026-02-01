@@ -3267,6 +3267,8 @@ class TableManager {
      * ⭐ החלת מיון רב-שלבי
      */
     _applyMultiLevelSort() {
+        console.log('🔍 _applyMultiLevelSort called, sortLevels:', JSON.stringify(this.state.sortLevels));
+
         if (this.state.sortLevels.length === 0) {
             this.state.sortColumn = null;
             this._updateSortIcons();
@@ -3287,7 +3289,7 @@ class TableManager {
         // ⭐ אם יש onFetchPage - פנה לשרת, אחרת מיון מקומי
         if (this.config.onFetchPage) {
             this.showLoadingIndicator();
-            console.log('🔄 Multi-level sorting via server');
+            console.log('🔄 Multi-level sorting via server, sortLevels count:', this.state.sortLevels.length);
             this._fetchPageFromServer(1).then(() => {
                 console.log('✅ Server multi-level sort completed');
             }).catch(err => {
@@ -3978,15 +3980,32 @@ class TableManager {
         // ספינר כבר הוצג ב-goToPage!
 
         try {
-            // ⭐ בניית אובייקט מיון לשליחה לשרת
+            // ⭐ בניית אובייקט מיון לשליחה לשרת - תמיכה במיון רב-שלבי
             let sortParams = null;
-            if (this.state.sortColumn !== null) {
+
+            // דיבוג: הצג את sortLevels לפני בניית sortParams
+            console.log('🔍 DEBUG sortLevels:', JSON.stringify(this.state.sortLevels));
+
+            if (this.state.sortLevels && this.state.sortLevels.length > 0) {
+                // מיון רב-שלבי - שלח מערך של רמות מיון
+                sortParams = this.state.sortLevels.map(level => {
+                    const col = this.config.columns[level.colIndex];
+                    console.log(`🔍 DEBUG level ${level.colIndex}: col=`, col?.field, 'order=', level.order);
+                    return {
+                        field: col?.field || '',
+                        order: level.order
+                    };
+                }).filter(p => p.field); // סנן רמות ללא שדה
+
+                console.log('🔍 DEBUG sortParams after build:', JSON.stringify(sortParams));
+            } else if (this.state.sortColumn !== null) {
+                // תאימות לאחור - מיון בודד
                 const col = this.config.columns[this.state.sortColumn];
                 if (col && col.field) {
-                    sortParams = {
+                    sortParams = [{
                         field: col.field,
                         order: this.state.sortOrder
-                    };
+                    }];
                 }
             }
 

@@ -41,6 +41,9 @@ try {
             if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
             if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
 
+            // ⭐ מיון רב-שלבי - תמיכה במערך של רמות מיון
+            $sortLevelsParam = $_GET['sortLevels'] ?? null;
+
             $areaGraveId = $_GET['areaGraveId'] ?? null;
             
             // בניית השאילתה

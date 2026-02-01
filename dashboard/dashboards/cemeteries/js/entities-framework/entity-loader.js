@@ -194,17 +194,31 @@ class EntityLoader {
             // בניית URL עם פרמטרים
             let apiUrl = `${config.apiEndpoint}?action=list&limit=${encodeURIComponent(limit)}&page=${encodeURIComponent(page)}`;
 
-            // ⭐ מיון: השתמש ב-sortParams אם קיים, אחרת ברירת מחדל
-            const orderBy = sortParams?.field || config.defaultOrderBy;
-            const sortDirection = sortParams?.order === 'asc' ? 'ASC' : 'DESC';
-            apiUrl += `&orderBy=${encodeURIComponent(orderBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+            // ⭐ מיון: תמיכה במיון רב-שלבי (מערך של רמות מיון)
+            let sortDescription = '';
+            if (Array.isArray(sortParams) && sortParams.length > 0) {
+                // מיון רב-שלבי - שלח כ-JSON
+                apiUrl += `&sortLevels=${encodeURIComponent(JSON.stringify(sortParams))}`;
+                // גם שלח את הראשון כ-orderBy לתאימות לאחור
+                apiUrl += `&orderBy=${encodeURIComponent(sortParams[0].field)}`;
+                apiUrl += `&sortDirection=${encodeURIComponent(sortParams[0].order === 'asc' ? 'ASC' : 'DESC')}`;
+                sortDescription = ` (sorted by ${sortParams.map(s => `${s.field} ${s.order}`).join(', ')})`;
+            } else if (sortParams?.field) {
+                // תאימות לאחור - אובייקט בודד
+                apiUrl += `&orderBy=${encodeURIComponent(sortParams.field)}`;
+                apiUrl += `&sortDirection=${encodeURIComponent(sortParams.order === 'asc' ? 'ASC' : 'DESC')}`;
+                sortDescription = ` (sorted by ${sortParams.field} ${sortParams.order})`;
+            } else if (config.defaultOrderBy) {
+                // ברירת מחדל
+                apiUrl += `&orderBy=${encodeURIComponent(config.defaultOrderBy)}&sortDirection=DESC`;
+            }
 
             // הוספת parent ID אם קיים
             if (parentId && config.parentParam) {
                 apiUrl += `&${encodeURIComponent(config.parentParam)}=${encodeURIComponent(parentId)}`;
             }
 
-            console.log(`📄 Fetching page ${page} with limit ${limit} for ${entityType}${sortParams ? ` (sorted by ${sortParams.field} ${sortParams.order})` : ''}`);
+            console.log(`📄 Fetching page ${page} with limit ${limit} for ${entityType}${sortDescription}`);
 
             const response = await fetch(apiUrl);
 

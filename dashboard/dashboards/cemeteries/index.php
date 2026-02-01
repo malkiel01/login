@@ -558,6 +558,6 @@ $isAdminUser = isAdmin();
     <script src="/dashboard/dashboards/cemeteries/notifications/templates/load-templates.js"></script>
     <!-- Approval Modal for approval-type notifications -->
     <script src="/js/biometric-auth.js"></script>
-    <script src="/js/approval-modal.js"></script>
+    <script src="/js/approval-modal.js?v=20260201"></script>
 </body>
 </html>

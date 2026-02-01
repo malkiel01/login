@@ -159,56 +159,27 @@
 }
 
 /* ===================================================================
-   Pending Table
+   Pending Table - שימוש בטמפלט data-table הסטנדרטי
    =================================================================== */
 .pending-section-body {
-    max-height: 220px; /* כ-4 שורות */
-    overflow-x: auto;
+    max-height: 250px; /* כ-4-5 שורות */
     overflow-y: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
     -webkit-overflow-scrolling: touch;
 }
 
-.pending-table {
-    width: 100%;
-    min-width: 500px; /* מינימום רוחב לטבלה */
-    border-collapse: collapse;
+/* התאמות ספציפיות לטבלה הממתינה */
+.pending-section-body .table-responsive {
+    border: none;
+    margin: 0;
 }
 
-.pending-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 1;
+.pending-data-table {
+    margin-bottom: 0 !important;
 }
 
-.pending-table th {
-    background: var(--bg-tertiary);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 10px 12px;
-    text-align: right;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.pending-table td {
-    padding: 12px;
-    font-size: 13px;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
-}
-
-.pending-table tbody tr {
-    transition: background-color 0.2s;
-}
-
-.pending-table tbody tr:hover {
-    background: var(--bg-tertiary);
-}
-
-.pending-table tbody tr:last-child td {
-    border-bottom: none;
+/* הסתר כרטיסים בדסקטופ, הצג במובייל */
+.pending-cards {
+    display: none;
 }
 
 /* התקדמות אישורים */
@@ -224,33 +195,33 @@
     font-weight: 600;
 }
 
-/* כפתורי פעולה */
-.pending-table .actions-cell {
+/* כפתורי פעולה בטבלה */
+.pending-data-table .actions-cell {
     white-space: nowrap;
 }
 
-.pending-table .btn {
+.pending-data-table .btn {
     padding: 6px 8px;
     margin-left: 4px;
 }
 
-.pending-table .btn-outline {
+.pending-data-table .btn-outline {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
 }
 
-.pending-table .btn-outline:hover {
+.pending-data-table .btn-outline:hover {
     background: var(--bg-tertiary);
     color: var(--text-primary);
 }
 
-.pending-table .btn-danger {
+.pending-data-table .btn-danger {
     border-color: #ef4444;
     color: #ef4444;
 }
 
-.pending-table .btn-danger:hover {
+.pending-data-table .btn-danger:hover {
     background: rgba(239, 68, 68, 0.1);
 }
 
@@ -262,7 +233,7 @@
         margin: 0 0 10px 0;
         padding: 10px;
         border-radius: 6px;
-        max-height: 400px;
+        max-height: none; /* ללא הגבלה - הכרטיסים יתפסו את הגובה הנדרש */
     }
 
     .pending-section-header {
@@ -296,36 +267,17 @@
     }
 
     .pending-section-body {
-        max-height: 180px;
+        max-height: 300px;
+        overflow-y: auto;
     }
 
-    .pending-table {
-        min-width: 400px;
-    }
-
-    .pending-table th,
-    .pending-table td {
-        padding: 8px 6px;
-        font-size: 11px;
-    }
-
-    /* הסתרת עמודות פחות חשובות במובייל */
-    .pending-table th:nth-child(4),
-    .pending-table td:nth-child(4),
-    .pending-table th:nth-child(5),
-    .pending-table td:nth-child(5),
-    .pending-table th:nth-child(7),
-    .pending-table td:nth-child(7) {
+    /* הסתר טבלה, הצג כרטיסים במובייל */
+    .pending-section-body .table-responsive {
         display: none;
     }
 
-    .pending-table .btn {
-        padding: 4px 5px;
-    }
-
-    .pending-table .btn svg {
-        width: 14px;
-        height: 14px;
+    .pending-cards {
+        display: block;
     }
 
     .approval-progress {
@@ -354,13 +306,7 @@
         font-size: 12px;
     }
 
-    .pending-table {
-        min-width: 350px;
-    }
-
-    .pending-table th,
-    .pending-table td {
-        padding: 6px 4px;
-        font-size: 10px;
+    .pending-section-body {
+        max-height: 250px;
     }
 }

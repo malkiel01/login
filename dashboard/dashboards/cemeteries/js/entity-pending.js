@@ -414,7 +414,7 @@ const EntityPending = {
 
     /**
      * יצירת סקשן של לקוחות ממתינים
-     * תבנית זהה ל-search-section מ-universal-search.js
+     * שימוש בטמפלט הטבלה הסטנדרטי (data-table) לתמיכה בכרטיסים במובייל
      * @param {Array} pendingList
      * @returns {string}
      */
@@ -445,23 +445,26 @@ const EntityPending = {
                     </button>
                 </div>
                 <div class="pending-section-body">
-                    <table class="pending-table">
-                        <thead>
-                            <tr>
-                                <th>סטטוס</th>
-                                <th>שם</th>
-                                <th>ת.ז.</th>
-                                <th>טלפון</th>
-                                <th>מבקש</th>
-                                <th>אישורים</th>
-                                <th>תוקף עד</th>
-                                <th>פעולות</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="data-table pending-data-table" id="pendingTable">
+                            <thead>
+                                <tr>
+                                    <th>סטטוס</th>
+                                    <th>שם</th>
+                                    <th>ת.ז.</th>
+                                    <th>טלפון</th>
+                                    <th>מבקש</th>
+                                    <th>אישורים</th>
+                                    <th>תוקף עד</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="entity-cards pending-cards" id="pendingCards"></div>
                 </div>
             </div>
         `;
@@ -614,6 +617,11 @@ const EntityPending = {
 
             // טעינת מצב שמור (collapsed/expanded)
             this.loadPendingSectionState();
+
+            // הפעלת המרה לכרטיסים במובייל
+            if (typeof handleTableResponsive === 'function') {
+                setTimeout(() => handleTableResponsive(), 100);
+            }
         } else {
             // אין ממתינים - הסתר את הכפתור
             if (showPendingBtn) {

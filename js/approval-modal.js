@@ -870,15 +870,8 @@ window.ApprovalModal = {
         const messageHandler = (event) => {
             if (event.data && event.data.type === 'entityApprovalComplete') {
                 window.removeEventListener('message', messageHandler);
-
-                if (event.data.status === 'approved') {
-                    this.showResponded('approved', true);
-                } else if (event.data.status === 'rejected') {
-                    this.showResponded('rejected', true);
-                } else {
-                    // Cancelled or other - just close
-                    this.close();
-                }
+                // Just close - the iframe already showed the result
+                this.close();
             }
         };
         window.addEventListener('message', messageHandler);

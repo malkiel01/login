@@ -220,6 +220,17 @@
         max-height: 300px !important;
     }
 
+    /* רוחב מותאם למובייל - גלילה אופקית */
+    .pending-section .table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .pending-section .table-body-container,
+    .pending-section .table-header-container {
+        min-width: 100% !important;
+    }
+
     .pending-section-header {
         margin-bottom: 8px;
     }

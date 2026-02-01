@@ -114,7 +114,21 @@ if (isset($_GET['embed'])) {
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <?php
+    // Set theme-color based on user's color scheme
+    $themeColors = [
+        'purple' => '#667eea',
+        'blue' => '#3b82f6',
+        'green' => '#22c55e',
+        'red' => '#ef4444',
+        'orange' => '#f97316',
+        'pink' => '#ec4899',
+        'teal' => '#14b8a6'
+    ];
+    $themeColor = $themeColors[$colorScheme] ?? '#667eea';
+    ?>
+    <meta name="theme-color" content="<?= $themeColor ?>">
     <title>אישור פעולה - <?php echo DASHBOARD_NAME; ?></title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">

@@ -93,7 +93,7 @@ $isAdminUser = isAdmin();
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122ci">
 
     <!-- Table Module - New Modular System with Theme Support -->
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/table-module/css/table-core.css?v=20260201">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/table-module/css/table-core.css?v=20260201b">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
 

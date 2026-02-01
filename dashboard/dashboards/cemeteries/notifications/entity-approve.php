@@ -116,19 +116,24 @@ if (isset($_GET['embed'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <?php
-    // Set theme-color based on user's color scheme
-    $themeColors = [
-        'purple' => '#667eea',
-        'blue' => '#3b82f6',
-        'green' => '#22c55e',
-        'red' => '#ef4444',
-        'orange' => '#f97316',
-        'pink' => '#ec4899',
-        'teal' => '#14b8a6'
-    ];
-    $themeColor = $themeColors[$colorScheme] ?? '#667eea';
+    // Theme colors from Design Center (user-preferences.css)
+    // Dark mode = gray, Light mode = purple/green based on colorScheme
+    if ($isDarkMode) {
+        $themeColorPrimary = '#374151';
+        $themeColorDark = '#1f2937';
+    } else {
+        // Light mode - 2 color schemes: purple (default) or green
+        if ($colorScheme === 'green') {
+            $themeColorPrimary = '#059669';
+            $themeColorDark = '#047857';
+        } else {
+            // Purple (default)
+            $themeColorPrimary = '#667eea';
+            $themeColorDark = '#764ba2';
+        }
+    }
     ?>
-    <meta name="theme-color" content="<?= $themeColor ?>">
+    <meta name="theme-color" content="<?= $themeColorPrimary ?>">
     <title>אישור פעולה - <?php echo DASHBOARD_NAME; ?></title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
@@ -160,7 +165,7 @@ if (isset($_GET['embed'])) {
         }
 
         .card-header {
-            background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
+            background: linear-gradient(135deg, <?= $themeColorPrimary ?> 0%, <?= $themeColorDark ?> 100%);
             padding: 24px 30px;
             color: white;
         }
@@ -498,7 +503,7 @@ if (isset($_GET['embed'])) {
             right: 0;
             z-index: 100;
             width: 100%;
-            background: linear-gradient(135deg, var(--color-primary, #22c55e) 0%, var(--color-primary-dark, #16a34a) 100%);
+            background: linear-gradient(135deg, <?= $themeColorPrimary ?> 0%, <?= $themeColorDark ?> 100%);
             color: white;
             padding: 14px 20px;
             padding-top: calc(14px + env(safe-area-inset-top, 0px));

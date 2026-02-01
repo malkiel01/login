@@ -465,6 +465,8 @@ class NotificationService {
             'targets' => $targets,
             'title' => $title,
             'body' => $body,
+            'url' => $options['url'] ?? null,
+            'icon' => $options['icon'] ?? null,
             'options' => $options
         ]);
     }

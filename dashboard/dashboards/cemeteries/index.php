@@ -91,10 +91,9 @@ $isAdminUser = isAdmin();
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css?v=20260122c">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css?v=20260122ci">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css?v=20260124">
 
     <!-- Table Module - New Modular System with Theme Support -->
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/table-module/css/table-core.css?v=20260124">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/table-module/css/table-core.css?v=20260201">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
 
@@ -280,7 +279,7 @@ $isAdminUser = isAdmin();
 
     <!-- Table Module v3.0.0 - מערכת טבלאות חדשה עם תמיכה בהעדפות משתמש -->
     <script src="/dashboard/dashboards/cemeteries/table-module/js/table-permissions.js?v=20260124"></script>
-    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-core.js?v=20260124"></script>
+    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-core.js?v=20260201"></script>
 
     <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script>
 

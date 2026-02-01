@@ -2554,18 +2554,22 @@ class TableManager {
         const menu = document.createElement('div');
         menu.className = 'tm-settings-menu';
         menu.style.cssText = `
-            position: fixed;
-            left: ${menuLeft}px;
-            top: ${menuTop}px;
-            background: var(--bg-primary, white);
-            border: 1px solid var(--border-color, #e5e7eb);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            width: ${menuWidth}px;
-            max-height: ${viewportHeight - 20}px;
-            overflow-y: auto;
-            z-index: 10000;
-            direction: rtl;
+            position: fixed !important;
+            left: ${menuLeft}px !important;
+            top: ${menuTop}px !important;
+            right: auto !important;
+            bottom: auto !important;
+            background: var(--bg-primary, white) !important;
+            border: 1px solid var(--border-color, #e5e7eb) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            width: ${menuWidth}px !important;
+            max-width: ${viewportWidth - 20}px !important;
+            max-height: ${viewportHeight - 20}px !important;
+            overflow-y: auto !important;
+            z-index: 10000 !important;
+            direction: rtl !important;
+            transform: none !important;
         `;
 
         // כותרת
@@ -2874,21 +2878,59 @@ class TableManager {
             subTop = Math.max(pad, Math.min(subTop, viewportHeight - subHeight - pad));
 
             submenu.style.cssText = `
-                position: fixed;
-                left: ${subLeft}px;
-                top: ${subTop}px;
-                background: var(--bg-primary, white);
-                border: 1px solid var(--border-color, #e5e7eb);
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                width: ${subWidth}px;
-                max-height: ${subHeight}px;
-                overflow-y: auto;
-                z-index: 10001;
-                direction: rtl;
+                position: fixed !important;
+                left: ${subLeft}px !important;
+                top: ${subTop}px !important;
+                right: auto !important;
+                bottom: auto !important;
+                background: var(--bg-primary, white) !important;
+                border: 1px solid var(--border-color, #e5e7eb) !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+                width: ${subWidth}px !important;
+                max-width: ${viewportWidth - 20}px !important;
+                max-height: ${subHeight}px !important;
+                overflow-y: auto !important;
+                z-index: 10001 !important;
+                direction: rtl !important;
+                transform: none !important;
             `;
 
             document.body.appendChild(submenu);
+
+            // 🔥 בדיקה נוספת אחרי הוספה - וודא שהתפריט בתוך המסך
+            requestAnimationFrame(() => {
+                const actualRect = submenu.getBoundingClientRect();
+                let needsAdjust = false;
+                let newLeft = actualRect.left;
+                let newTop = actualRect.top;
+
+                // בדוק אם יוצא מימין
+                if (actualRect.right > viewportWidth - pad) {
+                    newLeft = viewportWidth - actualRect.width - pad;
+                    needsAdjust = true;
+                }
+                // בדוק אם יוצא משמאל
+                if (actualRect.left < pad) {
+                    newLeft = pad;
+                    needsAdjust = true;
+                }
+                // בדוק אם יוצא מלמטה
+                if (actualRect.bottom > viewportHeight - pad) {
+                    newTop = viewportHeight - actualRect.height - pad;
+                    needsAdjust = true;
+                }
+                // בדוק אם יוצא מלמעלה
+                if (actualRect.top < pad) {
+                    newTop = pad;
+                    needsAdjust = true;
+                }
+
+                if (needsAdjust) {
+                    submenu.style.left = `${Math.max(pad, newLeft)}px`;
+                    submenu.style.top = `${Math.max(pad, newTop)}px`;
+                }
+            });
 
             // הוסף events ל-submenu
             submenu.onmouseenter = cancelClose;

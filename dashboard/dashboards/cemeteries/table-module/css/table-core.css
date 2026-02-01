@@ -660,6 +660,13 @@ body.dark-theme.color-scheme-green .tm-loading-spinner {
         height: auto;
         min-height: 40px;
     }
+
+    /* תפריט משנה - התאמה למובייל */
+    .tm-submenu {
+        min-width: 200px !important;
+        max-width: calc(100vw - 20px) !important;
+        max-height: calc(100vh - 20px) !important;
+    }
 }
 
 /* ===================================================================

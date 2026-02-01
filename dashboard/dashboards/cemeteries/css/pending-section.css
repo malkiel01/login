@@ -257,6 +257,7 @@
         padding: 10px;
         border-radius: 6px;
         max-height: none;
+        overflow: visible !important;
     }
 
     .pending-section-header {
@@ -289,10 +290,32 @@
         display: none;
     }
 
-    /* TableManager יטפל בהתאמה למובייל */
+    /* תיקון הצגת הטבלה במובייל */
+    .pending-section-body {
+        overflow: visible !important;
+    }
+
+    .pending-table-container {
+        overflow: visible !important;
+    }
+
+    /* TableManager במובייל */
     .pending-table-container .table-wrapper {
         height: auto !important;
-        min-height: 150px !important;
+        min-height: auto !important;
+        max-height: none !important;
+    }
+
+    .pending-table-container .table-fixed-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }
+
+    .pending-table-container .table-header-container,
+    .pending-table-container .table-body-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     .approval-progress {

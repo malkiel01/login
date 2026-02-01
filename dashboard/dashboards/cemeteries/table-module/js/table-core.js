@@ -3280,10 +3280,24 @@ class TableManager {
 
         this._updateSortIcons();
         this.state.currentPage = 1;
-        this.loadInitialData();
 
         // ⭐ שמירת העדפות מיון
         this._saveSortPreferences();
+
+        // ⭐ אם יש onFetchPage - פנה לשרת, אחרת מיון מקומי
+        if (this.config.onFetchPage) {
+            this.showLoadingIndicator();
+            console.log('🔄 Multi-level sorting via server');
+            this._fetchPageFromServer(1).then(() => {
+                console.log('✅ Server multi-level sort completed');
+            }).catch(err => {
+                console.error('❌ Server multi-level sort failed:', err);
+            });
+        } else {
+            // מיון מקומי רב-שלבי
+            this._sortByMultipleLevels();
+            this.loadInitialData();
+        }
     }
 
     /**

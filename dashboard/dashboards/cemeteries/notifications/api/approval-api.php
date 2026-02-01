@@ -32,10 +32,6 @@ if ($method === 'POST') {
 
 $action = $_GET['action'] ?? $input['action'] ?? '';
 
-// DEBUG: Log every request to this API
-$debugLog = "/home2/mbeplusc/public_html/form/login/approval-debug.log";
-file_put_contents($debugLog, date('Y-m-d H:i:s') . " - Action: $action, Method: $method, User: $userId\n", FILE_APPEND);
-
 try {
     switch ($action) {
         case 'respond':
@@ -270,10 +266,6 @@ function handleGetNotification(PDO $pdo, int $userId, NotificationLogger $logger
 
     // Send feedback to sender if enabled (first view)
     $logger->sendFeedbackToSender($notificationId, $userId, 'viewed');
-
-    // DEBUG: Log what we're returning
-    $debugLog = "/home2/mbeplusc/public_html/form/login/approval-debug.log";
-    file_put_contents($debugLog, date('Y-m-d H:i:s') . " - get_notification ID=$notificationId, URL=" . ($notification['url'] ?? 'NULL') . "\n", FILE_APPEND);
 
     echo json_encode([
         'success' => true,

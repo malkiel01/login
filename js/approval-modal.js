@@ -5,9 +5,6 @@
  * @version 1.0.0
  */
 
-// DEBUG: Alert when this file loads
-alert('approval-modal.js LOADED!');
-
 window.ApprovalModal = {
     modalElement: null,
     currentNotificationId: null,
@@ -374,18 +371,9 @@ window.ApprovalModal = {
             const notification = data.notification;
             notification.id = notificationId; // Ensure ID is set
 
-            // DEBUG: Log notification data
-            console.log('[ApprovalModal] Notification data received:', JSON.stringify(notification, null, 2));
-            console.log('[ApprovalModal] URL field:', notification.url);
-
-            // TEMP DEBUG: Visual alert for debugging
-            const urlValue = notification.url || 'NULL';
-            const hasEntityApprove = urlValue.includes('entity-approve.php');
-            alert('DEBUG:\nURL = ' + urlValue + '\nContains entity-approve.php? ' + hasEntityApprove);
-
-            // Force show iframe if URL contains entity-approve
-            if (hasEntityApprove) {
-                alert('Showing iframe now!');
+            // Check if this is an entity approval (has URL to entity-approve.php)
+            if (notification.url && notification.url.includes('entity-approve.php')) {
+                console.log('[ApprovalModal] Entity approval detected, showing iframe with:', notification.url);
                 this.init();
                 this.showEntityApprovalIframe(notification.url);
                 return;
@@ -422,14 +410,6 @@ window.ApprovalModal = {
                     this.showError('פג תוקף בקשת האישור');
                     document.getElementById('approvalFooter').style.display = 'none';
                 }
-                return;
-            }
-
-            // Check if this is an entity approval (has URL to entity-approve.php)
-            if (notification.url && notification.url.includes('entity-approve.php')) {
-                console.log('[ApprovalModal] Entity approval detected, showing iframe with:', notification.url);
-                this.init(); // Initialize modal first
-                this.showEntityApprovalIframe(notification.url);
                 return;
             }
 

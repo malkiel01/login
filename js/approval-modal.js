@@ -439,7 +439,14 @@ window.ApprovalModal = {
                 return;
             }
 
-            // Show content
+            // Check if this is an entity approval with custom URL
+            if (notification.url && notification.url.includes('entity-approve.php')) {
+                // Show entity approval page in iframe
+                this.showEntityApprovalIframe(notification.url);
+                return;
+            }
+
+            // Show generic content
             document.getElementById('approvalTitle').textContent = notification.title;
             document.getElementById('approvalBody').textContent = notification.body;
 
@@ -743,6 +750,99 @@ window.ApprovalModal = {
     },
 
     /**
+     * Show entity approval page in an iframe
+     * This replaces the generic approval content with the detailed entity-approve.php page
+     */
+    showEntityApprovalIframe(url) {
+        // Hide all content
+        document.getElementById('approvalLoading').style.display = 'none';
+        document.getElementById('approvalContent').style.display = 'none';
+        document.getElementById('approvalResponded').style.display = 'none';
+        document.getElementById('approvalError').style.display = 'none';
+        document.getElementById('approvalFooter').style.display = 'none'; // Hide default buttons - iframe has its own
+
+        // Update header title
+        const titleEl = this.modalElement.querySelector('.approval-modal-title');
+        if (titleEl) {
+            titleEl.textContent = 'אישור פעולה';
+        }
+
+        // Get modal body
+        const body = document.querySelector('.approval-modal-body');
+
+        // Create iframe container
+        let iframeContainer = document.getElementById('entityApprovalIframe');
+        if (!iframeContainer) {
+            iframeContainer = document.createElement('div');
+            iframeContainer.id = 'entityApprovalIframe';
+            iframeContainer.style.cssText = `
+                width: 100%;
+                height: 100%;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            `;
+
+            const iframe = document.createElement('iframe');
+            iframe.id = 'entityApproveFrame';
+            iframe.style.cssText = `
+                width: 100%;
+                height: 100%;
+                min-height: 500px;
+                flex: 1;
+                border: none;
+                border-radius: 0;
+            `;
+            iframeContainer.appendChild(iframe);
+
+            // Add CSS for iframe mode
+            if (!document.getElementById('entityApprovalIframeStyles')) {
+                const style = document.createElement('style');
+                style.id = 'entityApprovalIframeStyles';
+                style.textContent = `
+                    .approval-modal-fullscreen .approval-modal-body:has(#entityApprovalIframe) {
+                        padding: 0;
+                        overflow: hidden;
+                    }
+                    #entityApprovalIframe iframe {
+                        background: var(--bg-primary, white);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            body.appendChild(iframeContainer);
+        }
+
+        // Show iframe container
+        iframeContainer.style.display = 'flex';
+
+        // Load the entity approval page
+        const iframe = document.getElementById('entityApproveFrame');
+        iframe.src = url + '&embed=1'; // Add embed parameter to indicate iframe mode
+
+        // Listen for messages from the iframe
+        const messageHandler = (event) => {
+            if (event.data && event.data.type === 'entityApprovalComplete') {
+                window.removeEventListener('message', messageHandler);
+
+                if (event.data.status === 'approved') {
+                    this.showResponded('approved', true);
+                } else if (event.data.status === 'rejected') {
+                    this.showResponded('rejected', true);
+                } else {
+                    // Cancelled or other - just close
+                    this.close();
+                }
+            }
+        };
+        window.addEventListener('message', messageHandler);
+
+        // Store handler for cleanup
+        this._iframeMessageHandler = messageHandler;
+    },
+
+    /**
      * Show responded state (as a small popup with X to close)
      * @param {string} status - 'approved' or 'rejected'
      * @param {boolean} autoClose - if true, auto-close after 2 seconds (for fresh responses)
@@ -839,6 +939,18 @@ window.ApprovalModal = {
         if (this._escapeHandler) {
             document.removeEventListener('keydown', this._escapeHandler);
             this._escapeHandler = null;
+        }
+        // Remove iframe message handler
+        if (this._iframeMessageHandler) {
+            window.removeEventListener('message', this._iframeMessageHandler);
+            this._iframeMessageHandler = null;
+        }
+        // Clean up iframe if exists
+        const iframeContainer = document.getElementById('entityApprovalIframe');
+        if (iframeContainer) {
+            iframeContainer.style.display = 'none';
+            const iframe = document.getElementById('entityApproveFrame');
+            if (iframe) iframe.src = 'about:blank';
         }
         // Restore page scroll
         document.body.style.overflow = '';

@@ -276,7 +276,8 @@ function handleGetNotification(PDO $pdo, int $userId, NotificationLogger $logger
             'approval_message' => $notification['approval_message'],
             'approval_expires_at' => $notification['approval_expires_at'],
             'creator_name' => $notification['creator_name'],
-            'created_at' => $notification['created_at']
+            'created_at' => $notification['created_at'],
+            'url' => $notification['url'] ?? null
         ],
         'approval' => $approval,
         'expired' => $isExpired

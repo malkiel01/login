@@ -689,6 +689,20 @@ if (!$isDarkMode) {
             document.getElementById('rejectBtn').style.display = '';
         }
 
+        // Check if running inside iframe (embed mode)
+        const isEmbedMode = new URLSearchParams(window.location.search).has('embed') || window.parent !== window;
+
+        // Notify parent window (for iframe embed mode)
+        function notifyParent(status) {
+            if (isEmbedMode && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'entityApprovalComplete',
+                    status: status,
+                    pendingId: pendingId
+                }, '*');
+            }
+        }
+
         async function handleApprove() {
             if (!confirm('האם אתה בטוח שברצונך לאשר פעולה זו?')) {
                 return;
@@ -720,8 +734,14 @@ if (!$isDarkMode) {
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(data.complete ? 'הפעולה אושרה ובוצעה בהצלחה!' : 'האישור נרשם בהצלחה');
-                    location.reload();
+                    if (isEmbedMode) {
+                        // In iframe mode - notify parent
+                        notifyParent('approved');
+                    } else {
+                        // Standalone mode - show message and reload
+                        alert(data.complete ? 'הפעולה אושרה ובוצעה בהצלחה!' : 'האישור נרשם בהצלחה');
+                        location.reload();
+                    }
                 } else {
                     alert('שגיאה: ' + (data.error || 'לא ניתן לאשר'));
                 }
@@ -755,8 +775,14 @@ if (!$isDarkMode) {
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('הפעולה נדחתה');
-                    location.reload();
+                    if (isEmbedMode) {
+                        // In iframe mode - notify parent
+                        notifyParent('rejected');
+                    } else {
+                        // Standalone mode - show message and reload
+                        alert('הפעולה נדחתה');
+                        location.reload();
+                    }
                 } else {
                     alert('שגיאה: ' + (data.error || 'לא ניתן לדחות'));
                 }

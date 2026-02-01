@@ -1130,7 +1130,12 @@ class TableManager {
         if (this.config.onFetchPage) {
             // טען מחדש מהשרת עם המיון החדש
             this.showLoadingIndicator();
-            this._fetchPageFromServer(1);
+            console.log('🔄 Sorting via server, sortColumn:', this.state.sortColumn, 'sortOrder:', this.state.sortOrder);
+            this._fetchPageFromServer(1).then(() => {
+                console.log('✅ Server sort completed');
+            }).catch(err => {
+                console.error('❌ Server sort failed:', err);
+            });
         } else {
             // מיון מקומי
             this.state.filteredData.sort((a, b) => {

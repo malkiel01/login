@@ -267,6 +267,9 @@ function handleGetNotification(PDO $pdo, int $userId, NotificationLogger $logger
     // Send feedback to sender if enabled (first view)
     $logger->sendFeedbackToSender($notificationId, $userId, 'viewed');
 
+    // DEBUG: Log what we're returning
+    error_log("[ApprovalAPI] get_notification ID=$notificationId, URL=" . ($notification['url'] ?? 'NULL'));
+
     echo json_encode([
         'success' => true,
         'notification' => [

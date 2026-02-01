@@ -221,13 +221,21 @@
     }
 
     /* רוחב מותאם למובייל - גלילה אופקית */
-    .pending-section .table-container {
+    .pending-section-body {
+        width: 100% !important;
+        max-width: 100% !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
     }
 
-    .pending-section .table-body-container,
-    .pending-section .table-header-container {
+    .pending-section .table-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }
+
+    .pending-section .table-wrapper {
+        width: max-content !important;
         min-width: 100% !important;
     }
 

@@ -667,6 +667,46 @@ body.dark-theme.color-scheme-green .tm-loading-spinner {
         max-width: calc(100vw - 20px) !important;
         max-height: calc(100vh - 20px) !important;
     }
+
+    /* כפתורי תפריט */
+    .tm-menu-btn,
+    .tm-column-menu-btn {
+        padding: 2px 6px;
+        font-size: 14px;
+    }
+
+    /* תפריט עמודה */
+    .tm-column-menu {
+        min-width: 150px;
+    }
+
+    .tm-menu-item {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    /* טולבר */
+    .table-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .toolbar-section {
+        flex-wrap: wrap;
+    }
+
+    /* גלילה אופקית לטבלה */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* הקטנת רוחב מינימלי של עמודות */
+    .tm-header-cell,
+    .tm-cell {
+        min-width: 80px;
+    }
 }
 
 /* ===================================================================

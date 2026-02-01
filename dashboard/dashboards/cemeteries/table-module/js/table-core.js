@@ -2767,10 +2767,19 @@ class TableManager {
             const menuRect = menu.getBoundingClientRect();
             const pad = 10;
 
-            // מיקום אופקי
-            let left = rect.left;
-            if (left + menuRect.width > vw - pad) left = vw - menuRect.width - pad;
-            if (left < pad) left = pad;
+            // RTL: התפריט צריך להסתיים בצד ימין של הכפתור
+            // מיקום אופקי - התחל מימין הכפתור פחות רוחב התפריט
+            let left = rect.right - menuRect.width;
+
+            // אם יוצא משמאל - דחוף ימינה
+            if (left < pad) {
+                left = pad;
+            }
+
+            // אם יוצא מימין - דחוף שמאלה
+            if (left + menuRect.width > vw - pad) {
+                left = vw - menuRect.width - pad;
+            }
 
             // מיקום אנכי - מתחת לכפתור
             let top = rect.bottom + 5;
@@ -2901,17 +2910,30 @@ class TableManager {
                 const itemRect = item.getBoundingClientRect();
                 const submenuRect = submenu.getBoundingClientRect();
                 const pad = 10;
+                const mobile = vw <= 768;
 
-                // === מיקום אופקי ===
-                let left = itemRect.left - submenuRect.width;
-                if (left < pad) left = itemRect.right;
-                if (left + submenuRect.width > vw - pad) left = vw - submenuRect.width - pad;
-                if (left < pad) left = pad;
+                let left, top;
 
-                // === מיקום אנכי ===
-                let top = itemRect.top;
-                if (top + submenuRect.height > vh - pad) top = vh - submenuRect.height - pad;
-                if (top < pad) top = pad;
+                if (mobile) {
+                    // במובייל - מרכז את התפריט על המסך
+                    left = (vw - submenuRect.width) / 2;
+                    top = (vh - submenuRect.height) / 2;
+                } else {
+                    // בדסקטופ - נסה לפתוח משמאל לפריט
+                    left = itemRect.left - submenuRect.width;
+
+                    // אם יוצא משמאל - פתח מימין
+                    if (left < pad) {
+                        left = itemRect.right;
+                    }
+
+                    // אם יוצא מימין - דחוף שמאלה
+                    if (left + submenuRect.width > vw - pad) {
+                        left = vw - submenuRect.width - pad;
+                    }
+
+                    top = itemRect.top;
+                }
 
                 // כפה על ה-submenu להיות בתוך המסך
                 left = Math.max(pad, Math.min(left, vw - submenuRect.width - pad));

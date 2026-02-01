@@ -704,30 +704,60 @@ if (!$isDarkMode) {
         }
 
         async function handleApprove() {
-            if (!confirm('האם אתה בטוח שברצונך לאשר פעולה זו?')) {
+            // Check biometric availability
+            if (!window.biometricAuth || !window.biometricAuth.isSupported) {
+                alert('נדרש מכשיר התומך באימות ביומטרי');
                 return;
             }
 
-            showLoading(true);
-
-            // Try biometric authentication first
-            let biometricVerified = false;
-            if (window.BiometricAuth && await window.BiometricAuth.isAvailable()) {
-                try {
-                    const result = await window.BiometricAuth.authenticate('אימות לאישור פעולה');
-                    biometricVerified = result.success;
-                } catch (e) {
-                    console.log('Biometric auth skipped:', e);
-                }
+            // Check if user has biometric registered
+            let hasBiometric = false;
+            try {
+                hasBiometric = await window.biometricAuth.userHasBiometric();
+            } catch (e) {
+                console.error('Error checking biometric:', e);
+                alert('שגיאה בבדיקת אימות ביומטרי. נסה שוב.');
+                return;
             }
 
+            if (!hasBiometric) {
+                if (confirm('נדרש אימות ביומטרי לאישור. האם לעבור להגדרות לרישום טביעת אצבע / Face ID?')) {
+                    sessionStorage.setItem('pendingEntityApprovalId', pendingId);
+                    window.location.href = '/dashboard/dashboards/cemeteries/user-settings/settings-page.php?section=security';
+                }
+                return;
+            }
+
+            // Perform biometric authentication - MANDATORY
+            showLoading(true);
+            let biometricResult;
+            try {
+                biometricResult = await window.biometricAuth.authenticate();
+            } catch (e) {
+                console.error('Biometric error:', e);
+                alert('שגיאה באימות הביומטרי: ' + e.message);
+                showLoading(false);
+                return;
+            }
+
+            if (!biometricResult.success) {
+                if (biometricResult.userCancelled) {
+                    alert('האימות הביומטרי בוטל. יש לאשר עם טביעת אצבע / Face ID');
+                } else {
+                    alert('האימות הביומטרי נכשל. נסה שוב.');
+                }
+                showLoading(false);
+                return;
+            }
+
+            // Biometric verified - proceed with approval
             try {
                 const response = await fetch('/dashboard/dashboards/cemeteries/api/entity-approval-api.php?action=approve', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         pendingId: pendingId,
-                        biometric_verified: biometricVerified
+                        biometric_verified: true
                     })
                 });
 

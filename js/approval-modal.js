@@ -355,65 +355,9 @@ window.ApprovalModal = {
      * Once shown, user MUST respond - no escape possible
      */
     async show(notificationId) {
-        this.init();
         this.currentNotificationId = notificationId;
 
-        // Check if modal body was corrupted by showNoBiometricMessage()
-        // If so, we need to recreate the modal
-        const approvalLoading = document.getElementById('approvalLoading');
-        if (!approvalLoading) {
-            console.warn('[ApprovalModal] Modal body elements missing, recreating modal...');
-            // Remove the corrupted modal
-            if (this.modalElement) {
-                this.modalElement.remove();
-                this.modalElement = null;
-            }
-            // Reinitialize
-            this.init();
-        }
-
-        // Clear any leftover event handlers from previous showResponded()
-        if (this._escapeHandler) {
-            document.removeEventListener('keydown', this._escapeHandler);
-            this._escapeHandler = null;
-        }
-        this.modalElement.onclick = null;
-
-        // Reset to fullscreen mode (may have been changed by showResponded())
-        this.modalElement.classList.add('approval-fullscreen');
-        const modalInner = this.modalElement.querySelector('.approval-modal');
-        if (modalInner) {
-            modalInner.classList.add('approval-modal-fullscreen');
-        }
-
-        // Hide close button if visible from previous showResponded()
-        const closeBtn = this.modalElement.querySelector('.approval-modal-close');
-        if (closeBtn) {
-            closeBtn.style.display = 'none';
-        }
-
-        // Reset state
-        document.getElementById('approvalLoading').style.display = 'flex';
-        document.getElementById('approvalContent').style.display = 'none';
-        document.getElementById('approvalResponded').style.display = 'none';
-        document.getElementById('approvalError').style.display = 'none';
-        document.getElementById('approvalFooter').style.display = 'flex';
-
-        // Reset button states - fix for buttons staying disabled from previous attempts
-        const btnApprove = document.getElementById('btnModalApprove');
-        const btnReject = document.getElementById('btnModalReject');
-        if (btnApprove) btnApprove.disabled = false;
-        if (btnReject) btnReject.disabled = false;
-
-        // Push history state to block back navigation
-        history.pushState({ approvalModal: true }, '', window.location.href);
-
-        // Prevent page scroll while modal is open
-        document.body.style.overflow = 'hidden';
-
-        this.modalElement.style.display = 'flex';
-
-        // Load notification data
+        // Load notification data first to determine type
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/notifications/api/approval-api.php?action=get_notification&id=${notificationId}`, {
                 credentials: 'include'
@@ -425,28 +369,106 @@ window.ApprovalModal = {
             }
 
             const notification = data.notification;
+            notification.id = notificationId; // Ensure ID is set
 
             // Check if already responded
             if (data.approval && ['approved', 'rejected'].includes(data.approval.status)) {
-                this.showResponded(data.approval.status);
+                // Use templates if available, otherwise fallback to old modal
+                if (window.NotificationTemplates) {
+                    window.NotificationTemplates.showInfoNotification({
+                        id: notificationId,
+                        title: data.approval.status === 'approved' ? 'כבר אושר' : 'כבר נדחה',
+                        body: notification.title,
+                        level: data.approval.status === 'approved' ? 'success' : 'error'
+                    }, { autoDismiss: true, autoDismissDelay: 3000 });
+                } else {
+                    this.init();
+                    this.showResponded(data.approval.status);
+                }
                 return;
             }
 
             // Check if expired
             if (data.expired) {
-                this.showError('פג תוקף בקשת האישור');
-                document.getElementById('approvalFooter').style.display = 'none';
+                if (window.NotificationTemplates) {
+                    window.NotificationTemplates.showInfoNotification({
+                        id: notificationId,
+                        title: 'פג תוקף',
+                        body: 'פג תוקף בקשת האישור',
+                        level: 'warning'
+                    }, { autoDismiss: true, autoDismissDelay: 3000 });
+                } else {
+                    this.init();
+                    this.showError('פג תוקף בקשת האישור');
+                    document.getElementById('approvalFooter').style.display = 'none';
+                }
                 return;
             }
 
-            // Check if this is an entity approval with custom URL
+            // Check if this is an entity approval (has URL to entity-approve.php)
             if (notification.url && notification.url.includes('entity-approve.php')) {
-                // Show entity approval page in iframe
+                console.log('[ApprovalModal] Entity approval detected, showing iframe with:', notification.url);
+                this.init(); // Initialize modal first
                 this.showEntityApprovalIframe(notification.url);
                 return;
             }
 
-            // Show generic content
+            // ===== FALLBACK: Old modal approach if NotificationTemplates not loaded =====
+            this.init();
+
+            // Check if modal body was corrupted by showNoBiometricMessage()
+            const approvalLoading = document.getElementById('approvalLoading');
+            if (!approvalLoading) {
+                console.warn('[ApprovalModal] Modal body elements missing, recreating modal...');
+                if (this.modalElement) {
+                    this.modalElement.remove();
+                    this.modalElement = null;
+                }
+                this.init();
+            }
+
+            // Clear any leftover event handlers
+            if (this._escapeHandler) {
+                document.removeEventListener('keydown', this._escapeHandler);
+                this._escapeHandler = null;
+            }
+            this.modalElement.onclick = null;
+
+            // Reset to fullscreen mode
+            this.modalElement.classList.add('approval-fullscreen');
+            const modalInner = this.modalElement.querySelector('.approval-modal');
+            if (modalInner) {
+                modalInner.classList.add('approval-modal-fullscreen');
+            }
+
+            // Hide close button
+            const closeBtn = this.modalElement.querySelector('.approval-modal-close');
+            if (closeBtn) {
+                closeBtn.style.display = 'none';
+            }
+
+            // Reset state
+            document.getElementById('approvalLoading').style.display = 'none';
+            document.getElementById('approvalContent').style.display = 'block';
+            document.getElementById('approvalResponded').style.display = 'none';
+            document.getElementById('approvalError').style.display = 'none';
+            document.getElementById('approvalFooter').style.display = 'flex';
+
+            // Reset button states
+            const btnApprove = document.getElementById('btnModalApprove');
+            const btnReject = document.getElementById('btnModalReject');
+            if (btnApprove) btnApprove.disabled = false;
+            if (btnReject) btnReject.disabled = false;
+
+            // Push history state to block back navigation
+            history.pushState({ approvalModal: true }, '', window.location.href);
+
+            // Prevent page scroll
+            document.body.style.overflow = 'hidden';
+
+            this.modalElement.style.display = 'flex';
+
+            // Show content
             document.getElementById('approvalTitle').textContent = notification.title;
             document.getElementById('approvalBody').textContent = notification.body;
 
@@ -469,12 +491,18 @@ window.ApprovalModal = {
                 hintEl.textContent = '';
             }
 
-            document.getElementById('approvalLoading').style.display = 'none';
-            document.getElementById('approvalContent').style.display = 'block';
-
         } catch (error) {
             console.error('Error loading approval:', error);
-            this.showError(error.message);
+            if (window.NotificationTemplates) {
+                window.NotificationTemplates.showInfoNotification({
+                    title: 'שגיאה',
+                    body: error.message,
+                    level: 'error'
+                }, { autoDismiss: true, autoDismissDelay: 5000 });
+            } else {
+                this.init();
+                this.showError(error.message);
+            }
         }
     },
 
@@ -754,6 +782,22 @@ window.ApprovalModal = {
      * This replaces the generic approval content with the detailed entity-approve.php page
      */
     showEntityApprovalIframe(url) {
+        // Reset modal to fullscreen mode
+        this.modalElement.classList.add('approval-fullscreen');
+        const modalInner = this.modalElement.querySelector('.approval-modal');
+        if (modalInner) {
+            modalInner.classList.add('approval-modal-fullscreen');
+        }
+
+        // Show the modal
+        this.modalElement.style.display = 'flex';
+
+        // Prevent page scroll
+        document.body.style.overflow = 'hidden';
+
+        // Push history state to block back navigation
+        history.pushState({ approvalModal: true }, '', window.location.href);
+
         // Hide all content
         document.getElementById('approvalLoading').style.display = 'none';
         document.getElementById('approvalContent').style.display = 'none';
@@ -819,7 +863,8 @@ window.ApprovalModal = {
 
         // Load the entity approval page
         const iframe = document.getElementById('entityApproveFrame');
-        iframe.src = url + '&embed=1'; // Add embed parameter to indicate iframe mode
+        const separator = url.includes('?') ? '&' : '?';
+        iframe.src = url + separator + 'embed=1'; // Add embed parameter to indicate iframe mode
 
         // Listen for messages from the iframe
         const messageHandler = (event) => {

@@ -554,6 +554,8 @@ $isAdminUser = isAdmin();
     <script src="/push/push-subscribe.js"></script>
     <!-- Notification Modal - Dedicated screen for all notifications -->
     <script src="/js/notification-modal.js"></script>
+    <!-- Notification Templates - Different display types for notifications -->
+    <script src="/dashboard/dashboards/cemeteries/notifications/templates/load-templates.js"></script>
     <!-- Approval Modal for approval-type notifications -->
     <script src="/js/biometric-auth.js"></script>
     <script src="/js/approval-modal.js"></script>

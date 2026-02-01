@@ -210,33 +210,23 @@
         padding: 10px;
         border-radius: 6px;
         max-height: none;
-        overflow: visible !important;
+        overflow: hidden !important;
+        width: calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
     }
 
-    /* ביטול גובה קבוע במובייל - גובה אוטומטי */
+    /* ביטול גובה קבוע במובייל */
     .pending-section .table-wrapper {
         height: auto !important;
         min-height: auto !important;
         max-height: 300px !important;
+        overflow: visible !important;
     }
 
-    /* רוחב מותאם למובייל - גלילה אופקית */
+    /* גלילה אופקית */
     .pending-section-body {
-        width: 100% !important;
-        max-width: 100% !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
-    }
-
-    .pending-section .table-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow-x: auto !important;
-    }
-
-    .pending-section .table-wrapper {
-        width: max-content !important;
-        min-width: 100% !important;
     }
 
     .pending-section-header {

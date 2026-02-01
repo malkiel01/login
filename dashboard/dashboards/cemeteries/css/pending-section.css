@@ -159,56 +159,33 @@
 }
 
 /* ===================================================================
-   Pending Table - שימוש ב-TableManager
+   Pending Table - הבדלה ויזואלית בלבד (צבע רקע)
    =================================================================== */
 .pending-section-body {
     overflow: hidden;
 }
 
-/* החלפה בין דסקטופ למובייל */
-.pending-desktop-view {
-    display: block;
-}
-
-.pending-mobile-view {
-    display: none;
-}
-
-/* קונטיינר לטבלת TableManager */
-.pending-table-container {
-    width: 100%;
-    overflow: hidden;
-}
-
-/* התאמות ל-TableManager wrapper בתוך סקשן הממתינים */
-.pending-table-container .table-wrapper {
-    border: none !important;
-    border-radius: 0 !important;
-    height: auto !important;
-    min-height: auto !important;
-}
-
-/* הסתר toolbar בטבלת הממתינים - הטבלה הזו קטנה ולא צריכה toolbar */
-.pending-table-container .table-toolbar {
+/* הסתר toolbar בטבלת הממתינים - טבלה קטנה */
+.pending-section .table-toolbar {
     display: none !important;
 }
 
-/* הבדלה ויזואלית של טבלת הממתינים - רקע צהבהב עדין */
-.pending-table-container .table-body-container {
+/* הבדלה ויזואלית - רקע צהבהב עדין */
+.pending-section .table-body-container {
     background: rgba(251, 191, 36, 0.05) !important;
 }
 
-/* שורות בטבלת הממתינים - רקע צהבהב מעט יותר חזק */
-.pending-table-container .tm-row {
+/* שורות - רקע צהבהב */
+.pending-section .tm-row {
     background: rgba(251, 191, 36, 0.08) !important;
 }
 
-.pending-table-container .tm-row:hover {
+.pending-section .tm-row:hover {
     background: rgba(251, 191, 36, 0.15) !important;
 }
 
-/* כותרות בטבלת הממתינים */
-.pending-table-container .tm-header-cell {
+/* כותרות */
+.pending-section .tm-header-cell {
     background: #fef3c7 !important;
     color: #92400e !important;
     font-weight: 600 !important;
@@ -225,36 +202,6 @@
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
-}
-
-/* כפתורי פעולה בטבלה */
-.pending-data-table .actions-cell {
-    white-space: nowrap;
-}
-
-.pending-data-table .btn {
-    padding: 6px 8px;
-    margin-left: 4px;
-}
-
-.pending-data-table .btn-outline {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-}
-
-.pending-data-table .btn-outline:hover {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-}
-
-.pending-data-table .btn-danger {
-    border-color: #ef4444;
-    color: #ef4444;
-}
-
-.pending-data-table .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.1);
 }
 
 /* ====================================
@@ -299,15 +246,6 @@
         display: none;
     }
 
-    /* החלפה לכרטיסים במובייל */
-    .pending-desktop-view {
-        display: none !important;
-    }
-
-    .pending-mobile-view {
-        display: block !important;
-    }
-
     .approval-progress {
         padding: 3px 6px;
         font-size: 10px;
@@ -317,103 +255,6 @@
         font-size: 11px;
         padding: 2px 6px;
     }
-}
-
-/* ====================================
-   Pending Cards - Mobile View
-   ==================================== */
-.pending-cards-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 350px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.pending-card {
-    background: rgba(251, 191, 36, 0.1);
-    border: 1px solid rgba(251, 191, 36, 0.3);
-    border-radius: 10px;
-    padding: 12px;
-    transition: all 0.2s ease;
-}
-
-.pending-card:active {
-    background: rgba(251, 191, 36, 0.2);
-}
-
-.pending-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.pending-card-header .pending-badge {
-    font-size: 11px;
-    padding: 3px 8px;
-}
-
-.pending-card-header .pending-badge svg {
-    width: 12px;
-    height: 12px;
-}
-
-.pending-card-body {
-    margin-bottom: 10px;
-}
-
-.pending-card-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 6px;
-}
-
-.pending-card-details {
-    display: flex;
-    gap: 16px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.pending-card-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-tertiary, #9ca3af);
-}
-
-.pending-card-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    padding-top: 10px;
-    border-top: 1px solid rgba(251, 191, 36, 0.2);
-}
-
-.pending-card-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid var(--border-color);
-    background: var(--bg-primary, white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.pending-card-btn:active {
-    background: var(--bg-tertiary);
-    transform: scale(0.95);
-}
-
-.pending-card-btn svg {
-    color: var(--text-secondary);
 }
 
 @media screen and (max-width: 480px) {

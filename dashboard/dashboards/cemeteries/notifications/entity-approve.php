@@ -478,9 +478,38 @@ if (isset($_GET['embed'])) {
 
         body.embed-mode .card-header {
             padding: 16px 20px;
+        }
+
+        /* Top sticky header for embed mode */
+        .embed-header {
+            display: none;
+        }
+
+        body.embed-mode .embed-header {
+            display: block;
             position: sticky;
             top: 0;
             z-index: 50;
+            background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
+            color: white;
+            padding: 14px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        body.embed-mode .card-header {
+            background: var(--bg-secondary, #f1f5f9);
+            color: var(--text-primary, #1e293b);
+        }
+
+        body.embed-mode .card-header h1 {
+            color: var(--text-primary, #1e293b);
+        }
+
+        body.embed-mode .card-header .subtitle {
+            color: var(--text-secondary, #475569);
+            opacity: 1;
         }
 
         body.embed-mode .card-body {
@@ -581,6 +610,9 @@ if (isset($_GET['embed'])) {
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
+
+    <!-- Sticky header for embed mode -->
+    <div class="embed-header">בקשת אישור</div>
 
     <div class="approval-card">
         <div class="card-header">

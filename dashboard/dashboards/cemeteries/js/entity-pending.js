@@ -520,7 +520,7 @@ const EntityPending = {
 
             // הגדרות תצוגה
             totalItems: data.length,
-            scrollLoadBatch: 0,  // ללא infinite scroll - הכל מוצג
+            scrollLoadBatch: 999999,  // טען הכל בבת אחת
             showPagination: false,
 
             // גובה מותאם לסקשן

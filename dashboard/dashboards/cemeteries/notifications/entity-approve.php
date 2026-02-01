@@ -461,12 +461,14 @@ if (isset($_GET['embed'])) {
 
         /* Embed mode - full screen, no card styling, sticky buttons */
         body.embed-mode {
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            justify-content: flex-start;
-            background: var(--bg-primary);
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            background: var(--bg-primary) !important;
+            min-height: 100vh;
         }
 
         /* Top sticky header for embed mode - MUST BE FIRST */
@@ -475,10 +477,12 @@ if (isset($_GET['embed'])) {
         }
 
         body.embed-mode .embed-header {
-            display: block;
-            position: sticky;
+            display: block !important;
+            position: fixed;
             top: 0;
-            z-index: 50;
+            left: 0;
+            right: 0;
+            z-index: 100;
             width: 100%;
             background: linear-gradient(135deg, var(--color-primary, #22c55e) 0%, var(--color-primary-dark, #16a34a) 100%);
             color: white;
@@ -487,7 +491,12 @@ if (isset($_GET['embed'])) {
             font-size: 18px;
             font-weight: 600;
             text-align: center;
-            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        /* Add top padding to approval-card to account for fixed header */
+        body.embed-mode .approval-card {
+            margin-top: calc(46px + env(safe-area-inset-top, 0px));
         }
 
         body.embed-mode .approval-card {

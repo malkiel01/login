@@ -341,13 +341,19 @@ window.ApprovalModal = {
         // NO close on overlay click - user MUST respond
         // NO close on Escape key - user MUST respond
 
-        // Block back button while modal is open
-        window.addEventListener('popstate', (e) => {
+        // Handle back button - behavior depends on modal mode
+        this._popstateHandler = (e) => {
             if (this.modalElement && this.modalElement.style.display !== 'none') {
-                // Push state again to prevent navigation
-                history.pushState(null, '', window.location.href);
+                if (this._allowBackClose) {
+                    // Entity approval mode - allow back to close
+                    this.close();
+                } else {
+                    // Regular approval mode - block back navigation
+                    history.pushState(null, '', window.location.href);
+                }
             }
-        });
+        };
+        window.addEventListener('popstate', this._popstateHandler);
     },
 
     /**
@@ -795,8 +801,11 @@ window.ApprovalModal = {
         // Prevent page scroll
         document.body.style.overflow = 'hidden';
 
-        // Push history state to block back navigation
-        history.pushState({ approvalModal: true }, '', window.location.href);
+        // Push history state - this creates a new "screen" that back button will close
+        history.pushState({ entityApproval: true }, '', window.location.href);
+
+        // Allow back button to close this modal (unlike regular approval)
+        this._allowBackClose = true;
 
         // Hide all content
         document.getElementById('approvalLoading').style.display = 'none';
@@ -998,6 +1007,8 @@ window.ApprovalModal = {
         // Restore page scroll
         document.body.style.overflow = '';
         this.currentNotificationId = null;
+        // Reset back button behavior
+        this._allowBackClose = false;
 
         // קריאה ל-callback אם הוגדר (לעדכון אייפריים וכו')
         if (typeof this.onClose === 'function') {

@@ -1,0 +1,220 @@
+/**
+ * Pending Entity Badges
+ * Styles for displaying pending approval status on entities
+ * @version 1.0.0
+ */
+
+/* Badge Base */
+.pending-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Create Pending */
+.pending-badge.pending-create {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+/* Edit Pending */
+.pending-badge.pending-edit {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+/* Delete Pending */
+.pending-badge.pending-delete {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* Icon in badge */
+.pending-badge svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Row highlight for pending entities */
+tr.has-pending-operation {
+    background: rgba(251, 191, 36, 0.08) !important;
+}
+
+tr.has-pending-operation:hover {
+    background: rgba(251, 191, 36, 0.15) !important;
+}
+
+/* Pending indicator dot */
+.pending-indicator {
+    position: relative;
+}
+
+.pending-indicator::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    border: 2px solid var(--bg-primary, white);
+    animation: pulse-pending 2s infinite;
+}
+
+@keyframes pulse-pending {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+}
+
+/* Pending operations banner */
+.pending-operations-banner {
+    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pending-operations-banner-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #92400e;
+    font-size: 14px;
+}
+
+.pending-operations-banner-text svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.pending-operations-banner-count {
+    font-weight: 600;
+}
+
+.pending-operations-banner-link {
+    color: #92400e;
+    text-decoration: underline;
+    font-size: 14px;
+}
+
+.pending-operations-banner-link:hover {
+    color: #78350f;
+}
+
+/* Dark theme adjustments */
+.dark-theme .pending-badge.pending-create {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.dark-theme .pending-badge.pending-edit {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.dark-theme .pending-badge.pending-delete {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.dark-theme tr.has-pending-operation {
+    background: rgba(251, 191, 36, 0.1) !important;
+}
+
+.dark-theme tr.has-pending-operation:hover {
+    background: rgba(251, 191, 36, 0.2) !important;
+}
+
+.dark-theme .pending-operations-banner {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.1) 100%);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.dark-theme .pending-operations-banner-text {
+    color: #fbbf24;
+}
+
+.dark-theme .pending-operations-banner-link {
+    color: #fbbf24;
+}
+
+/* Tooltip for pending info */
+.pending-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.pending-tooltip .pending-tooltip-text {
+    visibility: hidden;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.pending-tooltip .pending-tooltip-text::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+}
+
+.pending-tooltip:hover .pending-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Status column with pending */
+.status-with-pending {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Compact mode adjustments */
+.compact-mode .pending-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+}
+
+.compact-mode .pending-operations-banner {
+    padding: 8px 12px;
+}

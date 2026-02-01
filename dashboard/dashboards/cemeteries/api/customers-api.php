@@ -14,6 +14,7 @@
 
     // אימות והרשאות - חייב להיות מחובר!
     require_once __DIR__ . '/api-auth.php';
+    require_once __DIR__ . '/services/EntityApprovalService.php';
 
     try {
         $pdo = getDBConnection();
@@ -696,39 +697,63 @@
 
                 // חישוב תושבות אוטומטי - רק בהוספת לקוח חדש
                 $data['resident'] = calculateResidency(
-                    $pdo, 
+                    $pdo,
                     $data['typeId'] ?? 3,
-                    $data['countryId'] ?? null, 
+                    $data['countryId'] ?? null,
                     $data['cityId'] ?? null
                 );
-                
+
                 // חישוב גיל אם יש תאריך לידה
                 if (!empty($data['dateBirth'])) {
                     $birthDate = new DateTime($data['dateBirth']);
                     $today = new DateTime();
                     $data['age'] = $birthDate->diff($today)->y;
                 }
-                
+
                 // יצירת unicId
                 $data['unicId'] = uniqid('customer_', true);
-                
+
                 // הוספת תאריכים
                 $data['createDate'] = date('Y-m-d H:i:s');
                 $data['updateDate'] = date('Y-m-d H:i:s');
-                
+
+                // === בדיקת אישור מורשה חתימה ===
+                $approvalService = EntityApprovalService::getInstance($pdo);
+                $currentUserId = getCurrentUserId();
+                $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'customers', 'create');
+
+                if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'customers', 'create')) {
+                    $result = $approvalService->createPendingOperation([
+                        'entity_type' => 'customers',
+                        'action' => 'create',
+                        'operation_data' => $data,
+                        'requested_by' => $currentUserId
+                    ]);
+
+                    echo json_encode([
+                        'success' => true,
+                        'pending' => true,
+                        'pendingId' => $result['pendingId'],
+                        'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                        'expiresAt' => $result['expiresAt']
+                    ]);
+                    break;
+                }
+                // === סוף בדיקת אישור ===
+
                 // בניית השאילתה
                 $fields = [
                     'unicId', 'typeId', 'numId', 'firstName', 'lastName', 'oldName', 'nom',
                     'gender', 'nameFather', 'nameMother', 'maritalStatus', 'dateBirth',
-                    'countryBirth', 'countryBirthId', 'age', 'resident', 'countryId', 'cityId', 
+                    'countryBirth', 'countryBirthId', 'age', 'resident', 'countryId', 'cityId',
                     'address', 'phone', 'phoneMobile', 'statusCustomer', 'spouse', 'comment',
                     'association', 'dateBirthHe', 'tourist', 'createDate', 'updateDate'
                 ];
-                
+
                 $insertFields = [];
                 $insertValues = [];
                 $params = [];
-                
+
                 foreach ($fields as $field) {
                     if (isset($data[$field])) {
                         $insertFields[] = $field;
@@ -736,10 +761,10 @@
                         $params[$field] = $data[$field];
                     }
                 }
-                
-                $sql = "INSERT INTO customers (" . implode(', ', $insertFields) . ") 
+
+                $sql = "INSERT INTO customers (" . implode(', ', $insertFields) . ")
                         VALUES (" . implode(', ', $insertValues) . ")";
-                
+
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
 
@@ -810,7 +835,7 @@
                     $checkStmt = $pdo->prepare("SELECT numId FROM customers WHERE unicId = :id");
                     $checkStmt->execute(['id' => $id]);
                     $currentNumId = $checkStmt->fetchColumn();
-                    
+
                     // בדוק כפילות רק אם המספר השתנה
                     if ($currentNumId != $data['numId']) {
                         $stmt = $pdo->prepare("SELECT unicId FROM customers WHERE numId = :numId AND isActive = 1");
@@ -827,10 +852,10 @@
                     $today = new DateTime();
                     $data['age'] = $birthDate->diff($today)->y;
                 }
-                
+
                 // עדכון תאריך
                 $data['updateDate'] = date('Y-m-d H:i:s');
-                
+
                 // בניית השאילתה
                 $fields = [
                     'typeId', 'numId', 'firstName', 'lastName', 'oldName', 'nom',
@@ -839,20 +864,50 @@
                     'address', 'phone', 'phoneMobile', 'statusCustomer', 'spouse', 'comment',
                     'association', 'dateBirthHe', 'tourist', 'updateDate'
                 ];
-                
+
                 $updateFields = [];
                 $params = ['id' => $id];
-                
+
                 foreach ($fields as $field) {
                     if (isset($data[$field])) {
                         $updateFields[] = "$field = :$field";
                         $params[$field] = $data[$field];
                     }
                 }
-                
+
                 if (empty($updateFields)) {
                     throw new Exception('No fields to update');
                 }
+
+                // === בדיקת אישור מורשה חתימה ===
+                $approvalService = EntityApprovalService::getInstance($pdo);
+                $currentUserId = getCurrentUserId();
+                $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'customers', 'edit');
+
+                if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'customers', 'edit')) {
+                    // שמירת המידע המקורי
+                    $stmt = $pdo->prepare("SELECT * FROM customers WHERE unicId = :id");
+                    $stmt->execute(['id' => $id]);
+                    $originalData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    $result = $approvalService->createPendingOperation([
+                        'entity_type' => 'customers',
+                        'action' => 'edit',
+                        'entity_id' => $id,
+                        'operation_data' => $data,
+                        'original_data' => $originalData,
+                        'requested_by' => $currentUserId
+                    ]);
+
+                    echo json_encode([
+                        'success' => true,
+                        'pending' => true,
+                        'pendingId' => $result['pendingId'],
+                        'message' => 'הבקשה לעריכה נשלחה לאישור מורשה חתימה'
+                    ]);
+                    break;
+                }
+                // === סוף בדיקת אישור ===
 
                 // ===== בדיקת בן/בת זוג קודמים לפני עדכון =====
                 $getOldSpouseStmt = $pdo->prepare("SELECT spouse FROM customers WHERE unicId = :id");
@@ -924,20 +979,54 @@
                 if (!$id) {
                     throw new Exception('Customer ID is required');
                 }
-                
+
                 // בדיקה אם יש רכישות או קבורות קשורות
                 $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchases WHERE clientId = :id AND isActive = 1");
                 $stmt->execute(['id' => $id]);
                 $purchases = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                
+
                 if ($purchases > 0) {
                     throw new Exception('לא ניתן למחוק לקוח עם רכישות פעילות');
                 }
-                
+
+                // קבלת פרטי הלקוח לפני מחיקה
+                $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = :id AND isActive = 1");
+                $stmt->execute(['id' => $id]);
+                $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$customer) {
+                    throw new Exception('הלקוח לא נמצא');
+                }
+
+                // === בדיקת אישור מורשה חתימה ===
+                $approvalService = EntityApprovalService::getInstance($pdo);
+                $currentUserId = getCurrentUserId();
+                $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'customers', 'delete');
+
+                if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'customers', 'delete')) {
+                    $result = $approvalService->createPendingOperation([
+                        'entity_type' => 'customers',
+                        'action' => 'delete',
+                        'entity_id' => $id,
+                        'operation_data' => ['id' => $id],
+                        'original_data' => $customer,
+                        'requested_by' => $currentUserId
+                    ]);
+
+                    echo json_encode([
+                        'success' => true,
+                        'pending' => true,
+                        'pendingId' => $result['pendingId'],
+                        'message' => 'הבקשה למחיקה נשלחה לאישור מורשה חתימה'
+                    ]);
+                    break;
+                }
+                // === סוף בדיקת אישור ===
+
                 // מחיקה רכה
                 $stmt = $pdo->prepare("UPDATE customers SET isActive = 0, inactiveDate = :date WHERE id = :id");
                 $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
-                
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'הלקוח נמחק בהצלחה'

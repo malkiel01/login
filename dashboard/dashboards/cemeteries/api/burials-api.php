@@ -14,6 +14,7 @@
 
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
+require_once __DIR__ . '/services/EntityApprovalService.php';
 
 // =====================================
 // 1️⃣ קבלת נתוני POST/GET
@@ -197,7 +198,7 @@ try {
         case 'create':
             requireCreatePermission('burials');
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             // אימות שדות חובה
             $required = ['clientId', 'graveId', 'dateDeath', 'dateBurial', 'timeBurial'];
             foreach ($required as $field) {
@@ -205,31 +206,57 @@ try {
                     throw new Exception("השדה $field הוא חובה");
                 }
             }
-            
+
             // בדוק אם הקבר תפוס
             $stmt = $pdo->prepare("SELECT graveStatus FROM graves WHERE unicId = :id");
             $stmt->execute(['id' => $data['graveId']]);
             $grave = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$grave) {
                 throw new Exception('הקבר לא נמצא');
             }
-            
+
             if ($grave['graveStatus'] == 3) {
                 throw new Exception('הקבר תפוס - לא ניתן לבצע קבורה');
             }
-            
+
             // יצירת unicId
             $unicId = uniqid('burial_', true);
-            
+            $data['unicId'] = $unicId;
+
             // הכנת נתונים
             $serialBurialId = $data['serialBurialId'] ?? 'B-' . date('Ymd') . '-' . rand(1000, 9999);
+            $data['serialBurialId'] = $serialBurialId;
             $placeDeath = $data['placeDeath'] ?? '';
             $nationalInsurance = $data['nationalInsuranceBurial'] ?? 'לא';
             $deathAbroad = $data['deathAbroad'] ?? 'לא';
             $comment = $data['comment'] ?? '';
             $timeDeath = $data['timeDeath'] ?? null;
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'burials', 'create');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'burials', 'create')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'burials',
+                    'action' => 'create',
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             // הכנסה למסד הנתונים
             $stmt = $pdo->prepare("
                 INSERT INTO burials (
@@ -248,7 +275,7 @@ try {
                     NOW(), NOW(), 1
                 )
             ");
-            
+
             $stmt->execute([
                 'unicId' => $unicId,
                 'clientId' => $data['clientId'],
@@ -264,15 +291,15 @@ try {
                 'deathAbroad' => $deathAbroad,
                 'comment' => $comment
             ]);
-            
+
             // עדכן סטטוס הקבר לתפוס (3)
             $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 3 WHERE unicId = :id");
             $stmt->execute(['id' => $data['graveId']]);
-            
+
             // עדכן סטטוס הלקוח לנפטר (3)
             $stmt = $pdo->prepare("UPDATE customers SET statusCustomer = 3 WHERE unicId = :id");
             $stmt->execute(['id' => $data['clientId']]);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'הקבורה נוצרה בהצלחה',
@@ -286,47 +313,72 @@ try {
             if (!$id) {
                 throw new Exception('Burial ID is required');
             }
-            
+
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             // שליפת הקבורה הקיימת
             $stmt = $pdo->prepare("SELECT * FROM burials WHERE unicId = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$existing) {
                 throw new Exception('הקבורה לא נמצאה');
             }
-            
+
             // הכנת שדות לעדכון
             $updates = [];
             $params = ['id' => $id];
-            
+
             $allowedFields = [
                 'dateDeath', 'timeDeath', 'dateBurial', 'timeBurial',
                 'placeDeath', 'nationalInsuranceBurial', 'deathAbroad',
                 'comment'
             ];
-            
+
             foreach ($allowedFields as $field) {
                 if (isset($data[$field])) {
                     $updates[] = "$field = :$field";
                     $params[$field] = $data[$field];
                 }
             }
-            
+
             if (empty($updates)) {
                 throw new Exception('אין שדות לעדכון');
             }
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'burials', 'edit');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'burials', 'edit')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'burials',
+                    'action' => 'edit',
+                    'entity_id' => $id,
+                    'operation_data' => $data,
+                    'original_data' => $existing,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה לעריכה נשלחה לאישור מורשה חתימה'
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             // הוסף תאריך עדכון
             $updates[] = "updateDate = NOW()";
-            
+
             // ביצוע העדכון
             $sql = "UPDATE burials SET " . implode(', ', $updates) . " WHERE unicId = :id";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'הקבורה עודכנה בהצלחה'
@@ -338,20 +390,45 @@ try {
             if (!$id) {
                 throw new Exception('Burial ID is required');
             }
-            
+
             // קבלת פרטי הקבורה
             $stmt = $pdo->prepare("SELECT graveId, clientId FROM burials WHERE id = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $burial = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$burial) {
                 throw new Exception('הקבורה לא נמצאה');
             }
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'burials', 'delete');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'burials', 'delete')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'burials',
+                    'action' => 'delete',
+                    'entity_id' => $id,
+                    'operation_data' => ['id' => $id],
+                    'original_data' => $burial,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה למחיקה נשלחה לאישור מורשה חתימה'
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             // מחיקה רכה
             $stmt = $pdo->prepare("UPDATE burials SET isActive = 0, inactiveDate = :date WHERE id = :id");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
-            
+
             // עדכון סטטוס הקבר - בדוק אם יש רכישה פעילה
             if ($burial['graveId']) {
                 // בדוק אם יש רכישה פעילה לקבר זה
@@ -369,22 +446,22 @@ try {
                     $stmt->execute(['id' => $burial['graveId']]);
                 }
             }
-            
+
             // בדוק אם ללקוח יש קבורות אחרות
             if ($burial['clientId']) {
                 $stmt = $pdo->prepare("
-                    SELECT COUNT(*) FROM burials 
+                    SELECT COUNT(*) FROM burials
                     WHERE clientId = :clientId AND id != :burialId AND isActive = 1
                 ");
                 $stmt->execute(['clientId' => $burial['clientId'], 'burialId' => $id]);
-                
+
                 // אם אין לו קבורות אחרות, החזר אותו לסטטוס רוכש (2)
                 if ($stmt->fetchColumn() == 0) {
                     $stmt = $pdo->prepare("UPDATE customers SET statusCustomer = 2 WHERE unicId = :id");
                     $stmt->execute(['id' => $burial['clientId']]);
                 }
             }
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'הקבורה נמחקה בהצלחה'

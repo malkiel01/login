@@ -391,6 +391,13 @@ $canManageRoles = isAdmin() || hasModulePermission('roles', 'view');
             <h1 class="page-title">ניהול משתמשים</h1>
             <div class="header-actions">
                 <?php if ($canManageRoles): ?>
+                <button class="btn btn-secondary" onclick="openApprovalSettings()">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    הגדרות אישור
+                </button>
                 <button class="btn btn-secondary" onclick="openRolesManager()">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
@@ -688,6 +695,25 @@ $canManageRoles = isAdmin() || hasModulePermission('roles', 'view');
                 });
             } else {
                 window.location.href = '/dashboard/dashboards/cemeteries/users/roles.php';
+            }
+        }
+
+        // Open approval settings
+        function openApprovalSettings() {
+            if (typeof PopupManager !== 'undefined') {
+                PopupManager.create({
+                    id: 'approval-settings-popup',
+                    type: 'iframe',
+                    src: '/dashboard/dashboards/cemeteries/users/approval-settings.php',
+                    title: 'הגדרות אישור פעולות',
+                    width: 1000,
+                    height: 800,
+                    onClose: () => {
+                        loadUsers();
+                    }
+                });
+            } else {
+                window.location.href = '/dashboard/dashboards/cemeteries/users/approval-settings.php';
             }
         }
 

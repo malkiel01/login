@@ -480,15 +480,83 @@ const EntityPending = {
                     </button>
                 </div>
                 <div class="pending-section-body">
-                    <div class="pending-table-container">
+                    <!-- טבלה לדסקטופ -->
+                    <div class="pending-table-container pending-desktop-view">
                         <table id="pendingTable" class="data-table">
                             <thead><tr><th>טוען...</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
+                    <!-- כרטיסים למובייל -->
+                    <div class="pending-cards-container pending-mobile-view" id="pendingCards"></div>
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * יצירת כרטיס ממתין למובייל
+     * @param {Object} pending - נתוני הממתין
+     * @returns {string}
+     */
+    createPendingCard(pending) {
+        const isOwner = pending.is_owner;
+        const fullName = `${pending.firstName || ''} ${pending.lastName || ''}`.trim() || '-';
+        const phone = pending.phoneMobile || pending.phone || '-';
+        const expiresAt = pending.expires_at ? new Date(pending.expires_at).toLocaleDateString('he-IL') : 'ללא';
+
+        let actions = `
+            <button class="pending-card-btn" onclick="EntityPending.openApproval(${pending.pending_id})" title="צפייה">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+        `;
+
+        if (isOwner) {
+            actions += `
+                <button class="pending-card-btn" onclick="EntityPending.cancelPending(${pending.pending_id})" title="ביטול">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            `;
+        }
+
+        return `
+            <div class="pending-card" data-pending-id="${pending.pending_id}">
+                <div class="pending-card-header">
+                    <span class="pending-badge pending-create">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+                        ממתין
+                    </span>
+                    <span class="approval-progress">${pending.approved_count || 0}/${pending.required_approvals}</span>
+                </div>
+                <div class="pending-card-body">
+                    <div class="pending-card-name">${fullName}</div>
+                    <div class="pending-card-details">
+                        <span>${pending.numId || '-'}</span>
+                        <span>${phone}</span>
+                    </div>
+                    <div class="pending-card-meta">
+                        <span>מבקש: ${pending.requester_name || '-'}</span>
+                        <span>תוקף: ${expiresAt}</span>
+                    </div>
+                </div>
+                <div class="pending-card-actions">${actions}</div>
+            </div>
+        `;
+    },
+
+    /**
+     * יצירת כרטיסים למובייל
+     * @param {Array} pendingList - רשימת הממתינים
+     */
+    renderPendingCards(pendingList) {
+        const container = document.getElementById('pendingCards');
+        if (!container) return;
+
+        container.innerHTML = pendingList.map(p => this.createPendingCard(p)).join('');
     },
 
     // שמירת instance של TableManager לממתינים
@@ -499,17 +567,26 @@ const EntityPending = {
      * @param {Array} data - נתוני הממתינים
      */
     initPendingTable(data) {
-        // אם כבר יש instance - עדכן את הנתונים
-        if (this.pendingTableInstance) {
-            this.pendingTableInstance.setData(data);
-            return;
-        }
-
         // בדיקה שהאלמנט קיים
         const table = document.getElementById('pendingTable');
         if (!table) {
             console.error('❌ pendingTable not found');
+            this.pendingTableInstance = null;
             return;
+        }
+
+        // בדיקה אם ה-DOM של הטבלה הקיימת עדיין קיים
+        // אם ה-instance קיים אבל ה-DOM שלו נמחק - צריך לאפס
+        if (this.pendingTableInstance) {
+            const existingWrapper = document.querySelector('.pending-table-container .table-wrapper');
+            if (existingWrapper) {
+                // ה-DOM קיים - עדכן את הנתונים
+                this.pendingTableInstance.setData(data);
+                return;
+            } else {
+                // ה-DOM נמחק - אפס את ה-instance
+                this.pendingTableInstance = null;
+            }
         }
 
         // יצירת TableManager
@@ -691,10 +768,11 @@ const EntityPending = {
             // טעינת מצב שמור (collapsed/expanded)
             this.loadPendingSectionState();
 
-            // אתחול TableManager עם הנתונים
-            // המתנה קצרה לוודא שה-DOM מוכן
+            // אתחול TableManager עם הנתונים (לדסקטופ)
+            // ויצירת כרטיסים (למובייל)
             setTimeout(() => {
                 this.initPendingTable(pending);
+                this.renderPendingCards(pending);
             }, 50);
         } else {
             // אין ממתינים - הסתר את הכפתור

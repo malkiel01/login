@@ -165,6 +165,15 @@
     overflow: hidden;
 }
 
+/* החלפה בין דסקטופ למובייל */
+.pending-desktop-view {
+    display: block;
+}
+
+.pending-mobile-view {
+    display: none;
+}
+
 /* קונטיינר לטבלת TableManager */
 .pending-table-container {
     width: 100%;
@@ -290,32 +299,13 @@
         display: none;
     }
 
-    /* תיקון הצגת הטבלה במובייל */
-    .pending-section-body {
-        overflow: visible !important;
+    /* החלפה לכרטיסים במובייל */
+    .pending-desktop-view {
+        display: none !important;
     }
 
-    .pending-table-container {
-        overflow: visible !important;
-    }
-
-    /* TableManager במובייל */
-    .pending-table-container .table-wrapper {
-        height: auto !important;
-        min-height: auto !important;
-        max-height: none !important;
-    }
-
-    .pending-table-container .table-fixed-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow-x: auto !important;
-    }
-
-    .pending-table-container .table-header-container,
-    .pending-table-container .table-body-container {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
+    .pending-mobile-view {
+        display: block !important;
     }
 
     .approval-progress {
@@ -327,6 +317,103 @@
         font-size: 11px;
         padding: 2px 6px;
     }
+}
+
+/* ====================================
+   Pending Cards - Mobile View
+   ==================================== */
+.pending-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 350px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pending-card {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 10px;
+    padding: 12px;
+    transition: all 0.2s ease;
+}
+
+.pending-card:active {
+    background: rgba(251, 191, 36, 0.2);
+}
+
+.pending-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.pending-card-header .pending-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+}
+
+.pending-card-header .pending-badge svg {
+    width: 12px;
+    height: 12px;
+}
+
+.pending-card-body {
+    margin-bottom: 10px;
+}
+
+.pending-card-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.pending-card-details {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.pending-card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-tertiary, #9ca3af);
+}
+
+.pending-card-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.pending-card-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary, white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pending-card-btn:active {
+    background: var(--bg-tertiary);
+    transform: scale(0.95);
+}
+
+.pending-card-btn svg {
+    color: var(--text-secondary);
 }
 
 @media screen and (max-width: 480px) {

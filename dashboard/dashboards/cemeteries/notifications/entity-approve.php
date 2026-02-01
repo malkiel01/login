@@ -523,15 +523,20 @@ if (isset($_GET['embed'])) {
             z-index: 101;
         }
 
-        /* Result message */
+        /* Result message - covers entire screen */
         .result-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
             text-align: center;
-            padding: 40px 20px;
+            padding: 20px;
+            z-index: 9999;
             animation: fadeIn 0.3s ease;
         }
 
@@ -815,17 +820,17 @@ if (isset($_GET['embed'])) {
             }
         }
 
-        // Show nice success/error message
+        // Show nice success/error message - full screen overlay
         function showResultMessage(status, message) {
-            const card = document.querySelector('.approval-card');
             const isApproved = status === 'approved';
 
-            card.innerHTML = `
-                <div class="result-message ${isApproved ? 'success' : 'rejected'}">
-                    <div class="result-icon">${isApproved ? '✓' : '✗'}</div>
-                    <div class="result-text">${message}</div>
-                </div>
+            const overlay = document.createElement('div');
+            overlay.className = `result-message ${isApproved ? 'success' : 'rejected'}`;
+            overlay.innerHTML = `
+                <div class="result-icon">${isApproved ? '✓' : '✗'}</div>
+                <div class="result-text">${message}</div>
             `;
+            document.body.appendChild(overlay);
 
             // Wait before closing (give time to read)
             setTimeout(() => {

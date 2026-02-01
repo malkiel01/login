@@ -146,7 +146,7 @@ if (isset($_GET['embed'])) {
         }
 
         .card-header {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+            background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
             padding: 24px 30px;
             color: white;
         }
@@ -478,6 +478,9 @@ if (isset($_GET['embed'])) {
 
         body.embed-mode .card-header {
             padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
         body.embed-mode .card-body {

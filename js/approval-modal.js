@@ -820,8 +820,10 @@ window.ApprovalModal = {
             header.style.display = 'none';
         }
 
-        // Get modal body
+        // Get modal body and remove padding for full-screen iframe
         const body = document.querySelector('.approval-modal-body');
+        body.style.padding = '0';
+        body.style.overflow = 'hidden';
 
         // Create iframe container
         let iframeContainer = document.getElementById('entityApprovalIframe');
@@ -983,6 +985,12 @@ window.ApprovalModal = {
             const header = this.modalElement.querySelector('.approval-modal-header');
             if (header) {
                 header.style.display = '';
+            }
+            // Restore modal body padding (might have been removed for iframe mode)
+            const body = this.modalElement.querySelector('.approval-modal-body');
+            if (body) {
+                body.style.padding = '';
+                body.style.overflow = '';
             }
             // Remove overlay click handler
             this.modalElement.onclick = null;

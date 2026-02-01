@@ -308,6 +308,27 @@ class NotificationService {
             }
         }
 
+        // Insert into push_notifications table for my-notifications page tracking
+        if ($notificationId) {
+            try {
+                $insertStmt = $this->pdo->prepare("
+                    INSERT INTO push_notifications (scheduled_notification_id, user_id, title, body, url, is_delivered, delivered_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ");
+                $insertStmt->execute([
+                    $notificationId,
+                    $userId,
+                    $title,
+                    $body,
+                    $url,
+                    $sent > 0 ? 1 : 0,
+                    $sent > 0 ? date('Y-m-d H:i:s') : null
+                ]);
+            } catch (Exception $e) {
+                error_log("[NotificationService] Failed to insert push_notification for user $userId: " . $e->getMessage());
+            }
+        }
+
         return [
             'success' => $sent > 0,
             'sent' => $sent,

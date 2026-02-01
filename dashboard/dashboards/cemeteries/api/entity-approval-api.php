@@ -206,6 +206,9 @@ try {
 
             $result = $service->recordApproval($pendingId, $userId, $biometricVerified);
 
+            // Mark the related push notification as read
+            markEntityApprovalNotificationAsRead($pdo, $pendingId, $userId);
+
             echo json_encode($result);
             break;
 
@@ -219,6 +222,9 @@ try {
             }
 
             $result = $service->rejectOperation($pendingId, $userId, $reason);
+
+            // Mark the related push notification as read
+            markEntityApprovalNotificationAsRead($pdo, $pendingId, $userId);
 
             echo json_encode($result);
             break;
@@ -291,4 +297,28 @@ try {
         'success' => false,
         'error' => $e->getMessage()
     ]);
+}
+
+/**
+ * Mark the push notification related to an entity approval as read
+ * This moves the notification from "new" to "history" in my-notifications
+ */
+function markEntityApprovalNotificationAsRead(PDO $pdo, int $pendingId, int $userId): void {
+    // Find the scheduled_notification by URL containing the pending ID
+    $urlPattern = "%entity-approve.php?id={$pendingId}%";
+
+    $stmt = $pdo->prepare("
+        UPDATE push_notifications pn
+        JOIN scheduled_notifications sn ON sn.id = pn.scheduled_notification_id
+        SET pn.is_read = 1
+        WHERE pn.user_id = ?
+          AND pn.is_read = 0
+          AND sn.url LIKE ?
+    ");
+    $stmt->execute([$userId, $urlPattern]);
+
+    $updated = $stmt->rowCount();
+    if ($updated > 0) {
+        error_log("[EntityApprovalAPI] Marked $updated notification(s) as read for pending $pendingId, user $userId");
+    }
 }

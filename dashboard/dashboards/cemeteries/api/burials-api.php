@@ -120,17 +120,34 @@ try {
             $countStmt->execute($params);
             $total = $countStmt->fetchColumn();
             
-            // רשימת עמודות מותרות למיון
-            $allowedSortColumns = ['createDate', 'dateBurial', 'dateDeath', 'burialStatus', 'id', 'serialBurialId'];
-            if (!in_array($sort, $allowedSortColumns)) {
-                $sort = 'createDate';
-            }
-            
+            // ⭐ מיפוי עמודות מיון - כולל שדות מ-JOIN
+            $sortColumnMapping = [
+                // שדות ישירים מ-burials
+                'createDate' => 'b.createDate',
+                'dateBurial' => 'b.dateBurial',
+                'dateDeath' => 'b.dateDeath',
+                'burialStatus' => 'b.burialStatus',
+                'id' => 'b.id',
+                'serialBurialId' => 'b.serialBurialId',
+                // שדות מ-customers (נפטר)
+                'clientFullNameHe' => 'cust1.fullNameHe',
+                'clientNumId' => 'cust1.numId',
+                // שדות מ-graves_view
+                'graveNameHe' => 'gv.graveNameHe',
+                'areaGraveNameHe' => 'gv.areaGraveNameHe',
+                'plotNameHe' => 'gv.plotNameHe',
+                'blockNameHe' => 'gv.blockNameHe',
+                'cemeteryNameHe' => 'gv.cemeteryNameHe'
+            ];
+
+            // מציאת עמודת המיון המתאימה
+            $orderByColumn = $sortColumnMapping[$sort] ?? 'b.createDate';
+
             // בדיקת כיוון המיון
             $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
-            
+
             // הוספת מיון ועימוד
-            $sql .= " ORDER BY b.$sort $order LIMIT :limit OFFSET :offset";
+            $sql .= " ORDER BY {$orderByColumn} {$order} LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

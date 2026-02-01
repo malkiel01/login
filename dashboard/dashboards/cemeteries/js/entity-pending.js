@@ -471,8 +471,85 @@ const EntityPending = {
             const html = this.createPendingCustomersSection(pending);
             container.insertAdjacentHTML('afterbegin', html);
         }
+    },
+
+    /**
+     * רענון רשימת הלקוחות וסקשן הממתינים
+     */
+    async refreshCustomersView() {
+        console.log('[EntityPending] מרענן תצוגת לקוחות...');
+
+        // ניקוי cache
+        this.clearCache();
+
+        // רענון סקשן ממתינים
+        const mainContainer = document.querySelector('.main-container');
+        if (mainContainer) {
+            await this.loadAndShowPendingCustomers(mainContainer);
+        }
+
+        // רענון רשימת הלקוחות
+        if (typeof EntityManager !== 'undefined' && window.currentType === 'customer') {
+            await EntityManager.refresh('customer');
+        } else if (typeof customersRefreshData === 'function') {
+            customersRefreshData();
+        } else if (typeof loadCustomers === 'function') {
+            loadCustomers();
+        }
+    },
+
+    /**
+     * אתחול האזנה להודעות מפופאפים
+     */
+    initMessageListener() {
+        window.addEventListener('message', (event) => {
+            // אישור/דחייה של entity הושלם
+            if (event.data && event.data.type === 'entityApprovalComplete') {
+                console.log('[EntityPending] התקבלה הודעת השלמת אישור:', event.data);
+
+                // סגירת הפופאפ
+                if (typeof PopupManager !== 'undefined') {
+                    const popupId = 'entity-approval-popup-' + event.data.pendingId;
+                    PopupManager.close(popupId);
+                }
+
+                // רענון אוטומטי לפי סוג הישות הנוכחי
+                setTimeout(() => {
+                    if (window.currentType === 'customer') {
+                        this.refreshCustomersView();
+                    } else if (window.currentType === 'purchase') {
+                        if (typeof purchasesRefreshData === 'function') {
+                            this.clearCache();
+                            purchasesRefreshData();
+                        }
+                    } else if (window.currentType === 'burial') {
+                        if (typeof burialsRefreshData === 'function') {
+                            this.clearCache();
+                            burialsRefreshData();
+                        }
+                    } else {
+                        // רענון כללי
+                        this.clearCache();
+                        if (typeof refreshData === 'function') {
+                            refreshData();
+                        }
+                    }
+                }, 300);
+            }
+        });
+
+        console.log('[EntityPending] האזנה להודעות אותחלה');
     }
 };
+
+// אתחול האזנה להודעות בטעינת הדף
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        EntityPending.initMessageListener();
+    });
+} else {
+    EntityPending.initMessageListener();
+}
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {

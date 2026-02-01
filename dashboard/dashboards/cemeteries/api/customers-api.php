@@ -861,6 +861,20 @@
                     }
                 }
 
+                // בדיקה אם כבר קיימת בקשת עריכה ממתינה עבור לקוח זה
+                $stmt = $pdo->prepare("
+                    SELECT id FROM pending_entity_operations
+                    WHERE entity_type = 'customers'
+                      AND action = 'edit'
+                      AND entity_id = ?
+                      AND status = 'pending'
+                ");
+                $stmt->execute([$id]);
+                $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($existingPending) {
+                    throw new Exception('כבר קיימת בקשה ממתינה לעריכת לקוח זה (מזהה בקשה: ' . $existingPending['id'] . ')');
+                }
+
                 // חישוב גיל אם יש תאריך לידה
                 if (!empty($data['dateBirth'])) {
                     $birthDate = new DateTime($data['dateBirth']);
@@ -1002,6 +1016,20 @@
 
                 if ($purchases > 0) {
                     throw new Exception('לא ניתן למחוק לקוח עם רכישות פעילות');
+                }
+
+                // בדיקה אם כבר קיימת בקשת מחיקה ממתינה עבור לקוח זה
+                $stmt = $pdo->prepare("
+                    SELECT id FROM pending_entity_operations
+                    WHERE entity_type = 'customers'
+                      AND action = 'delete'
+                      AND entity_id = ?
+                      AND status = 'pending'
+                ");
+                $stmt->execute([$id]);
+                $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($existingPending) {
+                    throw new Exception('כבר קיימת בקשה ממתינה למחיקת לקוח זה (מזהה בקשה: ' . $existingPending['id'] . ')');
                 }
 
                 // קבלת פרטי הלקוח לפני מחיקה

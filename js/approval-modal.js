@@ -5,6 +5,9 @@
  * @version 1.0.0
  */
 
+// DEBUG: Alert when this file loads
+alert('approval-modal.js LOADED!');
+
 window.ApprovalModal = {
     modalElement: null,
     currentNotificationId: null,

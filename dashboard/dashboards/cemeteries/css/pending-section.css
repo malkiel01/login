@@ -159,27 +159,50 @@
 }
 
 /* ===================================================================
-   Pending Table - שימוש בטמפלט data-table הסטנדרטי
+   Pending Table - שימוש ב-TableManager
    =================================================================== */
 .pending-section-body {
-    max-height: 250px; /* כ-4-5 שורות */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
 }
 
-/* התאמות ספציפיות לטבלה הממתינה */
-.pending-section-body .table-responsive {
-    border: none;
-    margin: 0;
+/* קונטיינר לטבלת TableManager */
+.pending-table-container {
+    width: 100%;
+    overflow: hidden;
 }
 
-.pending-data-table {
-    margin-bottom: 0 !important;
+/* התאמות ל-TableManager wrapper בתוך סקשן הממתינים */
+.pending-table-container .table-wrapper {
+    border: none !important;
+    border-radius: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
 }
 
-/* הסתר כרטיסים בדסקטופ, הצג במובייל */
-.pending-cards {
-    display: none;
+/* הסתר toolbar בטבלת הממתינים - הטבלה הזו קטנה ולא צריכה toolbar */
+.pending-table-container .table-toolbar {
+    display: none !important;
+}
+
+/* הבדלה ויזואלית של טבלת הממתינים - רקע צהבהב עדין */
+.pending-table-container .table-body-container {
+    background: rgba(251, 191, 36, 0.05) !important;
+}
+
+/* שורות בטבלת הממתינים - רקע צהבהב מעט יותר חזק */
+.pending-table-container .tm-row {
+    background: rgba(251, 191, 36, 0.08) !important;
+}
+
+.pending-table-container .tm-row:hover {
+    background: rgba(251, 191, 36, 0.15) !important;
+}
+
+/* כותרות בטבלת הממתינים */
+.pending-table-container .tm-header-cell {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    font-weight: 600 !important;
 }
 
 /* התקדמות אישורים */
@@ -233,7 +256,7 @@
         margin: 0 0 10px 0;
         padding: 10px;
         border-radius: 6px;
-        max-height: none; /* ללא הגבלה - הכרטיסים יתפסו את הגובה הנדרש */
+        max-height: none;
     }
 
     .pending-section-header {
@@ -266,18 +289,10 @@
         display: none;
     }
 
-    .pending-section-body {
-        max-height: 300px;
-        overflow-y: auto;
-    }
-
-    /* הסתר טבלה, הצג כרטיסים במובייל */
-    .pending-section-body .table-responsive {
-        display: none;
-    }
-
-    .pending-cards {
-        display: block;
+    /* TableManager יטפל בהתאמה למובייל */
+    .pending-table-container .table-wrapper {
+        height: auto !important;
+        min-height: 150px !important;
     }
 
     .approval-progress {
@@ -304,9 +319,5 @@
 
     .pending-section-title {
         font-size: 12px;
-    }
-
-    .pending-section-body {
-        max-height: 250px;
     }
 }

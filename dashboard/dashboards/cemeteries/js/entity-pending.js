@@ -360,82 +360,117 @@ const EntityPending = {
     },
 
     /**
-     * יצירת שורת טבלה עבור לקוח ממתין
-     * @param {Object} pending
-     * @returns {string}
+     * הגדרת עמודות לטבלת הממתינים
+     * @returns {Array} מערך הגדרות עמודות עבור TableManager
      */
-    createPendingCustomerRow(pending) {
-        const isOwner = pending.is_owner;
-        const expiresAt = pending.expires_at ? new Date(pending.expires_at).toLocaleDateString('he-IL') : 'ללא';
-
-        let actions = `
-            <button class="btn btn-sm btn-outline" onclick="EntityPending.openApproval(${pending.pending_id})" title="צפייה בפרטים">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                </svg>
-            </button>
-        `;
-
-        if (isOwner) {
-            actions += `
-                <button class="btn btn-sm btn-outline" onclick="EntityPending.resendApproval(${pending.pending_id})" title="שלח בקשה חוזרת">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-                    </svg>
-                </button>
-                <button class="btn btn-sm btn-outline btn-danger" onclick="EntityPending.cancelPending(${pending.pending_id})" title="ביטול">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-            `;
-        }
-
-        return `
-            <tr class="pending-row" data-pending-id="${pending.pending_id}">
-                <td>
+    getPendingTableColumns() {
+        return [
+            {
+                field: 'status',
+                label: 'סטטוס',
+                width: '120px',
+                render: (row) => `
                     <span class="pending-badge pending-create">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
                         ממתין לאישור
                     </span>
-                </td>
-                <td>${pending.firstName || ''} ${pending.lastName || ''}</td>
-                <td>${pending.numId || '-'}</td>
-                <td>${pending.phoneMobile || pending.phone || '-'}</td>
-                <td>${pending.requester_name || '-'}</td>
-                <td>
-                    <span class="approval-progress">${pending.approved_count || 0}/${pending.required_approvals}</span>
-                </td>
-                <td>${expiresAt}</td>
-                <td class="actions-cell">${actions}</td>
-            </tr>
-        `;
+                `
+            },
+            {
+                field: 'fullName',
+                label: 'שם',
+                width: '150px',
+                render: (row) => `${row.firstName || ''} ${row.lastName || ''}`
+            },
+            {
+                field: 'numId',
+                label: 'ת.ז.',
+                width: '100px',
+                render: (row) => row.numId || '-'
+            },
+            {
+                field: 'phone',
+                label: 'טלפון',
+                width: '120px',
+                render: (row) => row.phoneMobile || row.phone || '-'
+            },
+            {
+                field: 'requester_name',
+                label: 'מבקש',
+                width: '120px',
+                render: (row) => row.requester_name || '-'
+            },
+            {
+                field: 'approvals',
+                label: 'אישורים',
+                width: '80px',
+                render: (row) => `
+                    <span class="approval-progress">${row.approved_count || 0}/${row.required_approvals}</span>
+                `
+            },
+            {
+                field: 'expires_at',
+                label: 'תוקף עד',
+                width: '100px',
+                render: (row) => row.expires_at ? new Date(row.expires_at).toLocaleDateString('he-IL') : 'ללא'
+            },
+            {
+                field: 'actions',
+                label: 'פעולות',
+                width: '120px',
+                render: (row) => {
+                    const isOwner = row.is_owner;
+                    let actions = `
+                        <button class="btn btn-sm btn-outline" onclick="EntityPending.openApproval(${row.pending_id})" title="צפייה בפרטים">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    `;
+
+                    if (isOwner) {
+                        actions += `
+                            <button class="btn btn-sm btn-outline" onclick="EntityPending.resendApproval(${row.pending_id})" title="שלח בקשה חוזרת">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline btn-danger" onclick="EntityPending.cancelPending(${row.pending_id})" title="ביטול">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
+                        `;
+                    }
+
+                    return `<div class="action-buttons" style="display: flex; gap: 4px;">${actions}</div>`;
+                }
+            }
+        ];
     },
 
     /**
-     * יצירת סקשן של לקוחות ממתינים
-     * שימוש בטמפלט הטבלה הסטנדרטי (data-table) לתמיכה בכרטיסים במובייל
-     * @param {Array} pendingList
+     * יצירת סקשן של לקוחות ממתינים - HTML מינימלי
+     * TableManager ייצור את הטבלה עצמה
+     * @param {number} count - מספר הממתינים
      * @returns {string}
      */
-    createPendingCustomersSection(pendingList) {
-        if (!pendingList || pendingList.length === 0) return '';
-
-        let rows = pendingList.map(p => this.createPendingCustomerRow(p)).join('');
+    createPendingCustomersSection(count) {
+        if (!count || count === 0) return '';
 
         // בדיקה אם הסקשן היה מכווץ קודם
         const wasCollapsed = localStorage.getItem('pendingSectionCollapsed') === 'true';
         const collapsedClass = wasCollapsed ? ' collapsed' : '';
 
         return `
-            <div class="pending-section${collapsedClass}" id="pendingSection" data-count="${pendingList.length}">
+            <div class="pending-section${collapsedClass}" id="pendingSection" data-count="${count}">
                 <div class="pending-section-header">
                     <div class="pending-section-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                         </svg>
                         <span>לקוחות ממתינים לאישור</span>
-                        <span class="pending-section-count">${pendingList.length}</span>
+                        <span class="pending-section-count">${count}</span>
                     </div>
                     <button class="btn-collapse-pending" onclick="EntityPending.togglePendingSection(this)" title="צמצם ממתינים">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -445,29 +480,65 @@ const EntityPending = {
                     </button>
                 </div>
                 <div class="pending-section-body">
-                    <div class="table-responsive">
-                        <table class="data-table pending-data-table" id="pendingTable">
-                            <thead>
-                                <tr>
-                                    <th>סטטוס</th>
-                                    <th>שם</th>
-                                    <th>ת.ז.</th>
-                                    <th>טלפון</th>
-                                    <th>מבקש</th>
-                                    <th>אישורים</th>
-                                    <th>תוקף עד</th>
-                                    <th>פעולות</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rows}
-                            </tbody>
+                    <div class="pending-table-container">
+                        <table id="pendingTable" class="data-table">
+                            <thead><tr><th>טוען...</th></tr></thead>
+                            <tbody></tbody>
                         </table>
                     </div>
-                    <div class="entity-cards pending-cards" id="pendingCards"></div>
                 </div>
             </div>
         `;
+    },
+
+    // שמירת instance של TableManager לממתינים
+    pendingTableInstance: null,
+
+    /**
+     * אתחול TableManager לטבלת הממתינים
+     * @param {Array} data - נתוני הממתינים
+     */
+    initPendingTable(data) {
+        // אם כבר יש instance - עדכן את הנתונים
+        if (this.pendingTableInstance) {
+            this.pendingTableInstance.setData(data);
+            return;
+        }
+
+        // בדיקה שהאלמנט קיים
+        const table = document.getElementById('pendingTable');
+        if (!table) {
+            console.error('❌ pendingTable not found');
+            return;
+        }
+
+        // יצירת TableManager
+        this.pendingTableInstance = new TableManager({
+            tableSelector: '#pendingTable',
+            data: data,
+            columns: this.getPendingTableColumns(),
+
+            // הגדרות תצוגה
+            totalItems: data.length,
+            scrollLoadBatch: 0,  // ללא infinite scroll - הכל מוצג
+            showPagination: false,
+
+            // גובה מותאם לסקשן
+            tableHeight: '250px',
+            tableMinHeight: '150px',
+
+            // הגדרות נוספות
+            sortable: true,
+            resizable: false,
+            filterable: false,
+
+            // callback לדאבל-קליק
+            onRowDoubleClick: (row) => {
+                this.openApproval(row.pending_id);
+            }
+        });
+
+        console.log('✅ Pending TableManager initialized');
     },
 
     /**
@@ -594,17 +665,19 @@ const EntityPending = {
     async loadAndShowPendingCustomers(container) {
         const pending = await this.fetchPendingCreates('customers');
 
-        // הסרת סקשן קיים
+        // הסרת סקשן קיים ואיפוס instance
         const existingSection = container.querySelector('.pending-section');
         if (existingSection) {
             existingSection.remove();
+            this.pendingTableInstance = null;
         }
 
         // עדכון כפתור "הצג ממתינים" בהדר
         const showPendingBtn = document.querySelector('.btn-show-pending');
 
         if (pending && pending.length > 0) {
-            const html = this.createPendingCustomersSection(pending);
+            // יצירת HTML של הסקשן (ללא הנתונים - רק מבנה)
+            const html = this.createPendingCustomersSection(pending.length);
             container.insertAdjacentHTML('afterbegin', html);
 
             // עדכון המונה בכפתור ההדר
@@ -618,10 +691,11 @@ const EntityPending = {
             // טעינת מצב שמור (collapsed/expanded)
             this.loadPendingSectionState();
 
-            // הפעלת המרה לכרטיסים במובייל
-            if (typeof handleTableResponsive === 'function') {
-                setTimeout(() => handleTableResponsive(), 100);
-            }
+            // אתחול TableManager עם הנתונים
+            // המתנה קצרה לוודא שה-DOM מוכן
+            setTimeout(() => {
+                this.initPendingTable(pending);
+            }, 50);
         } else {
             // אין ממתינים - הסתר את הכפתור
             if (showPendingBtn) {
@@ -636,8 +710,9 @@ const EntityPending = {
     async refreshCustomersView() {
         console.log('[EntityPending] מרענן תצוגת לקוחות...');
 
-        // ניקוי cache
+        // ניקוי cache ו-TableManager instance
         this.clearCache();
+        this.pendingTableInstance = null;
 
         // רענון סקשן ממתינים
         const mainContent = document.querySelector('.main-content');

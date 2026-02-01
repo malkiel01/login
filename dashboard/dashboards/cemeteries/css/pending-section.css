@@ -1,0 +1,321 @@
+/**
+ * Pending Section Styles
+ * v1.0.0 - שימוש במשתני CSS גלובליים מ-user-preferences.css
+ * תבנית דומה לחיפוש הגלובלי (search.css)
+ */
+
+/* ===================================================================
+   Pending Section
+   =================================================================== */
+.pending-section {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    max-height: 350px; /* גובה מקסימלי לאנימציה */
+}
+
+/* ===================================================================
+   Pending Section Header
+   =================================================================== */
+.pending-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.pending-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pending-section-title svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+}
+
+.pending-section-count {
+    background: var(--primary-color);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: 4px;
+}
+
+/* ====================================
+   Pending Section Collapse Feature
+   ==================================== */
+
+/* כפתור צימצום בתוך סקשן הממתינים */
+.btn-collapse-pending {
+    display: inline-flex;
+    padding: 6px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    gap: 6px;
+    align-items: center;
+}
+
+.btn-collapse-pending:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-collapse-pending svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+}
+
+/* מצב מכווץ של סקשן הממתינים */
+.pending-section.collapsed {
+    max-height: 0;
+    padding: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+/* כפתור הצג ממתינים בשורת הפעולות */
+.btn-show-pending {
+    display: none; /* ברירת מחדל - מוסתר */
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)) !important;
+    border: none !important;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: white !important;
+    transition: all 0.2s ease;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-show-pending:hover {
+    box-shadow: 0 8px 16px color-mix(in srgb, var(--primary-color) 30%, transparent);
+    transform: translateY(-1px);
+}
+
+.btn-show-pending svg {
+    width: 18px;
+    height: 18px;
+    stroke: white !important;
+}
+
+.btn-show-pending .pending-btn-count {
+    background: white;
+    color: var(--primary-dark);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+/* הצג כפתור "הצג ממתינים" כשהסקשן מכווץ - בכל המסכים */
+.btn-show-pending.visible {
+    display: inline-flex !important;
+}
+
+/* ===================================================================
+   Pending Table
+   =================================================================== */
+.pending-section-body {
+    max-height: 220px; /* כ-4 שורות */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.pending-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pending-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.pending-table th {
+    background: var(--bg-tertiary);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 10px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pending-table td {
+    padding: 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.pending-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.pending-table tbody tr:hover {
+    background: var(--bg-tertiary);
+}
+
+.pending-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* התקדמות אישורים */
+.approval-progress {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--primary-color) 15%, transparent);
+    color: var(--primary-color);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* כפתורי פעולה */
+.pending-table .actions-cell {
+    white-space: nowrap;
+}
+
+.pending-table .btn {
+    padding: 6px 8px;
+    margin-left: 4px;
+}
+
+.pending-table .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.pending-table .btn-outline:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.pending-table .btn-danger {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.pending-table .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ====================================
+   Pending Section - Mobile Styles
+   ==================================== */
+@media screen and (max-width: 768px) {
+    .pending-section {
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 6px;
+    }
+
+    .pending-section-header {
+        margin-bottom: 8px;
+    }
+
+    .pending-section-title {
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    .pending-section-title svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .btn-collapse-pending {
+        padding: 4px 8px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .btn-collapse-pending svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* הסתר טקסט בכפתור, השאר אייקון */
+    .btn-collapse-pending span {
+        display: none;
+    }
+
+    .pending-section-body {
+        max-height: 180px;
+    }
+
+    .pending-table th,
+    .pending-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    /* הסתרת עמודות פחות חשובות במובייל */
+    .pending-table th:nth-child(4),
+    .pending-table td:nth-child(4),
+    .pending-table th:nth-child(5),
+    .pending-table td:nth-child(5),
+    .pending-table th:nth-child(7),
+    .pending-table td:nth-child(7) {
+        display: none;
+    }
+
+    .pending-table .btn {
+        padding: 5px 6px;
+    }
+
+    .pending-table .btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .approval-progress {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+
+    .pending-section-count {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .pending-section {
+        margin-bottom: 8px;
+        padding: 8px;
+        border-radius: 4px;
+    }
+
+    .pending-section-header {
+        margin-bottom: 6px;
+    }
+
+    .pending-section-title {
+        font-size: 12px;
+    }
+}

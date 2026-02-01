@@ -103,6 +103,7 @@ $isAdminUser = isAdmin();
 
     <!-- Pending Badges (Entity Approval) -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/pending-badges.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/pending-section.css">
 
     <!-- User Permissions for JavaScript -->
     <script>
@@ -215,6 +216,14 @@ $isAdminUser = isAdmin();
                         <span class="entity-subtitle" id="entitySubtitle"></span>
                     </div>
                     <div class="action-buttons">
+                        <!-- כפתור הצג ממתינים - מופיע רק כשסקשן הממתינים מכווץ -->
+                        <button class="btn-show-pending" onclick="EntityPending.expandSection()" title="הצג ממתינים לאישור">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                            </svg>
+                            <span>ממתינים</span>
+                            <span class="pending-btn-count">0</span>
+                        </button>
                         <!-- כפתור הצג חיפוש - מופיע רק כשהחיפוש מכווץ -->
                         <button class="btn-show-search" onclick="UniversalSearch.expandSearchSection(window.currentType || 'cemetery')" title="הצג חיפוש">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

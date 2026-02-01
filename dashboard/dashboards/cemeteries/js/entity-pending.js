@@ -414,6 +414,7 @@ const EntityPending = {
 
     /**
      * יצירת סקשן של לקוחות ממתינים
+     * תבנית זהה ל-search-section מ-universal-search.js
      * @param {Array} pendingList
      * @returns {string}
      */
@@ -423,25 +424,28 @@ const EntityPending = {
         let rows = pendingList.map(p => this.createPendingCustomerRow(p)).join('');
 
         // בדיקה אם הסקשן היה מכווץ קודם
-        const wasCollapsed = localStorage.getItem('pendingSection_collapsed') === 'true';
-        const collapsedClass = wasCollapsed ? ' section-collapsed' : '';
+        const wasCollapsed = localStorage.getItem('pendingSectionCollapsed') === 'true';
+        const collapsedClass = wasCollapsed ? ' collapsed' : '';
 
         return `
-            <div class="pending-customers-section${collapsedClass}" data-count="${pendingList.length}">
-                <div class="pending-customers-header" onclick="EntityPending.toggleSection()">
-                    <h3>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="pending-section${collapsedClass}" id="pendingSection" data-count="${pendingList.length}">
+                <div class="pending-section-header">
+                    <div class="pending-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                         </svg>
-                        לקוחות ממתינים לאישור
-                        <span class="pending-count">${pendingList.length}</span>
-                    </h3>
-                    <svg class="pending-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 15l-6-6-6 6"/>
-                    </svg>
+                        <span>לקוחות ממתינים לאישור</span>
+                        <span class="pending-section-count">${pendingList.length}</span>
+                    </div>
+                    <button class="btn-collapse-pending" onclick="EntityPending.togglePendingSection(this)" title="צמצם ממתינים">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                        <span>צמצם</span>
+                    </button>
                 </div>
-                <div class="pending-customers-body">
-                    <table class="pending-customers-table">
+                <div class="pending-section-body">
+                    <table class="pending-table">
                         <thead>
                             <tr>
                                 <th>סטטוס</th>
@@ -464,81 +468,120 @@ const EntityPending = {
     },
 
     /**
-     * צמצום/הרחבה של הסקשן
+     * צמצום/הרחבה של סקשן הממתינים (תבנית זהה ל-UniversalSearch.toggleSearchSection)
+     * @param {HTMLElement} btn - הכפתור שנלחץ
      */
-    toggleSection() {
-        const section = document.querySelector('.pending-customers-section');
-        if (!section) return;
-
-        section.classList.toggle('section-collapsed');
-        const isCollapsed = section.classList.contains('section-collapsed');
-        localStorage.setItem('pendingSection_collapsed', isCollapsed);
-
-        // עדכון כפתור ההדר
-        this.updateHeaderButton();
-    },
-
-    /**
-     * הסתרת הסקשן לגמרי (צמצום מלא)
-     */
-    collapseSection() {
-        const section = document.querySelector('.pending-customers-section');
-        if (section) {
-            section.classList.add('collapsed');
-            localStorage.setItem('pendingSection_hidden', 'true');
-            this.updateHeaderButton();
+    togglePendingSection(btn) {
+        const pendingSection = btn.closest('.pending-section');
+        if (!pendingSection) {
+            console.error('❌ pending-section not found!');
+            return;
         }
+
+        const isCollapsed = pendingSection.classList.toggle('collapsed');
+
+        // עדכון כפתור הצמצום
+        const btnText = btn.querySelector('span');
+        const btnIcon = btn.querySelector('svg');
+
+        if (isCollapsed) {
+            if (btnText) btnText.textContent = 'הרחב';
+            if (btnIcon) btnIcon.style.transform = 'rotate(180deg)';
+        } else {
+            if (btnText) btnText.textContent = 'צמצם';
+            if (btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+        }
+
+        // עדכון כפתור "הצג ממתינים" בשורת הפעולות
+        const showPendingBtn = document.querySelector('.btn-show-pending');
+        if (showPendingBtn) {
+            showPendingBtn.classList.toggle('visible', isCollapsed);
+            // עדכון המונה בכפתור
+            const countBadge = showPendingBtn.querySelector('.pending-btn-count');
+            if (countBadge) {
+                countBadge.textContent = pendingSection.dataset.count || '0';
+            }
+        }
+
+        // שמירה ב-localStorage
+        localStorage.setItem('pendingSectionCollapsed', isCollapsed);
     },
 
     /**
-     * הצגת הסקשן חזרה
+     * הרחבת סקשן הממתינים (קריאה מכפתור "הצג ממתינים")
      */
     expandSection() {
-        const section = document.querySelector('.pending-customers-section');
-        if (section) {
-            section.classList.remove('collapsed');
-            section.classList.remove('section-collapsed');
-            localStorage.setItem('pendingSection_hidden', 'false');
-            localStorage.setItem('pendingSection_collapsed', 'false');
-            this.updateHeaderButton();
+        const pendingSection = document.getElementById('pendingSection');
+        if (!pendingSection) return;
+
+        // הרחב את הסקשן
+        pendingSection.classList.remove('collapsed');
+
+        // עדכון כפתור הצמצום בתוך הסקשן
+        const collapseBtn = pendingSection.querySelector('.btn-collapse-pending');
+        if (collapseBtn) {
+            const btnText = collapseBtn.querySelector('span');
+            const btnIcon = collapseBtn.querySelector('svg');
+            if (btnText) btnText.textContent = 'צמצם';
+            if (btnIcon) btnIcon.style.transform = 'rotate(0deg)';
         }
+
+        // הסתר כפתור "הצג ממתינים"
+        const showPendingBtn = document.querySelector('.btn-show-pending');
+        if (showPendingBtn) {
+            showPendingBtn.classList.remove('visible');
+        }
+
+        // עדכון localStorage
+        localStorage.setItem('pendingSectionCollapsed', 'false');
     },
 
     /**
-     * עדכון כפתור ממתינים בהדר
+     * טעינת מצב שמור של סקשן הממתינים
      */
-    updateHeaderButton() {
-        const section = document.querySelector('.pending-customers-section');
-        const btn = document.querySelector('.btn-pending-toggle');
+    loadPendingSectionState() {
+        const isMobile = window.innerWidth <= 768;
+        const wasCollapsed = localStorage.getItem('pendingSectionCollapsed');
 
-        if (!btn) return;
+        // במסכים קטנים - ברירת מחדל מכווץ (אלא אם נשמר אחרת)
+        // במסכים גדולים - ברירת מחדל פתוח (אלא אם נשמר אחרת)
+        const shouldCollapse = wasCollapsed !== null
+            ? wasCollapsed === 'true'
+            : isMobile;
 
-        const count = section ? section.dataset.count : 0;
-        const isHidden = section && section.classList.contains('collapsed');
+        const pendingSection = document.getElementById('pendingSection');
+        const showPendingBtn = document.querySelector('.btn-show-pending');
 
-        if (count > 0 && isHidden) {
-            btn.style.display = 'inline-flex';
-            btn.querySelector('.pending-btn-count').textContent = count;
+        if (shouldCollapse) {
+            if (pendingSection) {
+                pendingSection.classList.add('collapsed');
+
+                // עדכון כפתור הצמצום
+                const collapseBtn = pendingSection.querySelector('.btn-collapse-pending');
+                if (collapseBtn) {
+                    const btnText = collapseBtn.querySelector('span');
+                    const btnIcon = collapseBtn.querySelector('svg');
+                    if (btnText) btnText.textContent = 'הרחב';
+                    if (btnIcon) btnIcon.style.transform = 'rotate(180deg)';
+                }
+
+                // הצג כפתור "הצג ממתינים"
+                if (showPendingBtn) {
+                    showPendingBtn.classList.add('visible');
+                    const countBadge = showPendingBtn.querySelector('.pending-btn-count');
+                    if (countBadge) {
+                        countBadge.textContent = pendingSection.dataset.count || '0';
+                    }
+                }
+            }
         } else {
-            btn.style.display = 'none';
+            if (pendingSection) {
+                pendingSection.classList.remove('collapsed');
+            }
+            if (showPendingBtn) {
+                showPendingBtn.classList.remove('visible');
+            }
         }
-    },
-
-    /**
-     * יצירת כפתור ממתינים להוספה להדר
-     * @param {number} count
-     * @returns {string}
-     */
-    createHeaderButton(count) {
-        return `
-            <button class="btn-pending-toggle" onclick="EntityPending.expandSection()" title="הצג ממתינים לאישור" style="display: none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                </svg>
-                <span>ממתינים</span>
-                <span class="pending-btn-count">${count}</span>
-            </button>
-        `;
     },
 
     /**
@@ -549,45 +592,33 @@ const EntityPending = {
         const pending = await this.fetchPendingCreates('customers');
 
         // הסרת סקשן קיים
-        const existingSection = container.querySelector('.pending-customers-section');
+        const existingSection = container.querySelector('.pending-section');
         if (existingSection) {
             existingSection.remove();
         }
 
-        // הסרת כפתור קיים
-        const existingBtn = document.querySelector('.btn-pending-toggle');
-        if (existingBtn) {
-            existingBtn.remove();
-        }
+        // עדכון כפתור "הצג ממתינים" בהדר
+        const showPendingBtn = document.querySelector('.btn-show-pending');
 
         if (pending && pending.length > 0) {
-            // בדיקה אם הסקשן היה מוסתר לגמרי
-            const wasHidden = localStorage.getItem('pendingSection_hidden') === 'true';
-
             const html = this.createPendingCustomersSection(pending);
             container.insertAdjacentHTML('afterbegin', html);
 
-            // אם היה מוסתר, נסתיר שוב
-            if (wasHidden) {
-                const section = container.querySelector('.pending-customers-section');
-                if (section) section.classList.add('collapsed');
-            }
-
-            // הוספת כפתור להדר
-            const actionButtons = document.querySelector('.action-buttons');
-            if (actionButtons) {
-                const btnHtml = this.createHeaderButton(pending.length);
-                // הוספה לפני כפתור ההוספה
-                const addBtn = actionButtons.querySelector('.btn-add');
-                if (addBtn) {
-                    addBtn.insertAdjacentHTML('beforebegin', btnHtml);
-                } else {
-                    actionButtons.insertAdjacentHTML('afterbegin', btnHtml);
+            // עדכון המונה בכפתור ההדר
+            if (showPendingBtn) {
+                const countBadge = showPendingBtn.querySelector('.pending-btn-count');
+                if (countBadge) {
+                    countBadge.textContent = pending.length;
                 }
             }
 
-            // עדכון מצב הכפתור
-            this.updateHeaderButton();
+            // טעינת מצב שמור (collapsed/expanded)
+            this.loadPendingSectionState();
+        } else {
+            // אין ממתינים - הסתר את הכפתור
+            if (showPendingBtn) {
+                showPendingBtn.classList.remove('visible');
+            }
         }
     },
 
@@ -601,9 +632,9 @@ const EntityPending = {
         this.clearCache();
 
         // רענון סקשן ממתינים
-        const mainContainer = document.querySelector('.main-container');
-        if (mainContainer) {
-            await this.loadAndShowPendingCustomers(mainContainer);
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            await this.loadAndShowPendingCustomers(mainContent);
         }
 
         // רענון רשימת הלקוחות

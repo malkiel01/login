@@ -794,22 +794,47 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 const result = await response.json();
 
                 if (result.success) {
-                    showAlert(result.message || 'הפעולה בוצעה בהצלחה', 'success');
+                    // בדיקה אם הפעולה ממתינה לאישור מורשה חתימה
+                    if (result.pending) {
+                        showAlert(result.message || 'הבקשה נשלחה לאישור מורשה חתימה', 'warning');
 
-                    // רענון הטבלה בחלון ההורה
-                    if (window.parent) {
-                        if (window.parent.EntityManager) {
-                            window.parent.EntityManager.refresh('customer');
+                        // הצגת פרטים נוספים
+                        const alertBox = document.getElementById('alertBox');
+                        alertBox.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 6v6l4 2"/>
+                                </svg>
+                                <div>
+                                    <strong>${result.message || 'הבקשה נשלחה לאישור'}</strong>
+                                    ${result.expiresAt ? '<br><small>תוקף: ' + new Date(result.expiresAt).toLocaleString('he-IL') + '</small>' : ''}
+                                </div>
+                            </div>
+                        `;
+
+                        // סגירה אחרי 4 שניות (יותר זמן לקריאה)
+                        setTimeout(() => {
+                            closeForm();
+                        }, 4000);
+                    } else {
+                        showAlert(result.message || 'הפעולה בוצעה בהצלחה', 'success');
+
+                        // רענון הטבלה בחלון ההורה
+                        if (window.parent) {
+                            if (window.parent.EntityManager) {
+                                window.parent.EntityManager.refresh('customer');
+                            }
+                            if (window.parent.refreshTable) {
+                                window.parent.refreshTable();
+                            }
                         }
-                        if (window.parent.refreshTable) {
-                            window.parent.refreshTable();
-                        }
+
+                        // סגירת הפופאפ אחרי 1.5 שניות
+                        setTimeout(() => {
+                            closeForm();
+                        }, 1500);
                     }
-
-                    // סגירת הפופאפ אחרי 1.5 שניות
-                    setTimeout(() => {
-                        closeForm();
-                    }, 1500);
                 } else {
                     throw new Error(result.error || result.message || 'שגיאה בשמירה');
                 }

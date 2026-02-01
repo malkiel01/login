@@ -133,6 +133,31 @@
     display: inline-flex !important;
 }
 
+/* במובייל - כפתור עגול עם אייקון בלבד */
+@media screen and (max-width: 768px) {
+    .btn-show-pending.visible {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0 !important;
+    }
+
+    /* הסתר את הטקסט והמונה - רק אייקון */
+    .btn-show-pending.visible span {
+        display: none !important;
+    }
+
+    .btn-show-pending.visible svg {
+        width: 20px !important;
+        height: 20px !important;
+        margin: 0 !important;
+    }
+}
+
 /* ===================================================================
    Pending Table
    =================================================================== */

@@ -7,7 +7,7 @@
  */
 
 require_once __DIR__ . '/../../notifications/api/NotificationLogger.php';
-require_once __DIR__ . '/../../../push/NotificationService.php';
+require_once __DIR__ . '/../../../../../push/NotificationService.php';
 
 class EntityApprovalService
 {

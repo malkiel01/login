@@ -65,6 +65,17 @@ $isAdminUser = isAdmin();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php
+    // צבע שורת הסטטוס של הפלאפון - לפי ערכת הנושא
+    if ($isDarkMode) {
+        $statusBarColor = '#374151';
+    } else if ($colorScheme === 'green') {
+        $statusBarColor = '#059669';
+    } else {
+        $statusBarColor = '#667eea';
+    }
+    ?>
+    <meta name="theme-color" content="<?= $statusBarColor ?>">
     <title><?php echo DASHBOARD_NAME; ?></title>
     <link rel="icon" href="data:,">
     

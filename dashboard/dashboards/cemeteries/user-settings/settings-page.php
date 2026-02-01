@@ -68,12 +68,24 @@ foreach ($allSettings as $key => $data) {
 
 // סדר קטגוריות
 $categoryOrder = ['display', 'tables', 'navigation', 'notifications', 'locale', 'general'];
+// צבע שורת הסטטוס - לפי ערכת הנושא
+$isDarkMode = isset($allSettings['darkMode']) && ($allSettings['darkMode']['value'] === true || $allSettings['darkMode']['value'] === 'true');
+$colorScheme = $allSettings['colorScheme']['value'] ?? 'purple';
+
+if ($isDarkMode) {
+    $statusBarColor = '#374151';
+} else if ($colorScheme === 'green') {
+    $statusBarColor = '#059669';
+} else {
+    $statusBarColor = '#667eea';
+}
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="<?= $statusBarColor ?>">
     <title>הגדרות אישיות</title>
 
     <!-- Font Awesome -->

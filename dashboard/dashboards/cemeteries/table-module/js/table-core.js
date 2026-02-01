@@ -2535,19 +2535,25 @@ class TableManager {
 
         const btn = e.currentTarget;
         const rect = btn.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const isMobile = viewportWidth <= 768;
+        const menuWidth = isMobile ? Math.min(260, viewportWidth - 20) : 220;
 
         const menu = document.createElement('div');
         menu.className = 'tm-settings-menu';
         menu.style.cssText = `
             position: fixed;
-            top: ${rect.bottom + 5}px;
-            left: ${rect.left}px;
+            visibility: hidden;
             background: var(--bg-primary, white);
             border: 1px solid var(--border-color, #e5e7eb);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            min-width: 220px;
-            z-index: 1000;
+            min-width: ${menuWidth}px;
+            max-width: ${viewportWidth - 20}px;
+            max-height: ${viewportHeight - 20}px;
+            overflow-y: auto;
+            z-index: 10000;
             direction: rtl;
         `;
 
@@ -2752,6 +2758,42 @@ class TableManager {
         menu.appendChild(menuItems);
         document.body.appendChild(menu);
 
+        // מיקום התפריט עם בדיקת גבולות viewport
+        requestAnimationFrame(() => {
+            const menuRect = menu.getBoundingClientRect();
+            const padding = 10;
+
+            // מיקום אופקי - התחל מהכפתור
+            let leftPos = rect.left;
+
+            // אם יוצא מימין - דחוף שמאלה
+            if (leftPos + menuRect.width > viewportWidth - padding) {
+                leftPos = viewportWidth - menuRect.width - padding;
+            }
+
+            // אם יוצא משמאל - דחוף ימינה
+            if (leftPos < padding) {
+                leftPos = padding;
+            }
+
+            // מיקום אנכי - מתחת לכפתור
+            let topPos = rect.bottom + 5;
+
+            // אם יוצא מלמטה - פתח מעל הכפתור
+            if (topPos + menuRect.height > viewportHeight - padding) {
+                topPos = rect.top - menuRect.height - 5;
+            }
+
+            // אם עדיין יוצא מלמעלה - דחוף למטה
+            if (topPos < padding) {
+                topPos = padding;
+            }
+
+            menu.style.left = `${Math.round(leftPos)}px`;
+            menu.style.top = `${Math.round(topPos)}px`;
+            menu.style.visibility = 'visible';
+        });
+
         // סגירה בלחיצה מחוץ לתפריט
         const closeHandler = (event) => {
             // בדוק אם הלחיצה בתוך התפריט הראשי
@@ -2827,69 +2869,74 @@ class TableManager {
 
             submenu.className = 'tm-submenu';
 
-            // מיקום ה-submenu - צמוד לפריט (ללא רווח!)
-            const itemRect = item.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             const isMobile = viewportWidth <= 768;
-
-            // במובייל - הגבל גודל ומקם במרכז
             const maxHeight = isMobile ? Math.min(300, viewportHeight - 40) : 400;
-            const minWidth = isMobile ? Math.min(220, viewportWidth - 20) : 250;
+            const maxWidth = isMobile ? viewportWidth - 20 : 350;
 
+            // סגנון בסיסי - מיקום יתעדכן אחרי רינדור
             submenu.style.cssText = `
                 position: fixed;
-                top: ${itemRect.top - 8}px;
+                top: 0;
+                left: 0;
+                visibility: hidden;
                 background: var(--bg-primary, white);
                 border: 1px solid var(--border-color, #e5e7eb);
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                min-width: ${minWidth}px;
-                max-width: ${viewportWidth - 20}px;
+                min-width: ${isMobile ? 200 : 250}px;
+                max-width: ${maxWidth}px;
                 max-height: ${maxHeight}px;
                 overflow-y: auto;
-                z-index: 1001;
+                z-index: 10001;
                 direction: rtl;
             `;
 
             document.body.appendChild(submenu);
 
-            // תיקון מיקום אחרי הוספה ל-DOM - התחשבות בגבולות המסך
-            const submenuRect = submenu.getBoundingClientRect();
+            // חכה לרינדור ואז מקם
+            requestAnimationFrame(() => {
+                const itemRect = item.getBoundingClientRect();
+                const submenuRect = submenu.getBoundingClientRect();
+                const padding = 10;
 
-            // חישוב מיקום אופקי
-            let leftPos = itemRect.left - submenuRect.width;
+                // === מיקום אופקי ===
+                let leftPos = itemRect.left - submenuRect.width; // נסה לפתוח משמאל
 
-            // וודא שה-submenu לא יוצא מהמסך משמאל
-            if (leftPos < 10) {
-                leftPos = itemRect.right; // פתח מימין במקום
-            }
+                // אם יוצא משמאל - פתח מימין
+                if (leftPos < padding) {
+                    leftPos = itemRect.right;
+                }
 
-            // וודא שלא יוצא מימין
-            if (leftPos + submenuRect.width > viewportWidth - 10) {
-                leftPos = viewportWidth - submenuRect.width - 10;
-            }
+                // אם יוצא מימין - דחוף פנימה
+                if (leftPos + submenuRect.width > viewportWidth - padding) {
+                    leftPos = viewportWidth - submenuRect.width - padding;
+                }
 
-            // במובייל - מרכז אופקית אם עדיין חורג
-            if (isMobile && (leftPos < 10 || leftPos + submenuRect.width > viewportWidth - 10)) {
-                leftPos = (viewportWidth - submenuRect.width) / 2;
-            }
+                // אם עדיין יוצא משמאל - דחוף פנימה
+                if (leftPos < padding) {
+                    leftPos = padding;
+                }
 
-            // חישוב מיקום אנכי
-            let topPos = itemRect.top - 8;
+                // === מיקום אנכי ===
+                let topPos = itemRect.top;
 
-            // וודא שה-submenu לא יוצא מלמטה
-            if (topPos + submenuRect.height > viewportHeight - 10) {
-                topPos = viewportHeight - submenuRect.height - 10;
-            }
+                // אם יוצא מלמטה - דחוף למעלה
+                if (topPos + submenuRect.height > viewportHeight - padding) {
+                    topPos = viewportHeight - submenuRect.height - padding;
+                }
 
-            // וודא שה-submenu לא יוצא מלמעלה
-            if (topPos < 10) {
-                topPos = 10;
-            }
+                // אם יוצא מלמעלה - דחוף למטה
+                if (topPos < padding) {
+                    topPos = padding;
+                }
 
-            submenu.style.left = `${leftPos}px`;
-            submenu.style.top = `${topPos}px`;
+                // עדכן מיקום והצג
+                submenu.style.left = `${Math.round(leftPos)}px`;
+                submenu.style.top = `${Math.round(topPos)}px`;
+                submenu.style.visibility = 'visible';
+            });
 
             // הוסף events ל-submenu
             submenu.onmouseenter = cancelClose;

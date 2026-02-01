@@ -101,6 +101,9 @@ $isAdminUser = isAdmin();
     <!-- User Preferences (Dark Mode, Compact, etc.) -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/user-preferences.css">
 
+    <!-- Pending Badges (Entity Approval) -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/pending-badges.css">
+
     <!-- User Permissions for JavaScript -->
     <script>
         window.USER_PERMISSIONS = <?= json_encode($userPermissions) ?>;
@@ -295,8 +298,11 @@ $isAdminUser = isAdmin();
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-state-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-loader.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-renderer.js?v=20260122"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js?v=20260122"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js?v=20260201"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
+
+    <!-- Entity Pending - הצגת רשומות ממתינות לאישור -->
+    <script src="/dashboard/dashboards/cemeteries/js/entity-pending.js"></script>
 
     <!-- 7️⃣ הקבצים הישנים (יישארו כ-fallback) -->
     <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>

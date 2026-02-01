@@ -106,7 +106,15 @@ class EntityManager {
                 await EntityRenderer.render(entityType, result.data, tableBody, result.pagination, signal);
             }
         }
-        
+
+        // טעינת רשומות ממתינות לאישור (ללקוחות)
+        if (entityType === 'customer' && typeof EntityPending !== 'undefined') {
+            const mainContainer = document.querySelector('.main-container');
+            if (mainContainer) {
+                EntityPending.loadAndShowPendingCustomers(mainContainer);
+            }
+        }
+
         // טעינת סטטיסטיקות
         await EntityLoader.loadStats(entityType, signal, parentId);
         

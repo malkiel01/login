@@ -269,6 +269,208 @@ const EntityPending = {
      */
     clearCache() {
         this.cache.clear();
+    },
+
+    /**
+     * טעינת רשומות ממתינות ליצירה (לא קיימות עדיין במערכת)
+     * @param {string} entityType - 'customers', 'purchases', 'burials'
+     * @returns {Promise<Array>}
+     */
+    async fetchPendingCreates(entityType) {
+        try {
+            const response = await fetch(
+                `/dashboard/dashboards/cemeteries/api/${entityType}-api.php?action=listPending`
+            );
+            const result = await response.json();
+            return result.success ? result.data : [];
+        } catch (error) {
+            console.error('Error fetching pending creates:', error);
+            return [];
+        }
+    },
+
+    /**
+     * ביטול בקשה ממתינה
+     * @param {number} pendingId
+     * @returns {Promise<boolean>}
+     */
+    async cancelPending(pendingId) {
+        if (!confirm('האם לבטל את הבקשה הממתינה?')) {
+            return false;
+        }
+
+        try {
+            const response = await fetch(
+                '/dashboard/dashboards/cemeteries/api/entity-approval-api.php?action=cancel',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pendingId })
+                }
+            );
+            const result = await response.json();
+
+            if (result.success) {
+                this.clearCache();
+                // רענון התצוגה
+                if (typeof refreshData === 'function') {
+                    refreshData();
+                }
+                return true;
+            } else {
+                alert('שגיאה: ' + (result.error || 'לא ניתן לבטל'));
+                return false;
+            }
+        } catch (error) {
+            console.error('Error canceling pending:', error);
+            alert('שגיאה בביטול הבקשה');
+            return false;
+        }
+    },
+
+    /**
+     * שליחה חוזרת של בקשת אישור
+     * @param {number} pendingId
+     * @returns {Promise<boolean>}
+     */
+    async resendApproval(pendingId) {
+        try {
+            const response = await fetch(
+                '/dashboard/dashboards/cemeteries/api/entity-approval-api.php?action=resendNotification',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pendingId })
+                }
+            );
+            const result = await response.json();
+
+            if (result.success) {
+                alert('בקשת האישור נשלחה מחדש');
+                return true;
+            } else {
+                alert('שגיאה: ' + (result.error || 'לא ניתן לשלוח'));
+                return false;
+            }
+        } catch (error) {
+            console.error('Error resending approval:', error);
+            alert('שגיאה בשליחת הבקשה');
+            return false;
+        }
+    },
+
+    /**
+     * יצירת שורת טבלה עבור לקוח ממתין
+     * @param {Object} pending
+     * @returns {string}
+     */
+    createPendingCustomerRow(pending) {
+        const isOwner = pending.is_owner;
+        const expiresAt = pending.expires_at ? new Date(pending.expires_at).toLocaleDateString('he-IL') : 'ללא';
+
+        let actions = `
+            <button class="btn btn-sm btn-outline" onclick="EntityPending.openApproval(${pending.pending_id})" title="צפייה בפרטים">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+        `;
+
+        if (isOwner) {
+            actions += `
+                <button class="btn btn-sm btn-outline" onclick="EntityPending.resendApproval(${pending.pending_id})" title="שלח בקשה חוזרת">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                </button>
+                <button class="btn btn-sm btn-outline btn-danger" onclick="EntityPending.cancelPending(${pending.pending_id})" title="ביטול">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            `;
+        }
+
+        return `
+            <tr class="pending-row" data-pending-id="${pending.pending_id}">
+                <td>
+                    <span class="pending-badge pending-create">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+                        ממתין לאישור
+                    </span>
+                </td>
+                <td>${pending.firstName || ''} ${pending.lastName || ''}</td>
+                <td>${pending.numId || '-'}</td>
+                <td>${pending.phoneMobile || pending.phone || '-'}</td>
+                <td>${pending.requester_name || '-'}</td>
+                <td>
+                    <span class="approval-progress">${pending.approved_count || 0}/${pending.required_approvals}</span>
+                </td>
+                <td>${expiresAt}</td>
+                <td class="actions-cell">${actions}</td>
+            </tr>
+        `;
+    },
+
+    /**
+     * יצירת סקשן של לקוחות ממתינים
+     * @param {Array} pendingList
+     * @returns {string}
+     */
+    createPendingCustomersSection(pendingList) {
+        if (!pendingList || pendingList.length === 0) return '';
+
+        let rows = pendingList.map(p => this.createPendingCustomerRow(p)).join('');
+
+        return `
+            <div class="pending-customers-section">
+                <div class="pending-customers-header">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                        </svg>
+                        לקוחות ממתינים לאישור
+                        <span class="pending-count">${pendingList.length}</span>
+                    </h3>
+                </div>
+                <table class="pending-customers-table">
+                    <thead>
+                        <tr>
+                            <th>סטטוס</th>
+                            <th>שם</th>
+                            <th>ת.ז.</th>
+                            <th>טלפון</th>
+                            <th>מבקש</th>
+                            <th>אישורים</th>
+                            <th>תוקף עד</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    /**
+     * טעינה והצגת לקוחות ממתינים
+     * @param {HTMLElement} container - אלמנט להוספת הסקשן
+     */
+    async loadAndShowPendingCustomers(container) {
+        const pending = await this.fetchPendingCreates('customers');
+
+        // הסרת סקשן קיים
+        const existingSection = container.querySelector('.pending-customers-section');
+        if (existingSection) {
+            existingSection.remove();
+        }
+
+        if (pending && pending.length > 0) {
+            const html = this.createPendingCustomersSection(pending);
+            container.insertAdjacentHTML('afterbegin', html);
+        }
     }
 };
 

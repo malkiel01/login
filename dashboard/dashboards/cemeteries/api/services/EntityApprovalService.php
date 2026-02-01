@@ -395,6 +395,46 @@ class EntityApprovalService
         ];
     }
 
+    /**
+     * שליחה חוזרת של התראות למאשרים שטרם הגיבו
+     */
+    public function resendNotifications(int $pendingId): int
+    {
+        $pending = $this->getPendingById($pendingId);
+        if (!$pending) {
+            throw new Exception('פעולה ממתינה לא נמצאה');
+        }
+
+        if ($pending['status'] !== 'pending') {
+            throw new Exception('הפעולה כבר טופלה');
+        }
+
+        // מציאת מאשרים שטרם הגיבו
+        $stmt = $this->pdo->prepare("
+            SELECT user_id FROM pending_operation_approvals
+            WHERE pending_id = ? AND status = 'pending'
+        ");
+        $stmt->execute([$pendingId]);
+        $pendingApprovals = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($pendingApprovals)) {
+            return 0;
+        }
+
+        // שליחת התראות חוזרות
+        $operationData = json_decode($pending['operation_data'], true) ?? [];
+        $this->sendApprovalNotification(
+            $pendingId,
+            $pending['entity_type'],
+            $pending['action'],
+            $operationData,
+            $pendingApprovals,
+            $pending['requested_by']
+        );
+
+        return count($pendingApprovals);
+    }
+
     // ========================================
     // Query Methods
     // ========================================

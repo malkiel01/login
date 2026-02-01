@@ -242,6 +242,38 @@ try {
             echo json_encode($result);
             break;
 
+        case 'resendNotification':
+            // שליחה חוזרת של בקשת אישור
+            $pendingId = (int)($postData['pendingId'] ?? 0);
+
+            if (!$pendingId) {
+                throw new Exception('מזהה חסר');
+            }
+
+            // בדיקה שהמשתמש הוא מי שיצר את הבקשה
+            $pending = $service->getPendingById($pendingId);
+            if (!$pending) {
+                throw new Exception('בקשה לא נמצאה');
+            }
+
+            if ($pending['requested_by'] != $userId && !isAdmin()) {
+                throw new Exception('אין הרשאה לשליחה חוזרת');
+            }
+
+            if ($pending['status'] !== 'pending') {
+                throw new Exception('הבקשה כבר טופלה');
+            }
+
+            // שליחה חוזרת של ההתראות
+            $result = $service->resendNotifications($pendingId);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'בקשת האישור נשלחה מחדש',
+                'sent' => $result
+            ]);
+            break;
+
         // ========================================
         // Authorizers
         // ========================================

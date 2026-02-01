@@ -1047,7 +1047,68 @@
                     'message' => 'הלקוח נמחק בהצלחה'
                 ]);
                 break;
-                
+
+            // רשימת לקוחות ממתינים לאישור
+            case 'listPending':
+                requireViewPermission('customers');
+
+                $currentUserId = getCurrentUserId();
+
+                // שליפת בקשות ממתינות ליצירת לקוחות
+                $sql = "
+                    SELECT
+                        peo.id as pending_id,
+                        peo.unicId as pending_unicId,
+                        peo.action,
+                        peo.entity_id,
+                        peo.operation_data,
+                        peo.original_data,
+                        peo.status,
+                        peo.required_approvals,
+                        peo.current_approvals,
+                        peo.created_at,
+                        peo.expires_at,
+                        peo.requested_by,
+                        u.name as requester_name,
+                        (SELECT COUNT(*) FROM pending_operation_approvals WHERE pending_id = peo.id AND status = 'approved') as approved_count,
+                        (SELECT COUNT(*) FROM pending_operation_approvals WHERE pending_id = peo.id AND status = 'rejected') as rejected_count
+                    FROM pending_entity_operations peo
+                    JOIN users u ON peo.requested_by = u.id
+                    WHERE peo.entity_type = 'customers'
+                      AND peo.status = 'pending'
+                    ORDER BY peo.created_at DESC
+                ";
+
+                $stmt = $pdo->query($sql);
+                $pendingList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // פענוח ה-JSON והכנת הנתונים לתצוגה
+                foreach ($pendingList as &$pending) {
+                    $operationData = json_decode($pending['operation_data'], true) ?? [];
+                    $originalData = json_decode($pending['original_data'], true) ?? [];
+
+                    // הוספת שדות מה-operation_data לתצוגה ישירה
+                    $pending['firstName'] = $operationData['firstName'] ?? '';
+                    $pending['lastName'] = $operationData['lastName'] ?? '';
+                    $pending['numId'] = $operationData['numId'] ?? '';
+                    $pending['phone'] = $operationData['phone'] ?? '';
+                    $pending['phoneMobile'] = $operationData['phoneMobile'] ?? '';
+                    $pending['typeId'] = $operationData['typeId'] ?? 3;
+
+                    // בדיקה אם המשתמש הנוכחי הוא מי שיצר את הבקשה
+                    $pending['is_owner'] = ($pending['requested_by'] == $currentUserId);
+
+                    // ניקוי שדות לא נחוצים
+                    unset($pending['operation_data'], $pending['original_data']);
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'data' => $pendingList,
+                    'total' => count($pendingList)
+                ]);
+                break;
+
             // סטטיסטיקות לקוחות
             case 'stats':
                 requireViewPermission('customers');

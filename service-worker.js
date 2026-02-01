@@ -4,7 +4,7 @@
  * חייב להיות בשורש האתר!
  */
 
-const CACHE_NAME = 'pwa-cache-v8';
+const CACHE_NAME = 'pwa-cache-v9';
 const API_URL = '/api/notifications.php';
 
 const urlsToCache = [
@@ -183,7 +183,7 @@ async function checkAndShowNotifications() {
             
             // הצג כל התראה
             for (const notif of data.notifications) {
-                const isApproval = notif.requires_approval || notif.isApproval || (notif.url && notif.url.includes('/approve.php'));
+                const isApproval = notif.requires_approval || notif.isApproval || (notif.url && (notif.url.includes('/approve.php') || notif.url.includes('entity-approve.php')));
                 await self.registration.showNotification(notif.title, {
                     body: notif.body,
                     icon: '/pwa/icons/android/android-launchericon-192-192.png',
@@ -272,7 +272,7 @@ self.addEventListener('push', event => {
             const data = event.data.json();
             const url = data.url || '/dashboard/';
             // Detect approval by explicit flag OR URL pattern
-            const isApprovalRequest = data.requiresApproval || data.requires_approval || data.isApproval || url.includes('/approve.php');
+            const isApprovalRequest = data.requiresApproval || data.requires_approval || data.isApproval || url.includes('/approve.php') || url.includes('entity-approve.php');
 
             notificationData = {
                 ...notificationData,
@@ -326,7 +326,7 @@ self.addEventListener('notificationclick', event => {
     const notificationTitle = event.notification.title || '';
     const notificationBody = event.notification.body || '';
     const notificationUrl = notificationData.url || '/dashboard/';
-    const isApproval = notificationData.isApproval || notificationUrl.includes('/approve.php');
+    const isApproval = notificationData.isApproval || notificationUrl.includes('/approve.php') || notificationUrl.includes('entity-approve.php');
 
     event.waitUntil(
         (async () => {

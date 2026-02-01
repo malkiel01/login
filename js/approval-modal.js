@@ -376,7 +376,17 @@ window.ApprovalModal = {
             console.log('[ApprovalModal] URL field:', notification.url);
 
             // TEMP DEBUG: Visual alert for debugging
-            alert('DEBUG: URL = ' + (notification.url || 'NULL'));
+            const urlValue = notification.url || 'NULL';
+            const hasEntityApprove = urlValue.includes('entity-approve.php');
+            alert('DEBUG:\nURL = ' + urlValue + '\nContains entity-approve.php? ' + hasEntityApprove);
+
+            // Force show iframe if URL contains entity-approve
+            if (hasEntityApprove) {
+                alert('Showing iframe now!');
+                this.init();
+                this.showEntityApprovalIframe(notification.url);
+                return;
+            }
 
             // Check if already responded
             if (data.approval && ['approved', 'rejected'].includes(data.approval.status)) {

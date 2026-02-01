@@ -529,7 +529,7 @@ const EntityPending = {
 
             // הגדרות נוספות
             sortable: true,
-            resizable: false,
+            resizable: true,
             filterable: false,
 
             // callback לדאבל-קליק

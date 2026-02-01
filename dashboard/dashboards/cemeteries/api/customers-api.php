@@ -129,8 +129,12 @@
                 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
                 $offset = ($page - 1) * $limit;
 
-                // ⭐ פרמטרי מיון
-                $allowedSortColumns = ['firstName', 'lastName', 'numId', 'phone', 'email', 'createDate', 'statusCustomer', 'city', 'address'];
+                // ⭐ פרמטרי מיון - כל השדות האפשריים בטבלה
+                $allowedSortColumns = [
+                    'firstName', 'lastName', 'fullNameHe', 'numId',
+                    'phone', 'phoneMobile', 'email', 'createDate',
+                    'statusCustomer', 'city', 'address', 'birthDate'
+                ];
                 $orderBy = $_GET['orderBy'] ?? 'createDate';
                 $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
                 if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';

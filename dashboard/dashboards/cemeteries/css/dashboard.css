@@ -288,7 +288,8 @@
 
     .entity-title-container .action-buttons .btn,
     .entity-title-container .action-buttons .btn-search-toggle,
-    .entity-title-container .action-buttons .btn-show-search {
+    .entity-title-container .action-buttons .btn-show-search,
+    .entity-title-container .action-buttons .btn-show-pending {
         width: 42px;
         height: 42px;
         min-width: 42px;
@@ -301,7 +302,8 @@
     /* הסתר טקסט בכפתורים */
     .entity-title-container .action-buttons .btn span,
     .entity-title-container .action-buttons .btn-search-toggle span,
-    .entity-title-container .action-buttons .btn-show-search span {
+    .entity-title-container .action-buttons .btn-show-search span,
+    .entity-title-container .action-buttons .btn-show-pending span {
         display: none;
     }
 
@@ -309,27 +311,31 @@
     .entity-title-container .action-buttons .btn svg,
     .entity-title-container .action-buttons .btn .icon,
     .entity-title-container .action-buttons .btn-search-toggle svg,
-    .entity-title-container .action-buttons .btn-show-search svg {
+    .entity-title-container .action-buttons .btn-show-search svg,
+    .entity-title-container .action-buttons .btn-show-pending svg {
         width: 20px;
         height: 20px;
         margin: 0;
     }
 
-    /* כפתור חיפוש - גרדיאנט כמו כפתור ראשי */
+    /* כפתור חיפוש/ממתינים - גרדיאנט כמו כפתור ראשי */
     .entity-title-container .action-buttons .btn-search-toggle,
-    .entity-title-container .action-buttons .btn-show-search {
+    .entity-title-container .action-buttons .btn-show-search,
+    .entity-title-container .action-buttons .btn-show-pending {
         background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
         border: none;
         color: white;
     }
 
     .entity-title-container .action-buttons .btn-search-toggle:active,
-    .entity-title-container .action-buttons .btn-show-search:active {
+    .entity-title-container .action-buttons .btn-show-search:active,
+    .entity-title-container .action-buttons .btn-show-pending:active {
         filter: brightness(0.9);
     }
 
     .entity-title-container .action-buttons .btn-search-toggle svg,
-    .entity-title-container .action-buttons .btn-show-search svg {
+    .entity-title-container .action-buttons .btn-show-search svg,
+    .entity-title-container .action-buttons .btn-show-pending svg {
         stroke: white;
     }
 

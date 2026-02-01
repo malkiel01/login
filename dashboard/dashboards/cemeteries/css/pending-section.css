@@ -13,7 +13,8 @@
     background: var(--bg-secondary);
     border-radius: 8px;
     transition: all 0.3s ease;
-    max-height: 350px; /* גובה מקסימלי לאנימציה */
+    max-height: 500px; /* גובה מקסימלי לאנימציה */
+    overflow: hidden;
 }
 
 /* ===================================================================
@@ -88,6 +89,7 @@
     margin-bottom: 0;
     overflow: hidden;
     opacity: 0;
+    border-width: 0;
     transition: all 0.3s ease;
 }
 
@@ -136,13 +138,16 @@
    =================================================================== */
 .pending-section-body {
     max-height: 220px; /* כ-4 שורות */
+    overflow-x: auto;
     overflow-y: auto;
     border: 1px solid var(--border-color);
     border-radius: 6px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .pending-table {
     width: 100%;
+    min-width: 500px; /* מינימום רוחב לטבלה */
     border-collapse: collapse;
 }
 
@@ -229,9 +234,10 @@
    ==================================== */
 @media screen and (max-width: 768px) {
     .pending-section {
-        margin-bottom: 10px;
+        margin: 0 0 10px 0;
         padding: 10px;
         border-radius: 6px;
+        max-height: 400px;
     }
 
     .pending-section-header {
@@ -268,10 +274,14 @@
         max-height: 180px;
     }
 
+    .pending-table {
+        min-width: 400px;
+    }
+
     .pending-table th,
     .pending-table td {
-        padding: 8px 10px;
-        font-size: 12px;
+        padding: 8px 6px;
+        font-size: 11px;
     }
 
     /* הסתרת עמודות פחות חשובות במובייל */
@@ -285,7 +295,7 @@
     }
 
     .pending-table .btn {
-        padding: 5px 6px;
+        padding: 4px 5px;
     }
 
     .pending-table .btn svg {
@@ -294,8 +304,8 @@
     }
 
     .approval-progress {
-        padding: 3px 8px;
-        font-size: 11px;
+        padding: 3px 6px;
+        font-size: 10px;
     }
 
     .pending-section-count {
@@ -306,7 +316,7 @@
 
 @media screen and (max-width: 480px) {
     .pending-section {
-        margin-bottom: 8px;
+        margin: 0 0 8px 0;
         padding: 8px;
         border-radius: 4px;
     }
@@ -317,5 +327,15 @@
 
     .pending-section-title {
         font-size: 12px;
+    }
+
+    .pending-table {
+        min-width: 350px;
+    }
+
+    .pending-table th,
+    .pending-table td {
+        padding: 6px 4px;
+        font-size: 10px;
     }
 }

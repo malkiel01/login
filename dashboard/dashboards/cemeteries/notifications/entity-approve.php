@@ -116,18 +116,18 @@ if (isset($_GET['embed'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <?php
-    // Theme colors from Design Center (user-preferences.css)
-    // Dark mode = gray, Light mode = purple/green based on colorScheme
+    // צבעים ממרכז העיצוב (user-preferences.css)
+    // מצב כהה = אפור, מצב בהיר = סגול/ירוק לפי ערכת הצבע
     if ($isDarkMode) {
         $themeColorPrimary = '#374151';
         $themeColorDark = '#1f2937';
     } else {
-        // Light mode - 2 color schemes: purple (default) or green
+        // מצב בהיר - 2 ערכות צבע: סגול (ברירת מחדל) או ירוק
         if ($colorScheme === 'green') {
             $themeColorPrimary = '#059669';
             $themeColorDark = '#047857';
         } else {
-            // Purple (default)
+            // סגול (ברירת מחדל)
             $themeColorPrimary = '#667eea';
             $themeColorDark = '#764ba2';
         }

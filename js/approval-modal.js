@@ -820,8 +820,8 @@ window.ApprovalModal = {
             header.style.display = 'none';
         }
 
-        // Update phone status bar color (theme-color meta tag)
-        // The iframe's meta tag doesn't affect the parent, so we update the parent's
+        // עדכון צבע שורת הסטטוס של הפלאפון
+        // תגית meta בתוך iframe לא משפיעה על הדף הראשי
         this._updateThemeColor();
 
         // Get modal body and remove padding for full-screen iframe
@@ -1016,7 +1016,7 @@ window.ApprovalModal = {
             const iframe = document.getElementById('entityApproveFrame');
             if (iframe) iframe.src = 'about:blank';
         }
-        // Restore original theme-color
+        // שחזור צבע שורת הסטטוס המקורי
         this._restoreThemeColor();
         // Restore page scroll
         document.body.style.overflow = '';
@@ -1032,31 +1032,31 @@ window.ApprovalModal = {
     },
 
     /**
-     * Update phone status bar color based on current theme
-     * Theme colors from Design Center (user-preferences.css)
+     * עדכון צבע שורת הסטטוס של הפלאפון
+     * צבעים ממרכז העיצוב (user-preferences.css)
      */
     _updateThemeColor() {
-        // Save original theme-color
+        // שמירת הצבע המקורי
         const existingMeta = document.querySelector('meta[name="theme-color"]');
         if (existingMeta) {
             this._originalThemeColor = existingMeta.getAttribute('content');
         }
 
-        // Determine theme color based on body classes
+        // קביעת הצבע לפי ערכת הנושא
         const body = document.body;
         const isDarkMode = body.classList.contains('dark-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
         const isGreen = body.classList.contains('color-scheme-green') || document.documentElement.getAttribute('data-color-scheme') === 'green';
 
         let themeColor;
         if (isDarkMode) {
-            themeColor = '#374151'; // Dark mode gray
+            themeColor = '#374151'; // מצב כהה - אפור
         } else if (isGreen) {
-            themeColor = '#059669'; // Green
+            themeColor = '#059669'; // ירוק
         } else {
-            themeColor = '#667eea'; // Purple (default)
+            themeColor = '#667eea'; // סגול (ברירת מחדל)
         }
 
-        // Update or create meta tag
+        // עדכון או יצירת תגית meta
         if (existingMeta) {
             existingMeta.setAttribute('content', themeColor);
         } else {
@@ -1068,7 +1068,7 @@ window.ApprovalModal = {
     },
 
     /**
-     * Restore original theme-color
+     * שחזור הצבע המקורי
      */
     _restoreThemeColor() {
         if (this._originalThemeColor) {

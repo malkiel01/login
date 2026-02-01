@@ -522,6 +522,50 @@ if (isset($_GET['embed'])) {
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             z-index: 101;
         }
+
+        /* Result message */
+        .result-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .result-message.success {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+
+        .result-message.rejected {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .result-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: scaleIn 0.4s ease;
+        }
+
+        .result-text {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
     </style>
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>">
@@ -771,6 +815,28 @@ if (isset($_GET['embed'])) {
             }
         }
 
+        // Show nice success/error message
+        function showResultMessage(status, message) {
+            const card = document.querySelector('.approval-card');
+            const isApproved = status === 'approved';
+
+            card.innerHTML = `
+                <div class="result-message ${isApproved ? 'success' : 'rejected'}">
+                    <div class="result-icon">${isApproved ? '✓' : '✗'}</div>
+                    <div class="result-text">${message}</div>
+                </div>
+            `;
+
+            // Wait before closing (give time to read)
+            setTimeout(() => {
+                if (isEmbedMode) {
+                    notifyParent(status);
+                } else {
+                    location.reload();
+                }
+            }, 2500);
+        }
+
         async function handleApprove() {
             // Check biometric availability
             if (!window.biometricAuth || !window.biometricAuth.isSupported) {
@@ -832,22 +898,17 @@ if (isset($_GET['embed'])) {
                 const data = await response.json();
 
                 if (data.success) {
-                    if (isEmbedMode) {
-                        // In iframe mode - notify parent
-                        notifyParent('approved');
-                    } else {
-                        // Standalone mode - show message and reload
-                        alert(data.complete ? 'הפעולה אושרה ובוצעה בהצלחה!' : 'האישור נרשם בהצלחה');
-                        location.reload();
-                    }
+                    showLoading(false);
+                    const message = data.complete ? 'הפעולה אושרה ובוצעה בהצלחה!' : 'האישור נרשם בהצלחה';
+                    showResultMessage('approved', message);
                 } else {
+                    showLoading(false);
                     alert('שגיאה: ' + (data.error || 'לא ניתן לאשר'));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('שגיאה בעת האישור');
-            } finally {
                 showLoading(false);
+                alert('שגיאה בעת האישור');
             }
         }
 
@@ -873,22 +934,16 @@ if (isset($_GET['embed'])) {
                 const data = await response.json();
 
                 if (data.success) {
-                    if (isEmbedMode) {
-                        // In iframe mode - notify parent
-                        notifyParent('rejected');
-                    } else {
-                        // Standalone mode - show message and reload
-                        alert('הפעולה נדחתה');
-                        location.reload();
-                    }
+                    showLoading(false);
+                    showResultMessage('rejected', 'הבקשה נדחתה');
                 } else {
+                    showLoading(false);
                     alert('שגיאה: ' + (data.error || 'לא ניתן לדחות'));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('שגיאה בעת הדחייה');
-            } finally {
                 showLoading(false);
+                alert('שגיאה בעת הדחייה');
             }
         }
     </script>

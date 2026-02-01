@@ -462,25 +462,14 @@ if (isset($_GET['embed'])) {
         /* Embed mode - full screen, no card styling, sticky buttons */
         body.embed-mode {
             padding: 0;
+            display: flex;
+            flex-direction: column;
             align-items: stretch;
-            justify-content: stretch;
+            justify-content: flex-start;
             background: var(--bg-primary);
         }
 
-        body.embed-mode .approval-card {
-            max-width: none;
-            border-radius: 0;
-            box-shadow: none;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        body.embed-mode .card-header {
-            padding: 16px 20px;
-        }
-
-        /* Top sticky header for embed mode */
+        /* Top sticky header for embed mode - MUST BE FIRST */
         .embed-header {
             display: none;
         }
@@ -490,15 +479,28 @@ if (isset($_GET['embed'])) {
             position: sticky;
             top: 0;
             z-index: 50;
-            background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
+            width: 100%;
+            background: linear-gradient(135deg, var(--color-primary, #22c55e) 0%, var(--color-primary-dark, #16a34a) 100%);
             color: white;
             padding: 14px 20px;
+            padding-top: calc(14px + env(safe-area-inset-top, 0px));
             font-size: 18px;
             font-weight: 600;
             text-align: center;
+            flex-shrink: 0;
+        }
+
+        body.embed-mode .approval-card {
+            max-width: none;
+            border-radius: 0;
+            box-shadow: none;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         body.embed-mode .card-header {
+            padding: 16px 20px;
             background: var(--bg-secondary, #f1f5f9);
             color: var(--text-primary, #1e293b);
         }

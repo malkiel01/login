@@ -279,7 +279,7 @@ $isAdminUser = isAdmin();
 
     <!-- Table Module v3.0.0 - מערכת טבלאות חדשה עם תמיכה בהעדפות משתמש -->
     <script src="/dashboard/dashboards/cemeteries/table-module/js/table-permissions.js?v=20260124"></script>
-    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-core.js?v=20260201"></script>
+    <script src="/dashboard/dashboards/cemeteries/table-module/js/table-core.js?v=20260201b"></script>
 
     <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script>
 

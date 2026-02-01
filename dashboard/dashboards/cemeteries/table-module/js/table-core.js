@@ -1126,8 +1126,9 @@ class TableManager {
         this.state.currentPage = 1;
 
         // ⭐ במצב server-side: שלח לשרת ולא מיון מקומי
-        if (this.config.onFetchPage && this.config.itemsPerPage < 999999) {
-            // פגינציה בשרת - טען מחדש מהשרת עם המיון החדש
+        // אם יש onFetchPage - תמיד מיון בשרת (גם ב-infinite scroll)
+        if (this.config.onFetchPage) {
+            // טען מחדש מהשרת עם המיון החדש
             this.showLoadingIndicator();
             this._fetchPageFromServer(1);
         } else {

@@ -40,8 +40,8 @@ if ($postData && isset($postData['action'])) {
     $filters = [];
     $page = $_GET['page'] ?? 1;
     $limit = $_GET['limit'] ?? 200;
-    $sort = $_GET['sort'] ?? 'createDate';
-    $order = strtoupper($_GET['order'] ?? 'DESC');
+    $sort = $_GET['orderBy'] ?? $_GET['sort'] ?? 'createDate';
+    $order = strtoupper($_GET['sortDirection'] ?? $_GET['order'] ?? 'DESC');
     $status = $_GET['status'] ?? '';
     // תמיכה בשני שמות פרמטרים: customer_id ו-clientId
     $customer_id = $_GET['customer_id'] ?? $_GET['clientId'] ?? '';

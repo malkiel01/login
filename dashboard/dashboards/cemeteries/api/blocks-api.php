@@ -33,6 +33,13 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
             $offset = ($page - 1) * $limit;
+
+            // ⭐ פרמטרי מיון
+            $allowedSortColumns = ['blockNameHe', 'blockNameEn', 'blockCode', 'blockLocation', 'createDate', 'availableSum', 'savedSum', 'purchasedSum', 'buriedSum', 'graveSum'];
+            $orderBy = $_GET['orderBy'] ?? 'createDate';
+            $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
+            if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
             
             $sql = "SELECT b.*, c.cemeteryNameHe
                     FROM blocks b
@@ -103,7 +110,7 @@ try {
             $totalAllStmt->execute($totalAllParams);
             $totalAll = $totalAllStmt->fetchColumn();
             
-            $sql .= " ORDER BY b.createDate DESC LIMIT :limit OFFSET :offset";
+            $sql .= " ORDER BY b.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

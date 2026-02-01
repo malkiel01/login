@@ -128,7 +128,14 @@
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
                 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
                 $offset = ($page - 1) * $limit;
-                
+
+                // ⭐ פרמטרי מיון
+                $allowedSortColumns = ['firstName', 'lastName', 'numId', 'phone', 'email', 'createDate', 'statusCustomer', 'city', 'address'];
+                $orderBy = $_GET['orderBy'] ?? 'createDate';
+                $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
+                if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
+                if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
+
                 // 🆕 פילטרים מתקדמים
                 $filters = [];
                 
@@ -387,8 +394,8 @@
                 $totalAllSql = "SELECT COUNT(*) FROM customers WHERE isActive = 1";
                 $totalAll = $pdo->query($totalAllSql)->fetchColumn();
                 
-                // הוספת מיון ועימוד
-                $sql .= " ORDER BY c.createDate DESC LIMIT :limit OFFSET :offset";
+                // ⭐ הוספת מיון ועימוד
+                $sql .= " ORDER BY c.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
                 
                 $stmt = $pdo->prepare($sql);
                 foreach ($params as $key => $value) {

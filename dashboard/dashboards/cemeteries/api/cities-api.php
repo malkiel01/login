@@ -27,7 +27,14 @@ require_once __DIR__ . '/api-auth.php';
              $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
              $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 500;
              $offset = ($page - 1) * $limit;
-             
+
+             // ⭐ פרמטרי מיון
+             $allowedSortColumns = ['cityNameHe', 'cityNameEn', 'cityCode', 'createDate'];
+             $orderBy = $_GET['orderBy'] ?? 'cityNameHe';
+             $sortDirection = strtoupper($_GET['sortDirection'] ?? 'ASC');
+             if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'cityNameHe';
+             if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'ASC';
+
              // בניית השאילתה עם JOIN למדינות
              $sql = "
                  SELECT 
@@ -67,8 +74,8 @@ require_once __DIR__ . '/api-auth.php';
              $countStmt->execute($params);
              $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
              
-             // הוספת מיון ועימוד
-             $sql .= " ORDER BY c.cityNameHe ASC LIMIT :limit OFFSET :offset";
+             // ⭐ הוספת מיון ועימוד
+             $sql .= " ORDER BY c.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
              
              $stmt = $pdo->prepare($sql);
              foreach ($params as $key => $value) {

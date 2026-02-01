@@ -33,7 +33,14 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
             $offset = ($page - 1) * $limit;
-            
+
+            // ⭐ פרמטרי מיון
+            $allowedSortColumns = ['graveNameHe', 'graveCode', 'graveStatus', 'createDate', 'graveNumber', 'graveRow'];
+            $orderBy = $_GET['orderBy'] ?? 'createDate';
+            $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
+            if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
+
             $areaGraveId = $_GET['areaGraveId'] ?? null;
             
             // בניית השאילתה
@@ -81,8 +88,8 @@ try {
             $countStmt->execute($countParams);
             $total = $countStmt->fetchColumn();
             
-            // מיון ועימוד
-            $sql .= " ORDER BY g.createDate DESC LIMIT :limit OFFSET :offset";
+            // ⭐ מיון ועימוד
+            $sql .= " ORDER BY g.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

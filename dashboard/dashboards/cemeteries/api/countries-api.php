@@ -26,7 +26,14 @@ require_once __DIR__ . '/api-auth.php';
              $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
              $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 300;
              $offset = ($page - 1) * $limit;
-             
+
+             // ⭐ פרמטרי מיון
+             $allowedSortColumns = ['countryNameHe', 'countryNameEn', 'countryCode', 'createDate'];
+             $orderBy = $_GET['orderBy'] ?? 'countryNameHe';
+             $sortDirection = strtoupper($_GET['sortDirection'] ?? 'ASC');
+             if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'countryNameHe';
+             if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'ASC';
+
              // בניית השאילתה
              $sql = "SELECT * FROM countries WHERE isActive = 1";
              $params = [];
@@ -49,8 +56,8 @@ require_once __DIR__ . '/api-auth.php';
              $countStmt->execute($params);
              $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
              
-             // הוספת מיון ועימוד
-             $sql .= " ORDER BY countryNameHe ASC LIMIT :limit OFFSET :offset";
+             // ⭐ הוספת מיון ועימוד
+             $sql .= " ORDER BY {$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
              
              $stmt = $pdo->prepare($sql);
              foreach ($params as $key => $value) {

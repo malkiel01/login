@@ -26,7 +26,14 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
-            
+
+            // ⭐ פרמטרי מיון
+            $allowedSortColumns = ['price', 'plotType', 'graveType', 'createDate'];
+            $orderBy = $_GET['orderBy'] ?? 'createDate';
+            $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
+            if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
+
             // בניית השאילתה
             $sql = "SELECT * FROM payments WHERE isActive = 1";
             $params = [];
@@ -58,8 +65,8 @@ try {
             $countStmt->execute($params);
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
             
-            // הוספת מיון ועימוד
-            $sql .= " ORDER BY createDate DESC LIMIT :limit OFFSET :offset";
+            // ⭐ הוספת מיון ועימוד
+            $sql .= " ORDER BY {$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

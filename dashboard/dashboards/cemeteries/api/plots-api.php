@@ -34,6 +34,13 @@ try {
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
             $offset = ($page - 1) * $limit;
 
+            // ⭐ פרמטרי מיון
+            $allowedSortColumns = ['plotNameHe', 'plotNameEn', 'plotCode', 'plotLocation', 'createDate', 'availableSum', 'savedSum', 'purchasedSum', 'buriedSum', 'graveSum'];
+            $orderBy = $_GET['orderBy'] ?? 'createDate';
+            $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
+            if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'createDate';
+            if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'DESC';
+
             $sql = "SELECT p.* FROM plots_view p WHERE isActive = 1";            
 
             $params = [];
@@ -102,7 +109,7 @@ try {
             $totalAllStmt->execute($totalAllParams);
             $totalAll = $totalAllStmt->fetchColumn();
             
-            $sql .= " ORDER BY p.createDate DESC LIMIT :limit OFFSET :offset";
+            $sql .= " ORDER BY p.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
             foreach ($params as $key => $value) {

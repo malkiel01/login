@@ -71,4 +71,4 @@ database.ini
 
 # Session files
 sessions/*
-!sessions/.gitkeep
+!sessions/.gitkeepbackup/

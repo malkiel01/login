@@ -15,6 +15,7 @@
 
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
+require_once __DIR__ . '/services/EntityApprovalService.php';
 
 // =====================================
 // 1️⃣ קבלת נתוני POST/GET
@@ -308,10 +309,37 @@ try {
                 }
             }
             
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+
+            // אם המשתמש הוא מורשה חתימה - מבצע מיידית (נחשב כחתימתו)
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'purchases', 'create');
+
+            // אם דורש אישור ואינו מורשה חתימה - שמור כפעולה ממתינה
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'purchases', 'create')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'purchases',
+                    'action' => 'create',
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             $insertFields = [];
             $insertValues = [];
             $params = [];
-            
+
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $insertFields[] = $field;
@@ -319,10 +347,10 @@ try {
                     $params[$field] = $data[$field];
                 }
             }
-            
-            $sql = "INSERT INTO purchases (" . implode(', ', $insertFields) . ") 
+
+            $sql = "INSERT INTO purchases (" . implode(', ', $insertFields) . ")
                     VALUES (" . implode(', ', $insertValues) . ")";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
@@ -407,13 +435,43 @@ try {
             if (empty($updateFields)) {
                 throw new Exception('אין שדות לעדכון');
             }
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'purchases', 'edit');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'purchases', 'edit')) {
+                // שמירת המידע המקורי
+                $stmt = $pdo->prepare("SELECT * FROM purchases WHERE unicId = :id");
+                $stmt->execute(['id' => $id]);
+                $originalData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'purchases',
+                    'action' => 'edit',
+                    'entity_id' => $id,
+                    'operation_data' => $data,
+                    'original_data' => $originalData,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה לעריכה נשלחה לאישור מורשה חתימה'
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             $params['id'] = $id;
             $sql = "UPDATE purchases SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'הרכישה עודכנה בהצלחה'
@@ -434,7 +492,32 @@ try {
             if (!$purchase) {
                 throw new Exception('הרכישה לא נמצאה');
             }
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'purchases', 'delete');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'purchases', 'delete')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'purchases',
+                    'action' => 'delete',
+                    'entity_id' => $id,
+                    'operation_data' => ['id' => $id],
+                    'original_data' => $purchase,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה למחיקה נשלחה לאישור מורשה חתימה'
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             // מחיקה רכה
             $stmt = $pdo->prepare("UPDATE purchases SET isActive = 0, inactiveDate = :date WHERE id = :id");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);

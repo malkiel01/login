@@ -371,6 +371,10 @@ window.ApprovalModal = {
             const notification = data.notification;
             notification.id = notificationId; // Ensure ID is set
 
+            // DEBUG: Log notification data
+            console.log('[ApprovalModal] Notification data received:', JSON.stringify(notification, null, 2));
+            console.log('[ApprovalModal] URL field:', notification.url);
+
             // Check if already responded
             if (data.approval && ['approved', 'rejected'].includes(data.approval.status)) {
                 // Use templates if available, otherwise fallback to old modal

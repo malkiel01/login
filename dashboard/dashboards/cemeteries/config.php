@@ -28,7 +28,9 @@ if (!defined('GRAVE_STATUS')) {
         1 => ['name' => 'פנוי', 'color' => '#10b981', 'bg' => '#d1fae5'],
         2 => ['name' => 'נרכש', 'color' => '#f97316', 'bg' => '#fed7aa'],
         3 => ['name' => 'תפוס', 'color' => '#dc2626', 'bg' => '#fecaca'],
-        4 => ['name' => 'שמור', 'color' => '#6366f1', 'bg' => '#ddd6fe']
+        4 => ['name' => 'ממתין לאישור רכישה', 'color' => '#eab308', 'bg' => '#fef3c7'],
+        5 => ['name' => 'ממתין לאישור קבורה', 'color' => '#f59e0b', 'bg' => '#fde68a'],
+        6 => ['name' => 'שמור', 'color' => '#6366f1', 'bg' => '#ddd6fe']
     ]);
 }
 
@@ -52,7 +54,9 @@ if (!defined('CUSTOMER_STATUS')) {
     define('CUSTOMER_STATUS', [
         1 => ['name' => 'פעיל', 'color' => '#10b981'],
         2 => ['name' => 'רכש', 'color' => '#3b82f6'],
-        3 => ['name' => 'נפטר', 'color' => '#6b7280']
+        3 => ['name' => 'נפטר', 'color' => '#6b7280'],
+        4 => ['name' => 'ממתין לאישור רכישה', 'color' => '#eab308'],
+        5 => ['name' => 'ממתין לאישור קבורה', 'color' => '#f59e0b']
     ]);
 }
 

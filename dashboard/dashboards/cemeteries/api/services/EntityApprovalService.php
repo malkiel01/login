@@ -156,6 +156,30 @@ class EntityApprovalService
 
         $pendingId = $this->pdo->lastInsertId();
 
+        // === עדכון סטטוס ישויות קשורות ל"ממתין" ===
+        // סטטוסי קבר: 4 = ממתין לאישור רכישה, 5 = ממתין לאישור קבורה
+        // סטטוסי לקוח: 4 = ממתין לאישור רכישה, 5 = ממתין לאישור קבורה
+        if ($entityType === 'purchases' && $action === 'create' && !empty($operationData['graveId'])) {
+            $this->pdo->prepare("UPDATE graves SET graveStatus = 4 WHERE unicId = ? AND graveStatus = 1")
+                      ->execute([$operationData['graveId']]);
+        }
+
+        if ($entityType === 'burials' && $action === 'create' && !empty($operationData['graveId'])) {
+            $this->pdo->prepare("UPDATE graves SET graveStatus = 5 WHERE unicId = ? AND graveStatus IN (1, 2)")
+                      ->execute([$operationData['graveId']]);
+        }
+
+        if ($entityType === 'purchases' && $action === 'create' && !empty($operationData['clientId'])) {
+            $this->pdo->prepare("UPDATE customers SET statusCustomer = 4 WHERE unicId = ? AND statusCustomer = 1")
+                      ->execute([$operationData['clientId']]);
+        }
+
+        if ($entityType === 'burials' && $action === 'create' && !empty($operationData['clientId'])) {
+            $this->pdo->prepare("UPDATE customers SET statusCustomer = 5 WHERE unicId = ?")
+                      ->execute([$operationData['clientId']]);
+        }
+        // === סוף עדכון סטטוס ישויות קשורות ===
+
         // Get authorizers and create approval records
         $authorizers = $this->getAuthorizers($entityType, $action);
         $authorizerIds = [];

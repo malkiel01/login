@@ -13,6 +13,7 @@
 
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
+require_once __DIR__ . '/services/EntityApprovalService.php';
 
 try {
     $pdo = getDBConnection();
@@ -222,18 +223,42 @@ try {
             $data['createDate'] = date('Y-m-d H:i:s');
             $data['updateDate'] = date('Y-m-d H:i:s');
             $data['isActive'] = 1;
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'cemeteries', 'create');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'cemeteries', 'create')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'cemeteries',
+                    'action' => 'create',
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             $fields = [
                 'unicId', 'cemeteryNameHe', 'cemeteryNameEn', 'cemeteryCode',
                 'address', 'contactName', 'contactPhoneName',
                 'nationalInsuranceCode', 'coordinates', 'documents',
                 'createDate', 'updateDate', 'isActive'
             ];
-            
+
             $insertFields = [];
             $insertValues = [];
             $params = [];
-            
+
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $insertFields[] = $field;
@@ -241,13 +266,13 @@ try {
                     $params[$field] = $data[$field];
                 }
             }
-            
+
             $sql = "INSERT INTO cemeteries (" . implode(', ', $insertFields) . ")
                     VALUES (" . implode(', ', $insertValues) . ")";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'בית העלמין נוסף בהצלחה',
@@ -285,56 +310,138 @@ try {
             }
             
             $data['updateDate'] = date('Y-m-d H:i:s');
-            
+
             $fields = [
                 'cemeteryNameHe', 'cemeteryNameEn', 'cemeteryCode',
                 'address', 'contactName', 'contactPhoneName',
                 'nationalInsuranceCode', 'coordinates', 'documents', 'updateDate'
             ];
-            
+
             $updateFields = [];
             $params = ['id' => $id];
-            
+
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $updateFields[] = "$field = :$field";
                     $params[$field] = $data[$field];
                 }
             }
-            
+
             if (empty($updateFields)) {
                 throw new Exception('No fields to update');
             }
-            
+
+            // === בדיקת כפילויות לפני יצירת pending ===
+            $stmt = $pdo->prepare("
+                SELECT id, action FROM pending_entity_operations
+                WHERE entity_type = 'cemeteries'
+                  AND action IN ('edit', 'delete')
+                  AND entity_id = ?
+                  AND status = 'pending'
+            ");
+            $stmt->execute([$id]);
+            $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($existingPending) {
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של בית עלמין זה (מזהה: ' . $existingPending['id'] . ')');
+            }
+            // === סוף בדיקת כפילויות ===
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'cemeteries', 'edit');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'cemeteries', 'edit')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'cemeteries',
+                    'action' => 'edit',
+                    'entity_id' => $id,
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             $sql = "UPDATE cemeteries SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'בית העלמין עודכן בהצלחה'
             ]);
             break;
-            
+
         // מחיקת בית עלמין
         case 'delete':
             requireDeletePermission('cemeteries');
             if (!$id) {
                 throw new Exception('Cemetery ID is required');
             }
-            
+
             // בדיקה אם יש גושים
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM blocks WHERE cemeteryId = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $blocks = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-            
+
             if ($blocks > 0) {
                 throw new Exception('לא ניתן למחוק בית עלמין עם גושים פעילים');
             }
-            
+
+            // === בדיקת כפילויות לפני יצירת pending ===
+            $stmt = $pdo->prepare("
+                SELECT id, action FROM pending_entity_operations
+                WHERE entity_type = 'cemeteries'
+                  AND action IN ('edit', 'delete')
+                  AND entity_id = ?
+                  AND status = 'pending'
+            ");
+            $stmt->execute([$id]);
+            $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($existingPending) {
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של בית עלמין זה (מזהה: ' . $existingPending['id'] . ')');
+            }
+            // === סוף בדיקת כפילויות ===
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'cemeteries', 'delete');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'cemeteries', 'delete')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'cemeteries',
+                    'action' => 'delete',
+                    'entity_id' => $id,
+                    'operation_data' => ['id' => $id],
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             $stmt = $pdo->prepare("UPDATE cemeteries SET isActive = 0, inactiveDate = :date WHERE unicId = :id");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'בית העלמין נמחק בהצלחה'

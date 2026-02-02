@@ -353,8 +353,8 @@ class EntityApprovalService
         $entityType = $pending['entity_type'];
         $action = $pending['action'];
 
-        // Execute the actual operation
-        $result = $this->executeOperation($entityType, $action, $operationData, $pending['entity_id']);
+        // Execute the actual operation (pass pendingId for history linking)
+        $result = $this->executeOperation($entityType, $action, $operationData, $pending['entity_id'], $pendingId);
 
         // Update pending status
         $stmt = $this->pdo->prepare("
@@ -656,35 +656,38 @@ class EntityApprovalService
 
     /**
      * Execute the actual entity operation
+     * @param int|null $pendingId - ID of the pending operation (for linking history)
      */
-    private function executeOperation(string $entityType, string $action, array $data, ?string $entityId): array
+    private function executeOperation(string $entityType, string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         // This will call the appropriate API method based on entity type and action
         // For now, we'll implement basic logic - in production this should call the actual API methods
 
         switch ($entityType) {
             case 'purchases':
-                return $this->executePurchaseOperation($action, $data, $entityId);
+                return $this->executePurchaseOperation($action, $data, $entityId, $pendingId);
             case 'burials':
-                return $this->executeBurialOperation($action, $data, $entityId);
+                return $this->executeBurialOperation($action, $data, $entityId, $pendingId);
             case 'customers':
-                return $this->executeCustomerOperation($action, $data, $entityId);
+                return $this->executeCustomerOperation($action, $data, $entityId, $pendingId);
             case 'cemeteries':
-                return $this->executeCemeteryOperation($action, $data, $entityId);
+                return $this->executeCemeteryOperation($action, $data, $entityId, $pendingId);
             case 'blocks':
-                return $this->executeBlockOperation($action, $data, $entityId);
+                return $this->executeBlockOperation($action, $data, $entityId, $pendingId);
             case 'plots':
-                return $this->executePlotOperation($action, $data, $entityId);
+                return $this->executePlotOperation($action, $data, $entityId, $pendingId);
             case 'graves':
-                return $this->executeGraveOperation($action, $data, $entityId);
+                return $this->executeGraveOperation($action, $data, $entityId, $pendingId);
             case 'payments':
-                return $this->executePaymentOperation($action, $data, $entityId);
+                return $this->executePaymentOperation($action, $data, $entityId, $pendingId);
+            case 'areaGraves':
+                return $this->executeAreaGraveOperation($action, $data, $entityId, $pendingId);
             default:
                 throw new Exception("Unknown entity type: $entityType");
         }
     }
 
-    private function executePurchaseOperation(string $action, array $data, ?string $entityId): array
+    private function executePurchaseOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         switch ($action) {
             case 'create':
@@ -693,8 +696,8 @@ class EntityApprovalService
                 $stmt = $this->pdo->prepare("
                     INSERT INTO purchases (unicId, clientId, graveId, contactId, price,
                                           numOfPayments, PaymentEndDate, paymentsList,
-                                          purchaseStatus, buyer_status, comment, isActive, createDate)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
+                                          purchaseStatus, buyer_status, comment, isActive, createDate, approved_pending_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)
                 ");
                 $stmt->execute([
                     $unicId,
@@ -707,7 +710,8 @@ class EntityApprovalService
                     json_encode($data['paymentsList'] ?? []),
                     $data['purchaseStatus'] ?? 1,
                     $data['buyer_status'] ?? 1,
-                    $data['comment'] ?? null
+                    $data['comment'] ?? null,
+                    $pendingId
                 ]);
 
                 // Update grave status
@@ -750,7 +754,7 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
-    private function executeBurialOperation(string $action, array $data, ?string $entityId): array
+    private function executeBurialOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         // Similar implementation for burials
         switch ($action) {
@@ -759,8 +763,8 @@ class EntityApprovalService
                 $stmt = $this->pdo->prepare("
                     INSERT INTO burials (unicId, clientId, graveId, contactId, purchaseId,
                                         dateDeath, timeDeath, dateBurial, timeBurial, placeDeath,
-                                        nationalInsuranceBurial, deathAbroad, comment, isActive, createDate)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
+                                        nationalInsuranceBurial, deathAbroad, comment, isActive, createDate, approved_pending_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)
                 ");
                 $stmt->execute([
                     $unicId,
@@ -775,7 +779,8 @@ class EntityApprovalService
                     $data['placeDeath'] ?? null,
                     $data['nationalInsuranceBurial'] ?? 0,
                     $data['deathAbroad'] ?? 0,
-                    $data['comment'] ?? null
+                    $data['comment'] ?? null,
+                    $pendingId
                 ]);
 
                 // Update grave and customer status
@@ -797,7 +802,7 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
-    private function executeCustomerOperation(string $action, array $data, ?string $entityId): array
+    private function executeCustomerOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         switch ($action) {
             case 'create':
@@ -821,6 +826,13 @@ class EntityApprovalService
                 $insertFields[] = 'unicId';
                 $insertValues[] = ':unicId';
                 $params['unicId'] = $unicId;
+
+                // Add approved_pending_id if provided
+                if ($pendingId) {
+                    $insertFields[] = 'approved_pending_id';
+                    $insertValues[] = ':approved_pending_id';
+                    $params['approved_pending_id'] = $pendingId;
+                }
 
                 foreach ($fields as $field) {
                     if ($field === 'unicId') continue; // Already added
@@ -907,7 +919,7 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
-    private function executeCemeteryOperation(string $action, array $data, ?string $entityId): array
+    private function executeCemeteryOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         switch ($action) {
             case 'create':
@@ -937,6 +949,12 @@ class EntityApprovalService
                     $insertFields[] = 'createDate';
                     $insertValues[] = 'NOW()';
                 }
+                // Add approved_pending_id if provided
+                if ($pendingId) {
+                    $insertFields[] = 'approved_pending_id';
+                    $insertValues[] = ':approved_pending_id';
+                    $params['approved_pending_id'] = $pendingId;
+                }
 
                 $sql = "INSERT INTO cemeteries (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
                 $this->pdo->prepare($sql)->execute($params);
@@ -965,7 +983,7 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
-    private function executeBlockOperation(string $action, array $data, ?string $entityId): array
+    private function executeBlockOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         switch ($action) {
             case 'create':
@@ -995,6 +1013,12 @@ class EntityApprovalService
                     $insertFields[] = 'createDate';
                     $insertValues[] = 'NOW()';
                 }
+                // Add approved_pending_id if provided
+                if ($pendingId) {
+                    $insertFields[] = 'approved_pending_id';
+                    $insertValues[] = ':approved_pending_id';
+                    $params['approved_pending_id'] = $pendingId;
+                }
 
                 $sql = "INSERT INTO blocks (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
                 $this->pdo->prepare($sql)->execute($params);
@@ -1023,7 +1047,7 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
-    private function executePlotOperation(string $action, array $data, ?string $entityId): array
+    private function executePlotOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         switch ($action) {
             case 'create':
@@ -1053,6 +1077,12 @@ class EntityApprovalService
                     $insertFields[] = 'createDate';
                     $insertValues[] = 'NOW()';
                 }
+                // Add approved_pending_id if provided
+                if ($pendingId) {
+                    $insertFields[] = 'approved_pending_id';
+                    $insertValues[] = ':approved_pending_id';
+                    $params['approved_pending_id'] = $pendingId;
+                }
 
                 $sql = "INSERT INTO plots (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
                 $this->pdo->prepare($sql)->execute($params);
@@ -1081,7 +1111,7 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
-    private function executeGraveOperation(string $action, array $data, ?string $entityId): array
+    private function executeGraveOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         switch ($action) {
             case 'create':
@@ -1111,6 +1141,12 @@ class EntityApprovalService
                     $insertFields[] = 'createDate';
                     $insertValues[] = 'NOW()';
                 }
+                // Add approved_pending_id if provided
+                if ($pendingId) {
+                    $insertFields[] = 'approved_pending_id';
+                    $insertValues[] = ':approved_pending_id';
+                    $params['approved_pending_id'] = $pendingId;
+                }
 
                 $sql = "INSERT INTO graves (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
                 $this->pdo->prepare($sql)->execute($params);
@@ -1139,7 +1175,7 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
-    private function executePaymentOperation(string $action, array $data, ?string $entityId): array
+    private function executePaymentOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
     {
         switch ($action) {
             case 'create':
@@ -1156,6 +1192,13 @@ class EntityApprovalService
                     'isActive' => 1,
                     'createDate' => date('Y-m-d H:i:s')
                 ];
+
+                // Add approved_pending_id if provided
+                if ($pendingId) {
+                    $insertFields[] = 'approved_pending_id';
+                    $insertValues[] = ':approved_pending_id';
+                    $params['approved_pending_id'] = $pendingId;
+                }
 
                 foreach ($fields as $field) {
                     if (isset($data[$field])) {
@@ -1201,6 +1244,162 @@ class EntityApprovalService
                     'id' => $entityId,
                     'inactiveDate' => date('Y-m-d H:i:s')
                 ]);
+                return ['entityId' => $entityId];
+        }
+        throw new Exception("Unknown action: $action");
+    }
+
+    private function executeAreaGraveOperation(string $action, array $data, ?string $entityId, ?int $pendingId = null): array
+    {
+        switch ($action) {
+            case 'create':
+                // Create area grave
+                $unicId = $data['unicId'] ?? uniqid('areaGrave_', true);
+                $now = date('Y-m-d H:i:s');
+
+                $stmt = $this->pdo->prepare("
+                    INSERT INTO areaGraves (unicId, areaGraveNameHe, coordinates, gravesList, graveType,
+                                           lineId, comments, documentsList, createDate, updateDate, isActive, approved_pending_id)
+                    VALUES (:unicId, :areaGraveNameHe, :coordinates, :gravesList, :graveType,
+                            :lineId, :comments, :documentsList, :createDate, :updateDate, 1, :approved_pending_id)
+                ");
+                $stmt->execute([
+                    'unicId' => $unicId,
+                    'areaGraveNameHe' => $data['areaGraveNameHe'] ?? '',
+                    'coordinates' => $data['coordinates'] ?? '',
+                    'gravesList' => '',
+                    'graveType' => $data['graveType'] ?? '',
+                    'lineId' => $data['lineId'] ?? null,
+                    'comments' => $data['comments'] ?? '',
+                    'documentsList' => $data['documentsList'] ?? '',
+                    'createDate' => $now,
+                    'updateDate' => $now,
+                    'approved_pending_id' => $pendingId
+                ]);
+
+                // Create graves if provided
+                $gravesData = $data['gravesData'] ?? [];
+                if (is_string($gravesData)) {
+                    $gravesData = json_decode($gravesData, true) ?? [];
+                }
+
+                foreach ($gravesData as $grave) {
+                    $graveUnicId = uniqid('grave_', true);
+                    $graveStmt = $this->pdo->prepare("
+                        INSERT INTO graves (unicId, areaGraveId, graveNameHe, plotType, graveStatus,
+                                           graveLocation, constructionCost, isSmallGrave, comments,
+                                           documentsList, createDate, updateDate, isActive)
+                        VALUES (:unicId, :areaGraveId, :graveNameHe, :plotType, :graveStatus,
+                                :graveLocation, :constructionCost, :isSmallGrave, :comments,
+                                :documentsList, :createDate, :updateDate, 1)
+                    ");
+                    $graveStmt->execute([
+                        'unicId' => $graveUnicId,
+                        'areaGraveId' => $unicId,
+                        'graveNameHe' => trim($grave['graveNameHe'] ?? ''),
+                        'plotType' => $grave['plotType'] ?? 1,
+                        'graveStatus' => 1,
+                        'graveLocation' => 0,
+                        'constructionCost' => $grave['constructionCost'] ?? 0,
+                        'isSmallGrave' => isset($grave['isSmallGrave']) && $grave['isSmallGrave'] ? 1 : 0,
+                        'comments' => '',
+                        'documentsList' => '',
+                        'createDate' => $now,
+                        'updateDate' => $now
+                    ]);
+                }
+
+                return ['entityId' => $unicId];
+
+            case 'edit':
+                if (!$entityId) {
+                    throw new Exception('Entity ID is required for edit');
+                }
+
+                $now = date('Y-m-d H:i:s');
+                $fields = ['areaGraveNameHe', 'coordinates', 'graveType', 'lineId', 'comments', 'documentsList'];
+                $updateFields = ['updateDate = :updateDate'];
+                $params = ['id' => $entityId, 'updateDate' => $now];
+
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+
+                $sql = "UPDATE areaGraves SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
+                $this->pdo->prepare($sql)->execute($params);
+
+                // Handle graves update if provided
+                $gravesData = $data['gravesData'] ?? [];
+                if (is_string($gravesData)) {
+                    $gravesData = json_decode($gravesData, true) ?? [];
+                }
+
+                if (!empty($gravesData)) {
+                    // Get existing graves
+                    $stmt = $this->pdo->prepare("SELECT unicId, graveStatus FROM graves WHERE areaGraveId = :id AND isActive = 1");
+                    $stmt->execute(['id' => $entityId]);
+                    $existingGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    $existingIds = array_column($existingGraves, 'unicId');
+                    $existingStatuses = array_column($existingGraves, 'graveStatus', 'unicId');
+                    $newGravesIds = array_filter(array_column($gravesData, 'id'));
+
+                    // Delete removed graves (only if status = 1)
+                    $gravesToDelete = array_diff($existingIds, $newGravesIds);
+                    foreach ($gravesToDelete as $graveIdToDelete) {
+                        if (($existingStatuses[$graveIdToDelete] ?? 0) == 1) {
+                            $this->pdo->prepare("UPDATE graves SET isActive = 0, inactiveDate = :date WHERE unicId = :id")
+                                      ->execute(['id' => $graveIdToDelete, 'date' => $now]);
+                        }
+                    }
+
+                    // Update or create graves
+                    foreach ($gravesData as $grave) {
+                        if (!empty($grave['id']) && in_array($grave['id'], $existingIds)) {
+                            // Update existing
+                            $this->pdo->prepare("
+                                UPDATE graves SET graveNameHe = :graveNameHe, plotType = :plotType,
+                                                 constructionCost = :constructionCost, isSmallGrave = :isSmallGrave,
+                                                 updateDate = :updateDate
+                                WHERE unicId = :id
+                            ")->execute([
+                                'id' => $grave['id'],
+                                'graveNameHe' => trim($grave['graveNameHe'] ?? ''),
+                                'plotType' => $grave['plotType'] ?? 1,
+                                'constructionCost' => $grave['constructionCost'] ?? 0,
+                                'isSmallGrave' => isset($grave['isSmallGrave']) && $grave['isSmallGrave'] ? 1 : 0,
+                                'updateDate' => $now
+                            ]);
+                        } else {
+                            // Create new
+                            $graveUnicId = uniqid('grave_', true);
+                            $this->pdo->prepare("
+                                INSERT INTO graves (unicId, areaGraveId, graveNameHe, plotType, graveStatus,
+                                                   graveLocation, constructionCost, isSmallGrave, comments,
+                                                   documentsList, createDate, updateDate, isActive)
+                                VALUES (:unicId, :areaGraveId, :graveNameHe, :plotType, 1, 0, :constructionCost,
+                                        :isSmallGrave, '', '', :createDate, :updateDate, 1)
+                            ")->execute([
+                                'unicId' => $graveUnicId,
+                                'areaGraveId' => $entityId,
+                                'graveNameHe' => trim($grave['graveNameHe'] ?? ''),
+                                'plotType' => $grave['plotType'] ?? 1,
+                                'constructionCost' => $grave['constructionCost'] ?? 0,
+                                'isSmallGrave' => isset($grave['isSmallGrave']) && $grave['isSmallGrave'] ? 1 : 0,
+                                'createDate' => $now,
+                                'updateDate' => $now
+                            ]);
+                        }
+                    }
+                }
+
+                return ['entityId' => $entityId];
+
+            case 'delete':
+                $this->pdo->prepare("UPDATE areaGraves SET isActive = 0, inactiveDate = :date WHERE unicId = :id")
+                          ->execute(['id' => $entityId, 'date' => date('Y-m-d H:i:s')]);
                 return ['entityId' => $entityId];
         }
         throw new Exception("Unknown action: $action");

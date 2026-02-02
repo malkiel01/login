@@ -15,6 +15,7 @@
 
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
+require_once __DIR__ . '/services/EntityApprovalService.php';
 
 // =====================================
 // 1️⃣ קבלת נתוני POST/GET
@@ -325,20 +326,20 @@ try {
         case 'create':
             requireCreatePermission('areaGraves');
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             // ולידציה - שדות חובה
             if (empty($data['areaGraveNameHe'])) {
                 throw new Exception('שם אחוזת הקבר (עברית) הוא שדה חובה');
             }
-            
+
             if (empty($data['lineId'])) {
                 throw new Exception('בחירת שורה היא חובה');
             }
-            
+
             if (empty($data['graveType'])) {
                 throw new Exception('סוג אחוזת קבר הוא שדה חובה');
             }
-            
+
             // קבל נתוני קברים
             $gravesData = [];
             if (isset($data['gravesData'])) {
@@ -348,32 +349,59 @@ try {
                     $gravesData = $data['gravesData'];
                 }
             }
-            
+
             // ולידציית קברים
             if (empty($gravesData) || count($gravesData) === 0) {
                 throw new Exception('חובה להוסיף לפחות קבר אחד');
             }
-            
+
             if (count($gravesData) > 5) {
                 throw new Exception('ניתן להוסיף עד 5 קברים בלבד');
             }
-            
+
             // בדוק שמות ייחודיים בקברים
             $graveNames = array_map(function($g) {
                 return trim($g['graveNameHe']);
             }, $gravesData);
-            
+
             if (count($graveNames) !== count(array_unique($graveNames))) {
                 throw new Exception('שמות קברים חייבים להיות ייחודיים באחוזה');
             }
-            
+
             // בדוק שכל הקברים קיבלו שם
             foreach ($gravesData as $idx => $grave) {
                 if (empty($grave['graveNameHe'])) {
                     throw new Exception("שם קבר מספר " . ($idx + 1) . " הוא חובה");
                 }
             }
-            
+
+            // ========== בדיקת אישורים ==========
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'areaGraves', 'create');
+
+            // אם צריך אישור והמשתמש לא מורשה חתימה
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'areaGraves', 'create')) {
+                // שמור את נתוני הקברים ב-data
+                $data['gravesData'] = $gravesData;
+
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'areaGraves',
+                    'action' => 'create',
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'message' => 'הבקשה נשלחה לאישור',
+                    'pendingId' => $result['pendingId']
+                ]);
+                break;
+            }
+            // ========== סוף בדיקת אישורים ==========
+
             // התחל טרנזקציה
             $pdo->beginTransaction();
             
@@ -476,14 +504,14 @@ try {
             if (!$id) {
                 throw new Exception('Area Grave ID is required');
             }
-            
+
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             // ולידציה - שדות חובה
             if (empty($data['areaGraveNameHe'])) {
                 throw new Exception('שם אחוזת הקבר (עברית) הוא שדה חובה');
             }
-            
+
             // קבל נתוני קברים
             $gravesData = [];
             if (isset($data['gravesData'])) {
@@ -493,32 +521,67 @@ try {
                     $gravesData = $data['gravesData'];
                 }
             }
-            
+
             // ולידציית קברים
             if (empty($gravesData) || count($gravesData) === 0) {
                 throw new Exception('חובה להיות לפחות קבר אחד');
             }
-            
+
             if (count($gravesData) > 5) {
                 throw new Exception('ניתן להוסיף עד 5 קברים בלבד');
             }
-            
+
             // בדוק שמות ייחודיים
             $graveNames = array_map(function($g) {
                 return trim($g['graveNameHe']);
             }, $gravesData);
-            
+
             if (count($graveNames) !== count(array_unique($graveNames))) {
                 throw new Exception('שמות קברים חייבים להיות ייחודיים באחוזה');
             }
-            
+
             // בדוק שכל הקברים קיבלו שם
             foreach ($gravesData as $idx => $grave) {
                 if (empty($grave['graveNameHe'])) {
                     throw new Exception("שם קבר מספר " . ($idx + 1) . " הוא חובה");
                 }
             }
-            
+
+            // ========== בדיקת אישורים ==========
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+
+            // בדוק אם יש פעולה ממתינה על אחוזת קבר זו
+            $existingPending = $approvalService->getPendingForEntity('areaGraves', $id);
+            if ($existingPending) {
+                throw new Exception('קיימת בקשה ממתינה לאישור עבור אחוזת קבר זו. יש להמתין לאישור או לבטל את הבקשה הקיימת.');
+            }
+
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'areaGraves', 'edit');
+
+            // אם צריך אישור והמשתמש לא מורשה חתימה
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'areaGraves', 'edit')) {
+                // שמור את נתוני הקברים ב-data
+                $data['gravesData'] = $gravesData;
+
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'areaGraves',
+                    'action' => 'edit',
+                    'entity_id' => $id,
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'message' => 'הבקשה נשלחה לאישור',
+                    'pendingId' => $result['pendingId']
+                ]);
+                break;
+            }
+            // ========== סוף בדיקת אישורים ==========
+
             // התחל טרנזקציה
             $pdo->beginTransaction();
             
@@ -668,24 +731,56 @@ try {
 
             // בדיקה אם יש קברים פעילים באחוזה
             $stmt = $pdo->prepare("
-                SELECT COUNT(*) as count 
-                FROM graves 
+                SELECT COUNT(*) as count
+                FROM graves
                 WHERE areaGraveId = :id AND isActive = 1
             ");
             $stmt->execute(['id' => $id]);
             $graves = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-            
+
             if ($graves > 0) {
                 throw new Exception('לא ניתן למחוק אחוזת קבר עם קברים פעילים');
             }
-            
+
+            // ========== בדיקת אישורים ==========
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+
+            // בדוק אם יש פעולה ממתינה על אחוזת קבר זו
+            $existingPending = $approvalService->getPendingForEntity('areaGraves', $id);
+            if ($existingPending) {
+                throw new Exception('קיימת בקשה ממתינה לאישור עבור אחוזת קבר זו. יש להמתין לאישור או לבטל את הבקשה הקיימת.');
+            }
+
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'areaGraves', 'delete');
+
+            // אם צריך אישור והמשתמש לא מורשה חתימה
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'areaGraves', 'delete')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'areaGraves',
+                    'action' => 'delete',
+                    'entity_id' => $id,
+                    'operation_data' => ['id' => $id],
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'message' => 'בקשת המחיקה נשלחה לאישור',
+                    'pendingId' => $result['pendingId']
+                ]);
+                break;
+            }
+            // ========== סוף בדיקת אישורים ==========
+
             $stmt = $pdo->prepare("
-                UPDATE areaGraves 
-                SET isActive = 0, inactiveDate = :date 
+                UPDATE areaGraves
+                SET isActive = 0, inactiveDate = :date
                 WHERE unicId = :id
             ");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'אחוזת הקבר נמחקה בהצלחה'

@@ -367,12 +367,13 @@ try {
                 $stmt->execute([$data['clientId']]);
 
                 // בדיקה 1: האם יש pending על הקבר הזה?
+                // משתמש בעמודת grave_id המחושבת לביצועים טובים יותר
                 $stmt = $pdo->prepare("
                     SELECT id FROM pending_entity_operations
                     WHERE entity_type = 'purchases'
                       AND action = 'create'
                       AND status = 'pending'
-                      AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.graveId')) = ?
+                      AND grave_id = ?
                 ");
                 $stmt->execute([$data['graveId']]);
                 $existingGravePending = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -382,12 +383,13 @@ try {
                 }
 
                 // בדיקה 2: האם יש pending על הלקוח הזה (רכישה או קבורה)?
+                // משתמש בעמודת client_id המחושבת לביצועים טובים יותר
                 $stmt = $pdo->prepare("
                     SELECT id, entity_type FROM pending_entity_operations
                     WHERE entity_type IN ('purchases', 'burials')
                       AND action = 'create'
                       AND status = 'pending'
-                      AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.clientId')) = ?
+                      AND client_id = ?
                 ");
                 $stmt->execute([$data['clientId']]);
                 $existingClientPending = $stmt->fetch(PDO::FETCH_ASSOC);

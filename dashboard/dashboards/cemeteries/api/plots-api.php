@@ -13,6 +13,7 @@
 
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
+require_once __DIR__ . '/services/EntityApprovalService.php';
 
 try {
     $pdo = getDBConnection();
@@ -271,19 +272,43 @@ try {
             $data['createDate'] = date('Y-m-d H:i:s');
             $data['updateDate'] = date('Y-m-d H:i:s');
             $data['isActive'] = 1;
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'plots', 'create');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'plots', 'create')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'plots',
+                    'action' => 'create',
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             // ⭐ שדות מותאמים למבנה הטבלה האמיתי
             $fields = [
                 'unicId', 'blockId', 'plotNameHe', 'plotNameEn', 'plotCode',
-                'plotLocation', 'nationalInsuranceCode', 'comments', 
+                'plotLocation', 'nationalInsuranceCode', 'comments',
                 'coordinates', 'documentsList',
                 'createDate', 'updateDate', 'isActive'
             ];
-            
+
             $insertFields = [];
             $insertValues = [];
             $params = [];
-            
+
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $insertFields[] = $field;
@@ -291,13 +316,13 @@ try {
                     $params[$field] = $data[$field];
                 }
             }
-            
+
             $sql = "INSERT INTO plots (" . implode(', ', $insertFields) . ")
                     VALUES (" . implode(', ', $insertValues) . ")";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'החלקה נוספה בהצלחה',
@@ -350,32 +375,73 @@ try {
             }
   
             $data['updateDate'] = date('Y-m-d H:i:s');
-            
+
             // ⭐ שדות מותאמים למבנה הטבלה האמיתי
             $fields = [
                 'plotNameHe', 'plotNameEn', 'plotCode',
                 'plotLocation', 'nationalInsuranceCode', 'comments',
                 'coordinates', 'documentsList', 'updateDate', 'blockId'
             ];
-            
+
             $updateFields = [];
             $params = ['id' => $id];
-            
+
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $updateFields[] = "$field = :$field";
                     $params[$field] = $data[$field];
                 }
             }
-            
+
             if (empty($updateFields)) {
                 throw new Exception('No fields to update');
             }
-            
+
+            // === בדיקת כפילויות לפני יצירת pending ===
+            $stmt = $pdo->prepare("
+                SELECT id, action FROM pending_entity_operations
+                WHERE entity_type = 'plots'
+                  AND action IN ('edit', 'delete')
+                  AND entity_id = ?
+                  AND status = 'pending'
+            ");
+            $stmt->execute([$id]);
+            $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($existingPending) {
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של חלקה זו (מזהה: ' . $existingPending['id'] . ')');
+            }
+            // === סוף בדיקת כפילויות ===
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'plots', 'edit');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'plots', 'edit')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'plots',
+                    'action' => 'edit',
+                    'entity_id' => $id,
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             $sql = "UPDATE plots SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'החלקה עודכנה בהצלחה'
@@ -390,52 +456,95 @@ try {
 
             // שלב 1: בדוק אם יש שורות לחלקה
             $stmt = $pdo->prepare("
-                SELECT unicId 
-                FROM rows 
+                SELECT unicId
+                FROM rows
                 WHERE plotId = :id AND isActive = 1
             ");
             $stmt->execute(['id' => $id]);
             $activeRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // שלב 2: אם יש שורות - בדוק אחוזות קבר
             if (count($activeRows) > 0) {
                 $rowIds = array_column($activeRows, 'unicId');
                 $placeholders = implode(',', array_fill(0, count($rowIds), '?'));
-                
+
                 // בדוק אם יש אחוזות קבר פעילות
                 $stmt = $pdo->prepare("
-                    SELECT COUNT(*) as count 
-                    FROM areaGraves 
+                    SELECT COUNT(*) as count
+                    FROM areaGraves
                     WHERE lineId IN ($placeholders) AND isActive = 1
                 ");
                 $stmt->execute($rowIds);
                 $areaGravesCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                
+
                 // אם יש אחוזות קבר - אסור למחוק
                 if ($areaGravesCount > 0) {
                     throw new Exception('לא ניתן למחוק חלקה עם אחוזות קבר פעילות. יש למחוק תחילה את אחוזות הקבר.');
                 }
-                
-                // אין אחוזות קבר - מחק את השורות
+            }
+
+            // === בדיקת כפילויות לפני יצירת pending ===
+            $stmt = $pdo->prepare("
+                SELECT id, action FROM pending_entity_operations
+                WHERE entity_type = 'plots'
+                  AND action IN ('edit', 'delete')
+                  AND entity_id = ?
+                  AND status = 'pending'
+            ");
+            $stmt->execute([$id]);
+            $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($existingPending) {
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של חלקה זו (מזהה: ' . $existingPending['id'] . ')');
+            }
+            // === סוף בדיקת כפילויות ===
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'plots', 'delete');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'plots', 'delete')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'plots',
+                    'action' => 'delete',
+                    'entity_id' => $id,
+                    'operation_data' => ['id' => $id],
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
+            // מחק שורות אם יש
+            if (count($activeRows) > 0) {
                 $stmt = $pdo->prepare("
-                    UPDATE rows 
-                    SET isActive = 0, inactiveDate = :date 
+                    UPDATE rows
+                    SET isActive = 0, inactiveDate = :date
                     WHERE plotId = :id AND isActive = 1
                 ");
                 $stmt->execute([
-                    'id' => $id, 
+                    'id' => $id,
                     'date' => date('Y-m-d H:i:s')
                 ]);
             }
-            
-            // שלב 3: מחק את החלקה
+
+            // מחק את החלקה
             $stmt = $pdo->prepare("
-                UPDATE plots 
-                SET isActive = 0, inactiveDate = :date 
+                UPDATE plots
+                SET isActive = 0, inactiveDate = :date
                 WHERE unicId = :id
             ");
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'החלקה נמחקה בהצלחה'

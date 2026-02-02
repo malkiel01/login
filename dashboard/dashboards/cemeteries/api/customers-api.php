@@ -740,12 +740,13 @@
                     }
 
                     // בדיקה 2: בבקשות ממתינות לאישור
+                    // משתמש בעמודת num_id המחושבת לביצועים טובים יותר
                     $stmt = $pdo->prepare("
                         SELECT id, unicId FROM pending_entity_operations
                         WHERE entity_type = 'customers'
                           AND action = 'create'
                           AND status = 'pending'
-                          AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.numId')) = ?
+                          AND num_id = ?
                     ");
                     $stmt->execute([$data['numId']]);
                     $pendingRecord = $stmt->fetch(PDO::FETCH_ASSOC);

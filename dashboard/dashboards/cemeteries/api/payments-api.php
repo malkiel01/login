@@ -4,6 +4,7 @@
 
 // אימות והרשאות - חייב להיות מחובר!
 require_once __DIR__ . '/api-auth.php';
+require_once __DIR__ . '/services/EntityApprovalService.php';
 
 try {
     $pdo = getDBConnection();
@@ -464,31 +465,55 @@ try {
         case 'create':
             requireCreatePermission('payments');
             $data = json_decode(file_get_contents('php://input'), true);
-            
+
             // ולידציה
             if (empty($data['price'])) {
                 throw new Exception('מחיר הוא שדה חובה');
             }
-            
+
             // יצירת unicId אוטומטי
             if (empty($data['unicId'])) {
                 $data['unicId'] = 'PAY_' . date('YmdHis') . '_' . rand(1000, 9999);
             }
-            
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'payments', 'create');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'payments', 'create')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'payments',
+                    'action' => 'create',
+                    'operation_data' => $data,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             // בניית השאילתה
             $fields = [
                 'plotType', 'graveType', 'resident', 'buyerStatus', 'price',
                 'priceDefinition', 'cemeteryId', 'blockId', 'plotId', 'lineId',
                 'startPayment', 'unicId', 'mandatory'
             ];
-            
+
             $insertFields = ['isActive', 'createDate'];
             $insertValues = [':isActive', ':createDate'];
             $params = [
                 'isActive' => 1,
                 'createDate' => date('Y-m-d H:i:s')
             ];
-            
+
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $insertFields[] = $field;
@@ -496,15 +521,15 @@ try {
                     $params[$field] = $data[$field];
                 }
             }
-            
-            $sql = "INSERT INTO payments (" . implode(', ', $insertFields) . ") 
+
+            $sql = "INSERT INTO payments (" . implode(', ', $insertFields) . ")
                     VALUES (" . implode(', ', $insertValues) . ")";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             $paymentId = $pdo->lastInsertId();
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'התשלום נוסף בהצלחה',
@@ -525,32 +550,79 @@ try {
             if (!$id) {
                 throw new Exception('Payment ID is required');
             }
-            
+
+            // === בדיקת כפילויות לפני יצירת pending ===
+            $stmt = $pdo->prepare("
+                SELECT id, action FROM pending_entity_operations
+                WHERE entity_type = 'payments'
+                  AND action IN ('edit', 'delete')
+                  AND entity_id = ?
+                  AND status = 'pending'
+            ");
+            $stmt->execute([$id]);
+            $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($existingPending) {
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של תשלום זה (מזהה: ' . $existingPending['id'] . ')');
+            }
+            // === סוף בדיקת כפילויות ===
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'payments', 'edit');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'payments', 'edit')) {
+                // שמירת המידע המקורי
+                $stmt = $pdo->prepare("SELECT * FROM payments WHERE id = :id");
+                $stmt->execute(['id' => $id]);
+                $originalData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'payments',
+                    'action' => 'edit',
+                    'entity_id' => $id,
+                    'operation_data' => $data,
+                    'original_data' => $originalData,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
             // בניית השאילתה
             $fields = [
                 'plotType', 'graveType', 'resident', 'buyerStatus', 'price',
                 'priceDefinition', 'cemeteryId', 'blockId', 'plotId', 'lineId',
                 'startPayment', 'mandatory'
             ];
-            
+
             $updateFields = ['updateDate = :updateDate'];
             $params = [
                 'id' => $id,
                 'updateDate' => date('Y-m-d H:i:s')
             ];
-            
+
             foreach ($fields as $field) {
                 if (isset($data[$field])) {
                     $updateFields[] = "$field = :$field";
                     $params[$field] = $data[$field];
                 }
             }
-            
+
             $sql = "UPDATE payments SET " . implode(', ', $updateFields) . " WHERE id = :id";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'התשלום עודכן בהצלחה'
@@ -563,17 +635,68 @@ try {
             if (!$id) {
                 throw new Exception('Payment ID is required');
             }
-            
+
+            // קבלת פרטי התשלום
+            $stmt = $pdo->prepare("SELECT * FROM payments WHERE id = :id AND isActive = 1");
+            $stmt->execute(['id' => $id]);
+            $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$payment) {
+                throw new Exception('התשלום לא נמצא');
+            }
+
+            // === בדיקת כפילויות לפני יצירת pending ===
             $stmt = $pdo->prepare("
-                UPDATE payments 
-                SET isActive = 0, inactiveDate = :inactiveDate 
+                SELECT id, action FROM pending_entity_operations
+                WHERE entity_type = 'payments'
+                  AND action IN ('edit', 'delete')
+                  AND entity_id = ?
+                  AND status = 'pending'
+            ");
+            $stmt->execute([$id]);
+            $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($existingPending) {
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של תשלום זה (מזהה: ' . $existingPending['id'] . ')');
+            }
+            // === סוף בדיקת כפילויות ===
+
+            // === בדיקת אישור מורשה חתימה ===
+            $approvalService = EntityApprovalService::getInstance($pdo);
+            $currentUserId = getCurrentUserId();
+            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'payments', 'delete');
+
+            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'payments', 'delete')) {
+                $result = $approvalService->createPendingOperation([
+                    'entity_type' => 'payments',
+                    'action' => 'delete',
+                    'entity_id' => $id,
+                    'operation_data' => ['id' => $id],
+                    'original_data' => $payment,
+                    'requested_by' => $currentUserId
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'pending' => true,
+                    'pendingId' => $result['pendingId'],
+                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                    'expiresAt' => $result['expiresAt']
+                ]);
+                break;
+            }
+            // === סוף בדיקת אישור ===
+
+            $stmt = $pdo->prepare("
+                UPDATE payments
+                SET isActive = 0, inactiveDate = :inactiveDate
                 WHERE id = :id
             ");
             $stmt->execute([
                 'id' => $id,
                 'inactiveDate' => date('Y-m-d H:i:s')
             ]);
-            
+
             echo json_encode([
                 'success' => true,
                 'message' => 'התשלום נמחק בהצלחה'

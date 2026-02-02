@@ -444,6 +444,7 @@ function markEntityApprovalNotificationAsRead(PDO $pdo, int $pendingId, int $use
 function markAllApprovalNotificationsAsRead(PDO $pdo, int $pendingId): void {
     $urlPattern = "%entity-approve.php?id={$pendingId}%";
 
+    // 1. סמן push_notifications שכבר נשלחו כנקראו
     $stmt = $pdo->prepare("
         UPDATE push_notifications pn
         JOIN scheduled_notifications sn ON sn.id = pn.scheduled_notification_id
@@ -456,5 +457,29 @@ function markAllApprovalNotificationsAsRead(PDO $pdo, int $pendingId): void {
     $updated = $stmt->rowCount();
     if ($updated > 0) {
         error_log("[EntityApprovalAPI] Marked ALL $updated notification(s) as read for pending $pendingId");
+    }
+
+    // 2. בטל scheduled_notifications שטרם נשלחו (status = 'pending')
+    cancelScheduledNotifications($pdo, $pendingId);
+}
+
+/**
+ * Cancel scheduled notifications that haven't been sent yet
+ * This prevents future notifications from being sent for resolved operations
+ */
+function cancelScheduledNotifications(PDO $pdo, int $pendingId): void {
+    $urlPattern = "%entity-approve.php?id={$pendingId}%";
+
+    $stmt = $pdo->prepare("
+        UPDATE scheduled_notifications
+        SET status = 'cancelled'
+        WHERE url LIKE ?
+          AND status = 'pending'
+    ");
+    $stmt->execute([$urlPattern]);
+
+    $cancelled = $stmt->rowCount();
+    if ($cancelled > 0) {
+        error_log("[EntityApprovalAPI] Cancelled $cancelled scheduled notification(s) for pending $pendingId");
     }
 }

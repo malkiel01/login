@@ -278,59 +278,81 @@ try {
             $comment = $data['comment'] ?? '';
             $timeDeath = $data['timeDeath'] ?? null;
 
-            // === בדיקת כפילויות לפני יצירת pending ===
-            // בדיקה 1: האם יש pending על הקבר הזה?
-            $stmt = $pdo->prepare("
-                SELECT id FROM pending_entity_operations
-                WHERE entity_type = 'burials'
-                  AND action = 'create'
-                  AND status = 'pending'
-                  AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.graveId')) = ?
-            ");
-            $stmt->execute([$data['graveId']]);
-            $existingGravePending = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($existingGravePending) {
-                throw new Exception('כבר קיימת בקשה ממתינה לקבורה על קבר זה (מזהה: ' . $existingGravePending['id'] . ')');
+            // === בדיקת כפילויות עם נעילה אופטימיסטית ===
+            // נעילת הקבר והלקוח למניעת race conditions
+            $pdo->beginTransaction();
+            try {
+                // נעילת הקבר - ימתין אם יש transaction אחר
+                $stmt = $pdo->prepare("SELECT unicId FROM graves WHERE unicId = ? FOR UPDATE");
+                $stmt->execute([$data['graveId']]);
+
+                // נעילת הלקוח
+                $stmt = $pdo->prepare("SELECT unicId FROM customers WHERE unicId = ? FOR UPDATE");
+                $stmt->execute([$data['clientId']]);
+
+                // בדיקה 1: האם יש pending על הקבר הזה?
+                $stmt = $pdo->prepare("
+                    SELECT id FROM pending_entity_operations
+                    WHERE entity_type = 'burials'
+                      AND action = 'create'
+                      AND status = 'pending'
+                      AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.graveId')) = ?
+                ");
+                $stmt->execute([$data['graveId']]);
+                $existingGravePending = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($existingGravePending) {
+                    $pdo->rollBack();
+                    throw new Exception('כבר קיימת בקשה ממתינה לקבורה על קבר זה (מזהה: ' . $existingGravePending['id'] . ')');
+                }
+
+                // בדיקה 2: האם יש pending על הלקוח הזה?
+                $stmt = $pdo->prepare("
+                    SELECT id FROM pending_entity_operations
+                    WHERE entity_type = 'burials'
+                      AND action = 'create'
+                      AND status = 'pending'
+                      AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.clientId')) = ?
+                ");
+                $stmt->execute([$data['clientId']]);
+                $existingClientPending = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($existingClientPending) {
+                    $pdo->rollBack();
+                    throw new Exception('כבר קיימת בקשה ממתינה לקבורה עבור לקוח זה (מזהה: ' . $existingClientPending['id'] . ')');
+                }
+                // === סוף בדיקת כפילויות ===
+
+                // === בדיקת אישור מורשה חתימה ===
+                $approvalService = EntityApprovalService::getInstance($pdo);
+                $currentUserId = getCurrentUserId();
+                $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'burials', 'create');
+
+                if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'burials', 'create')) {
+                    $result = $approvalService->createPendingOperation([
+                        'entity_type' => 'burials',
+                        'action' => 'create',
+                        'operation_data' => $data,
+                        'requested_by' => $currentUserId
+                    ]);
+
+                    $pdo->commit();
+                    echo json_encode([
+                        'success' => true,
+                        'pending' => true,
+                        'pendingId' => $result['pendingId'],
+                        'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                        'expiresAt' => $result['expiresAt']
+                    ]);
+                    break;
+                }
+                // === סוף בדיקת אישור ===
+
+                $pdo->commit();
+            } catch (Exception $lockException) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $lockException;
             }
-
-            // בדיקה 2: האם יש pending על הלקוח הזה?
-            $stmt = $pdo->prepare("
-                SELECT id FROM pending_entity_operations
-                WHERE entity_type = 'burials'
-                  AND action = 'create'
-                  AND status = 'pending'
-                  AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.clientId')) = ?
-            ");
-            $stmt->execute([$data['clientId']]);
-            $existingClientPending = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($existingClientPending) {
-                throw new Exception('כבר קיימת בקשה ממתינה לקבורה עבור לקוח זה (מזהה: ' . $existingClientPending['id'] . ')');
-            }
-            // === סוף בדיקת כפילויות ===
-
-            // === בדיקת אישור מורשה חתימה ===
-            $approvalService = EntityApprovalService::getInstance($pdo);
-            $currentUserId = getCurrentUserId();
-            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'burials', 'create');
-
-            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'burials', 'create')) {
-                $result = $approvalService->createPendingOperation([
-                    'entity_type' => 'burials',
-                    'action' => 'create',
-                    'operation_data' => $data,
-                    'requested_by' => $currentUserId
-                ]);
-
-                echo json_encode([
-                    'success' => true,
-                    'pending' => true,
-                    'pendingId' => $result['pendingId'],
-                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
-                    'expiresAt' => $result['expiresAt']
-                ]);
-                break;
-            }
-            // === סוף בדיקת אישור ===
 
             // הכנסה למסד הנתונים
             $stmt = $pdo->prepare("
@@ -422,18 +444,19 @@ try {
             }
 
             // === בדיקת כפילויות לפני יצירת pending ===
-            // בדיקה אם כבר קיימת בקשת עריכה ממתינה עבור קבורה זו
+            // בדיקה אם כבר קיימת בקשה ממתינה (עריכה או מחיקה) עבור קבורה זו
             $stmt = $pdo->prepare("
-                SELECT id FROM pending_entity_operations
+                SELECT id, action FROM pending_entity_operations
                 WHERE entity_type = 'burials'
-                  AND action = 'edit'
+                  AND action IN ('edit', 'delete')
                   AND entity_id = ?
                   AND status = 'pending'
             ");
             $stmt->execute([$id]);
             $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($existingPending) {
-                throw new Exception('כבר קיימת בקשה ממתינה לעריכת קבורה זו (מזהה: ' . $existingPending['id'] . ')');
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של קבורה זו (מזהה: ' . $existingPending['id'] . ')');
             }
             // === סוף בדיקת כפילויות ===
 
@@ -492,18 +515,19 @@ try {
             }
 
             // === בדיקת כפילויות לפני יצירת pending ===
-            // בדיקה אם כבר קיימת בקשת מחיקה ממתינה עבור קבורה זו
+            // בדיקה אם כבר קיימת בקשה ממתינה (עריכה או מחיקה) עבור קבורה זו
             $stmt = $pdo->prepare("
-                SELECT id FROM pending_entity_operations
+                SELECT id, action FROM pending_entity_operations
                 WHERE entity_type = 'burials'
-                  AND action = 'delete'
+                  AND action IN ('edit', 'delete')
                   AND entity_id = ?
                   AND status = 'pending'
             ");
             $stmt->execute([$id]);
             $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($existingPending) {
-                throw new Exception('כבר קיימת בקשה ממתינה למחיקת קבורה זו (מזהה: ' . $existingPending['id'] . ')');
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של קבורה זו (מזהה: ' . $existingPending['id'] . ')');
             }
             // === סוף בדיקת כפילויות ===
 

@@ -354,63 +354,85 @@ try {
                 }
             }
             
-            // === בדיקת כפילויות לפני יצירת pending ===
-            // בדיקה 1: האם יש pending על הקבר הזה?
-            $stmt = $pdo->prepare("
-                SELECT id FROM pending_entity_operations
-                WHERE entity_type = 'purchases'
-                  AND action = 'create'
-                  AND status = 'pending'
-                  AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.graveId')) = ?
-            ");
-            $stmt->execute([$data['graveId']]);
-            $existingGravePending = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($existingGravePending) {
-                throw new Exception('כבר קיימת בקשה ממתינה לרכישה על קבר זה (מזהה: ' . $existingGravePending['id'] . ')');
+            // === בדיקת כפילויות עם נעילה אופטימיסטית ===
+            // נעילת הקבר והלקוח למניעת race conditions
+            $pdo->beginTransaction();
+            try {
+                // נעילת הקבר - ימתין אם יש transaction אחר
+                $stmt = $pdo->prepare("SELECT unicId FROM graves WHERE unicId = ? FOR UPDATE");
+                $stmt->execute([$data['graveId']]);
+
+                // נעילת הלקוח
+                $stmt = $pdo->prepare("SELECT unicId FROM customers WHERE unicId = ? FOR UPDATE");
+                $stmt->execute([$data['clientId']]);
+
+                // בדיקה 1: האם יש pending על הקבר הזה?
+                $stmt = $pdo->prepare("
+                    SELECT id FROM pending_entity_operations
+                    WHERE entity_type = 'purchases'
+                      AND action = 'create'
+                      AND status = 'pending'
+                      AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.graveId')) = ?
+                ");
+                $stmt->execute([$data['graveId']]);
+                $existingGravePending = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($existingGravePending) {
+                    $pdo->rollBack();
+                    throw new Exception('כבר קיימת בקשה ממתינה לרכישה על קבר זה (מזהה: ' . $existingGravePending['id'] . ')');
+                }
+
+                // בדיקה 2: האם יש pending על הלקוח הזה (רכישה או קבורה)?
+                $stmt = $pdo->prepare("
+                    SELECT id, entity_type FROM pending_entity_operations
+                    WHERE entity_type IN ('purchases', 'burials')
+                      AND action = 'create'
+                      AND status = 'pending'
+                      AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.clientId')) = ?
+                ");
+                $stmt->execute([$data['clientId']]);
+                $existingClientPending = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($existingClientPending) {
+                    $pdo->rollBack();
+                    $entityLabel = $existingClientPending['entity_type'] === 'purchases' ? 'רכישה' : 'קבורה';
+                    throw new Exception('כבר קיימת בקשה ממתינה ל' . $entityLabel . ' עבור לקוח זה (מזהה: ' . $existingClientPending['id'] . ')');
+                }
+                // === סוף בדיקת כפילויות ===
+
+                // === בדיקת אישור מורשה חתימה ===
+                $approvalService = EntityApprovalService::getInstance($pdo);
+                $currentUserId = getCurrentUserId();
+
+                // אם המשתמש הוא מורשה חתימה - מבצע מיידית (נחשב כחתימתו)
+                $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'purchases', 'create');
+
+                // אם דורש אישור ואינו מורשה חתימה - שמור כפעולה ממתינה
+                if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'purchases', 'create')) {
+                    $result = $approvalService->createPendingOperation([
+                        'entity_type' => 'purchases',
+                        'action' => 'create',
+                        'operation_data' => $data,
+                        'requested_by' => $currentUserId
+                    ]);
+
+                    $pdo->commit();
+                    echo json_encode([
+                        'success' => true,
+                        'pending' => true,
+                        'pendingId' => $result['pendingId'],
+                        'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
+                        'expiresAt' => $result['expiresAt']
+                    ]);
+                    break;
+                }
+                // === סוף בדיקת אישור ===
+
+                $pdo->commit();
+            } catch (Exception $lockException) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $lockException;
             }
-
-            // בדיקה 2: האם יש pending על הלקוח הזה (רכישה או קבורה)?
-            $stmt = $pdo->prepare("
-                SELECT id, entity_type FROM pending_entity_operations
-                WHERE entity_type IN ('purchases', 'burials')
-                  AND action = 'create'
-                  AND status = 'pending'
-                  AND JSON_UNQUOTE(JSON_EXTRACT(operation_data, '$.clientId')) = ?
-            ");
-            $stmt->execute([$data['clientId']]);
-            $existingClientPending = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($existingClientPending) {
-                $entityLabel = $existingClientPending['entity_type'] === 'purchases' ? 'רכישה' : 'קבורה';
-                throw new Exception('כבר קיימת בקשה ממתינה ל' . $entityLabel . ' עבור לקוח זה (מזהה: ' . $existingClientPending['id'] . ')');
-            }
-            // === סוף בדיקת כפילויות ===
-
-            // === בדיקת אישור מורשה חתימה ===
-            $approvalService = EntityApprovalService::getInstance($pdo);
-            $currentUserId = getCurrentUserId();
-
-            // אם המשתמש הוא מורשה חתימה - מבצע מיידית (נחשב כחתימתו)
-            $isAuthorizer = $approvalService->isAuthorizer($currentUserId, 'purchases', 'create');
-
-            // אם דורש אישור ואינו מורשה חתימה - שמור כפעולה ממתינה
-            if (!$isAuthorizer && $approvalService->userNeedsApproval($currentUserId, 'purchases', 'create')) {
-                $result = $approvalService->createPendingOperation([
-                    'entity_type' => 'purchases',
-                    'action' => 'create',
-                    'operation_data' => $data,
-                    'requested_by' => $currentUserId
-                ]);
-
-                echo json_encode([
-                    'success' => true,
-                    'pending' => true,
-                    'pendingId' => $result['pendingId'],
-                    'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
-                    'expiresAt' => $result['expiresAt']
-                ]);
-                break;
-            }
-            // === סוף בדיקת אישור ===
 
             $insertFields = [];
             $insertValues = [];
@@ -513,18 +535,19 @@ try {
             }
 
             // === בדיקת כפילויות לפני יצירת pending ===
-            // בדיקה אם כבר קיימת בקשת עריכה ממתינה עבור רכישה זו
+            // בדיקה אם כבר קיימת בקשה ממתינה (עריכה או מחיקה) עבור רכישה זו
             $stmt = $pdo->prepare("
-                SELECT id FROM pending_entity_operations
+                SELECT id, action FROM pending_entity_operations
                 WHERE entity_type = 'purchases'
-                  AND action = 'edit'
+                  AND action IN ('edit', 'delete')
                   AND entity_id = ?
                   AND status = 'pending'
             ");
             $stmt->execute([$id]);
             $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($existingPending) {
-                throw new Exception('כבר קיימת בקשה ממתינה לעריכת רכישה זו (מזהה: ' . $existingPending['id'] . ')');
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של רכישה זו (מזהה: ' . $existingPending['id'] . ')');
             }
             // === סוף בדיקת כפילויות ===
 
@@ -586,18 +609,19 @@ try {
             }
 
             // === בדיקת כפילויות לפני יצירת pending ===
-            // בדיקה אם כבר קיימת בקשת מחיקה ממתינה עבור רכישה זו
+            // בדיקה אם כבר קיימת בקשה ממתינה (עריכה או מחיקה) עבור רכישה זו
             $stmt = $pdo->prepare("
-                SELECT id FROM pending_entity_operations
+                SELECT id, action FROM pending_entity_operations
                 WHERE entity_type = 'purchases'
-                  AND action = 'delete'
+                  AND action IN ('edit', 'delete')
                   AND entity_id = ?
                   AND status = 'pending'
             ");
             $stmt->execute([$id]);
             $existingPending = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($existingPending) {
-                throw new Exception('כבר קיימת בקשה ממתינה למחיקת רכישה זו (מזהה: ' . $existingPending['id'] . ')');
+                $actionLabel = $existingPending['action'] === 'edit' ? 'עריכה' : 'מחיקה';
+                throw new Exception('כבר קיימת בקשה ממתינה ל' . $actionLabel . ' של רכישה זו (מזהה: ' . $existingPending['id'] . ')');
             }
             // === סוף בדיקת כפילויות ===
 

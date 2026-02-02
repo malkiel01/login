@@ -175,7 +175,8 @@ class EntityApprovalService
         }
 
         if ($entityType === 'burials' && $action === 'create' && !empty($operationData['clientId'])) {
-            $this->pdo->prepare("UPDATE customers SET statusCustomer = 5 WHERE unicId = ?")
+            // רק אם הלקוח פעיל (1) או רכש (2) - לא לשנות אם כבר נפטר (3)
+            $this->pdo->prepare("UPDATE customers SET statusCustomer = 5 WHERE unicId = ? AND statusCustomer IN (1, 2)")
                       ->execute([$operationData['clientId']]);
         }
         // === סוף עדכון סטטוס ישויות קשורות ===
@@ -266,13 +267,24 @@ class EntityApprovalService
             return $this->applyOperation($pendingId, $userId);
         }
 
-        return [
+        // בנה תגובה מפורטת עם מידע על מאשרים חובה
+        $response = [
             'success' => true,
             'message' => 'האישור נרשם',
             'currentApprovals' => $pending['current_approvals'],
             'requiredApprovals' => $pending['required_approvals'],
             'complete' => false
         ];
+
+        // הוסף מידע על מאשרים חובה שטרם אישרו
+        $pendingMandatory = $this->getPendingMandatoryCount($pendingId);
+        if ($pendingMandatory > 0) {
+            $response['pendingMandatoryCount'] = $pendingMandatory;
+            $response['pendingMandatoryAuthorizers'] = $this->getPendingMandatoryAuthorizers($pendingId);
+            $response['message'] = "האישור נרשם. ממתין לאישור {$pendingMandatory} מאשרי חובה נוספים.";
+        }
+
+        return $response;
     }
 
     /**
@@ -288,20 +300,43 @@ class EntityApprovalService
         // Check if all mandatory authorizers have approved
         $rules = $this->getApprovalRules($pending['entity_type'], $pending['action']);
         if ($rules && $rules['require_all_mandatory']) {
-            $stmt = $this->pdo->prepare("
-                SELECT COUNT(*) as pending_mandatory
-                FROM pending_operation_approvals
-                WHERE pending_id = ? AND is_mandatory = 1 AND status != 'approved'
-            ");
-            $stmt->execute([$pendingId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($result['pending_mandatory'] > 0) {
+            $pendingMandatory = $this->getPendingMandatoryCount($pendingId);
+            if ($pendingMandatory > 0) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Get count of mandatory authorizers who haven't approved yet
+     */
+    public function getPendingMandatoryCount(int $pendingId): int
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT COUNT(*) as pending_mandatory
+            FROM pending_operation_approvals
+            WHERE pending_id = ? AND is_mandatory = 1 AND status != 'approved'
+        ");
+        $stmt->execute([$pendingId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)$result['pending_mandatory'];
+    }
+
+    /**
+     * Get names of mandatory authorizers who haven't approved yet
+     */
+    public function getPendingMandatoryAuthorizers(int $pendingId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT u.name, u.username
+            FROM pending_operation_approvals poa
+            JOIN users u ON poa.user_id = u.id
+            WHERE poa.pending_id = ? AND poa.is_mandatory = 1 AND poa.status != 'approved'
+        ");
+        $stmt->execute([$pendingId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -1108,10 +1143,19 @@ class EntityApprovalService
     {
         switch ($action) {
             case 'create':
-                $fields = ['purchaseId', 'amount', 'paymentDate', 'paymentMethod', 'referenceNumber', 'comments', 'isActive', 'createDate'];
-                $insertFields = [];
-                $insertValues = [];
-                $params = [];
+                // שדות טבלת payments
+                $fields = [
+                    'plotType', 'graveType', 'resident', 'buyerStatus', 'price',
+                    'priceDefinition', 'cemeteryId', 'blockId', 'plotId', 'lineId',
+                    'startPayment', 'unicId', 'mandatory'
+                ];
+
+                $insertFields = ['isActive', 'createDate'];
+                $insertValues = [':isActive', ':createDate'];
+                $params = [
+                    'isActive' => 1,
+                    'createDate' => date('Y-m-d H:i:s')
+                ];
 
                 foreach ($fields as $field) {
                     if (isset($data[$field])) {
@@ -1120,38 +1164,43 @@ class EntityApprovalService
                         $params[$field] = $data[$field];
                     }
                 }
-                if (!in_array('isActive', $insertFields)) {
-                    $insertFields[] = 'isActive';
-                    $insertValues[] = '1';
-                }
-                if (!in_array('createDate', $insertFields)) {
-                    $insertFields[] = 'createDate';
-                    $insertValues[] = 'NOW()';
-                }
 
-                $sql = "INSERT INTO payments (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
+                $sql = "INSERT INTO payments (" . implode(', ', $insertFields) . ")
+                        VALUES (" . implode(', ', $insertValues) . ")";
                 $this->pdo->prepare($sql)->execute($params);
                 $paymentId = $this->pdo->lastInsertId();
                 return ['entityId' => $paymentId];
 
             case 'edit':
-                $fields = ['purchaseId', 'amount', 'paymentDate', 'paymentMethod', 'referenceNumber', 'comments'];
-                $updateFields = [];
-                $params = ['id' => $entityId];
+                $fields = [
+                    'plotType', 'graveType', 'resident', 'buyerStatus', 'price',
+                    'priceDefinition', 'cemeteryId', 'blockId', 'plotId', 'lineId',
+                    'startPayment', 'mandatory'
+                ];
+                $updateFields = ['updateDate = :updateDate'];
+                $params = [
+                    'id' => $entityId,
+                    'updateDate' => date('Y-m-d H:i:s')
+                ];
                 foreach ($fields as $field) {
                     if (isset($data[$field])) {
                         $updateFields[] = "$field = :$field";
                         $params[$field] = $data[$field];
                     }
                 }
-                if (!empty($updateFields)) {
-                    $sql = "UPDATE payments SET " . implode(', ', $updateFields) . ", updateDate = NOW() WHERE id = :id";
-                    $this->pdo->prepare($sql)->execute($params);
-                }
+                $sql = "UPDATE payments SET " . implode(', ', $updateFields) . " WHERE id = :id";
+                $this->pdo->prepare($sql)->execute($params);
                 return ['entityId' => $entityId];
 
             case 'delete':
-                $this->pdo->prepare("UPDATE payments SET isActive = 0, updateDate = NOW() WHERE id = ?")->execute([$entityId]);
+                $this->pdo->prepare("
+                    UPDATE payments
+                    SET isActive = 0, inactiveDate = :inactiveDate
+                    WHERE id = :id
+                ")->execute([
+                    'id' => $entityId,
+                    'inactiveDate' => date('Y-m-d H:i:s')
+                ]);
                 return ['entityId' => $entityId];
         }
         throw new Exception("Unknown action: $action");
@@ -1299,25 +1348,39 @@ class EntityApprovalService
         if ($entityType === 'burials' && $action === 'create') {
             // החזר קבר לסטטוס קודם (מ-5 ל-2 אם יש רכישה, אחרת 1)
             if (!empty($operationData['graveId'])) {
-                // בדוק אם יש רכישה פעילה
-                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM purchases WHERE graveId = ? AND isActive = 1");
+                // בדוק אם יש קבורה פעילה - אם כן, לא להחזיר סטטוס
+                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM burials WHERE graveId = ? AND isActive = 1");
                 $stmt->execute([$operationData['graveId']]);
-                $hasPurchase = $stmt->fetchColumn() > 0;
+                $hasBurial = $stmt->fetchColumn() > 0;
 
-                $newStatus = $hasPurchase ? 2 : 1;
-                $this->pdo->prepare("UPDATE graves SET graveStatus = ? WHERE unicId = ? AND graveStatus = 5")
-                          ->execute([$newStatus, $operationData['graveId']]);
+                if (!$hasBurial) {
+                    // בדוק אם יש רכישה פעילה
+                    $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM purchases WHERE graveId = ? AND isActive = 1");
+                    $stmt->execute([$operationData['graveId']]);
+                    $hasPurchase = $stmt->fetchColumn() > 0;
+
+                    $newStatus = $hasPurchase ? 2 : 1;
+                    $this->pdo->prepare("UPDATE graves SET graveStatus = ? WHERE unicId = ? AND graveStatus = 5")
+                              ->execute([$newStatus, $operationData['graveId']]);
+                }
             }
             // החזר לקוח לסטטוס קודם (מ-5 ל-2 אם יש רכישה, אחרת 1)
             if (!empty($operationData['clientId'])) {
-                // בדוק אם יש רכישה פעילה
-                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM purchases WHERE clientId = ? AND isActive = 1");
+                // בדוק אם הלקוח כבר נפטר (יש לו קבורה פעילה) - אם כן, לא להחזיר סטטוס
+                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM burials WHERE clientId = ? AND isActive = 1");
                 $stmt->execute([$operationData['clientId']]);
-                $hasPurchase = $stmt->fetchColumn() > 0;
+                $hasBurial = $stmt->fetchColumn() > 0;
 
-                $newStatus = $hasPurchase ? 2 : 1;
-                $this->pdo->prepare("UPDATE customers SET statusCustomer = ? WHERE unicId = ? AND statusCustomer = 5")
-                          ->execute([$newStatus, $operationData['clientId']]);
+                if (!$hasBurial) {
+                    // בדוק אם יש רכישה פעילה
+                    $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM purchases WHERE clientId = ? AND isActive = 1");
+                    $stmt->execute([$operationData['clientId']]);
+                    $hasPurchase = $stmt->fetchColumn() > 0;
+
+                    $newStatus = $hasPurchase ? 2 : 1;
+                    $this->pdo->prepare("UPDATE customers SET statusCustomer = ? WHERE unicId = ? AND statusCustomer = 5")
+                              ->execute([$newStatus, $operationData['clientId']]);
+                }
             }
         }
     }

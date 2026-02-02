@@ -244,7 +244,7 @@ try {
                     'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
                     'expiresAt' => $result['expiresAt']
                 ]);
-                break;
+                exit; // Stop execution after pending response
             }
             // === סוף בדיקת אישור ===
 
@@ -368,7 +368,7 @@ try {
                     'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
                     'expiresAt' => $result['expiresAt']
                 ]);
-                break;
+                exit; // Stop execution after pending response
             }
             // === סוף בדיקת אישור ===
 
@@ -435,7 +435,7 @@ try {
                     'message' => 'הבקשה נשלחה לאישור מורשה חתימה',
                     'expiresAt' => $result['expiresAt']
                 ]);
-                break;
+                exit; // Stop execution after pending response
             }
             // === סוף בדיקת אישור ===
 

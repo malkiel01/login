@@ -398,7 +398,7 @@ try {
                     'message' => 'הבקשה נשלחה לאישור',
                     'pendingId' => $result['pendingId']
                 ]);
-                break;
+                exit; // Stop execution after pending response
             }
             // ========== סוף בדיקת אישורים ==========
 
@@ -578,7 +578,7 @@ try {
                     'message' => 'הבקשה נשלחה לאישור',
                     'pendingId' => $result['pendingId']
                 ]);
-                break;
+                exit; // Stop execution after pending response
             }
             // ========== סוף בדיקת אישורים ==========
 
@@ -770,7 +770,7 @@ try {
                     'message' => 'בקשת המחיקה נשלחה לאישור',
                     'pendingId' => $result['pendingId']
                 ]);
-                break;
+                exit; // Stop execution after pending response
             }
             // ========== סוף בדיקת אישורים ==========
 

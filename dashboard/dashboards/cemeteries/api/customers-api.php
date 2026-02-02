@@ -979,7 +979,7 @@
                         'pendingId' => $result['pendingId'],
                         'message' => 'הבקשה לעריכה נשלחה לאישור מורשה חתימה'
                     ]);
-                    break;
+                    exit; // Stop execution after pending response
                 }
                 // === סוף בדיקת אישור ===
 
@@ -1107,7 +1107,7 @@
                         'pendingId' => $result['pendingId'],
                         'message' => 'הבקשה למחיקה נשלחה לאישור מורשה חתימה'
                     ]);
-                    break;
+                    exit; // Stop execution after pending response
                 }
                 // === סוף בדיקת אישור ===
 

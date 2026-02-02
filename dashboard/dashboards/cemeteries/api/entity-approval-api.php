@@ -296,6 +296,79 @@ try {
             break;
 
         // ========================================
+        // History
+        // ========================================
+
+        case 'listHistory':
+            // List historical approval operations (approved, rejected, expired, cancelled)
+            $entityType = $_GET['entityType'] ?? null;
+            $status = $_GET['status'] ?? null; // approved, rejected, expired, cancelled, or null for all
+            $dateFrom = $_GET['dateFrom'] ?? null;
+            $dateTo = $_GET['dateTo'] ?? null;
+            $limit = min((int)($_GET['limit'] ?? 50), 200);
+            $offset = (int)($_GET['offset'] ?? 0);
+
+            $sql = "
+                SELECT peo.*,
+                       u.name as requester_name,
+                       (SELECT GROUP_CONCAT(CONCAT(u2.name, ':', poa.status) SEPARATOR ', ')
+                        FROM pending_operation_approvals poa
+                        JOIN users u2 ON poa.user_id = u2.id
+                        WHERE poa.pending_id = peo.id AND poa.status != 'pending'
+                       ) as approvers_summary
+                FROM pending_entity_operations peo
+                JOIN users u ON peo.requested_by = u.id
+                WHERE peo.status != 'pending'
+            ";
+            $params = [];
+
+            if ($status) {
+                $sql .= " AND peo.status = ?";
+                $params[] = $status;
+            }
+
+            if ($entityType) {
+                $sql .= " AND peo.entity_type = ?";
+                $params[] = $entityType;
+            }
+
+            if ($dateFrom) {
+                $sql .= " AND DATE(peo.created_at) >= ?";
+                $params[] = $dateFrom;
+            }
+
+            if ($dateTo) {
+                $sql .= " AND DATE(peo.created_at) <= ?";
+                $params[] = $dateTo;
+            }
+
+            // Get total count
+            $countSql = str_replace("SELECT peo.*, ", "SELECT COUNT(*) as total ", $sql);
+            $countSql = preg_replace('/,\s*\(SELECT GROUP_CONCAT.*?\) as approvers_summary/', '', $countSql);
+            $countStmt = $pdo->prepare($countSql);
+            $countStmt->execute($params);
+            $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            $sql .= " ORDER BY peo.completed_at DESC, peo.created_at DESC LIMIT ? OFFSET ?";
+            $params[] = $limit;
+            $params[] = $offset;
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $history = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $history,
+                'pagination' => [
+                    'total' => (int)$total,
+                    'limit' => $limit,
+                    'offset' => $offset
+                ]
+            ]);
+            break;
+
+        // ========================================
         // Status Check
         // ========================================
 

@@ -255,6 +255,14 @@
             </div>
         </div>
 
+        <!-- היסטוריית אישורים -->
+        <div class="management-item">
+            <div class="hierarchy-header" id="approvalHistoryItem" onclick="handleSidebarClick('approvalHistoryItem', openApprovalHistory)">
+                <span class="hierarchy-icon">📜</span>
+                <span class="hierarchy-title">היסטוריית אישורים</span>
+            </div>
+        </div>
+
         <!-- ניהול דוחות - בקרוב -->
         <?php if (isAdmin() || hasModulePermission('reports', 'view') || hasModulePermission('reports', 'edit') || hasModulePermission('reports', 'create')): ?>
         <div class="management-item">
@@ -498,6 +506,24 @@ function openMyNotifications() {
         });
     } else {
         window.location.href = '/dashboard/dashboards/cemeteries/my-notifications/';
+    }
+}
+
+/**
+ * פתיחת מסך היסטוריית אישורים
+ */
+function openApprovalHistory() {
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'approval-history-popup',
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/notifications/approval-history.php',
+            title: 'היסטוריית אישורים',
+            width: 1100,
+            height: 750
+        });
+    } else {
+        window.location.href = '/dashboard/dashboards/cemeteries/notifications/approval-history.php';
     }
 }
 

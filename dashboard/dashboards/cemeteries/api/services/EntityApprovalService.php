@@ -601,6 +601,16 @@ class EntityApprovalService
                 return $this->executeBurialOperation($action, $data, $entityId);
             case 'customers':
                 return $this->executeCustomerOperation($action, $data, $entityId);
+            case 'cemeteries':
+                return $this->executeCemeteryOperation($action, $data, $entityId);
+            case 'blocks':
+                return $this->executeBlockOperation($action, $data, $entityId);
+            case 'plots':
+                return $this->executePlotOperation($action, $data, $entityId);
+            case 'graves':
+                return $this->executeGraveOperation($action, $data, $entityId);
+            case 'payments':
+                return $this->executePaymentOperation($action, $data, $entityId);
             default:
                 throw new Exception("Unknown entity type: $entityType");
         }
@@ -829,6 +839,291 @@ class EntityApprovalService
         throw new Exception("Unknown action: $action");
     }
 
+    private function executeCemeteryOperation(string $action, array $data, ?string $entityId): array
+    {
+        switch ($action) {
+            case 'create':
+                $unicId = $data['unicId'] ?? uniqid('cem_', true);
+                $fields = ['unicId', 'cemeteryName', 'cemeteryNameHe', 'cityId', 'address', 'phone', 'email', 'website', 'contactName', 'comments', 'isActive', 'createDate'];
+                $insertFields = [];
+                $insertValues = [];
+                $params = [];
+
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $insertFields[] = $field;
+                        $insertValues[] = ":$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!in_array('unicId', $insertFields)) {
+                    $insertFields[] = 'unicId';
+                    $insertValues[] = ':unicId';
+                    $params['unicId'] = $unicId;
+                }
+                if (!in_array('isActive', $insertFields)) {
+                    $insertFields[] = 'isActive';
+                    $insertValues[] = '1';
+                }
+                if (!in_array('createDate', $insertFields)) {
+                    $insertFields[] = 'createDate';
+                    $insertValues[] = 'NOW()';
+                }
+
+                $sql = "INSERT INTO cemeteries (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
+                $this->pdo->prepare($sql)->execute($params);
+                return ['entityId' => $unicId];
+
+            case 'edit':
+                $fields = ['cemeteryName', 'cemeteryNameHe', 'cityId', 'address', 'phone', 'email', 'website', 'contactName', 'comments'];
+                $updateFields = [];
+                $params = ['id' => $entityId];
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!empty($updateFields)) {
+                    $sql = "UPDATE cemeteries SET " . implode(', ', $updateFields) . ", updateDate = NOW() WHERE unicId = :id";
+                    $this->pdo->prepare($sql)->execute($params);
+                }
+                return ['entityId' => $entityId];
+
+            case 'delete':
+                $this->pdo->prepare("UPDATE cemeteries SET isActive = 0, updateDate = NOW() WHERE unicId = ?")->execute([$entityId]);
+                return ['entityId' => $entityId];
+        }
+        throw new Exception("Unknown action: $action");
+    }
+
+    private function executeBlockOperation(string $action, array $data, ?string $entityId): array
+    {
+        switch ($action) {
+            case 'create':
+                $unicId = $data['unicId'] ?? uniqid('blk_', true);
+                $fields = ['unicId', 'cemeteryId', 'blockName', 'blockNameHe', 'totalPlots', 'comments', 'isActive', 'createDate'];
+                $insertFields = [];
+                $insertValues = [];
+                $params = [];
+
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $insertFields[] = $field;
+                        $insertValues[] = ":$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!in_array('unicId', $insertFields)) {
+                    $insertFields[] = 'unicId';
+                    $insertValues[] = ':unicId';
+                    $params['unicId'] = $unicId;
+                }
+                if (!in_array('isActive', $insertFields)) {
+                    $insertFields[] = 'isActive';
+                    $insertValues[] = '1';
+                }
+                if (!in_array('createDate', $insertFields)) {
+                    $insertFields[] = 'createDate';
+                    $insertValues[] = 'NOW()';
+                }
+
+                $sql = "INSERT INTO blocks (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
+                $this->pdo->prepare($sql)->execute($params);
+                return ['entityId' => $unicId];
+
+            case 'edit':
+                $fields = ['cemeteryId', 'blockName', 'blockNameHe', 'totalPlots', 'comments'];
+                $updateFields = [];
+                $params = ['id' => $entityId];
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!empty($updateFields)) {
+                    $sql = "UPDATE blocks SET " . implode(', ', $updateFields) . ", updateDate = NOW() WHERE unicId = :id";
+                    $this->pdo->prepare($sql)->execute($params);
+                }
+                return ['entityId' => $entityId];
+
+            case 'delete':
+                $this->pdo->prepare("UPDATE blocks SET isActive = 0, updateDate = NOW() WHERE unicId = ?")->execute([$entityId]);
+                return ['entityId' => $entityId];
+        }
+        throw new Exception("Unknown action: $action");
+    }
+
+    private function executePlotOperation(string $action, array $data, ?string $entityId): array
+    {
+        switch ($action) {
+            case 'create':
+                $unicId = $data['unicId'] ?? uniqid('plt_', true);
+                $fields = ['unicId', 'blockId', 'plotName', 'plotNameHe', 'plotType', 'totalGraves', 'comments', 'isActive', 'createDate'];
+                $insertFields = [];
+                $insertValues = [];
+                $params = [];
+
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $insertFields[] = $field;
+                        $insertValues[] = ":$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!in_array('unicId', $insertFields)) {
+                    $insertFields[] = 'unicId';
+                    $insertValues[] = ':unicId';
+                    $params['unicId'] = $unicId;
+                }
+                if (!in_array('isActive', $insertFields)) {
+                    $insertFields[] = 'isActive';
+                    $insertValues[] = '1';
+                }
+                if (!in_array('createDate', $insertFields)) {
+                    $insertFields[] = 'createDate';
+                    $insertValues[] = 'NOW()';
+                }
+
+                $sql = "INSERT INTO plots (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
+                $this->pdo->prepare($sql)->execute($params);
+                return ['entityId' => $unicId];
+
+            case 'edit':
+                $fields = ['blockId', 'plotName', 'plotNameHe', 'plotType', 'totalGraves', 'comments'];
+                $updateFields = [];
+                $params = ['id' => $entityId];
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!empty($updateFields)) {
+                    $sql = "UPDATE plots SET " . implode(', ', $updateFields) . ", updateDate = NOW() WHERE unicId = :id";
+                    $this->pdo->prepare($sql)->execute($params);
+                }
+                return ['entityId' => $entityId];
+
+            case 'delete':
+                $this->pdo->prepare("UPDATE plots SET isActive = 0, updateDate = NOW() WHERE unicId = ?")->execute([$entityId]);
+                return ['entityId' => $entityId];
+        }
+        throw new Exception("Unknown action: $action");
+    }
+
+    private function executeGraveOperation(string $action, array $data, ?string $entityId): array
+    {
+        switch ($action) {
+            case 'create':
+                $unicId = $data['unicId'] ?? uniqid('grv_', true);
+                $fields = ['unicId', 'areaGraveId', 'graveNameHe', 'plotType', 'graveStatus', 'graveLocation', 'constructionCost', 'isSmallGrave', 'comments', 'documentsList', 'isActive', 'createDate'];
+                $insertFields = [];
+                $insertValues = [];
+                $params = [];
+
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $insertFields[] = $field;
+                        $insertValues[] = ":$field";
+                        $params[$field] = is_array($data[$field]) ? json_encode($data[$field]) : $data[$field];
+                    }
+                }
+                if (!in_array('unicId', $insertFields)) {
+                    $insertFields[] = 'unicId';
+                    $insertValues[] = ':unicId';
+                    $params['unicId'] = $unicId;
+                }
+                if (!in_array('isActive', $insertFields)) {
+                    $insertFields[] = 'isActive';
+                    $insertValues[] = '1';
+                }
+                if (!in_array('createDate', $insertFields)) {
+                    $insertFields[] = 'createDate';
+                    $insertValues[] = 'NOW()';
+                }
+
+                $sql = "INSERT INTO graves (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
+                $this->pdo->prepare($sql)->execute($params);
+                return ['entityId' => $unicId];
+
+            case 'edit':
+                $fields = ['areaGraveId', 'graveNameHe', 'plotType', 'graveStatus', 'graveLocation', 'constructionCost', 'isSmallGrave', 'comments', 'documentsList'];
+                $updateFields = [];
+                $params = ['id' => $entityId];
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = is_array($data[$field]) ? json_encode($data[$field]) : $data[$field];
+                    }
+                }
+                if (!empty($updateFields)) {
+                    $sql = "UPDATE graves SET " . implode(', ', $updateFields) . ", updateDate = NOW() WHERE unicId = :id";
+                    $this->pdo->prepare($sql)->execute($params);
+                }
+                return ['entityId' => $entityId];
+
+            case 'delete':
+                $this->pdo->prepare("UPDATE graves SET isActive = 0, updateDate = NOW() WHERE unicId = ?")->execute([$entityId]);
+                return ['entityId' => $entityId];
+        }
+        throw new Exception("Unknown action: $action");
+    }
+
+    private function executePaymentOperation(string $action, array $data, ?string $entityId): array
+    {
+        switch ($action) {
+            case 'create':
+                $fields = ['purchaseId', 'amount', 'paymentDate', 'paymentMethod', 'referenceNumber', 'comments', 'isActive', 'createDate'];
+                $insertFields = [];
+                $insertValues = [];
+                $params = [];
+
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $insertFields[] = $field;
+                        $insertValues[] = ":$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!in_array('isActive', $insertFields)) {
+                    $insertFields[] = 'isActive';
+                    $insertValues[] = '1';
+                }
+                if (!in_array('createDate', $insertFields)) {
+                    $insertFields[] = 'createDate';
+                    $insertValues[] = 'NOW()';
+                }
+
+                $sql = "INSERT INTO payments (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $insertValues) . ")";
+                $this->pdo->prepare($sql)->execute($params);
+                $paymentId = $this->pdo->lastInsertId();
+                return ['entityId' => $paymentId];
+
+            case 'edit':
+                $fields = ['purchaseId', 'amount', 'paymentDate', 'paymentMethod', 'referenceNumber', 'comments'];
+                $updateFields = [];
+                $params = ['id' => $entityId];
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                if (!empty($updateFields)) {
+                    $sql = "UPDATE payments SET " . implode(', ', $updateFields) . ", updateDate = NOW() WHERE id = :id";
+                    $this->pdo->prepare($sql)->execute($params);
+                }
+                return ['entityId' => $entityId];
+
+            case 'delete':
+                $this->pdo->prepare("UPDATE payments SET isActive = 0, updateDate = NOW() WHERE id = ?")->execute([$entityId]);
+                return ['entityId' => $entityId];
+        }
+        throw new Exception("Unknown action: $action");
+    }
+
     /**
      * Send approval notification to authorizers
      */
@@ -844,7 +1139,12 @@ class EntityApprovalService
         $entityLabels = [
             'purchases' => 'רכישה',
             'burials' => 'קבורה',
-            'customers' => 'לקוח'
+            'customers' => 'לקוח',
+            'cemeteries' => 'בית עלמין',
+            'blocks' => 'גוש',
+            'plots' => 'חלקה',
+            'graves' => 'קבר',
+            'payments' => 'תשלום'
         ];
 
         // Action labels
@@ -899,7 +1199,12 @@ class EntityApprovalService
         $entityLabels = [
             'purchases' => 'רכישה',
             'burials' => 'קבורה',
-            'customers' => 'לקוח'
+            'customers' => 'לקוח',
+            'cemeteries' => 'בית עלמין',
+            'blocks' => 'גוש',
+            'plots' => 'חלקה',
+            'graves' => 'קבר',
+            'payments' => 'תשלום'
         ];
         $entityLabel = $entityLabels[$pending['entity_type']] ?? $pending['entity_type'];
 

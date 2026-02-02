@@ -100,7 +100,7 @@ body {
     background: var(--bg-secondary);
     border-radius: var(--radius-md);
     border: 2px solid transparent;
-    overflow: hidden;
+    overflow: visible;
     transition: border-color 0.2s ease;
 }
 
@@ -1154,7 +1154,7 @@ body.dark-theme .smart-select-option.selected {
     z-index: 9999;
     margin-top: 4px;
     max-height: 300px;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
 }

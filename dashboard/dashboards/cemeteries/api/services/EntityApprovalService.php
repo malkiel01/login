@@ -696,7 +696,7 @@ class EntityApprovalService
                 $stmt = $this->pdo->prepare("
                     INSERT INTO purchases (unicId, clientId, graveId, contactId, price,
                                           numOfPayments, PaymentEndDate, paymentsList,
-                                          purchaseStatus, buyer_status, comment, isActive, createDate, approved_pending_id)
+                                          purchaseStatus, buyerStatus, comment, isActive, createDate, approved_pending_id)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)
                 ");
                 $stmt->execute([
@@ -709,7 +709,7 @@ class EntityApprovalService
                     $data['PaymentEndDate'] ?? null,
                     json_encode($data['paymentsList'] ?? []),
                     $data['purchaseStatus'] ?? 1,
-                    $data['buyer_status'] ?? 1,
+                    $data['buyerStatus'] ?? 1,
                     $data['comment'] ?? null,
                     $pendingId
                 ]);
@@ -725,7 +725,7 @@ class EntityApprovalService
                 // Update existing purchase
                 $fields = [];
                 $values = [];
-                foreach (['clientId', 'graveId', 'contactId', 'price', 'numOfPayments', 'PaymentEndDate', 'paymentsList', 'purchaseStatus', 'buyer_status', 'comment'] as $field) {
+                foreach (['clientId', 'graveId', 'contactId', 'price', 'numOfPayments', 'PaymentEndDate', 'paymentsList', 'purchaseStatus', 'buyerStatus', 'comment'] as $field) {
                     if (isset($data[$field])) {
                         $fields[] = "$field = ?";
                         $values[] = is_array($data[$field]) ? json_encode($data[$field]) : $data[$field];

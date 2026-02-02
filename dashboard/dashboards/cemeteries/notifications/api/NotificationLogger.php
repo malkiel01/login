@@ -17,7 +17,8 @@ class NotificationLogger {
             require_once __DIR__ . '/../../config.php';
             $this->conn = getDBConnection();
         }
-        $this->ensureTableExists();
+        // Note: ensureTableExists() removed to prevent implicit commit during active transactions
+        // The table should be created via migration: sql/notification_logs.sql
     }
 
     /**

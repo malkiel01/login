@@ -206,8 +206,13 @@ try {
 
             $result = $service->recordApproval($pendingId, $userId, $biometricVerified);
 
-            // Mark the related push notification as read
+            // Mark the related push notification as read for THIS user
             markEntityApprovalNotificationAsRead($pdo, $pendingId, $userId);
+
+            // אם הפעולה הושלמה - בטל את כל ההתראות של כל המאשרים
+            if ($result['complete'] ?? false) {
+                markAllApprovalNotificationsAsRead($pdo, $pendingId);
+            }
 
             echo json_encode($result);
             break;
@@ -223,8 +228,8 @@ try {
 
             $result = $service->rejectOperation($pendingId, $userId, $reason);
 
-            // Mark the related push notification as read
-            markEntityApprovalNotificationAsRead($pdo, $pendingId, $userId);
+            // דחייה מבטלת את כל ההתראות לכל המאשרים
+            markAllApprovalNotificationsAsRead($pdo, $pendingId);
 
             echo json_encode($result);
             break;
@@ -238,6 +243,9 @@ try {
             }
 
             $result = $service->cancelOperation($pendingId, $userId);
+
+            // ביטול מבטל את כל ההתראות לכל המאשרים
+            markAllApprovalNotificationsAsRead($pdo, $pendingId);
 
             echo json_encode($result);
             break;
@@ -425,5 +433,28 @@ function markEntityApprovalNotificationAsRead(PDO $pdo, int $pendingId, int $use
     $updated = $stmt->rowCount();
     if ($updated > 0) {
         error_log("[EntityApprovalAPI] Marked $updated notification(s) as read for pending $pendingId, user $userId");
+    }
+}
+
+/**
+ * Mark ALL push notifications related to an entity approval as read
+ * This is called when the operation is approved, rejected, cancelled, or expired
+ * to invalidate notifications for ALL authorizers
+ */
+function markAllApprovalNotificationsAsRead(PDO $pdo, int $pendingId): void {
+    $urlPattern = "%entity-approve.php?id={$pendingId}%";
+
+    $stmt = $pdo->prepare("
+        UPDATE push_notifications pn
+        JOIN scheduled_notifications sn ON sn.id = pn.scheduled_notification_id
+        SET pn.is_read = 1
+        WHERE pn.is_read = 0
+          AND sn.url LIKE ?
+    ");
+    $stmt->execute([$urlPattern]);
+
+    $updated = $stmt->rowCount();
+    if ($updated > 0) {
+        error_log("[EntityApprovalAPI] Marked ALL $updated notification(s) as read for pending $pendingId");
     }
 }

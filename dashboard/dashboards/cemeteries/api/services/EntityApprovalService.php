@@ -160,8 +160,10 @@ class EntityApprovalService
         // סטטוסי קבר: 4 = ממתין לאישור רכישה, 5 = ממתין לאישור קבורה
         // סטטוסי לקוח: 4 = ממתין לאישור רכישה, 5 = ממתין לאישור קבורה
         if ($entityType === 'purchases' && $action === 'create' && !empty($operationData['graveId'])) {
-            $this->pdo->prepare("UPDATE graves SET graveStatus = 4 WHERE unicId = ? AND graveStatus = 1")
-                      ->execute([$operationData['graveId']]);
+            $graveStmt = $this->pdo->prepare("UPDATE graves SET graveStatus = 4 WHERE unicId = ? AND graveStatus = 1");
+            $graveStmt->execute([$operationData['graveId']]);
+            $graveRows = $graveStmt->rowCount();
+            error_log("[EntityApproval] Updating grave {$operationData['graveId']} to status 4. Rows affected: {$graveRows}");
         }
 
         if ($entityType === 'burials' && $action === 'create' && !empty($operationData['graveId'])) {
@@ -170,8 +172,10 @@ class EntityApprovalService
         }
 
         if ($entityType === 'purchases' && $action === 'create' && !empty($operationData['clientId'])) {
-            $this->pdo->prepare("UPDATE customers SET statusCustomer = 4 WHERE unicId = ? AND statusCustomer = 1")
-                      ->execute([$operationData['clientId']]);
+            $updateStmt = $this->pdo->prepare("UPDATE customers SET statusCustomer = 4 WHERE unicId = ? AND statusCustomer = 1");
+            $updateStmt->execute([$operationData['clientId']]);
+            $rowsAffected = $updateStmt->rowCount();
+            error_log("[EntityApproval] Updating customer {$operationData['clientId']} to status 4. Rows affected: {$rowsAffected}");
         }
 
         if ($entityType === 'burials' && $action === 'create' && !empty($operationData['clientId'])) {

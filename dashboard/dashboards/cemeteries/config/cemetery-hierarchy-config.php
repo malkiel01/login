@@ -1370,7 +1370,9 @@ return [
                     ['value' => 1, 'label' => 'פנוי'],
                     ['value' => 2, 'label' => 'נרכש'],
                     ['value' => 3, 'label' => 'קבור'],
-                    ['value' => 4, 'label' => 'שמור']
+                    ['value' => 4, 'label' => 'ממתין לאישור רכישה'],
+                    ['value' => 5, 'label' => 'ממתין לאישור קבורה'],
+                    ['value' => 6, 'label' => 'שמור']
                 ]
             ],
             [
@@ -1442,7 +1444,9 @@ return [
                     1 => 'פנוי',
                     2 => 'נרכש',
                     3 => 'קבור',
-                    4 => 'שמור'
+                    4 => 'ממתין לאישור רכישה',
+                    5 => 'ממתין לאישור קבורה',
+                    6 => 'שמור'
                 ],
                 'default' => 1,
                 'required' => true
@@ -1525,7 +1529,9 @@ return [
             1 => ['text' => 'פנוי', 'color' => '#10b981', 'class' => 'badge-success'],
             2 => ['text' => 'נרכש', 'color' => '#3b82f6', 'class' => 'badge-info'],
             3 => ['text' => 'קבור', 'color' => '#6b7280', 'class' => 'badge-secondary'],
-            4 => ['text' => 'שמור', 'color' => '#f59e0b', 'class' => 'badge-warning']
+            4 => ['text' => 'ממתין לאישור רכישה', 'color' => '#eab308', 'class' => 'badge-warning'],
+            5 => ['text' => 'ממתין לאישור קבורה', 'color' => '#f59e0b', 'class' => 'badge-warning'],
+            6 => ['text' => 'שמור', 'color' => '#6366f1', 'class' => 'badge-primary']
         ],
         
         // סוגי חלקה
@@ -1748,7 +1754,9 @@ return [
                 'options' => [
                     ['value' => 1, 'label' => 'פעיל'],
                     ['value' => 2, 'label' => 'רכש'],
-                    ['value' => 3, 'label' => 'נפטר']
+                    ['value' => 3, 'label' => 'נפטר'],
+                    ['value' => 4, 'label' => 'ממתין לאישור רכישה'],
+                    ['value' => 5, 'label' => 'ממתין לאישור קבורה']
                 ]
             ],
             [
@@ -1856,12 +1864,14 @@ return [
                 'options' => [
                     ['value' => 1, 'label' => 'פעיל'],
                     ['value' => 2, 'label' => 'רכש'],
-                    ['value' => 3, 'label' => 'נפטר']
+                    ['value' => 3, 'label' => 'נפטר'],
+                    ['value' => 4, 'label' => 'ממתין לאישור רכישה'],
+                    ['value' => 5, 'label' => 'ממתין לאישור קבורה']
                 ],
                 'default' => 1
             ]
         ],
-        
+
         // ⭐ הגדרות API
         'api' => [
             'endpoint' => '/dashboard/dashboards/cemeteries/api/customers-api.php',
@@ -1911,7 +1921,9 @@ return [
         'customerStatuses' => [
             1 => ['text' => 'פעיל', 'color' => '#10b981', 'class' => 'badge-success'],
             2 => ['text' => 'רכש', 'color' => '#3b82f6', 'class' => 'badge-info'],
-            3 => ['text' => 'נפטר', 'color' => '#6b7280', 'class' => 'badge-secondary']
+            3 => ['text' => 'נפטר', 'color' => '#6b7280', 'class' => 'badge-secondary'],
+            4 => ['text' => 'ממתין לאישור רכישה', 'color' => '#eab308', 'class' => 'badge-warning'],
+            5 => ['text' => 'ממתין לאישור קבורה', 'color' => '#f59e0b', 'class' => 'badge-warning']
         ],
         
         // סוגי תושבות

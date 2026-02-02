@@ -113,6 +113,33 @@ if (!defined('PAYMENT_PRICE_DEFINITIONS')) {
     ]);
 }
 
+// תוויות ישויות למערכת האישורים
+if (!defined('ENTITY_LABELS')) {
+    define('ENTITY_LABELS', [
+        'purchases' => 'רכישה',
+        'burials' => 'קבורה',
+        'customers' => 'לקוח',
+        'cemeteries' => 'בית עלמין',
+        'blocks' => 'גוש',
+        'plots' => 'חלקה',
+        'graves' => 'קבר',
+        'payments' => 'תשלום',
+        'areaGraves' => 'אחוזת קבר',
+        'countries' => 'מדינה',
+        'cities' => 'עיר',
+        'residencies' => 'תושבות'
+    ]);
+}
+
+// תוויות פעולות למערכת האישורים
+if (!defined('ACTION_LABELS')) {
+    define('ACTION_LABELS', [
+        'create' => 'יצירת',
+        'edit' => 'עריכת',
+        'delete' => 'מחיקת'
+    ]);
+}
+
 // פונקציות עזר ספציפיות לדשבורד
 function getHierarchyLevel($type) {
     $levels = [

@@ -309,6 +309,8 @@ $isAdminUser = isAdmin();
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js?v=20260201"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
 
+    <!-- Entity Labels - קונפיג מרכזי לתוויות ישויות -->
+    <script src="/dashboard/dashboards/cemeteries/js/entity-labels.js"></script>
     <!-- Entity Pending - הצגת רשומות ממתינות לאישור -->
     <script src="/dashboard/dashboards/cemeteries/js/entity-pending.js"></script>
 

@@ -8,6 +8,7 @@
 
 require_once __DIR__ . '/../../notifications/api/NotificationLogger.php';
 require_once __DIR__ . '/../../../../../push/NotificationService.php';
+require_once __DIR__ . '/../../config.php';
 
 class EntityApprovalService
 {
@@ -1135,27 +1136,9 @@ class EntityApprovalService
         $requester = $stmt->fetch(PDO::FETCH_ASSOC);
         $requesterName = $requester['name'] ?? 'משתמש';
 
-        // Entity type labels
-        $entityLabels = [
-            'purchases' => 'רכישה',
-            'burials' => 'קבורה',
-            'customers' => 'לקוח',
-            'cemeteries' => 'בית עלמין',
-            'blocks' => 'גוש',
-            'plots' => 'חלקה',
-            'graves' => 'קבר',
-            'payments' => 'תשלום'
-        ];
-
-        // Action labels
-        $actionLabels = [
-            'create' => 'יצירת',
-            'edit' => 'עריכת',
-            'delete' => 'מחיקת'
-        ];
-
-        $entityLabel = $entityLabels[$entityType] ?? $entityType;
-        $actionLabel = $actionLabels[$action] ?? $action;
+        // Use central config labels
+        $entityLabel = ENTITY_LABELS[$entityType] ?? $entityType;
+        $actionLabel = ACTION_LABELS[$action] ?? $action;
 
         $title = "דרוש אישור: {$actionLabel} {$entityLabel}";
         $body = "המשתמש {$requesterName} מבקש לבצע {$actionLabel} {$entityLabel}";
@@ -1196,17 +1179,8 @@ class EntityApprovalService
         $responder = $stmt->fetch(PDO::FETCH_ASSOC);
         $responderName = $responder['name'] ?? 'מורשה חתימה';
 
-        $entityLabels = [
-            'purchases' => 'רכישה',
-            'burials' => 'קבורה',
-            'customers' => 'לקוח',
-            'cemeteries' => 'בית עלמין',
-            'blocks' => 'גוש',
-            'plots' => 'חלקה',
-            'graves' => 'קבר',
-            'payments' => 'תשלום'
-        ];
-        $entityLabel = $entityLabels[$pending['entity_type']] ?? $pending['entity_type'];
+        // Use central config labels
+        $entityLabel = ENTITY_LABELS[$pending['entity_type']] ?? $pending['entity_type'];
 
         if ($status === 'approved') {
             $title = "הבקשה אושרה: {$entityLabel}";

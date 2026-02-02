@@ -195,7 +195,7 @@ const EntityPending = {
         html += '<ul style="list-style: none; padding: 0; margin: 0;">';
 
         for (const item of pending) {
-            const entityLabel = {purchases: 'רכישה', burials: 'קבורה', customers: 'לקוח', cemeteries: 'בית עלמין', blocks: 'גוש', plots: 'חלקה', graves: 'קבר', payments: 'תשלום'}[item.entity_type] || item.entity_type;
+            const entityLabel = (typeof EntityLabels !== 'undefined') ? EntityLabels.getEntity(item.entity_type) : item.entity_type;
             const actionLabel = this.actionLabels[item.action] || item.action;
 
             html += `

@@ -1322,54 +1322,58 @@
                     if ($formType === 'burial') {
                         // קבורה: לקוחות שאין להם קבורה + הלקוח הנוכחי
                         $sql = "
-                            SELECT 
-                                unicId, 
-                                firstName, 
-                                lastName, 
-                                phone, 
-                                phoneMobile, 
+                            SELECT
+                                unicId,
+                                firstName,
+                                lastName,
+                                phone,
+                                phoneMobile,
                                 resident,
                                 CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
-                            FROM customers 
+                            FROM customers
                             WHERE (
-                                NOT EXISTS (
-                                    SELECT 1 FROM burials b 
-                                    WHERE b.clientId = customers.unicId 
-                                    AND b.isActive = 1
+                                (
+                                    NOT EXISTS (
+                                        SELECT 1 FROM burials b
+                                        WHERE b.clientId = customers.unicId
+                                        AND b.isActive = 1
+                                    )
+                                    AND statusCustomer NOT IN (4, 5)
                                 )
                                 OR unicId = :currentClient2
                             )
-                            AND isActive = 1 
+                            AND isActive = 1
                             ORDER BY is_current DESC, lastName, firstName
                         ";
                     } else {
                         // רכישה: לקוחות שאין להם רכישה ואין להם קבורה + הלקוח הנוכחי
                         $sql = "
-                            SELECT 
-                                unicId, 
-                                firstName, 
-                                lastName, 
-                                phone, 
-                                phoneMobile, 
+                            SELECT
+                                unicId,
+                                firstName,
+                                lastName,
+                                phone,
+                                phoneMobile,
                                 resident,
                                 CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
-                            FROM customers 
+                            FROM customers
                             WHERE (
                                 (
                                     NOT EXISTS (
-                                        SELECT 1 FROM purchases p 
-                                        WHERE p.clientId = customers.unicId 
+                                        SELECT 1 FROM purchases p
+                                        WHERE p.clientId = customers.unicId
                                         AND p.isActive = 1
                                     )
                                     AND NOT EXISTS (
-                                        SELECT 1 FROM burials b 
-                                        WHERE b.clientId = customers.unicId 
+                                        SELECT 1 FROM burials b
+                                        WHERE b.clientId = customers.unicId
                                         AND b.isActive = 1
                                     )
+                                    AND statusCustomer NOT IN (4, 5)
                                 )
                                 OR unicId = :currentClient2
                             )
-                            AND isActive = 1 
+                            AND isActive = 1
                             ORDER BY is_current DESC, lastName, firstName
                         ";
                     }
@@ -1383,46 +1387,48 @@
                 } else {
                     // ✅ במצב הוספה
                     if ($formType === 'burial') {
-                        // קבורה: לקוחות שאין להם קבורה
+                        // קבורה: לקוחות שאין להם קבורה ואין להם בקשה ממתינה
                         $sql = "
-                            SELECT 
-                                unicId, 
-                                firstName, 
-                                lastName, 
-                                phone, 
-                                phoneMobile, 
+                            SELECT
+                                unicId,
+                                firstName,
+                                lastName,
+                                phone,
+                                phoneMobile,
                                 resident
-                            FROM customers 
+                            FROM customers
                             WHERE NOT EXISTS (
-                                SELECT 1 FROM burials b 
-                                WHERE b.clientId = customers.unicId 
+                                SELECT 1 FROM burials b
+                                WHERE b.clientId = customers.unicId
                                 AND b.isActive = 1
                             )
-                            AND isActive = 1 
+                            AND statusCustomer NOT IN (4, 5)
+                            AND isActive = 1
                             ORDER BY lastName, firstName
                         ";
                     } else {
-                        // רכישה: לקוחות שאין להם רכישה ואין להם קבורה
+                        // רכישה: לקוחות שאין להם רכישה ואין להם קבורה ואין להם בקשה ממתינה
                         $sql = "
-                            SELECT 
-                                unicId, 
-                                firstName, 
-                                lastName, 
-                                phone, 
-                                phoneMobile, 
+                            SELECT
+                                unicId,
+                                firstName,
+                                lastName,
+                                phone,
+                                phoneMobile,
                                 resident
-                            FROM customers 
+                            FROM customers
                             WHERE NOT EXISTS (
-                                SELECT 1 FROM purchases p 
-                                WHERE p.clientId = customers.unicId 
+                                SELECT 1 FROM purchases p
+                                WHERE p.clientId = customers.unicId
                                 AND p.isActive = 1
                             )
                             AND NOT EXISTS (
-                                SELECT 1 FROM burials b 
-                                WHERE b.clientId = customers.unicId 
+                                SELECT 1 FROM burials b
+                                WHERE b.clientId = customers.unicId
                                 AND b.isActive = 1
                             )
-                            AND isActive = 1 
+                            AND statusCustomer NOT IN (4, 5)
+                            AND isActive = 1
                             ORDER BY lastName, firstName
                         ";
                     }

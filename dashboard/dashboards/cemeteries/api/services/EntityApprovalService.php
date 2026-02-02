@@ -380,6 +380,10 @@ class EntityApprovalService
         ");
         $stmt->execute([$reason, $pendingId]);
 
+        // === Rollback סטטוס ישויות קשורות ===
+        $this->rollbackRelatedEntityStatuses($pending);
+        // === סוף Rollback ===
+
         // Notify the requester
         $this->notifyRequester($pending, 'rejected', $rejectorId, $reason);
 
@@ -413,6 +417,10 @@ class EntityApprovalService
             WHERE id = ?
         ");
         $stmt->execute([$pendingId]);
+
+        // === Rollback סטטוס ישויות קשורות ===
+        $this->rollbackRelatedEntityStatuses($pending);
+        // === סוף Rollback ===
 
         return [
             'success' => true,
@@ -1237,12 +1245,80 @@ class EntityApprovalService
      */
     public function processExpiredOperations(): int
     {
+        // שליפת הפעולות שעומדות לפוג
         $stmt = $this->pdo->query("
-            UPDATE pending_entity_operations
-            SET status = 'expired', completed_at = NOW()
+            SELECT id, entity_type, action, operation_data
+            FROM pending_entity_operations
             WHERE status = 'pending' AND expires_at < NOW()
         ");
+        $expiredOps = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return $stmt->rowCount();
+        $count = 0;
+        foreach ($expiredOps as $op) {
+            // עדכון סטטוס ל-expired
+            $this->pdo->prepare("
+                UPDATE pending_entity_operations
+                SET status = 'expired', completed_at = NOW()
+                WHERE id = ?
+            ")->execute([$op['id']]);
+
+            // Rollback סטטוס ישויות קשורות
+            $this->rollbackRelatedEntityStatuses($op);
+
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Rollback related entity statuses when operation is rejected/cancelled/expired
+     */
+    private function rollbackRelatedEntityStatuses(array $pending): void
+    {
+        $operationData = is_string($pending['operation_data'])
+            ? json_decode($pending['operation_data'], true) ?? []
+            : ($pending['operation_data'] ?? []);
+
+        $entityType = $pending['entity_type'];
+        $action = $pending['action'];
+
+        if ($entityType === 'purchases' && $action === 'create') {
+            // החזר קבר לפנוי (מ-4 ל-1)
+            if (!empty($operationData['graveId'])) {
+                $this->pdo->prepare("UPDATE graves SET graveStatus = 1 WHERE unicId = ? AND graveStatus = 4")
+                          ->execute([$operationData['graveId']]);
+            }
+            // החזר לקוח לפעיל (מ-4 ל-1)
+            if (!empty($operationData['clientId'])) {
+                $this->pdo->prepare("UPDATE customers SET statusCustomer = 1 WHERE unicId = ? AND statusCustomer = 4")
+                          ->execute([$operationData['clientId']]);
+            }
+        }
+
+        if ($entityType === 'burials' && $action === 'create') {
+            // החזר קבר לסטטוס קודם (מ-5 ל-2 אם יש רכישה, אחרת 1)
+            if (!empty($operationData['graveId'])) {
+                // בדוק אם יש רכישה פעילה
+                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM purchases WHERE graveId = ? AND isActive = 1");
+                $stmt->execute([$operationData['graveId']]);
+                $hasPurchase = $stmt->fetchColumn() > 0;
+
+                $newStatus = $hasPurchase ? 2 : 1;
+                $this->pdo->prepare("UPDATE graves SET graveStatus = ? WHERE unicId = ? AND graveStatus = 5")
+                          ->execute([$newStatus, $operationData['graveId']]);
+            }
+            // החזר לקוח לסטטוס קודם (מ-5 ל-2 אם יש רכישה, אחרת 1)
+            if (!empty($operationData['clientId'])) {
+                // בדוק אם יש רכישה פעילה
+                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM purchases WHERE clientId = ? AND isActive = 1");
+                $stmt->execute([$operationData['clientId']]);
+                $hasPurchase = $stmt->fetchColumn() > 0;
+
+                $newStatus = $hasPurchase ? 2 : 1;
+                $this->pdo->prepare("UPDATE customers SET statusCustomer = ? WHERE unicId = ? AND statusCustomer = 5")
+                          ->execute([$newStatus, $operationData['clientId']]);
+            }
+        }
     }
 }

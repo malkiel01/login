@@ -272,6 +272,27 @@ const EntityPending = {
     },
 
     /**
+     * ניקוי סקשן ממתינים וכפתור "הצג ממתינים"
+     * קריאה בעת מעבר לישות שאינה customers
+     */
+    clearPendingSection() {
+        // הסרת סקשן הממתינים
+        const pendingSection = document.getElementById('pendingSection');
+        if (pendingSection) {
+            pendingSection.remove();
+        }
+
+        // איפוס instance של TableManager
+        this.pendingTableInstance = null;
+
+        // הסתרת כפתור "הצג ממתינים"
+        const showPendingBtn = document.querySelector('.btn-show-pending');
+        if (showPendingBtn) {
+            showPendingBtn.classList.remove('visible');
+        }
+    },
+
+    /**
      * טעינת רשומות ממתינות ליצירה (לא קיימות עדיין במערכת)
      * @param {string} entityType - 'customers', 'purchases', 'burials'
      * @returns {Promise<Array>}

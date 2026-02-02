@@ -34,6 +34,27 @@ require_once __DIR__ . '/api-auth.php';
              if (!in_array($orderBy, $allowedSortColumns)) $orderBy = 'countryNameHe';
              if (!in_array($sortDirection, ['ASC', 'DESC'])) $sortDirection = 'ASC';
 
+            // ⭐ מיון רב-שלבי - תמיכה במערך של רמות מיון
+            $sortLevelsParam = $_GET['sortLevels'] ?? null;
+            $orderByClause = "{$orderBy} {$sortDirection}"; // ברירת מחדל
+
+            if ($sortLevelsParam) {
+                $sortLevels = is_string($sortLevelsParam) ? json_decode($sortLevelsParam, true) : $sortLevelsParam;
+                if (is_array($sortLevels) && count($sortLevels) > 0) {
+                    $orderByClauses = [];
+                    foreach ($sortLevels as $level) {
+                        $field = $level['field'] ?? '';
+                        $levelOrder = strtoupper($level['order'] ?? 'ASC') === 'ASC' ? 'ASC' : 'DESC';
+                        if (in_array($field, $allowedSortColumns)) {
+                            $orderByClauses[] = "{$field} {$levelOrder}";
+                        }
+                    }
+                    if (count($orderByClauses) > 0) {
+                        $orderByClause = implode(', ', $orderByClauses);
+                    }
+                }
+            }
+
              // בניית השאילתה
              $sql = "SELECT * FROM countries WHERE isActive = 1";
              $params = [];
@@ -57,7 +78,7 @@ require_once __DIR__ . '/api-auth.php';
              $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
              
              // ⭐ הוספת מיון ועימוד
-             $sql .= " ORDER BY {$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
+             $sql .= " ORDER BY {$orderByClause} LIMIT :limit OFFSET :offset";
              
              $stmt = $pdo->prepare($sql);
              foreach ($params as $key => $value) {

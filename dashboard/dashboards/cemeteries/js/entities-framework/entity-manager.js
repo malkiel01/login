@@ -107,11 +107,16 @@ class EntityManager {
             }
         }
 
-        // טעינת רשומות ממתינות לאישור (ללקוחות)
-        if (entityType === 'customer' && typeof EntityPending !== 'undefined') {
-            const mainContainer = document.querySelector('.main-container');
-            if (mainContainer) {
-                EntityPending.loadAndShowPendingCustomers(mainContainer);
+        // טעינת רשומות ממתינות לאישור (ללקוחות בלבד)
+        if (typeof EntityPending !== 'undefined') {
+            if (entityType === 'customer') {
+                const mainContainer = document.querySelector('.main-container');
+                if (mainContainer) {
+                    EntityPending.loadAndShowPendingCustomers(mainContainer);
+                }
+            } else {
+                // ניקוי סקשן ממתינים בעת מעבר לישות אחרת
+                EntityPending.clearPendingSection();
             }
         }
 

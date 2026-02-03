@@ -723,6 +723,12 @@ class EntityApprovalService
                     $this->pdo->prepare("UPDATE graves SET graveStatus = 2 WHERE unicId = ?")->execute([$data['graveId']]);
                 }
 
+                // Update customer status from pending (4) to purchased (2)
+                if (!empty($data['clientId'])) {
+                    $this->pdo->prepare("UPDATE customers SET statusCustomer = 2 WHERE unicId = ? AND statusCustomer = 4")
+                              ->execute([$data['clientId']]);
+                }
+
                 return ['entityId' => $unicId];
 
             case 'edit':

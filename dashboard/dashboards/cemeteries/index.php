@@ -132,17 +132,80 @@ $isAdminUser = isAdmin();
             return perms.includes('view') || perms.includes('edit') || perms.includes('create');
         };
 
-        // מניעת סגירת האפליקציה דרך כפתור חזור
+        // ========== DEBUG NAVIGATION ==========
         (function() {
-            // על כל לחיצת חזור - דחוף entry חדש
-            // ככה אי אפשר לצאת מהאפליקציה
-            window.addEventListener('popstate', function() {
-                history.pushState(null, '');
+            const DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
+
+            // פונקציית לוג לשרת
+            function log(event, data = {}) {
+                const payload = {
+                    source: 'NavigationDebug',
+                    event: event,
+                    data: data,
+                    timestamp: new Date().toISOString(),
+                    url: location.href,
+                    hash: location.hash,
+                    historyLength: history.length,
+                    historyState: history.state,
+                    referrer: document.referrer
+                };
+                console.log('[NAV]', event, payload);
+                fetch(DEBUG_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
+            }
+
+            // === טעינת דף ===
+            log('PAGE_LOAD', { readyState: document.readyState });
+
+            // === POPSTATE - כפתור חזור/קדימה ===
+            window.addEventListener('popstate', function(e) {
+                log('POPSTATE', { state: e.state });
+                // דחוף entry חדש למניעת יציאה
+                history.pushState({ navGuard: Date.now() }, '');
+                log('PUSHED_STATE_AFTER_POPSTATE');
+            });
+
+            // === HASHCHANGE ===
+            window.addEventListener('hashchange', function(e) {
+                log('HASHCHANGE', { oldURL: e.oldURL, newURL: e.newURL });
+            });
+
+            // === BEFOREUNLOAD - לפני סגירה ===
+            window.addEventListener('beforeunload', function(e) {
+                log('BEFOREUNLOAD');
+            });
+
+            // === PAGEHIDE ===
+            window.addEventListener('pagehide', function(e) {
+                log('PAGEHIDE', { persisted: e.persisted });
+            });
+
+            // === PAGESHOW ===
+            window.addEventListener('pageshow', function(e) {
+                log('PAGESHOW', { persisted: e.persisted });
+            });
+
+            // === VISIBILITYCHANGE ===
+            document.addEventListener('visibilitychange', function() {
+                log('VISIBILITY', { state: document.visibilityState });
+            });
+
+            // === FOCUS/BLUR ===
+            window.addEventListener('focus', function() {
+                log('WINDOW_FOCUS');
+            });
+            window.addEventListener('blur', function() {
+                log('WINDOW_BLUR');
             });
 
             // דחוף entry ראשוני
-            history.pushState(null, '');
+            history.pushState({ navGuard: 'init' }, '');
+            log('INITIAL_STATE_PUSHED');
         })();
+        // ========== END DEBUG ==========
     </script>
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">

@@ -2,7 +2,7 @@
  * Login Notifications Manager
  * מציג התראות שלא נקראו בעת כניסה למערכת
  *
- * @version 3.0.0
+ * @version 3.1.0 - DEBUG
  */
 
 window.LoginNotifications = {
@@ -19,23 +19,98 @@ window.LoginNotifications = {
     },
 
     /**
+     * לוג לשרת
+     */
+    async serverLog(message, data = {}) {
+        try {
+            const logData = {
+                message,
+                data,
+                timestamp: new Date().toISOString(),
+                url: location.href,
+                hash: location.hash,
+                historyLength: history.length,
+                historyState: history.state
+            };
+            console.log('[LoginNotifications]', message, logData);
+
+            await fetch('/dashboard/dashboards/cemeteries/api/debug-log.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source: 'LoginNotifications', ...logData })
+            });
+        } catch (e) {
+            console.error('[LoginNotifications] serverLog error:', e);
+        }
+    },
+
+    /**
      * אתחול
      */
     async init() {
-        console.log('[LoginNotifications] init');
+        this.serverLog('init started');
+
+        // הגדר מאזינים לניווט - לדיבוג
+        this.setupNavigationDebug();
 
         if (sessionStorage.getItem(this.config.sessionKey)) {
-            console.log('[LoginNotifications] Already shown this session');
+            this.serverLog('Already shown this session');
             return;
         }
 
         const ready = await this.waitForDependencies();
         if (!ready) {
-            console.log('[LoginNotifications] Dependencies not ready');
+            this.serverLog('Dependencies not ready');
             return;
         }
 
         await this.loadAndShowNotifications();
+    },
+
+    /**
+     * מאזינים לדיבוג ניווט
+     */
+    setupNavigationDebug() {
+        // Popstate - כפתור חזור/קדימה
+        window.addEventListener('popstate', (e) => {
+            this.serverLog('POPSTATE EVENT', {
+                state: e.state,
+                isActive: this.state.isActive,
+                currentIndex: this.state.currentIndex,
+                queueLength: this.state.queue.length
+            });
+        });
+
+        // Hashchange
+        window.addEventListener('hashchange', (e) => {
+            this.serverLog('HASHCHANGE EVENT', {
+                oldURL: e.oldURL,
+                newURL: e.newURL
+            });
+        });
+
+        // Beforeunload - לפני סגירת האפליקציה
+        window.addEventListener('beforeunload', (e) => {
+            this.serverLog('BEFOREUNLOAD EVENT - APP CLOSING', {
+                isActive: this.state.isActive
+            });
+        });
+
+        // Pagehide - דף מוסתר (iOS)
+        window.addEventListener('pagehide', (e) => {
+            this.serverLog('PAGEHIDE EVENT', {
+                persisted: e.persisted
+            });
+        });
+
+        // Visibilitychange
+        document.addEventListener('visibilitychange', () => {
+            this.serverLog('VISIBILITY CHANGE', {
+                visibilityState: document.visibilityState
+            });
+        });
+
+        this.serverLog('Navigation debug listeners set up');
     },
 
     async waitForDependencies() {
@@ -53,6 +128,8 @@ window.LoginNotifications = {
     },
 
     async loadAndShowNotifications() {
+        this.serverLog('loadAndShowNotifications started');
+
         try {
             const response = await fetch(`${this.config.apiUrl}?action=get_unread`, {
                 credentials: 'include'
@@ -60,7 +137,7 @@ window.LoginNotifications = {
             const data = await response.json();
 
             if (!data.success || !data.notifications || data.notifications.length === 0) {
-                console.log('[LoginNotifications] No notifications');
+                this.serverLog('No notifications found', { data });
                 sessionStorage.setItem(this.config.sessionKey, 'true');
                 return;
             }
@@ -70,12 +147,15 @@ window.LoginNotifications = {
             this.state.currentIndex = 0;
             this.state.isActive = true;
 
-            console.log('[LoginNotifications] Found', this.state.queue.length, 'notifications');
+            this.serverLog('Notifications loaded', {
+                count: this.state.queue.length,
+                titles: this.state.queue.map(n => n.title)
+            });
 
             this.showNextNotification();
 
         } catch (error) {
-            console.error('[LoginNotifications] Error:', error);
+            this.serverLog('Error loading notifications', { error: error.message });
         }
     },
 
@@ -96,15 +176,25 @@ window.LoginNotifications = {
      * הצגת ההתראה הבאה
      */
     showNextNotification() {
+        this.serverLog('showNextNotification called', {
+            currentIndex: this.state.currentIndex,
+            queueLength: this.state.queue.length
+        });
+
         if (this.state.currentIndex >= this.state.queue.length) {
-            console.log('[LoginNotifications] All done');
+            this.serverLog('All notifications done');
             this.finish();
             return;
         }
 
         const notification = this.state.queue[this.state.currentIndex];
         const counter = `${this.state.currentIndex + 1}/${this.state.queue.length}`;
-        console.log('[LoginNotifications] Showing', counter, notification.title);
+
+        this.serverLog('Showing notification', {
+            counter,
+            title: notification.title,
+            id: notification.id
+        });
 
         // נקה callback קודם
         NotificationTemplates.callbacks.onClose = null;
@@ -118,7 +208,10 @@ window.LoginNotifications = {
         // הגדר callback לסגירה - רק אחרי שההתראה מוצגת
         setTimeout(() => {
             NotificationTemplates.onClose(() => {
-                console.log('[LoginNotifications] Notification closed');
+                this.serverLog('Notification closed by user', {
+                    closedIndex: this.state.currentIndex,
+                    title: notification.title
+                });
                 this.state.currentIndex++;
                 setTimeout(() => this.showNextNotification(), 300);
             });
@@ -129,6 +222,7 @@ window.LoginNotifications = {
      * סיום
      */
     finish() {
+        this.serverLog('finish() called - all notifications complete');
         this.state.isActive = false;
         sessionStorage.setItem(this.config.sessionKey, 'true');
 

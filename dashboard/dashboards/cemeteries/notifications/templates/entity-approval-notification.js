@@ -31,8 +31,7 @@
         // Prevent page scroll
         document.body.style.overflow = 'hidden';
 
-        // Push history state to block back navigation
-        history.pushState({ entityApprovalModal: true }, '', window.location.href);
+        // NOTE: History manipulation removed - handled by index.php navigation guard
 
         // Extract pending ID from URL
         const urlMatch = notification.url.match(/id=(\d+)/);
@@ -86,8 +85,7 @@
         approveBtn.addEventListener('click', () => this.handleEntityApprove(pendingId));
         rejectBtn.addEventListener('click', () => this.handleEntityReject(pendingId));
 
-        // Block back button
-        window.addEventListener('popstate', this.handleEntityPopState);
+        // NOTE: popstate handler removed - handled by index.php navigation guard
 
         // Load entity details
         this.loadEntityDetails(pendingId);
@@ -606,21 +604,13 @@
         setTimeout(() => this.close(), 2000);
     };
 
-    /**
-     * Handle popstate (back button) for entity approval
-     */
-    NotificationTemplates.handleEntityPopState = function(e) {
-        if (NotificationTemplates.activeModal && NotificationTemplates.activeModal.classList.contains('entity-approval-overlay')) {
-            history.pushState(null, '', window.location.href);
-        }
-    };
+    // NOTE: handleEntityPopState removed - navigation guard in index.php handles this
 
     /**
-     * Override close to clean up entity approval specific handlers
+     * Override close to clean up entity approval specific data
      */
     const originalEntityClose = NotificationTemplates.close;
     NotificationTemplates.close = function() {
-        window.removeEventListener('popstate', this.handleEntityPopState);
         this.currentPendingId = null;
         this.currentNotificationId = null;
         originalEntityClose.call(this);

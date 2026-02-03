@@ -201,9 +201,11 @@ $isAdminUser = isAdmin();
                 log('WINDOW_BLUR');
             });
 
-            // דחוף entry ראשוני
-            history.pushState({ navGuard: 'init' }, '');
-            log('INITIAL_STATE_PUSHED');
+            // דחוף מספר entries כחיץ - ככה צריך ללחוץ חזור הרבה פעמים כדי לצאת
+            for (let i = 0; i < 5; i++) {
+                history.pushState({ navGuard: 'buffer_' + i }, '');
+            }
+            log('INITIAL_BUFFER_PUSHED', { count: 5, historyLength: history.length });
         })();
         // ========== END DEBUG ==========
     </script>

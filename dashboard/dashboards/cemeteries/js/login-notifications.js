@@ -2,7 +2,7 @@
  * Login Notifications Manager
  * מציג התראות שלא נקראו בעת כניסה למערכת
  *
- * @version 2.2.0
+ * @version 2.3.0
  */
 
 window.LoginNotifications = {
@@ -58,13 +58,23 @@ window.LoginNotifications = {
      * הגדרת תמיכה בכפתור חזור באמצעות History API
      */
     setupBackButton() {
+        // הוסף entries חיץ למניעת סגירת האפליקציה
+        for (let i = 0; i < 10; i++) {
+            history.pushState({ notificationBuffer: i }, '');
+        }
+
         window.addEventListener('popstate', (e) => {
-            // אם יש התראה מוצגת והמשתמש לחץ חזור
-            if (this.state.isShowingNotification && this.state.waitingForUserAction) {
-                console.log('[LoginNotifications] Back button pressed - closing notification');
-                // מיד דוחפים state חדש כדי למנוע סגירת האפליקציה
-                history.pushState({ loginNotification: true }, '');
-                this.closeCurrentAndShowNext();
+            console.log('[LoginNotifications] Popstate fired, isActive:', this.state.isActive, 'isShowing:', this.state.isShowingNotification);
+
+            // כל עוד אנחנו בתהליך ההתראות - דחוף state חדש
+            if (this.state.isActive) {
+                history.pushState({ notificationBuffer: Date.now() }, '');
+
+                // אם יש התראה מוצגת - סגור אותה
+                if (this.state.isShowingNotification && this.state.waitingForUserAction) {
+                    console.log('[LoginNotifications] Back button pressed - closing notification');
+                    this.closeCurrentAndShowNext();
+                }
             }
         });
     },

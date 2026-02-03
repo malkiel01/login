@@ -15,6 +15,28 @@ const EntityPending = {
         delete: 'מחיקה'
     },
 
+    // Entity type labels (Hebrew)
+    entityLabels: {
+        customers: 'לקוחות',
+        purchases: 'רכישות',
+        burials: 'קבורות',
+        graves: 'קברים',
+        blocks: 'גושים',
+        plots: 'חלקות',
+        cemeteries: 'בתי עלמין'
+    },
+
+    // Map singular entity type to plural for API
+    entityTypeMap: {
+        customer: 'customers',
+        purchase: 'purchases',
+        burial: 'burials',
+        grave: 'graves',
+        block: 'blocks',
+        plot: 'plots',
+        cemetery: 'cemeteries'
+    },
+
     /**
      * Fetch pending operations for an entity type
      * @param {string} entityType - 'purchases', 'burials', 'customers'
@@ -381,40 +403,115 @@ const EntityPending = {
     },
 
     /**
-     * הגדרת עמודות לטבלת הממתינים
+     * הגדרת עמודות לטבלת הממתינים - לפי סוג ישות
+     * @param {string} entityType - 'customers', 'purchases', 'burials'
      * @returns {Array} מערך הגדרות עמודות עבור TableManager
      */
-    getPendingTableColumns() {
-        return [
+    getPendingTableColumns(entityType) {
+        // עמודות בסיסיות משותפות לכל הישויות
+        const baseColumns = [
             {
                 field: 'status',
                 label: 'סטטוס',
                 width: '120px',
-                render: (row) => `
-                    <span class="pending-badge pending-create">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
-                        ממתין לאישור
-                    </span>
-                `
-            },
-            {
-                field: 'fullName',
-                label: 'שם',
-                width: '150px',
-                render: (row) => `${row.firstName || ''} ${row.lastName || ''}`
-            },
-            {
-                field: 'numId',
-                label: 'ת.ז.',
-                width: '100px',
-                render: (row) => row.numId || '-'
-            },
-            {
-                field: 'phone',
-                label: 'טלפון',
-                width: '120px',
-                render: (row) => row.phoneMobile || row.phone || '-'
-            },
+                render: (row) => {
+                    const actionLabel = this.actionLabels[row.action] || row.action;
+                    return `
+                        <span class="pending-badge pending-${row.action || 'create'}">
+                            ${this.getIcon(row.action || 'create')}
+                            ממתין - ${actionLabel}
+                        </span>
+                    `;
+                }
+            }
+        ];
+
+        // עמודות ספציפיות לפי סוג ישות
+        let entityColumns = [];
+
+        switch (entityType) {
+            case 'customers':
+                entityColumns = [
+                    {
+                        field: 'fullName',
+                        label: 'שם',
+                        width: '150px',
+                        render: (row) => `${row.firstName || ''} ${row.lastName || ''}`
+                    },
+                    {
+                        field: 'numId',
+                        label: 'ת.ז.',
+                        width: '100px',
+                        render: (row) => row.numId || '-'
+                    },
+                    {
+                        field: 'phone',
+                        label: 'טלפון',
+                        width: '120px',
+                        render: (row) => row.phoneMobile || row.phone || '-'
+                    }
+                ];
+                break;
+
+            case 'purchases':
+                entityColumns = [
+                    {
+                        field: 'clientName',
+                        label: 'לקוח',
+                        width: '150px',
+                        render: (row) => row.clientName || `${row.clientFirstName || ''} ${row.clientLastName || ''}`.trim() || '-'
+                    },
+                    {
+                        field: 'graveName',
+                        label: 'קבר',
+                        width: '120px',
+                        render: (row) => row.graveName || row.graveNameHe || '-'
+                    },
+                    {
+                        field: 'price',
+                        label: 'מחיר',
+                        width: '100px',
+                        render: (row) => row.price ? `₪${parseFloat(row.price).toLocaleString()}` : '-'
+                    }
+                ];
+                break;
+
+            case 'burials':
+                entityColumns = [
+                    {
+                        field: 'clientName',
+                        label: 'נפטר/ת',
+                        width: '150px',
+                        render: (row) => row.clientName || `${row.clientFirstName || ''} ${row.clientLastName || ''}`.trim() || '-'
+                    },
+                    {
+                        field: 'graveName',
+                        label: 'קבר',
+                        width: '120px',
+                        render: (row) => row.graveName || row.graveNameHe || '-'
+                    },
+                    {
+                        field: 'burialDate',
+                        label: 'תאריך קבורה',
+                        width: '100px',
+                        render: (row) => row.burialDate ? new Date(row.burialDate).toLocaleDateString('he-IL') : '-'
+                    }
+                ];
+                break;
+
+            default:
+                entityColumns = [
+                    {
+                        field: 'name',
+                        label: 'שם',
+                        width: '200px',
+                        render: (row) => row.name || row.nameHe || '-'
+                    }
+                ];
+        }
+
+        // עמודות סיום משותפות
+        const endColumns = [
             {
                 field: 'requester_name',
                 label: 'מבקש',
@@ -468,29 +565,44 @@ const EntityPending = {
                 }
             }
         ];
+
+        return [...baseColumns, ...entityColumns, ...endColumns];
     },
 
     /**
-     * יצירת סקשן של לקוחות ממתינים - HTML מינימלי
-     * TableManager ייצור את הטבלה עצמה
+     * יצירת סקשן של לקוחות ממתינים - HTML מינימלי (עטיפה לתאימות אחורה)
      * @param {number} count - מספר הממתינים
      * @returns {string}
      */
     createPendingCustomersSection(count) {
+        return this.createPendingSection('customers', count);
+    },
+
+    /**
+     * יצירת סקשן של ישויות ממתינות - HTML מינימלי
+     * TableManager ייצור את הטבלה עצמה
+     * @param {string} entityType - סוג הישות ('customers', 'purchases', 'burials')
+     * @param {number} count - מספר הממתינים
+     * @returns {string}
+     */
+    createPendingSection(entityType, count) {
         if (!count || count === 0) return '';
 
         // בדיקה אם הסקשן היה מכווץ קודם
         const wasCollapsed = localStorage.getItem('pendingSectionCollapsed') === 'true';
         const collapsedClass = wasCollapsed ? ' collapsed' : '';
 
+        // תווית הישות בעברית
+        const entityLabel = this.entityLabels[entityType] || entityType;
+
         return `
-            <div class="pending-section${collapsedClass}" id="pendingSection" data-count="${count}">
+            <div class="pending-section${collapsedClass}" id="pendingSection" data-count="${count}" data-entity-type="${entityType}">
                 <div class="pending-section-header">
                     <div class="pending-section-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                         </svg>
-                        <span>לקוחות ממתינים לאישור</span>
+                        <span>${entityLabel} ממתינים לאישור</span>
                         <span class="pending-section-count">${count}</span>
                     </div>
                     <button class="btn-collapse-pending" onclick="EntityPending.togglePendingSection(this)" title="צמצם ממתינים">
@@ -515,11 +627,15 @@ const EntityPending = {
     // שמירת instance של TableManager לממתינים
     pendingTableInstance: null,
 
+    // שמירת סוג הישות הנוכחי
+    currentEntityType: null,
+
     /**
      * אתחול TableManager לטבלת הממתינים
      * @param {Array} data - נתוני הממתינים
+     * @param {string} entityType - סוג הישות (ברירת מחדל: 'customers')
      */
-    initPendingTable(data) {
+    initPendingTable(data, entityType = 'customers') {
         // בדיקה שהאלמנט קיים
         const table = document.getElementById('pendingTable');
         if (!table) {
@@ -530,7 +646,7 @@ const EntityPending = {
 
         // בדיקה אם ה-DOM של הטבלה הקיימת עדיין קיים
         // אם ה-instance קיים אבל ה-DOM שלו נמחק - צריך לאפס
-        if (this.pendingTableInstance) {
+        if (this.pendingTableInstance && this.currentEntityType === entityType) {
             const existingWrapper = document.querySelector('.pending-section .table-wrapper');
             if (existingWrapper) {
                 // ה-DOM קיים - עדכן את הנתונים
@@ -542,11 +658,14 @@ const EntityPending = {
             }
         }
 
+        // שמירת סוג הישות הנוכחי
+        this.currentEntityType = entityType;
+
         // יצירת TableManager
         this.pendingTableInstance = new TableManager({
             tableSelector: '#pendingTable',
             data: data,
-            columns: this.getPendingTableColumns(),
+            columns: this.getPendingTableColumns(entityType),
 
             // הגדרות תצוגה
             totalItems: data.length,
@@ -568,7 +687,7 @@ const EntityPending = {
             }
         });
 
-        console.log('✅ Pending TableManager initialized');
+        console.log(`✅ Pending TableManager initialized for ${entityType}`);
     },
 
     /**
@@ -689,11 +808,20 @@ const EntityPending = {
     },
 
     /**
-     * טעינה והצגת לקוחות ממתינים
+     * טעינה והצגת לקוחות ממתינים (עטיפה לתאימות אחורה)
      * @param {HTMLElement} container - אלמנט להוספת הסקשן
      */
     async loadAndShowPendingCustomers(container) {
-        const pending = await this.fetchPendingCreates('customers');
+        return this.loadAndShowPending('customers', container);
+    },
+
+    /**
+     * טעינה והצגת ישויות ממתינות - גרסה גנרית
+     * @param {string} entityType - סוג הישות ('customers', 'purchases', 'burials')
+     * @param {HTMLElement} container - אלמנט להוספת הסקשן
+     */
+    async loadAndShowPending(entityType, container) {
+        const pending = await this.fetchPendingCreates(entityType);
 
         // הסרת סקשן קיים ואיפוס instance
         const existingSection = container.querySelector('.pending-section');
@@ -707,7 +835,7 @@ const EntityPending = {
 
         if (pending && pending.length > 0) {
             // יצירת HTML של הסקשן (ללא הנתונים - רק מבנה)
-            const html = this.createPendingCustomersSection(pending.length);
+            const html = this.createPendingSection(entityType, pending.length);
             container.insertAdjacentHTML('afterbegin', html);
 
             // עדכון המונה בכפתור ההדר
@@ -723,7 +851,7 @@ const EntityPending = {
 
             // אתחול TableManager עם הנתונים
             setTimeout(() => {
-                this.initPendingTable(pending);
+                this.initPendingTable(pending, entityType);
             }, 50);
         } else {
             // אין ממתינים - הסתר את הכפתור
@@ -734,10 +862,19 @@ const EntityPending = {
     },
 
     /**
-     * רענון רשימת הלקוחות וסקשן הממתינים
+     * רענון רשימת הלקוחות וסקשן הממתינים (עטיפה לתאימות אחורה)
      */
     async refreshCustomersView() {
-        console.log('[EntityPending] מרענן תצוגת לקוחות...');
+        return this.refreshEntityView('customers');
+    },
+
+    /**
+     * רענון רשימת הישויות וסקשן הממתינים - גרסה גנרית
+     * @param {string} entityType - סוג הישות ('customers', 'purchases', 'burials')
+     */
+    async refreshEntityView(entityType) {
+        const entityLabel = this.entityLabels[entityType] || entityType;
+        console.log(`[EntityPending] מרענן תצוגת ${entityLabel}...`);
 
         // ניקוי cache ו-TableManager instance
         this.clearCache();
@@ -745,17 +882,20 @@ const EntityPending = {
 
         // רענון סקשן ממתינים
         const mainContent = document.querySelector('.main-content');
-        if (mainContent) {
-            await this.loadAndShowPendingCustomers(mainContent);
+        const mainContainer = document.querySelector('.main-container');
+        const container = mainContainer || mainContent;
+
+        if (container) {
+            await this.loadAndShowPending(entityType, container);
         }
 
-        // רענון רשימת הלקוחות
-        if (typeof EntityManager !== 'undefined' && window.currentType === 'customer') {
-            await EntityManager.refresh('customer');
-        } else if (typeof customersRefreshData === 'function') {
-            customersRefreshData();
-        } else if (typeof loadCustomers === 'function') {
-            loadCustomers();
+        // רענון רשימת הישויות
+        const singularType = Object.keys(this.entityTypeMap).find(
+            key => this.entityTypeMap[key] === entityType
+        ) || entityType.replace(/s$/, '');
+
+        if (typeof EntityManager !== 'undefined') {
+            await EntityManager.refresh(singularType);
         }
     },
 

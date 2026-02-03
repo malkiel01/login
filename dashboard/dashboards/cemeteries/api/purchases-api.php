@@ -691,7 +691,89 @@ try {
                 'message' => 'הרכישה נמחקה בהצלחה'
             ]);
             break;
-            
+
+        // רשימת רכישות ממתינות לאישור
+        case 'listPending':
+            requireViewPermission('purchases');
+
+            $currentUserId = getCurrentUserId();
+
+            // שליפת בקשות ממתינות לרכישות
+            $sql = "
+                SELECT
+                    peo.id as pending_id,
+                    peo.unicId as pending_unicId,
+                    peo.action,
+                    peo.entity_id,
+                    peo.operation_data,
+                    peo.original_data,
+                    peo.status,
+                    peo.required_approvals,
+                    peo.current_approvals,
+                    peo.created_at,
+                    peo.expires_at,
+                    peo.requested_by,
+                    u.name as requester_name,
+                    (SELECT COUNT(*) FROM pending_operation_approvals WHERE pending_id = peo.id AND status = 'approved') as approved_count,
+                    (SELECT COUNT(*) FROM pending_operation_approvals WHERE pending_id = peo.id AND status = 'rejected') as rejected_count
+                FROM pending_entity_operations peo
+                JOIN users u ON peo.requested_by = u.id
+                WHERE peo.entity_type = 'purchases'
+                  AND peo.status = 'pending'
+                ORDER BY peo.created_at DESC
+            ";
+
+            $stmt = $pdo->query($sql);
+            $pendingList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // פענוח ה-JSON והכנת הנתונים לתצוגה
+            foreach ($pendingList as &$pending) {
+                $operationData = json_decode($pending['operation_data'], true) ?? [];
+                $originalData = json_decode($pending['original_data'], true) ?? [];
+
+                // הוספת שדות מה-operation_data לתצוגה ישירה
+                $pending['clientId'] = $operationData['clientId'] ?? '';
+                $pending['graveId'] = $operationData['graveId'] ?? '';
+                $pending['price'] = $operationData['price'] ?? 0;
+                $pending['buyer_status'] = $operationData['buyer_status'] ?? '';
+                $pending['purchaseStatus'] = $operationData['purchaseStatus'] ?? '';
+
+                // שליפת שם לקוח וקבר
+                if (!empty($pending['clientId'])) {
+                    $clientStmt = $pdo->prepare("SELECT firstName, lastName FROM customers WHERE unicId = ?");
+                    $clientStmt->execute([$pending['clientId']]);
+                    $client = $clientStmt->fetch(PDO::FETCH_ASSOC);
+                    if ($client) {
+                        $pending['clientFirstName'] = $client['firstName'];
+                        $pending['clientLastName'] = $client['lastName'];
+                        $pending['clientName'] = trim($client['firstName'] . ' ' . $client['lastName']);
+                    }
+                }
+
+                if (!empty($pending['graveId'])) {
+                    $graveStmt = $pdo->prepare("SELECT graveNameHe FROM graves WHERE unicId = ?");
+                    $graveStmt->execute([$pending['graveId']]);
+                    $grave = $graveStmt->fetch(PDO::FETCH_ASSOC);
+                    if ($grave) {
+                        $pending['graveName'] = $grave['graveNameHe'];
+                        $pending['graveNameHe'] = $grave['graveNameHe'];
+                    }
+                }
+
+                // בדיקה אם המשתמש הנוכחי הוא מי שיצר את הבקשה
+                $pending['is_owner'] = ($pending['requested_by'] == $currentUserId);
+
+                // ניקוי שדות לא נחוצים
+                unset($pending['operation_data'], $pending['original_data']);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $pendingList,
+                'total' => count($pendingList)
+            ]);
+            break;
+
         // סטטיסטיקות רכישות
         case 'stats':
             requireViewPermission('purchases');

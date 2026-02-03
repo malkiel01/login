@@ -107,12 +107,17 @@ class EntityManager {
             }
         }
 
-        // טעינת רשומות ממתינות לאישור (ללקוחות בלבד)
+        // טעינת רשומות ממתינות לאישור (לקוחות, רכישות, קבורות)
         if (typeof EntityPending !== 'undefined') {
-            if (entityType === 'customer') {
+            // רשימת ישויות שתומכות בתצוגת ממתינים
+            const pendingEnabledEntities = ['customer', 'purchase', 'burial'];
+
+            if (pendingEnabledEntities.includes(entityType)) {
                 const mainContainer = document.querySelector('.main-container');
                 if (mainContainer) {
-                    EntityPending.loadAndShowPendingCustomers(mainContainer);
+                    // המרה מ-singular ל-plural עבור ה-API
+                    const pluralType = EntityPending.entityTypeMap[entityType] || entityType + 's';
+                    EntityPending.loadAndShowPending(pluralType, mainContainer);
                 }
             } else {
                 // ניקוי סקשן ממתינים בעת מעבר לישות אחרת

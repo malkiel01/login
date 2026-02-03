@@ -131,6 +131,24 @@ $isAdminUser = isAdmin();
             const perms = window.USER_PERMISSIONS[module];
             return perms.includes('view') || perms.includes('edit') || perms.includes('create');
         };
+
+        // מניעת חזרה לדף הלוגין
+        // דוחף entries להיסטוריה ומאזין ל-popstate למניעת יציאה מהאפליקציה
+        (function() {
+            // דחוף כמה entries להיסטוריה כחיץ
+            for (let i = 0; i < 3; i++) {
+                history.pushState({ appBuffer: i }, '');
+            }
+
+            // מאזין לכפתור חזור
+            window.addEventListener('popstate', function(e) {
+                // אם אין state או שזה לא buffer שלנו - דחוף חזרה
+                // זה מונע יציאה מהאפליקציה או חזרה ללוגין
+                if (!e.state || !e.state.appBuffer) {
+                    history.pushState({ appBuffer: Date.now() }, '');
+                }
+            });
+        })();
     </script>
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">

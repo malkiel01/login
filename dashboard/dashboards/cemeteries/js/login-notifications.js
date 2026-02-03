@@ -2,7 +2,7 @@
  * Login Notifications Manager
  * מציג התראות שלא נקראו בעת כניסה למערכת
  *
- * @version 2.1.0
+ * @version 2.2.0
  */
 
 window.LoginNotifications = {
@@ -55,13 +55,15 @@ window.LoginNotifications = {
     },
 
     /**
-     * הגדרת תמיכה בכפתור חזור באמצעות hash
+     * הגדרת תמיכה בכפתור חזור באמצעות History API
      */
     setupBackButton() {
-        window.addEventListener('hashchange', (e) => {
-            // אם היינו במסך התראה והמשתמש לחץ חזור
-            if (this.state.isShowingNotification && !location.hash.includes('notification')) {
-                console.log('[LoginNotifications] Back button - closing notification');
+        window.addEventListener('popstate', (e) => {
+            // אם יש התראה מוצגת והמשתמש לחץ חזור
+            if (this.state.isShowingNotification && this.state.waitingForUserAction) {
+                console.log('[LoginNotifications] Back button pressed - closing notification');
+                // מיד דוחפים state חדש כדי למנוע סגירת האפליקציה
+                history.pushState({ loginNotification: true }, '');
                 this.closeCurrentAndShowNext();
             }
         });
@@ -130,8 +132,8 @@ window.LoginNotifications = {
         this.state.isShowingNotification = true;
         this.state.waitingForUserAction = true;
 
-        // הוסף hash לכתובת (לתמיכה בכפתור חזור)
-        location.hash = 'notification-' + this.state.currentIndex;
+        // דחוף state להיסטוריה (לתמיכה בכפתור חזור)
+        history.pushState({ loginNotification: true, index: this.state.currentIndex }, '');
 
         // נקה callbacks קודמים
         NotificationTemplates.callbacks.onClose = null;
@@ -170,10 +172,6 @@ window.LoginNotifications = {
             document.body.style.overflow = '';
         }
 
-        // הסר hash
-        if (location.hash.includes('notification')) {
-            history.replaceState(null, '', location.pathname + location.search);
-        }
 
         // המשך להתראה הבאה
         this.state.currentIndex++;
@@ -188,10 +186,6 @@ window.LoginNotifications = {
         this.state.isShowingNotification = false;
         this.state.waitingForUserAction = false;
         sessionStorage.setItem(this.config.sessionKey, 'true');
-
-        if (location.hash.includes('notification')) {
-            history.replaceState(null, '', location.pathname + location.search);
-        }
 
         if (typeof updateMyNotificationsCount === 'function') {
             updateMyNotificationsCount();

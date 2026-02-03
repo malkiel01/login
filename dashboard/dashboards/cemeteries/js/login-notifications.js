@@ -2,13 +2,7 @@
  * Login Notifications Manager
  * מציג התראות שלא נקראו בעת כניסה למערכת
  *
- * תכונות:
- * - הצגת עד 5 התראות בפתיחת האפליקציה
- * - כל התראה היא "מסך" נפרד (תמיכה בכפתור חזור)
- * - הצגה אחת אחרי השנייה
- *
- * @version 2.0.0
- * @author Malkiel
+ * @version 2.1.0
  */
 
 window.LoginNotifications = {
@@ -22,81 +16,57 @@ window.LoginNotifications = {
         isActive: false,
         queue: [],
         currentIndex: 0,
-        historyStateAdded: false
+        isShowingNotification: false,
+        waitingForUserAction: false
     },
 
     /**
-     * אתחול - נקרא בטעינת הדף
+     * אתחול
      */
     async init() {
-        console.log('[LoginNotifications] init started');
+        console.log('[LoginNotifications] init');
 
-        // בדוק אם כבר הוצגו התראות בסשן הזה
         if (sessionStorage.getItem(this.config.sessionKey)) {
-            console.log('[LoginNotifications] Already shown in this session');
+            console.log('[LoginNotifications] Already shown');
             return;
         }
 
-        // המתן לטעינת התלויות
         const ready = await this.waitForDependencies();
-        if (!ready) {
-            console.log('[LoginNotifications] Dependencies not ready');
-            return;
-        }
+        if (!ready) return;
 
-        // הגדר מאזין לכפתור חזור
-        this.setupBackButtonHandler();
+        // הגדר מאזין לכפתור חזור (באמצעות hash)
+        this.setupBackButton();
 
-        // טען והצג התראות
         await this.loadAndShowNotifications();
     },
 
-    /**
-     * המתנה לטעינת תלויות
-     */
     async waitForDependencies() {
         const maxWait = 5000;
-        const interval = 100;
         let waited = 0;
-
         while (waited < maxWait) {
             if (typeof NotificationTemplates !== 'undefined' &&
                 typeof NotificationTemplates.show === 'function') {
                 return true;
             }
-            await new Promise(r => setTimeout(r, interval));
-            waited += interval;
+            await new Promise(r => setTimeout(r, 100));
+            waited += 100;
         }
         return false;
     },
 
     /**
-     * הגדרת מאזין לכפתור חזור
+     * הגדרת תמיכה בכפתור חזור באמצעות hash
      */
-    setupBackButtonHandler() {
-        window.addEventListener('popstate', (event) => {
-            // אם יש התראה פעילה וזה state של התראה
-            if (this.state.isActive && this.state.historyStateAdded) {
-                console.log('[LoginNotifications] Back button pressed - closing notification');
-                this.state.historyStateAdded = false;
-
-                // סגור את ההתראה הנוכחית בלי לקרוא ל-onClose callback
-                if (NotificationTemplates.activeModal) {
-                    NotificationTemplates.activeModal.remove();
-                    NotificationTemplates.activeModal = null;
-                    document.body.style.overflow = '';
-                }
-
-                // המשך להתראה הבאה
-                this.state.currentIndex++;
-                setTimeout(() => this.showNextNotification(), 300);
+    setupBackButton() {
+        window.addEventListener('hashchange', (e) => {
+            // אם היינו במסך התראה והמשתמש לחץ חזור
+            if (this.state.isShowingNotification && !location.hash.includes('notification')) {
+                console.log('[LoginNotifications] Back button - closing notification');
+                this.closeCurrentAndShowNext();
             }
         });
     },
 
-    /**
-     * טעינת והצגת התראות
-     */
     async loadAndShowNotifications() {
         try {
             const response = await fetch(`${this.config.apiUrl}?action=get_unread`, {
@@ -110,7 +80,6 @@ window.LoginNotifications = {
                 return;
             }
 
-            // מיון והגבלה
             this.state.queue = this.sortByPriority(data.notifications)
                 .slice(0, this.config.maxNotifications);
             this.state.currentIndex = 0;
@@ -118,7 +87,6 @@ window.LoginNotifications = {
 
             console.log('[LoginNotifications] Found', this.state.queue.length, 'notifications');
 
-            // התחל להציג
             this.showNextNotification();
 
         } catch (error) {
@@ -126,21 +94,15 @@ window.LoginNotifications = {
         }
     },
 
-    /**
-     * מיון לפי עדיפות
-     */
     sortByPriority(notifications) {
         const priority = { 'urgent': 1, 'warning': 2, 'info': 3 };
         return notifications.sort((a, b) => {
-            // אישורים קודם
             if (a.requires_approval !== b.requires_approval) {
                 return a.requires_approval ? -1 : 1;
             }
-            // לפי סוג
             const pa = priority[a.notification_type] || 3;
             const pb = priority[b.notification_type] || 3;
             if (pa !== pb) return pa - pb;
-            // לפי תאריך
             return new Date(b.created_at) - new Date(a.created_at);
         });
     },
@@ -149,99 +111,129 @@ window.LoginNotifications = {
      * הצגת ההתראה הבאה
      */
     showNextNotification() {
-        // בדיקה אם סיימנו
-        if (this.state.currentIndex >= this.state.queue.length) {
-            console.log('[LoginNotifications] All notifications shown');
-            this.state.isActive = false;
-            sessionStorage.setItem(this.config.sessionKey, 'true');
+        // מניעת קריאות כפולות
+        if (this.state.waitingForUserAction) {
+            console.log('[LoginNotifications] Already waiting for user action');
+            return;
+        }
 
-            // עדכון מונה בסיידבר
-            if (typeof updateMyNotificationsCount === 'function') {
-                updateMyNotificationsCount();
-            }
+        if (this.state.currentIndex >= this.state.queue.length) {
+            console.log('[LoginNotifications] All done');
+            this.finish();
             return;
         }
 
         const notification = this.state.queue[this.state.currentIndex];
-        console.log('[LoginNotifications] Showing notification', this.state.currentIndex + 1, '/', this.state.queue.length);
+        const counter = `${this.state.currentIndex + 1}/${this.state.queue.length}`;
+        console.log('[LoginNotifications] Showing', counter, notification.title);
 
-        // הוסף state להיסטוריה (לתמיכה בכפתור חזור)
-        history.pushState({ loginNotification: true }, '');
-        this.state.historyStateAdded = true;
+        this.state.isShowingNotification = true;
+        this.state.waitingForUserAction = true;
 
-        // הגדר callback לסגירה (כשלוחצים X או על הרקע)
-        NotificationTemplates.onClose(() => {
-            console.log('[LoginNotifications] Notification closed by user');
+        // הוסף hash לכתובת (לתמיכה בכפתור חזור)
+        location.hash = 'notification-' + this.state.currentIndex;
 
-            // הסר את ה-state מההיסטוריה
-            if (this.state.historyStateAdded) {
-                this.state.historyStateAdded = false;
-                history.back();
-            }
-
-            // המשך להתראה הבאה
-            this.state.currentIndex++;
-            setTimeout(() => this.showNextNotification(), 300);
-        });
+        // נקה callbacks קודמים
+        NotificationTemplates.callbacks.onClose = null;
 
         // הצג את ההתראה
         NotificationTemplates.show(notification, {
             autoDismiss: false,
-            showCounter: this.state.queue.length > 1
-                ? `${this.state.currentIndex + 1}/${this.state.queue.length}`
-                : null
+            showCounter: this.state.queue.length > 1 ? counter : null
         });
+
+        // הגדר callback רק אחרי שההתראה הוצגה
+        setTimeout(() => {
+            NotificationTemplates.onClose(() => {
+                console.log('[LoginNotifications] User closed notification');
+                this.closeCurrentAndShowNext();
+            });
+        }, 100);
     },
 
     /**
-     * דילוג על כל ההתראות
+     * סגירת ההתראה הנוכחית ומעבר לבאה
      */
-    skipAll() {
-        console.log('[LoginNotifications] Skip all');
-        this.state.queue = [];
-        this.state.currentIndex = 0;
-        this.state.isActive = false;
+    closeCurrentAndShowNext() {
+        if (!this.state.waitingForUserAction) return;
 
-        if (this.state.historyStateAdded) {
-            this.state.historyStateAdded = false;
-            history.back();
+        this.state.waitingForUserAction = false;
+        this.state.isShowingNotification = false;
+
+        // נקה callback למניעת קריאות כפולות
+        NotificationTemplates.callbacks.onClose = null;
+
+        // סגור את ההתראה אם עדיין פתוחה
+        if (NotificationTemplates.activeModal) {
+            NotificationTemplates.activeModal.remove();
+            NotificationTemplates.activeModal = null;
+            document.body.style.overflow = '';
         }
 
-        NotificationTemplates.close();
-        sessionStorage.setItem(this.config.sessionKey, 'true');
+        // הסר hash
+        if (location.hash.includes('notification')) {
+            history.replaceState(null, '', location.pathname + location.search);
+        }
+
+        // המשך להתראה הבאה
+        this.state.currentIndex++;
+        setTimeout(() => this.showNextNotification(), 400);
     },
 
     /**
-     * איפוס (לבדיקות)
+     * סיום
      */
+    finish() {
+        this.state.isActive = false;
+        this.state.isShowingNotification = false;
+        this.state.waitingForUserAction = false;
+        sessionStorage.setItem(this.config.sessionKey, 'true');
+
+        if (location.hash.includes('notification')) {
+            history.replaceState(null, '', location.pathname + location.search);
+        }
+
+        if (typeof updateMyNotificationsCount === 'function') {
+            updateMyNotificationsCount();
+        }
+    },
+
+    skipAll() {
+        NotificationTemplates.callbacks.onClose = null;
+        this.state.queue = [];
+        this.finish();
+        if (NotificationTemplates.activeModal) {
+            NotificationTemplates.activeModal.remove();
+            NotificationTemplates.activeModal = null;
+        }
+    },
+
     reset() {
         sessionStorage.removeItem(this.config.sessionKey);
-        this.state.queue = [];
-        this.state.currentIndex = 0;
-        this.state.isActive = false;
-        this.state.historyStateAdded = false;
-        console.log('[LoginNotifications] Reset');
+        this.state = {
+            isActive: false,
+            queue: [],
+            currentIndex: 0,
+            isShowingNotification: false,
+            waitingForUserAction: false
+        };
     }
 };
 
-// אתחול אוטומטי
+// אתחול
 (function() {
     function setup() {
-        // המתן ל-event שהתבניות מוכנות
         let initialized = false;
-
         const initOnce = () => {
             if (initialized) return;
             initialized = true;
             LoginNotifications.init();
         };
 
-        // מאזין ל-event
         window.addEventListener('notificationTemplatesReady', () => {
             setTimeout(initOnce, 500);
         });
 
-        // fallback
         setTimeout(initOnce, 3000);
     }
 

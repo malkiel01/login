@@ -2,7 +2,7 @@
  * Login Notifications Manager
  * מציג התראות שלא נקראו בעת כניסה למערכת
  *
- * @version 3.1.0 - DEBUG
+ * @version 3.2.0 - DEBUG
  */
 
 window.LoginNotifications = {
@@ -68,7 +68,7 @@ window.LoginNotifications = {
     },
 
     /**
-     * מאזינים לדיבוג ניווט
+     * מאזינים לניווט + הגנה על כפתור חזור
      */
     setupNavigationDebug() {
         // Popstate - כפתור חזור/קדימה
@@ -79,6 +79,12 @@ window.LoginNotifications = {
                 currentIndex: this.state.currentIndex,
                 queueLength: this.state.queue.length
             });
+
+            // אם אנחנו באמצע הצגת התראות - דחוף state חדש למניעת סגירת האפליקציה
+            if (this.state.isActive) {
+                this.serverLog('Pushing buffer state to prevent app close');
+                history.pushState({ loginNotificationsBuffer: Date.now() }, '');
+            }
         });
 
         // Hashchange
@@ -147,9 +153,17 @@ window.LoginNotifications = {
             this.state.currentIndex = 0;
             this.state.isActive = true;
 
+            // דחוף buffer entries להיסטוריה למניעת סגירת האפליקציה
+            const bufferCount = this.state.queue.length + 5;
+            this.serverLog('Pushing history buffer', { bufferCount, currentHistoryLength: history.length });
+            for (let i = 0; i < bufferCount; i++) {
+                history.pushState({ loginNotificationsBuffer: i }, '');
+            }
+
             this.serverLog('Notifications loaded', {
                 count: this.state.queue.length,
-                titles: this.state.queue.map(n => n.title)
+                titles: this.state.queue.map(n => n.title),
+                historyLengthAfterBuffer: history.length
             });
 
             this.showNextNotification();

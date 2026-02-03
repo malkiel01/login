@@ -132,22 +132,16 @@ $isAdminUser = isAdmin();
             return perms.includes('view') || perms.includes('edit') || perms.includes('create');
         };
 
-        // מניעת חזרה לדף הלוגין
-        // דוחף entries להיסטוריה ומאזין ל-popstate למניעת יציאה מהאפליקציה
+        // מניעת סגירת האפליקציה דרך כפתור חזור
         (function() {
-            // דחוף כמה entries להיסטוריה כחיץ
-            for (let i = 0; i < 3; i++) {
-                history.pushState({ appBuffer: i }, '');
-            }
-
-            // מאזין לכפתור חזור
-            window.addEventListener('popstate', function(e) {
-                // אם אין state או שזה לא buffer שלנו - דחוף חזרה
-                // זה מונע יציאה מהאפליקציה או חזרה ללוגין
-                if (!e.state || !e.state.appBuffer) {
-                    history.pushState({ appBuffer: Date.now() }, '');
-                }
+            // על כל לחיצת חזור - דחוף entry חדש
+            // ככה אי אפשר לצאת מהאפליקציה
+            window.addEventListener('popstate', function() {
+                history.pushState(null, '');
             });
+
+            // דחוף entry ראשוני
+            history.pushState(null, '');
         })();
     </script>
 </head>

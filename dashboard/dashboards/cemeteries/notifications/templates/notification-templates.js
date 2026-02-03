@@ -205,6 +205,8 @@ window.NotificationTemplates = {
 };
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => NotificationTemplates.init());
+} else {
     NotificationTemplates.init();
-});
+}

@@ -33,6 +33,7 @@
             autoDismiss: options.autoDismiss ?? true,
             autoDismissDelay: options.autoDismissDelay ?? 5000,
             showCloseButton: options.showCloseButton ?? true,
+            showCounter: options.showCounter ?? null, // מונה התראות (1/5)
             actionButton: options.actionButton ?? null, // { text: 'פתח', onClick: function }
             ...options
         };
@@ -43,6 +44,9 @@
         overlay.innerHTML = `
             <div class="info-notification-container">
                 <div class="info-notification-card">
+                    ${config.showCounter ? `
+                    <span class="info-notification-counter">${config.showCounter}</span>
+                    ` : ''}
                     ${config.showCloseButton ? `
                     <button class="info-notification-close" aria-label="סגור">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -296,6 +300,24 @@
                 .info-notification-card {
                     border-radius: 20px;
                 }
+            }
+
+            /* Counter badge */
+            .info-notification-counter {
+                position: absolute;
+                top: 16px;
+                left: 60px;
+                background: var(--primary-color, #667eea);
+                color: white;
+                font-size: 12px;
+                font-weight: 600;
+                padding: 4px 10px;
+                border-radius: 12px;
+            }
+
+            [dir="rtl"] .info-notification-counter {
+                left: auto;
+                right: 60px;
             }
         `;
         document.head.appendChild(style);

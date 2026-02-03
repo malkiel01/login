@@ -532,7 +532,7 @@
                         WHERE isActive = 1";
                 $params = [];
 
-                // תנאי: לקוחות ללא רכישה וללא קבורה (או הלקוח הנוכחי)
+                // תנאי: לקוחות ללא רכישה וללא קבורה ולא ממתינים לאישור (או הלקוח הנוכחי)
                 if ($currentClient) {
                     $sql .= " AND (
                         (
@@ -546,6 +546,7 @@
                                 WHERE b.clientId = customers.unicId
                                 AND b.isActive = 1
                             )
+                            AND statusCustomer NOT IN (4, 5)
                         )
                         OR unicId = :currentClient
                     )";
@@ -560,7 +561,8 @@
                         SELECT 1 FROM burials b
                         WHERE b.clientId = customers.unicId
                         AND b.isActive = 1
-                    )";
+                    )
+                    AND statusCustomer NOT IN (4, 5)";
                 }
 
                 // חיפוש לפי טקסט
@@ -613,8 +615,9 @@
                         WHERE isActive = 1";
                 $params = [];
 
-                // תנאי: לקוחות ללא קבורה (או הלקוח הנוכחי)
+                // תנאי: לקוחות ללא קבורה ולא ממתינים לאישור (או הלקוח הנוכחי)
                 // לא נפטרים (statusCustomer != 3) - כי אלה כבר נקברו
+                // לא ממתינים (statusCustomer NOT IN (4, 5)) - כי יש להם פעולה ממתינה
                 if ($currentClient) {
                     $sql .= " AND (
                         (
@@ -623,7 +626,7 @@
                                 WHERE b.clientId = customers.unicId
                                 AND b.isActive = 1
                             )
-                            AND (statusCustomer IS NULL OR statusCustomer != 3)
+                            AND (statusCustomer IS NULL OR statusCustomer NOT IN (3, 4, 5))
                         )
                         OR unicId = :currentClient
                     )";
@@ -634,7 +637,7 @@
                         WHERE b.clientId = customers.unicId
                         AND b.isActive = 1
                     )
-                    AND (statusCustomer IS NULL OR statusCustomer != 3)";
+                    AND (statusCustomer IS NULL OR statusCustomer NOT IN (3, 4, 5))";
                 }
 
                 // חיפוש לפי טקסט

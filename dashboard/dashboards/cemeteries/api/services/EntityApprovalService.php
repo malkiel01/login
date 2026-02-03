@@ -793,12 +793,15 @@ class EntityApprovalService
                     $pendingId
                 ]);
 
-                // Update grave and customer status
+                // Update grave status to buried (3)
                 if (!empty($data['graveId'])) {
                     $this->pdo->prepare("UPDATE graves SET graveStatus = 3 WHERE unicId = ?")->execute([$data['graveId']]);
                 }
+
+                // Update customer status from pending burial (5) to buried (3)
                 if (!empty($data['clientId'])) {
-                    $this->pdo->prepare("UPDATE customers SET statusCustomer = 3 WHERE unicId = ?")->execute([$data['clientId']]);
+                    $this->pdo->prepare("UPDATE customers SET statusCustomer = 3 WHERE unicId = ? AND statusCustomer = 5")
+                              ->execute([$data['clientId']]);
                 }
 
                 return ['entityId' => $unicId];

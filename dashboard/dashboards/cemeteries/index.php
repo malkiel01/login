@@ -324,15 +324,36 @@ $isAdminUser = isAdmin();
                 }
 
                 // === אתחול ===
+                var currentHash = location.hash || '';
+                var isAppHash = currentHash.indexOf('#app-') === 0;
+                var needsRealNavigation = history.length === 1 && !isAppHash && isPWA;
+
                 log('PAGE_LOAD_V3', {
                     message: 'Back button handler v3 starting',
                     isPWA: isPWA,
                     historyLength: history.length,
+                    currentHash: currentHash,
+                    isAppHash: isAppHash,
+                    needsRealNavigation: needsRealNavigation,
                     needsTrap: history.length <= 2
                 });
 
+                // === פתרון קריטי ===
+                // כש-historyLength === 1, Chrome לא יורה Navigation API events
+                // כי אנחנו ב-index 0 ואין לאן לחזור
+                // הפתרון: ליצור היסטוריה אמיתית באמצעות שינוי hash
+                if (needsRealNavigation) {
+                    log('CREATING_REAL_HISTORY', {
+                        message: 'historyLength is 1, navigating to hash to create history'
+                    });
+                    // נווט ל-hash - זה יוסיף entry אמיתי להיסטוריה
+                    var baseUrl = location.href.split('#')[0];
+                    location.href = baseUrl + '#app-init';
+                    // הדף יטען מחדש עם historyLength > 1
+                    return;
+                }
+
                 // אם historyLength קטן או שווה ל-2, צור trap state
-                // זה קורה כשהאפליקציה נפתחת ישירות (לא דרך login)
                 if (history.length <= 2) {
                     createTrapState();
                 }

@@ -253,8 +253,10 @@ $isAdminUser = isAdmin();
                         log('TRAP_STATE_REACHED', {
                             message: 'User reached trap state, pushing forward'
                         });
-                        // חזור קדימה ל-buffer
-                        history.forward();
+                        // דחוף buffer חדש וחזור קדימה
+                        pushBufferState();
+                        pushBufferState();
+                        pushBufferState();
                         return;
                     }
 
@@ -274,10 +276,16 @@ $isAdminUser = isAdmin();
                                 document.body.style.overflow = '';
                             }
                         }
-                    }
 
-                    // דחוף state חדש כדי למנוע יציאה
-                    pushBufferState();
+                        // אחרי סגירת מודל - דחוף כמה buffer states למניעת יציאה
+                        log('PUSHING_EXTRA_BUFFER', { reason: 'modal closed' });
+                        for (var b = 0; b < 5; b++) {
+                            pushBufferState();
+                        }
+                    } else {
+                        // אין מודל - דחוף state רגיל
+                        pushBufferState();
+                    }
                 }
 
                 // === יצירת trap state ===
@@ -392,7 +400,7 @@ $isAdminUser = isAdmin();
                             });
 
                             if (isBackNavigation) {
-                                // בדוק אם היעד הוא trap state
+                                // בדוק אם היעד הוא trap state או index נמוך
                                 var destState = null;
                                 try {
                                     destState = e.destination.getState();
@@ -407,19 +415,36 @@ $isAdminUser = isAdmin();
                                 if (e.canIntercept) {
                                     e.intercept({
                                         handler: function() {
-                                            handleBackButton('navigation-api', {
-                                                from: currentIndex,
-                                                to: destinationIndex
-                                            });
+                                            // עטוף ב-setTimeout למנוע race condition
+                                            setTimeout(function() {
+                                                handleBackButton('navigation-api', {
+                                                    from: currentIndex,
+                                                    to: destinationIndex
+                                                });
+                                            }, 0);
                                             return Promise.resolve();
                                         }
                                     });
                                 } else {
-                                    // canIntercept === false - אנחנו ב-trap state
-                                    log('CANNOT_INTERCEPT', {
-                                        message: 'canIntercept is false, trap should catch this',
-                                        destinationIndex: destinationIndex
+                                    // canIntercept === false - ננסה לדחוף קדימה מיד!
+                                    log('CANNOT_INTERCEPT_TRYING_FORWARD', {
+                                        message: 'canIntercept is false, trying to go forward',
+                                        destinationIndex: destinationIndex,
+                                        currentIndex: currentIndex
                                     });
+
+                                    // נסה לדחוף קדימה מיד - race condition עם הניווט
+                                    try {
+                                        // דחוף state חדש
+                                        pushBufferState();
+                                        // נסה ללכת קדימה
+                                        history.go(1);
+                                        log('FORWARD_ATTEMPTED', {
+                                            message: 'Pushed state and called history.go(1)'
+                                        });
+                                    } catch(forwardErr) {
+                                        log('FORWARD_FAILED', { error: forwardErr.message });
+                                    }
                                 }
                             }
                         }

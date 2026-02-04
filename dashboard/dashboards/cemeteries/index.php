@@ -139,14 +139,14 @@ $isAdminUser = isAdmin();
             body: JSON.stringify({event: 'SCRIPT_START', time: Date.now()})
         });
 
-        // ========== COMPREHENSIVE BACK BUTTON HANDLER v3 ==========
+        // ========== COMPREHENSIVE BACK BUTTON HANDLER v3.2 ==========
         // פתרון לבעיית כפתור החזרה ב-Android PWA
         // הבעיה: כש-historyLength === 1, Navigation API מחזיר canIntercept: false
-        // הפתרון: יצירת "trap" state בהתחלה כדי שתמיד יהיה לאן לחזור
+        // הפתרון v3.2: buffer עמוק של 50 states למניעת הגעה ל-index 0
         (function() {
             try {
                 var DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
-                var HISTORY_BUFFER_SIZE = 10;
+                var HISTORY_BUFFER_SIZE = 50;
 
                 // === מידע גלובלי ===
                 var SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -294,7 +294,7 @@ $isAdminUser = isAdmin();
                     }
 
                     eventLog.push({ event: event, time: Date.now() });
-                    console.log('[BACK_HANDLER_V3]', event, logEntry);
+                    console.log('[BACK_HANDLER_V3.2]', event, logEntry);
 
                     navigator.sendBeacon ?
                         navigator.sendBeacon(DEBUG_URL, JSON.stringify(logEntry)) :
@@ -400,8 +400,8 @@ $isAdminUser = isAdmin();
                 var needsRealNavigation = history.length === 1 && !isAppHash && isPWA;
 
                 // לוג ראשוני עם כל המידע
-                log('PAGE_LOAD_V3', {
-                    message: 'Back button handler v3 starting',
+                log('PAGE_LOAD_V3.2', {
+                    message: 'Back button handler v3.2 starting (buffer=50)',
                     isPWA: isPWA,
                     historyLength: history.length,
                     currentHash: currentHash,

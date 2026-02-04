@@ -132,24 +132,19 @@ $isAdminUser = isAdmin();
             return perms.includes('view') || perms.includes('edit') || perms.includes('create');
         };
 
-        // ========== DEBUG NAVIGATION ==========
+        // ========== BACK BUTTON HANDLER ==========
         (function() {
             const DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
 
-            // פונקציית לוג לשרת
             function log(event, data = {}) {
                 const payload = {
-                    source: 'NavigationDebug',
+                    source: 'BackButtonHandler',
                     event: event,
                     data: data,
                     timestamp: new Date().toISOString(),
-                    url: location.href,
-                    hash: location.hash,
-                    historyLength: history.length,
-                    historyState: history.state,
-                    referrer: document.referrer
+                    historyLength: history.length
                 };
-                console.log('[NAV]', event, payload);
+                console.log('[BACK]', event, payload);
                 fetch(DEBUG_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -157,59 +152,39 @@ $isAdminUser = isAdmin();
                 }).catch(() => {});
             }
 
-            // === טעינת דף ===
-            log('PAGE_LOAD', { readyState: document.readyState });
+            // דחוף state התחלתי אחד
+            history.pushState({ app: 'cemeteries' }, '');
+            log('INIT', { historyLength: history.length });
 
-            // === POPSTATE - כפתור חזור/קדימה ===
+            // טיפול בכפתור חזור
             window.addEventListener('popstate', function(e) {
                 log('POPSTATE', { state: e.state });
-                // דחוף entry חדש למניעת יציאה
-                history.pushState({ navGuard: Date.now() }, '');
-                log('PUSHED_STATE_AFTER_POPSTATE');
+
+                // בדוק אם יש modal פתוח (התראות או אחר)
+                const notificationModal = document.querySelector('.notification-overlay, .notification-modal, .modal-overlay, [class*="modal"]');
+                const isModalOpen = notificationModal && notificationModal.style.display !== 'none' && document.body.style.overflow === 'hidden';
+
+                if (isModalOpen) {
+                    log('CLOSING_MODAL');
+                    // סגור את ה-modal
+                    if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
+                        NotificationTemplates.close();
+                    } else if (notificationModal) {
+                        notificationModal.remove();
+                        document.body.style.overflow = '';
+                    }
+                } else {
+                    log('NO_MODAL_OPEN');
+                }
+
+                // תמיד דחוף state חדש - למנוע יציאה מהאפליקציה
+                history.pushState({ app: 'cemeteries', t: Date.now() }, '');
+                log('PUSHED_STATE');
             });
 
-            // === HASHCHANGE ===
-            window.addEventListener('hashchange', function(e) {
-                log('HASHCHANGE', { oldURL: e.oldURL, newURL: e.newURL });
-            });
-
-            // === BEFOREUNLOAD - לפני סגירה ===
-            window.addEventListener('beforeunload', function(e) {
-                log('BEFOREUNLOAD');
-            });
-
-            // === PAGEHIDE ===
-            window.addEventListener('pagehide', function(e) {
-                log('PAGEHIDE', { persisted: e.persisted });
-            });
-
-            // === PAGESHOW ===
-            window.addEventListener('pageshow', function(e) {
-                log('PAGESHOW', { persisted: e.persisted });
-            });
-
-            // === VISIBILITYCHANGE ===
-            document.addEventListener('visibilitychange', function() {
-                log('VISIBILITY', { state: document.visibilityState });
-            });
-
-            // === FOCUS/BLUR ===
-            window.addEventListener('focus', function() {
-                log('WINDOW_FOCUS');
-            });
-            window.addEventListener('blur', function() {
-                log('WINDOW_BLUR');
-            });
-
-            // דחוף מספר entries כחיץ - ככה צריך ללחוץ חזור הרבה פעמים כדי לצאת
-            // מספר גדול (20) כדי להתמודד עם entries שנוצרו מטופס הלוגין
-            const BUFFER_COUNT = 20;
-            for (let i = 0; i < BUFFER_COUNT; i++) {
-                history.pushState({ navGuard: 'buffer_' + i }, '');
-            }
-            log('INITIAL_BUFFER_PUSHED', { count: BUFFER_COUNT, historyLength: history.length });
+            log('HANDLER_READY');
         })();
-        // ========== END DEBUG ==========
+        // ========== END BACK BUTTON HANDLER ==========
     </script>
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">

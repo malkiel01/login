@@ -160,7 +160,70 @@ $isAdminUser = isAdmin();
                 var initialHistoryLength = history.length;
                 var trapStateCreated = false;
 
-                // === פונקציות עזר ===
+                // === פונקציות עזר - דיבוג מורחב ===
+
+                // מידע מלא על Navigation API
+                function getNavigationAPIInfo() {
+                    try {
+                        if (!('navigation' in window)) {
+                            return { available: false };
+                        }
+                        var nav = window.navigation;
+                        var entries = nav.entries();
+                        var entriesSummary = [];
+                        for (var i = 0; i < Math.min(entries.length, 20); i++) {
+                            var entry = entries[i];
+                            entriesSummary.push({
+                                index: entry.index,
+                                url: entry.url ? entry.url.split('/').pop() : 'N/A', // רק שם הקובץ
+                                key: entry.key ? entry.key.substring(0, 8) : 'N/A',
+                                sameDocument: entry.sameDocument,
+                                hasState: entry.getState ? !!entry.getState() : false
+                            });
+                        }
+                        return {
+                            available: true,
+                            currentIndex: nav.currentEntry ? nav.currentEntry.index : -1,
+                            currentKey: nav.currentEntry ? nav.currentEntry.key : 'N/A',
+                            currentUrl: nav.currentEntry ? nav.currentEntry.url : 'N/A',
+                            entriesLength: entries.length,
+                            canGoBack: nav.canGoBack,
+                            canGoForward: nav.canGoForward,
+                            entries: entriesSummary
+                        };
+                    } catch(e) { return { error: e.message }; }
+                }
+
+                // מידע על איך הדף נטען
+                function getNavigationTiming() {
+                    try {
+                        var perf = performance.getEntriesByType('navigation')[0];
+                        return {
+                            type: perf ? perf.type : 'unknown', // navigate, reload, back_forward, prerender
+                            redirectCount: perf ? perf.redirectCount : 0,
+                            duration: perf ? Math.round(perf.duration) : 0
+                        };
+                    } catch(e) { return { error: e.message }; }
+                }
+
+                // מידע מורחב על PWA
+                function getPWAInfo() {
+                    try {
+                        return {
+                            standalone: window.matchMedia('(display-mode: standalone)').matches,
+                            fullscreen: window.matchMedia('(display-mode: fullscreen)').matches,
+                            minimalUI: window.matchMedia('(display-mode: minimal-ui)').matches,
+                            browser: window.matchMedia('(display-mode: browser)').matches,
+                            navigatorStandalone: window.navigator.standalone === true,
+                            referrer: document.referrer || 'none',
+                            documentURL: location.href,
+                            hash: location.hash || 'none',
+                            pathname: location.pathname,
+                            isSecure: location.protocol === 'https:'
+                        };
+                    } catch(e) { return { error: e.message }; }
+                }
+
                 function getEnvironmentInfo() {
                     try {
                         return {
@@ -208,19 +271,27 @@ $isAdminUser = isAdmin();
                     } catch(e) { return { error: e.message }; }
                 }
 
-                // === פונקציית לוג ===
-                function log(event, eventData) {
+                // === פונקציית לוג מורחבת ===
+                function log(event, eventData, includeFullNavInfo) {
                     eventData = eventData || {};
                     var logEntry = {
                         sessionId: SESSION_ID,
                         eventNumber: eventLog.length + 1,
                         event: event,
                         timestamp: new Date().toISOString(),
+                        msSincePageLoad: Date.now() - PAGE_LOAD_TIME,
                         eventData: eventData,
                         history: getHistoryInfo(),
                         modals: getModalInfo(),
-                        environment: getEnvironmentInfo()
+                        environment: getEnvironmentInfo(),
+                        pwa: getPWAInfo(),
+                        timing: getNavigationTiming()
                     };
+
+                    // הוסף מידע מלא על Navigation API רק כשצריך (זה הרבה data)
+                    if (includeFullNavInfo) {
+                        logEntry.navigationAPI = getNavigationAPIInfo();
+                    }
 
                     eventLog.push({ event: event, time: Date.now() });
                     console.log('[BACK_HANDLER_V3]', event, logEntry);
@@ -328,6 +399,7 @@ $isAdminUser = isAdmin();
                 var isAppHash = currentHash.indexOf('#app-') === 0;
                 var needsRealNavigation = history.length === 1 && !isAppHash && isPWA;
 
+                // לוג ראשוני עם כל המידע
                 log('PAGE_LOAD_V3', {
                     message: 'Back button handler v3 starting',
                     isPWA: isPWA,
@@ -335,7 +407,31 @@ $isAdminUser = isAdmin();
                     currentHash: currentHash,
                     isAppHash: isAppHash,
                     needsRealNavigation: needsRealNavigation,
-                    needsTrap: history.length <= 2
+                    needsTrap: history.length <= 2,
+                    locationHref: location.href,
+                    documentReferrer: document.referrer || 'none'
+                }, true); // true = כולל מידע מלא על Navigation API
+
+                // === רישום hashchange listener מוקדם ===
+                // חשוב: נרשם לפני כל דבר אחר כדי לתפוס את ה-hashchange
+                window.addEventListener('hashchange', function(e) {
+                    log('HASHCHANGE_DETECTED', {
+                        oldURL: e.oldURL,
+                        newURL: e.newURL,
+                        oldHash: e.oldURL ? e.oldURL.split('#')[1] || 'none' : 'none',
+                        newHash: e.newURL ? e.newURL.split('#')[1] || 'none' : 'none',
+                        historyLengthAfter: history.length
+                    }, true);
+                });
+
+                // === רישום error listener ===
+                window.addEventListener('error', function(e) {
+                    log('JS_ERROR', {
+                        message: e.message,
+                        filename: e.filename,
+                        lineno: e.lineno,
+                        colno: e.colno
+                    });
                 });
 
                 // === פתרון קריטי ===
@@ -344,14 +440,58 @@ $isAdminUser = isAdmin();
                 // הפתרון: ליצור היסטוריה אמיתית באמצעות שינוי hash
                 if (needsRealNavigation) {
                     log('CREATING_REAL_HISTORY', {
-                        message: 'historyLength is 1, navigating to hash to create history'
-                    });
+                        message: 'historyLength is 1, navigating to hash to create history',
+                        currentUrl: location.href,
+                        targetUrl: location.href.split('#')[0] + '#app-init'
+                    }, true);
+
+                    // הוסף listener ל-hashchange לפני הניווט
+                    var hashChangeHandler = function(e) {
+                        log('HASH_NAVIGATION_COMPLETE', {
+                            message: 'Hash navigation completed',
+                            oldURL: e.oldURL,
+                            newURL: e.newURL,
+                            newHistoryLength: history.length
+                        }, true);
+                        // הסר את ה-listener
+                        window.removeEventListener('hashchange', hashChangeHandler);
+                    };
+                    window.addEventListener('hashchange', hashChangeHandler);
+
                     // נווט ל-hash - זה יוסיף entry אמיתי להיסטוריה
                     var baseUrl = location.href.split('#')[0];
                     location.href = baseUrl + '#app-init';
-                    // הדף יטען מחדש עם historyLength > 1
+
+                    log('HASH_NAVIGATION_INITIATED', {
+                        message: 'location.href changed, waiting for hashchange',
+                        newUrl: baseUrl + '#app-init'
+                    });
+
+                    // הדף לא יטען מחדש! hashchange יקרה
+                    // אז נמשיך לאתחול אחרי timeout קצר
+                    setTimeout(function() {
+                        log('TIMEOUT_AFTER_HASH_NAV', {
+                            message: 'Timeout fired after hash navigation',
+                            historyLength: history.length,
+                            currentHash: location.hash
+                        }, true);
+
+                        // עכשיו נמשיך לאתחול
+                        continueInitialization();
+                    }, 100);
+
                     return;
                 }
+
+                // המשך אתחול רגיל
+                continueInitialization();
+
+                function continueInitialization() {
+                    log('CONTINUE_INIT', {
+                        message: 'Continuing initialization',
+                        historyLength: history.length,
+                        currentHash: location.hash
+                    }, true);
 
                 // אם historyLength קטן או שווה ל-2, צור trap state
                 if (history.length <= 2) {
@@ -520,7 +660,9 @@ $isAdminUser = isAdmin();
                 log('HANDLER_V2_READY', {
                     message: 'All event listeners registered',
                     methods: ['popstate', 'hashchange', 'navigation-api', 'beforeunload', 'pagehide']
-                });
+                }, true); // כולל מידע מלא
+
+                } // סוף continueInitialization
 
             } catch(err) {
                 fetch('/dashboard/dashboards/cemeteries/api/debug-log.php', {

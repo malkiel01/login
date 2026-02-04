@@ -132,6 +132,13 @@ $isAdminUser = isAdmin();
             return perms.includes('view') || perms.includes('edit') || perms.includes('create');
         };
 
+        // ========== SIMPLE TEST LOG ==========
+        fetch('/dashboard/dashboards/cemeteries/api/debug-log.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({event: 'SCRIPT_START', time: Date.now()})
+        });
+
         // ========== COMPREHENSIVE BACK BUTTON HANDLER ==========
         (function() {
             const DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';

@@ -132,62 +132,304 @@ $isAdminUser = isAdmin();
             return perms.includes('view') || perms.includes('edit') || perms.includes('create');
         };
 
-        // ========== BACK BUTTON HANDLER ==========
+        // ========== COMPREHENSIVE BACK BUTTON HANDLER ==========
         (function() {
             const DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
 
-            function log(event, data = {}) {
-                const payload = {
-                    source: 'BackButtonHandler',
-                    event: event,
-                    data: data,
-                    timestamp: new Date().toISOString(),
-                    historyLength: history.length
+            // === מידע גלובלי ===
+            const SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const PAGE_LOAD_TIME = Date.now();
+            let backPressCount = 0;
+            let statesPushedLog = []; // רשימת כל ה-states שדחפנו
+            let eventLog = []; // רשימת כל האירועים
+
+            // === פונקציות עזר ===
+            function getEnvironmentInfo() {
+                return {
+                    isPWA: window.matchMedia('(display-mode: standalone)').matches ||
+                           window.navigator.standalone === true,
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    screenSize: window.innerWidth + 'x' + window.innerHeight,
+                    devicePixelRatio: window.devicePixelRatio,
+                    online: navigator.onLine,
+                    visibilityState: document.visibilityState
                 };
-                console.log('[BACK]', event, payload);
+            }
+
+            function getHistoryInfo() {
+                return {
+                    length: history.length,
+                    currentState: history.state,
+                    scrollRestoration: history.scrollRestoration
+                };
+            }
+
+            function getNavigationInfo() {
+                const perf = performance.getEntriesByType('navigation')[0];
+                return {
+                    type: perf ? perf.type : 'unknown', // navigate, reload, back_forward, prerender
+                    referrer: document.referrer,
+                    url: location.href,
+                    pathname: location.pathname,
+                    hash: location.hash
+                };
+            }
+
+            function getCacheInfo() {
+                // Session Storage
+                const sessionStorageKeys = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    sessionStorageKeys.push({
+                        key: key,
+                        value: sessionStorage.getItem(key)?.substring(0, 100) // רק 100 תווים ראשונים
+                    });
+                }
+
+                // Local Storage
+                const localStorageKeys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    localStorageKeys.push({
+                        key: key,
+                        valueLength: localStorage.getItem(key)?.length || 0
+                    });
+                }
+
+                // Service Worker
+                const swInfo = {
+                    supported: 'serviceWorker' in navigator,
+                    controller: navigator.serviceWorker?.controller ? {
+                        state: navigator.serviceWorker.controller.state,
+                        scriptURL: navigator.serviceWorker.controller.scriptURL
+                    } : null
+                };
+
+                // Performance cache info
+                const perfEntries = performance.getEntriesByType('resource').slice(-10); // last 10
+                const cacheHits = perfEntries.filter(e => e.transferSize === 0).length;
+
+                return {
+                    sessionStorage: {
+                        itemCount: sessionStorage.length,
+                        items: sessionStorageKeys
+                    },
+                    localStorage: {
+                        itemCount: localStorage.length,
+                        items: localStorageKeys
+                    },
+                    serviceWorker: swInfo,
+                    performanceCache: {
+                        recentResourcesCount: perfEntries.length,
+                        cacheHitsCount: cacheHits,
+                        cacheHitRate: perfEntries.length > 0 ?
+                            ((cacheHits / perfEntries.length) * 100).toFixed(1) + '%' : 'N/A'
+                    },
+                    bfcache: {
+                        // Check if page might be in bfcache
+                        wasRestoredFromBfcache: performance.getEntriesByType('navigation')[0]?.type === 'back_forward'
+                    }
+                };
+            }
+
+            function getModalInfo() {
+                const hasTemplates = typeof NotificationTemplates !== 'undefined';
+                const activeModal = hasTemplates ? NotificationTemplates.activeModal : null;
+                const domOverlay = document.querySelector('.notification-overlay');
+
+                return {
+                    notificationTemplatesLoaded: hasTemplates,
+                    hasActiveModal: !!activeModal,
+                    activeModalClass: activeModal ? activeModal.className : null,
+                    domOverlayFound: !!domOverlay,
+                    domOverlayVisible: domOverlay ? domOverlay.offsetParent !== null : false,
+                    bodyOverflow: document.body.style.overflow,
+                    loginNotificationsActive: typeof LoginNotifications !== 'undefined' ?
+                        LoginNotifications.state?.isActive : 'not loaded'
+                };
+            }
+
+            function getTimingInfo() {
+                const now = Date.now();
+                const lastState = statesPushedLog[statesPushedLog.length - 1];
+                return {
+                    currentTime: new Date(now).toISOString(),
+                    currentTimeMs: now,
+                    pageLoadTime: new Date(PAGE_LOAD_TIME).toISOString(),
+                    timeSincePageLoad: ((now - PAGE_LOAD_TIME) / 1000).toFixed(2) + 's',
+                    timeSincePageLoadMs: now - PAGE_LOAD_TIME,
+                    lastStatePushTime: lastState ? new Date(lastState.pushedAt).toISOString() : null,
+                    timeSinceLastPush: lastState ? ((now - lastState.pushedAt) / 1000).toFixed(2) + 's' : null
+                };
+            }
+
+            function getSessionInfo() {
+                return {
+                    sessionId: SESSION_ID,
+                    backPressCount: backPressCount,
+                    totalStatesPushed: statesPushedLog.length,
+                    statesPushed: statesPushedLog.map(s => ({
+                        type: s.type,
+                        pushedAt: new Date(s.pushedAt).toISOString()
+                    }))
+                };
+            }
+
+            // === פונקציית לוג מקיפה ===
+            function log(event, eventData = {}) {
+                const logEntry = {
+                    // מזהים
+                    sessionId: SESSION_ID,
+                    eventNumber: eventLog.length + 1,
+                    event: event,
+
+                    // זמנים
+                    timing: getTimingInfo(),
+
+                    // מידע על האירוע
+                    eventData: eventData,
+
+                    // מידע על היסטוריה
+                    history: getHistoryInfo(),
+
+                    // מידע על session
+                    session: getSessionInfo(),
+
+                    // מידע על modals
+                    modals: getModalInfo(),
+
+                    // מידע על הסביבה
+                    environment: getEnvironmentInfo(),
+
+                    // מידע על ניווט
+                    navigation: getNavigationInfo(),
+
+                    // מידע על קאש
+                    cache: getCacheInfo()
+                };
+
+                eventLog.push({ event, time: Date.now() });
+
+                console.log('[BACK_HANDLER]', event, logEntry);
+
                 fetch(DEBUG_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(() => {});
+                    body: JSON.stringify(logEntry)
+                }).catch(err => console.error('Log failed:', err));
+
+                return logEntry;
             }
 
-            // דחוף state התחלתי אחד
-            history.pushState({ app: 'cemeteries' }, '');
-            log('INIT', { historyLength: history.length });
-
-            // טיפול בכפתור חזור
-            window.addEventListener('popstate', function(e) {
-                log('POPSTATE', { state: e.state });
-
-                // בדוק אם יש modal פתוח - בדיקה ישירה של NotificationTemplates
-                const hasActiveModal = typeof NotificationTemplates !== 'undefined' && NotificationTemplates.activeModal;
-
-                // גם בדיקת DOM כגיבוי
-                const domModal = document.querySelector('.notification-overlay');
-                const isModalOpen = hasActiveModal || (domModal && domModal.offsetParent !== null);
-
-                log('MODAL_CHECK', { hasActiveModal: !!hasActiveModal, domModal: !!domModal, isModalOpen });
-
-                if (isModalOpen) {
-                    log('CLOSING_MODAL');
-                    // סגור את ה-modal
-                    if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
-                        NotificationTemplates.close();
-                    } else if (domModal) {
-                        domModal.remove();
-                        document.body.style.overflow = '';
-                    }
-                } else {
-                    log('NO_MODAL - staying in app');
-                }
-
-                // תמיד דחוף state חדש - למנוע יציאה מהאפליקציה
-                history.pushState({ app: 'cemeteries', t: Date.now() }, '');
-                log('PUSHED_STATE');
+            // === אתחול ===
+            log('PAGE_LOAD', {
+                message: 'Page loaded, starting back button handler'
             });
 
-            log('HANDLER_READY');
+            // דחוף state התחלתי
+            const initialState = {
+                app: 'cemeteries',
+                type: 'initial',
+                pushedAt: Date.now(),
+                sessionId: SESSION_ID
+            };
+            history.pushState(initialState, '');
+            statesPushedLog.push(initialState);
+
+            log('INITIAL_STATE_PUSHED', {
+                state: initialState
+            });
+
+            // === טיפול בכפתור חזור ===
+            window.addEventListener('popstate', function(e) {
+                backPressCount++;
+
+                log('BACK_BUTTON_PRESSED', {
+                    pressNumber: backPressCount,
+                    poppedState: e.state,
+                    message: 'User pressed back button'
+                });
+
+                // בדיקת modal
+                const modalInfo = getModalInfo();
+                const isModalOpen = modalInfo.hasActiveModal ||
+                                   (modalInfo.domOverlayFound && modalInfo.domOverlayVisible);
+
+                if (isModalOpen) {
+                    log('MODAL_DETECTED', {
+                        action: 'will close modal',
+                        modalInfo: modalInfo
+                    });
+
+                    // סגור modal
+                    if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
+                        NotificationTemplates.close();
+                        log('MODAL_CLOSED', { method: 'NotificationTemplates.close()' });
+                    } else {
+                        const overlay = document.querySelector('.notification-overlay');
+                        if (overlay) {
+                            overlay.remove();
+                            document.body.style.overflow = '';
+                            log('MODAL_CLOSED', { method: 'DOM removal' });
+                        }
+                    }
+                } else {
+                    log('NO_MODAL', {
+                        action: 'staying in app',
+                        modalInfo: modalInfo
+                    });
+                }
+
+                // דחוף state חדש
+                const newState = {
+                    app: 'cemeteries',
+                    type: 'after_back_' + backPressCount,
+                    pushedAt: Date.now(),
+                    sessionId: SESSION_ID,
+                    previousState: e.state
+                };
+                history.pushState(newState, '');
+                statesPushedLog.push(newState);
+
+                log('NEW_STATE_PUSHED', {
+                    state: newState,
+                    message: 'Pushed new state to prevent app exit'
+                });
+            });
+
+            // === אירועים נוספים לניטור ===
+            window.addEventListener('beforeunload', function(e) {
+                log('BEFORE_UNLOAD', {
+                    message: 'Page is about to unload - THIS SHOULD NOT HAPPEN!'
+                });
+            });
+
+            window.addEventListener('pagehide', function(e) {
+                log('PAGE_HIDE', {
+                    persisted: e.persisted,
+                    message: e.persisted ? 'Page hidden (bfcache)' : 'Page hidden (no cache)'
+                });
+            });
+
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    log('PAGE_SHOW_FROM_CACHE', {
+                        persisted: e.persisted,
+                        message: 'Page restored from bfcache'
+                    });
+                }
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                log('VISIBILITY_CHANGE', {
+                    state: document.visibilityState
+                });
+            });
+
+            log('HANDLER_READY', {
+                message: 'All event listeners registered'
+            });
         })();
         // ========== END BACK BUTTON HANDLER ==========
     </script>

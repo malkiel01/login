@@ -70,6 +70,9 @@ window.LoginNotifications = {
             this.state.currentIndex = 0;
             this.state.isActive = true;
 
+            // סמן מיד שההתראות הוצגו - למנוע הצגה חוזרת אם הדף נטען מחדש
+            sessionStorage.setItem(this.config.sessionKey, 'true');
+
             console.log('[LoginNotifications] Found', this.state.queue.length, 'notifications');
 
             this.showNextNotification();

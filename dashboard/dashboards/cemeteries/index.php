@@ -160,21 +160,26 @@ $isAdminUser = isAdmin();
             window.addEventListener('popstate', function(e) {
                 log('POPSTATE', { state: e.state });
 
-                // בדוק אם יש modal פתוח (התראות או אחר)
-                const notificationModal = document.querySelector('.notification-overlay, .notification-modal, .modal-overlay, [class*="modal"]');
-                const isModalOpen = notificationModal && notificationModal.style.display !== 'none' && document.body.style.overflow === 'hidden';
+                // בדוק אם יש modal פתוח - בדיקה ישירה של NotificationTemplates
+                const hasActiveModal = typeof NotificationTemplates !== 'undefined' && NotificationTemplates.activeModal;
+
+                // גם בדיקת DOM כגיבוי
+                const domModal = document.querySelector('.notification-overlay');
+                const isModalOpen = hasActiveModal || (domModal && domModal.offsetParent !== null);
+
+                log('MODAL_CHECK', { hasActiveModal: !!hasActiveModal, domModal: !!domModal, isModalOpen });
 
                 if (isModalOpen) {
                     log('CLOSING_MODAL');
                     // סגור את ה-modal
                     if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
                         NotificationTemplates.close();
-                    } else if (notificationModal) {
-                        notificationModal.remove();
+                    } else if (domModal) {
+                        domModal.remove();
                         document.body.style.overflow = '';
                     }
                 } else {
-                    log('NO_MODAL_OPEN');
+                    log('NO_MODAL - staying in app');
                 }
 
                 // תמיד דחוף state חדש - למנוע יציאה מהאפליקציה

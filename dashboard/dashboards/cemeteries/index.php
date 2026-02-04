@@ -139,14 +139,14 @@ $isAdminUser = isAdmin();
             body: JSON.stringify({event: 'SCRIPT_START', time: Date.now()})
         });
 
-        // ========== COMPREHENSIVE BACK BUTTON HANDLER v2 ==========
-        // פתרון משופר לבעיית כפתור החזרה ב-Android PWA
-        // הבעיה: Android PWA לא מפעיל popstate כשלוחצים על כפתור חזרה
-        // הפתרון: שילוב של Buffer היסטוריה + Navigation API + hashchange
+        // ========== COMPREHENSIVE BACK BUTTON HANDLER v3 ==========
+        // פתרון לבעיית כפתור החזרה ב-Android PWA
+        // הבעיה: כש-historyLength === 1, Navigation API מחזיר canIntercept: false
+        // הפתרון: יצירת "trap" state בהתחלה כדי שתמיד יהיה לאן לחזור
         (function() {
             try {
                 var DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
-                var HISTORY_BUFFER_SIZE = 10; // כמות states לדחוף כ-buffer
+                var HISTORY_BUFFER_SIZE = 10;
 
                 // === מידע גלובלי ===
                 var SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -157,6 +157,8 @@ $isAdminUser = isAdmin();
                 var isPWA = window.matchMedia('(display-mode: standalone)').matches ||
                             window.navigator.standalone === true;
                 var currentBufferIndex = 0;
+                var initialHistoryLength = history.length;
+                var trapStateCreated = false;
 
                 // === פונקציות עזר ===
                 function getEnvironmentInfo() {
@@ -169,7 +171,9 @@ $isAdminUser = isAdmin();
                             devicePixelRatio: window.devicePixelRatio,
                             online: navigator.onLine,
                             visibilityState: document.visibilityState,
-                            hasNavigationAPI: 'navigation' in window
+                            hasNavigationAPI: 'navigation' in window,
+                            initialHistoryLength: initialHistoryLength,
+                            trapStateCreated: trapStateCreated
                         };
                     } catch(e) { return { error: e.message }; }
                 }
@@ -180,7 +184,9 @@ $isAdminUser = isAdmin();
                             length: history.length,
                             currentState: history.state,
                             scrollRestoration: history.scrollRestoration,
-                            bufferIndex: currentBufferIndex
+                            bufferIndex: currentBufferIndex,
+                            navigationIndex: 'navigation' in window ? window.navigation.currentEntry.index : 'N/A',
+                            navigationLength: 'navigation' in window ? window.navigation.entries().length : 'N/A'
                         };
                     } catch(e) { return { error: e.message }; }
                 }
@@ -217,9 +223,8 @@ $isAdminUser = isAdmin();
                     };
 
                     eventLog.push({ event: event, time: Date.now() });
-                    console.log('[BACK_HANDLER_V2]', event, logEntry);
+                    console.log('[BACK_HANDLER_V3]', event, logEntry);
 
-                    // שלח לשרת בצורה לא חוסמת
                     navigator.sendBeacon ?
                         navigator.sendBeacon(DEBUG_URL, JSON.stringify(logEntry)) :
                         fetch(DEBUG_URL, {
@@ -233,13 +238,25 @@ $isAdminUser = isAdmin();
                 }
 
                 // === טיפול בכפתור חזור ===
-                function handleBackButton(source) {
+                function handleBackButton(source, stateInfo) {
                     backPressCount++;
 
                     log('BACK_BUTTON_DETECTED', {
                         source: source,
-                        pressNumber: backPressCount
+                        pressNumber: backPressCount,
+                        stateInfo: stateInfo
                     });
+
+                    // בדוק אם הגענו ל-trap state
+                    var currentState = history.state;
+                    if (currentState && currentState.isTrap) {
+                        log('TRAP_STATE_REACHED', {
+                            message: 'User reached trap state, pushing forward'
+                        });
+                        // חזור קדימה ל-buffer
+                        history.forward();
+                        return;
+                    }
 
                     var modalInfo = getModalInfo();
                     var isModalOpen = modalInfo.hasActiveModal ||
@@ -259,8 +276,27 @@ $isAdminUser = isAdmin();
                         }
                     }
 
-                    // תמיד דחוף state חדש כדי למנוע יציאה
+                    // דחוף state חדש כדי למנוע יציאה
                     pushBufferState();
+                }
+
+                // === יצירת trap state ===
+                function createTrapState() {
+                    var trapState = {
+                        app: 'cemeteries',
+                        isTrap: true,
+                        createdAt: Date.now(),
+                        sessionId: SESSION_ID
+                    };
+
+                    // סמן את הדף הנוכחי כ-trap
+                    history.replaceState(trapState, '', location.href);
+                    trapStateCreated = true;
+
+                    log('TRAP_STATE_CREATED', {
+                        message: 'Current page marked as trap state',
+                        historyLength: history.length
+                    });
                 }
 
                 // === דחיפת state לbuffer ===
@@ -268,25 +304,32 @@ $isAdminUser = isAdmin();
                     currentBufferIndex++;
                     var state = {
                         app: 'cemeteries',
+                        isTrap: false,
                         bufferIndex: currentBufferIndex,
                         pushedAt: Date.now(),
                         sessionId: SESSION_ID
                     };
 
-                    // עדכון hash כדי לתפוס גם hashchange
                     var newHash = '#app-' + currentBufferIndex;
                     history.pushState(state, '', newHash);
                     statesPushedLog.push(state);
                 }
 
                 // === אתחול ===
-                log('PAGE_LOAD_V2', {
-                    message: 'Back button handler v2 starting',
+                log('PAGE_LOAD_V3', {
+                    message: 'Back button handler v3 starting',
                     isPWA: isPWA,
-                    historyLength: history.length
+                    historyLength: history.length,
+                    needsTrap: history.length <= 2
                 });
 
-                // דחוף buffer של states התחלתי
+                // אם historyLength קטן או שווה ל-2, צור trap state
+                // זה קורה כשהאפליקציה נפתחת ישירות (לא דרך login)
+                if (history.length <= 2) {
+                    createTrapState();
+                }
+
+                // דחוף buffer של states
                 log('PUSHING_BUFFER', { size: HISTORY_BUFFER_SIZE });
                 for (var i = 0; i < HISTORY_BUFFER_SIZE; i++) {
                     pushBufferState();
@@ -296,45 +339,88 @@ $isAdminUser = isAdmin();
                     currentIndex: currentBufferIndex
                 });
 
-                // === גישה 1: popstate (עבור דפדפנים רגילים) ===
+                // === גישה 1: popstate ===
                 window.addEventListener('popstate', function(e) {
                     log('POPSTATE_EVENT', { state: e.state });
-                    handleBackButton('popstate');
+
+                    // בדוק אם הגענו ל-trap state
+                    if (e.state && e.state.isTrap) {
+                        log('POPSTATE_TRAP_DETECTED', {
+                            message: 'Trap state detected in popstate, going forward'
+                        });
+                        // דחוף buffer חדש ולך קדימה
+                        pushBufferState();
+                        return;
+                    }
+
+                    handleBackButton('popstate', e.state);
                 });
 
-                // === גישה 2: hashchange (fallback) ===
+                // === גישה 2: hashchange ===
                 window.addEventListener('hashchange', function(e) {
                     log('HASHCHANGE_EVENT', {
                         oldURL: e.oldURL,
                         newURL: e.newURL
                     });
-                    // רק אם זה ניווט אחורה (hash קטן יותר)
                     var oldIndex = parseInt((e.oldURL.split('#app-')[1]) || '0');
                     var newIndex = parseInt((e.newURL.split('#app-')[1]) || '0');
                     if (newIndex < oldIndex) {
-                        handleBackButton('hashchange');
+                        handleBackButton('hashchange', { oldIndex: oldIndex, newIndex: newIndex });
                     }
                 });
 
-                // === גישה 3: Navigation API (Chrome 102+) ===
+                // === גישה 3: Navigation API ===
                 if ('navigation' in window) {
-                    log('NAVIGATION_API_AVAILABLE', {});
+                    log('NAVIGATION_API_AVAILABLE', {
+                        currentIndex: window.navigation.currentEntry.index,
+                        entriesLength: window.navigation.entries().length
+                    });
 
                     window.navigation.addEventListener('navigate', function(e) {
-                        // רק אם זה ניווט אחורה ולא ניווט חיצוני
-                        if (e.navigationType === 'traverse' && e.destination.index < window.navigation.currentEntry.index) {
-                            log('NAVIGATION_API_BACK', {
+                        if (e.navigationType === 'traverse') {
+                            var currentIndex = window.navigation.currentEntry.index;
+                            var destinationIndex = e.destination.index;
+                            var isBackNavigation = destinationIndex < currentIndex;
+
+                            log('NAVIGATION_API_TRAVERSE', {
                                 navigationType: e.navigationType,
-                                canIntercept: e.canIntercept
+                                canIntercept: e.canIntercept,
+                                currentIndex: currentIndex,
+                                destinationIndex: destinationIndex,
+                                isBackNavigation: isBackNavigation,
+                                destinationState: e.destination.getState ? e.destination.getState() : 'N/A'
                             });
 
-                            if (e.canIntercept) {
-                                e.intercept({
-                                    handler: function() {
-                                        handleBackButton('navigation-api');
-                                        return Promise.resolve();
-                                    }
-                                });
+                            if (isBackNavigation) {
+                                // בדוק אם היעד הוא trap state
+                                var destState = null;
+                                try {
+                                    destState = e.destination.getState();
+                                } catch(err) {}
+
+                                if (destState && destState.isTrap) {
+                                    log('NAVIGATION_TO_TRAP', {
+                                        message: 'Navigation to trap state detected'
+                                    });
+                                }
+
+                                if (e.canIntercept) {
+                                    e.intercept({
+                                        handler: function() {
+                                            handleBackButton('navigation-api', {
+                                                from: currentIndex,
+                                                to: destinationIndex
+                                            });
+                                            return Promise.resolve();
+                                        }
+                                    });
+                                } else {
+                                    // canIntercept === false - אנחנו ב-trap state
+                                    log('CANNOT_INTERCEPT', {
+                                        message: 'canIntercept is false, trap should catch this',
+                                        destinationIndex: destinationIndex
+                                    });
+                                }
                             }
                         }
                     });

@@ -10,39 +10,21 @@ if (isset($_GET['redirect_to'])) {
 }
 
 // פונקציה לטיפול בהפניה אחרי התחברות מוצלחת
-// משתמש ב-location.replace() כדי שדף הלוגין לא יישאר בהיסטוריה
+// שימוש ב-header() - הדרך הנכונה! לא יוצר entry בהיסטוריה
 function handleLoginRedirect() {
     if (isset($_SESSION['redirect_after_login'])) {
         $redirect = $_SESSION['redirect_after_login'];
         unset($_SESSION['redirect_after_login']);
         $url = $redirect;
     } else {
-        $url = '/dashboard/index.php';
+        // ישירות לבתי קברות - דילוג על dashboard/index.php
+        $url = '/dashboard/dashboards/cemeteries/';
     }
 
-    $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
-
-    // שימוש ב-JavaScript location.replace() במקום header()
-    // ככה דף הלוגין לא נשאר בהיסטוריה ואי אפשר לחזור אליו
-    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<script>
-        // DEBUG: After successful login
-        fetch("/dashboard/dashboards/cemeteries/api/debug-log.php", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                event: "HANDLE_LOGIN_REDIRECT",
-                from: "/auth/login.php (after POST)",
-                to: "' . $safeUrl . '",
-                historyLength: history.length,
-                referrer: document.referrer,
-                timestamp: Date.now()
-            })
-        }).finally(() => {
-            location.replace("' . $safeUrl . '");
-        });
-    </script>';
-    echo '</head><body>מעביר...</body></html>';
+    // HTTP 303 See Other - הדרך הנכונה לredirect אחרי POST
+    // זה אומר לדפדפן: "הבקשה הצליחה, עכשיו לך לכתובת הזו עם GET"
+    // הדפדפן לא ישמור את ה-POST בהיסטוריה!
+    header('Location: ' . $url, true, 303);
     exit;
 }
 

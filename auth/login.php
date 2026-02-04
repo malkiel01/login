@@ -28,33 +28,10 @@ require_once 'token-manager.php'; // Persistent Auth for PWA
 require_once '../push/push-log.php'; // Push notification logging
 // require_once '../debugs/index.php';
 
-// אם המשתמש כבר מחובר, העבר לדף הראשי
-// משתמש ב-JavaScript location.replace() כדי לא להוסיף להיסטוריה
-// (header Location מוסיף להיסטוריה וגורם ללולאה כשלוחצים חזור)
+// אם המשתמש כבר מחובר, העבר לדף הראשי מיידית
+// שימוש ב-header() כי זה קורה ברמת HTTP - המשתמש לא רואה את הדף בכלל!
 if (isset($_SESSION['user_id'])) {
-    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<script>
-        // DEBUG: Already logged in redirect
-        fetch("/dashboard/dashboards/cemeteries/api/debug-log.php", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                event: "LOGIN_ALREADY_AUTHENTICATED",
-                from: "/auth/login.php",
-                to: "/dashboard/index.php",
-                historyLength: history.length,
-                referrer: document.referrer,
-                timestamp: Date.now()
-            })
-        });
-
-        // דחוף buffer states לפני ההפניה - למנוע חזרה לדף הלוגין
-        for (let i = 0; i < 10; i++) {
-            history.pushState({ loginGuard: i }, "");
-        }
-        location.replace("/dashboard/index.php");
-    </script>';
-    echo '</head><body></body></html>';
+    header('Location: /dashboard/dashboards/cemeteries/', true, 302);
     exit;
 }
 

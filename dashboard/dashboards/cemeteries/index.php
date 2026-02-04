@@ -139,30 +139,37 @@ $isAdminUser = isAdmin();
             body: JSON.stringify({event: 'SCRIPT_START', time: Date.now()})
         });
 
-        // ========== COMPREHENSIVE BACK BUTTON HANDLER ==========
+        // ========== COMPREHENSIVE BACK BUTTON HANDLER v2 ==========
+        // פתרון משופר לבעיית כפתור החזרה ב-Android PWA
+        // הבעיה: Android PWA לא מפעיל popstate כשלוחצים על כפתור חזרה
+        // הפתרון: שילוב של Buffer היסטוריה + Navigation API + hashchange
         (function() {
             try {
                 var DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
+                var HISTORY_BUFFER_SIZE = 10; // כמות states לדחוף כ-buffer
 
                 // === מידע גלובלי ===
                 var SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 var PAGE_LOAD_TIME = Date.now();
                 var backPressCount = 0;
-                var statesPushedLog = []; // רשימת כל ה-states שדחפנו
-                var eventLog = []; // רשימת כל האירועים
+                var statesPushedLog = [];
+                var eventLog = [];
+                var isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                            window.navigator.standalone === true;
+                var currentBufferIndex = 0;
 
                 // === פונקציות עזר ===
                 function getEnvironmentInfo() {
                     try {
                         return {
-                            isPWA: window.matchMedia('(display-mode: standalone)').matches ||
-                                   window.navigator.standalone === true,
+                            isPWA: isPWA,
                             userAgent: navigator.userAgent,
                             platform: navigator.platform,
                             screenSize: window.innerWidth + 'x' + window.innerHeight,
                             devicePixelRatio: window.devicePixelRatio,
                             online: navigator.onLine,
-                            visibilityState: document.visibilityState
+                            visibilityState: document.visibilityState,
+                            hasNavigationAPI: 'navigation' in window
                         };
                     } catch(e) { return { error: e.message }; }
                 }
@@ -172,88 +179,8 @@ $isAdminUser = isAdmin();
                         return {
                             length: history.length,
                             currentState: history.state,
-                            scrollRestoration: history.scrollRestoration
-                        };
-                    } catch(e) { return { error: e.message }; }
-                }
-
-                function getNavigationInfo() {
-                    try {
-                        var perf = performance.getEntriesByType('navigation')[0];
-                        return {
-                            type: perf ? perf.type : 'unknown',
-                            referrer: document.referrer,
-                            url: location.href,
-                            pathname: location.pathname,
-                            hash: location.hash
-                        };
-                    } catch(e) { return { error: e.message }; }
-                }
-
-                function getCacheInfo() {
-                    try {
-                        // Session Storage
-                        var sessionStorageKeys = [];
-                        for (var i = 0; i < sessionStorage.length; i++) {
-                            var key = sessionStorage.key(i);
-                            var val = sessionStorage.getItem(key);
-                            sessionStorageKeys.push({
-                                key: key,
-                                value: val ? val.substring(0, 100) : null
-                            });
-                        }
-
-                        // Local Storage
-                        var localStorageKeys = [];
-                        for (var j = 0; j < localStorage.length; j++) {
-                            var lkey = localStorage.key(j);
-                            var lval = localStorage.getItem(lkey);
-                            localStorageKeys.push({
-                                key: lkey,
-                                valueLength: lval ? lval.length : 0
-                            });
-                        }
-
-                        // Service Worker
-                        var swInfo = {
-                            supported: 'serviceWorker' in navigator,
-                            controller: null
-                        };
-                        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                            swInfo.controller = {
-                                state: navigator.serviceWorker.controller.state,
-                                scriptURL: navigator.serviceWorker.controller.scriptURL
-                            };
-                        }
-
-                        // Performance cache info
-                        var perfEntries = performance.getEntriesByType('resource').slice(-10);
-                        var cacheHits = 0;
-                        for (var k = 0; k < perfEntries.length; k++) {
-                            if (perfEntries[k].transferSize === 0) cacheHits++;
-                        }
-
-                        var navEntry = performance.getEntriesByType('navigation')[0];
-
-                        return {
-                            sessionStorage: {
-                                itemCount: sessionStorage.length,
-                                items: sessionStorageKeys
-                            },
-                            localStorage: {
-                                itemCount: localStorage.length,
-                                items: localStorageKeys
-                            },
-                            serviceWorker: swInfo,
-                            performanceCache: {
-                                recentResourcesCount: perfEntries.length,
-                                cacheHitsCount: cacheHits,
-                                cacheHitRate: perfEntries.length > 0 ?
-                                    ((cacheHits / perfEntries.length) * 100).toFixed(1) + '%' : 'N/A'
-                            },
-                            bfcache: {
-                                wasRestoredFromBfcache: navEntry ? navEntry.type === 'back_forward' : false
-                            }
+                            scrollRestoration: history.scrollRestoration,
+                            bufferIndex: currentBufferIndex
                         };
                     } catch(e) { return { error: e.message }; }
                 }
@@ -270,203 +197,214 @@ $isAdminUser = isAdmin();
                             activeModalClass: activeModal ? activeModal.className : null,
                             domOverlayFound: !!domOverlay,
                             domOverlayVisible: domOverlay ? domOverlay.offsetParent !== null : false,
-                            bodyOverflow: document.body.style.overflow,
-                            loginNotificationsActive: typeof LoginNotifications !== 'undefined' && LoginNotifications.state ?
-                                LoginNotifications.state.isActive : 'not loaded'
+                            bodyOverflow: document.body.style.overflow
                         };
                     } catch(e) { return { error: e.message }; }
                 }
 
-                function getTimingInfo() {
-                    try {
-                        var now = Date.now();
-                        var lastState = statesPushedLog[statesPushedLog.length - 1];
-                        return {
-                            currentTime: new Date(now).toISOString(),
-                            currentTimeMs: now,
-                            pageLoadTime: new Date(PAGE_LOAD_TIME).toISOString(),
-                            timeSincePageLoad: ((now - PAGE_LOAD_TIME) / 1000).toFixed(2) + 's',
-                            timeSincePageLoadMs: now - PAGE_LOAD_TIME,
-                            lastStatePushTime: lastState ? new Date(lastState.pushedAt).toISOString() : null,
-                            timeSinceLastPush: lastState ? ((now - lastState.pushedAt) / 1000).toFixed(2) + 's' : null
-                        };
-                    } catch(e) { return { error: e.message }; }
-                }
-
-                function getSessionInfo() {
-                    try {
-                        var mapped = [];
-                        for (var i = 0; i < statesPushedLog.length; i++) {
-                            var s = statesPushedLog[i];
-                            mapped.push({
-                                type: s.type,
-                                pushedAt: new Date(s.pushedAt).toISOString()
-                            });
-                        }
-                        return {
-                            sessionId: SESSION_ID,
-                            backPressCount: backPressCount,
-                            totalStatesPushed: statesPushedLog.length,
-                            statesPushed: mapped
-                        };
-                    } catch(e) { return { error: e.message }; }
-                }
-
-                // === פונקציית לוג מקיפה ===
+                // === פונקציית לוג ===
                 function log(event, eventData) {
                     eventData = eventData || {};
                     var logEntry = {
                         sessionId: SESSION_ID,
                         eventNumber: eventLog.length + 1,
                         event: event,
-                        timing: getTimingInfo(),
+                        timestamp: new Date().toISOString(),
                         eventData: eventData,
                         history: getHistoryInfo(),
-                        session: getSessionInfo(),
                         modals: getModalInfo(),
-                        environment: getEnvironmentInfo(),
-                        navigation: getNavigationInfo(),
-                        cache: getCacheInfo()
+                        environment: getEnvironmentInfo()
                     };
 
                     eventLog.push({ event: event, time: Date.now() });
+                    console.log('[BACK_HANDLER_V2]', event, logEntry);
 
-                    console.log('[BACK_HANDLER]', event, logEntry);
-
-                    fetch(DEBUG_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(logEntry)
-                    }).catch(function(err) { console.error('Log failed:', err); });
+                    // שלח לשרת בצורה לא חוסמת
+                    navigator.sendBeacon ?
+                        navigator.sendBeacon(DEBUG_URL, JSON.stringify(logEntry)) :
+                        fetch(DEBUG_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(logEntry),
+                            keepalive: true
+                        }).catch(function() {});
 
                     return logEntry;
                 }
 
-                // === אתחול ===
-                log('PAGE_LOAD', {
-                    message: 'Page loaded, starting back button handler'
-                });
-
-                // דחוף state התחלתי
-                var initialState = {
-                    app: 'cemeteries',
-                    type: 'initial',
-                    pushedAt: Date.now(),
-                    sessionId: SESSION_ID
-                };
-                history.pushState(initialState, '');
-                statesPushedLog.push(initialState);
-
-                log('INITIAL_STATE_PUSHED', {
-                    state: initialState
-                });
-
                 // === טיפול בכפתור חזור ===
-                window.addEventListener('popstate', function(e) {
+                function handleBackButton(source) {
                     backPressCount++;
 
-                    log('BACK_BUTTON_PRESSED', {
-                        pressNumber: backPressCount,
-                        poppedState: e.state,
-                        message: 'User pressed back button'
+                    log('BACK_BUTTON_DETECTED', {
+                        source: source,
+                        pressNumber: backPressCount
                     });
 
-                    // בדיקת modal
                     var modalInfo = getModalInfo();
                     var isModalOpen = modalInfo.hasActiveModal ||
                                        (modalInfo.domOverlayFound && modalInfo.domOverlayVisible);
 
                     if (isModalOpen) {
-                        log('MODAL_DETECTED', {
-                            action: 'will close modal',
-                            modalInfo: modalInfo
-                        });
+                        log('CLOSING_MODAL', { modalInfo: modalInfo });
 
-                        // סגור modal
                         if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
                             NotificationTemplates.close();
-                            log('MODAL_CLOSED', { method: 'NotificationTemplates.close()' });
                         } else {
                             var overlay = document.querySelector('.notification-overlay');
                             if (overlay) {
                                 overlay.remove();
                                 document.body.style.overflow = '';
-                                log('MODAL_CLOSED', { method: 'DOM removal' });
                             }
                         }
-                    } else {
-                        log('NO_MODAL', {
-                            action: 'staying in app',
-                            modalInfo: modalInfo
-                        });
                     }
 
-                    // דחוף state חדש
-                    var newState = {
+                    // תמיד דחוף state חדש כדי למנוע יציאה
+                    pushBufferState();
+                }
+
+                // === דחיפת state לbuffer ===
+                function pushBufferState() {
+                    currentBufferIndex++;
+                    var state = {
                         app: 'cemeteries',
-                        type: 'after_back_' + backPressCount,
+                        bufferIndex: currentBufferIndex,
                         pushedAt: Date.now(),
-                        sessionId: SESSION_ID,
-                        previousState: e.state
+                        sessionId: SESSION_ID
                     };
-                    history.pushState(newState, '');
-                    statesPushedLog.push(newState);
 
-                    log('NEW_STATE_PUSHED', {
-                        state: newState,
-                        message: 'Pushed new state to prevent app exit'
-                    });
+                    // עדכון hash כדי לתפוס גם hashchange
+                    var newHash = '#app-' + currentBufferIndex;
+                    history.pushState(state, '', newHash);
+                    statesPushedLog.push(state);
+                }
+
+                // === אתחול ===
+                log('PAGE_LOAD_V2', {
+                    message: 'Back button handler v2 starting',
+                    isPWA: isPWA,
+                    historyLength: history.length
                 });
 
-                // === אירועים נוספים לניטור ===
+                // דחוף buffer של states התחלתי
+                log('PUSHING_BUFFER', { size: HISTORY_BUFFER_SIZE });
+                for (var i = 0; i < HISTORY_BUFFER_SIZE; i++) {
+                    pushBufferState();
+                }
+                log('BUFFER_READY', {
+                    historyLength: history.length,
+                    currentIndex: currentBufferIndex
+                });
+
+                // === גישה 1: popstate (עבור דפדפנים רגילים) ===
+                window.addEventListener('popstate', function(e) {
+                    log('POPSTATE_EVENT', { state: e.state });
+                    handleBackButton('popstate');
+                });
+
+                // === גישה 2: hashchange (fallback) ===
+                window.addEventListener('hashchange', function(e) {
+                    log('HASHCHANGE_EVENT', {
+                        oldURL: e.oldURL,
+                        newURL: e.newURL
+                    });
+                    // רק אם זה ניווט אחורה (hash קטן יותר)
+                    var oldIndex = parseInt((e.oldURL.split('#app-')[1]) || '0');
+                    var newIndex = parseInt((e.newURL.split('#app-')[1]) || '0');
+                    if (newIndex < oldIndex) {
+                        handleBackButton('hashchange');
+                    }
+                });
+
+                // === גישה 3: Navigation API (Chrome 102+) ===
+                if ('navigation' in window) {
+                    log('NAVIGATION_API_AVAILABLE', {});
+
+                    window.navigation.addEventListener('navigate', function(e) {
+                        // רק אם זה ניווט אחורה ולא ניווט חיצוני
+                        if (e.navigationType === 'traverse' && e.destination.index < window.navigation.currentEntry.index) {
+                            log('NAVIGATION_API_BACK', {
+                                navigationType: e.navigationType,
+                                canIntercept: e.canIntercept
+                            });
+
+                            if (e.canIntercept) {
+                                e.intercept({
+                                    handler: function() {
+                                        handleBackButton('navigation-api');
+                                        return Promise.resolve();
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // === גישה 4: מניעת beforeunload ===
                 window.addEventListener('beforeunload', function(e) {
-                    log('BEFORE_UNLOAD', {
-                        message: 'Page is about to unload - THIS SHOULD NOT HAPPEN!'
-                    });
+                    log('BEFORE_UNLOAD', { message: 'Attempting to prevent unload' });
+
+                    // בדוק אם יש modal פתוח - אם כן, נסה למנוע יציאה
+                    var modalInfo = getModalInfo();
+                    if (modalInfo.hasActiveModal || modalInfo.domOverlayFound) {
+                        e.preventDefault();
+                        e.returnValue = '';
+                        return '';
+                    }
                 });
 
+                // === גישה 5: pagehide - נסיון אחרון ===
                 window.addEventListener('pagehide', function(e) {
                     log('PAGE_HIDE', {
                         persisted: e.persisted,
-                        message: e.persisted ? 'Page hidden (bfcache)' : 'Page hidden (no cache)'
+                        message: e.persisted ? 'bfcache' : 'no cache'
                     });
                 });
 
+                // === שחזור מ-bfcache ===
                 window.addEventListener('pageshow', function(e) {
                     if (e.persisted) {
-                        log('PAGE_SHOW_FROM_CACHE', {
-                            persisted: e.persisted,
-                            message: 'Page restored from bfcache'
-                        });
+                        log('PAGE_RESTORED', { message: 'Restored from bfcache' });
+                        // דחוף buffer מחדש
+                        for (var j = 0; j < HISTORY_BUFFER_SIZE; j++) {
+                            pushBufferState();
+                        }
                     }
                 });
 
+                // === visibility change ===
                 document.addEventListener('visibilitychange', function() {
-                    log('VISIBILITY_CHANGE', {
-                        state: document.visibilityState
-                    });
+                    if (document.visibilityState === 'visible') {
+                        log('VISIBILITY_VISIBLE', {});
+                        // וודא שיש מספיק buffer
+                        if (currentBufferIndex < HISTORY_BUFFER_SIZE) {
+                            for (var k = currentBufferIndex; k < HISTORY_BUFFER_SIZE; k++) {
+                                pushBufferState();
+                            }
+                        }
+                    }
                 });
 
-                log('HANDLER_READY', {
-                    message: 'All event listeners registered'
+                log('HANDLER_V2_READY', {
+                    message: 'All event listeners registered',
+                    methods: ['popstate', 'hashchange', 'navigation-api', 'beforeunload', 'pagehide']
                 });
 
             } catch(err) {
-                // אם יש שגיאה - שלח אותה ללוג!
                 fetch('/dashboard/dashboards/cemeteries/api/debug-log.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        event: 'HANDLER_ERROR',
+                        event: 'HANDLER_V2_ERROR',
                         error: err.message,
                         stack: err.stack,
                         time: Date.now()
                     })
                 });
-                console.error('[BACK_HANDLER] Error:', err);
+                console.error('[BACK_HANDLER_V2] Error:', err);
             }
         })();
-        // ========== END BACK BUTTON HANDLER ==========
+        // ========== END BACK BUTTON HANDLER v2 ==========
     </script>
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">

@@ -46,9 +46,13 @@ if (isset($_SESSION['user_id'])) {
                 referrer: document.referrer,
                 timestamp: Date.now()
             })
-        }).finally(() => {
-            location.replace("/dashboard/index.php");
         });
+
+        // דחוף buffer states לפני ההפניה - למנוע חזרה לדף הלוגין
+        for (let i = 0; i < 10; i++) {
+            history.pushState({ loginGuard: i }, "");
+        }
+        location.replace("/dashboard/index.php");
     </script>';
     echo '</head><body></body></html>';
     exit;

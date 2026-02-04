@@ -202,10 +202,12 @@ $isAdminUser = isAdmin();
             });
 
             // דחוף מספר entries כחיץ - ככה צריך ללחוץ חזור הרבה פעמים כדי לצאת
-            for (let i = 0; i < 5; i++) {
+            // מספר גדול (20) כדי להתמודד עם entries שנוצרו מטופס הלוגין
+            const BUFFER_COUNT = 20;
+            for (let i = 0; i < BUFFER_COUNT; i++) {
                 history.pushState({ navGuard: 'buffer_' + i }, '');
             }
-            log('INITIAL_BUFFER_PUSHED', { count: 5, historyLength: history.length });
+            log('INITIAL_BUFFER_PUSHED', { count: BUFFER_COUNT, historyLength: history.length });
         })();
         // ========== END DEBUG ==========
     </script>

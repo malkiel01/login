@@ -29,8 +29,12 @@ require_once '../push/push-log.php'; // Push notification logging
 // require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
+// משתמש ב-JavaScript location.replace() כדי לא להוסיף להיסטוריה
+// (header Location מוסיף להיסטוריה וגורם ללולאה כשלוחצים חזור)
 if (isset($_SESSION['user_id'])) {
-    header('Location: ../dashboard/index.php');  // תיקון: חזרה לתיקייה הראשית
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace("/dashboard/index.php");</script>';
+    echo '</head><body></body></html>';
     exit;
 }
 

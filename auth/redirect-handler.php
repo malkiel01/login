@@ -10,15 +10,21 @@ if (isset($_GET['redirect_to'])) {
 }
 
 // פונקציה לטיפול בהפניה אחרי התחברות מוצלחת
+// משתמש ב-location.replace() כדי שדף הלוגין לא יישאר בהיסטוריה
 function handleLoginRedirect() {
     if (isset($_SESSION['redirect_after_login'])) {
         $redirect = $_SESSION['redirect_after_login'];
         unset($_SESSION['redirect_after_login']);
-        // הוספת .. כי אנחנו בתיקיית auth
-        header('Location: ..' . $redirect);
+        $url = $redirect;
     } else {
-        header('Location: ../dashboard/index.php');
+        $url = '/dashboard/index.php';
     }
+
+    // שימוש ב-JavaScript location.replace() במקום header()
+    // ככה דף הלוגין לא נשאר בהיסטוריה ואי אפשר לחזור אליו
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace("' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '");</script>';
+    echo '</head><body>מעביר...</body></html>';
     exit;
 }
 

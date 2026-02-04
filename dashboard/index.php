@@ -24,9 +24,12 @@ $dashboardType = getUserDashboardType($userId);
 require_once __DIR__ . '/config.php';
 
 // בדוק אם יש redirect מוגדר בקונפיג
+// משתמש ב-location.replace() כדי לא להוסיף להיסטוריה
 if (defined('DASHBOARD_TYPES') && isset(DASHBOARD_TYPES[$dashboardType]['redirect'])) {
     $redirect = DASHBOARD_TYPES[$dashboardType]['redirect'];
-    header('Location: ' . $redirect);
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace("' . htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8') . '");</script>';
+    echo '</head><body></body></html>';
     exit;
 }
 

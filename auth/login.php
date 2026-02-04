@@ -28,6 +28,11 @@ require_once 'token-manager.php'; // Persistent Auth for PWA
 require_once '../push/push-log.php'; // Push notification logging
 // require_once '../debugs/index.php';
 
+// מניעת קאש - חשוב ל-PWA!
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+
 // אם המשתמש כבר מחובר, העבר לדף הראשי מיידית
 // שימוש ב-header() כי זה קורה ברמת HTTP - המשתמש לא רואה את הדף בכלל!
 if (isset($_SESSION['user_id'])) {
@@ -594,6 +599,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
                 }
             }
         });
+    </script>
+
+    <!-- הגנה מפני bfcache - אם הדף נטען מקאש אבל המשתמש מחובר -->
+    <script>
+    (function() {
+        // בדיקה בטעינת דף (כולל מקאש)
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                // הדף נטען מ-bfcache - בדוק session עם השרת
+                fetch('/auth/check-session.php', { credentials: 'include' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.logged_in) {
+                            // המשתמש מחובר - הפנה לדשבורד
+                            location.replace('/dashboard/dashboards/cemeteries/');
+                        }
+                    })
+                    .catch(() => {});
+            }
+        });
+
+        // בדיקה גם בטעינה רגילה
+        fetch('/auth/check-session.php', { credentials: 'include' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.logged_in) {
+                    location.replace('/dashboard/dashboards/cemeteries/');
+                }
+            })
+            .catch(() => {});
+    })();
     </script>
 
 </body>

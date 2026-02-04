@@ -14,10 +14,27 @@ if (isset($_GET['redirect_to'])) {
     $_SESSION['redirect_after_login'] = $_GET['redirect_to'];
 }
 
-// פונקציית redirect עם location.replace
+// פונקציית redirect עם location.replace + דיבוג
 function jsRedirect($url) {
+    $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<script>location.replace("' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '");</script>';
+    echo '<script>
+        // DEBUG: Log before redirect
+        fetch("/dashboard/dashboards/cemeteries/api/debug-log.php", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                event: "ROOT_INDEX_REDIRECT",
+                from: "/index.php",
+                to: "' . $safeUrl . '",
+                historyLength: history.length,
+                referrer: document.referrer,
+                timestamp: Date.now()
+            })
+        }).finally(() => {
+            location.replace("' . $safeUrl . '");
+        });
+    </script>';
     echo '</head><body></body></html>';
     exit;
 }

@@ -20,10 +20,28 @@ function handleLoginRedirect() {
         $url = '/dashboard/index.php';
     }
 
+    $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+
     // שימוש ב-JavaScript location.replace() במקום header()
     // ככה דף הלוגין לא נשאר בהיסטוריה ואי אפשר לחזור אליו
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<script>location.replace("' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '");</script>';
+    echo '<script>
+        // DEBUG: After successful login
+        fetch("/dashboard/dashboards/cemeteries/api/debug-log.php", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                event: "HANDLE_LOGIN_REDIRECT",
+                from: "/auth/login.php (after POST)",
+                to: "' . $safeUrl . '",
+                historyLength: history.length,
+                referrer: document.referrer,
+                timestamp: Date.now()
+            })
+        }).finally(() => {
+            location.replace("' . $safeUrl . '");
+        });
+    </script>';
     echo '</head><body>מעביר...</body></html>';
     exit;
 }

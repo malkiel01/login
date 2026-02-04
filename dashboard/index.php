@@ -27,8 +27,26 @@ require_once __DIR__ . '/config.php';
 // משתמש ב-location.replace() כדי לא להוסיף להיסטוריה
 if (defined('DASHBOARD_TYPES') && isset(DASHBOARD_TYPES[$dashboardType]['redirect'])) {
     $redirect = DASHBOARD_TYPES[$dashboardType]['redirect'];
+    $safeRedirect = htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8');
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<script>location.replace("' . htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8') . '");</script>';
+    echo '<script>
+        // DEBUG: Dashboard redirect to specific dashboard
+        fetch("/dashboard/dashboards/cemeteries/api/debug-log.php", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                event: "DASHBOARD_INDEX_REDIRECT",
+                from: "/dashboard/index.php",
+                to: "' . $safeRedirect . '",
+                dashboardType: "' . $dashboardType . '",
+                historyLength: history.length,
+                referrer: document.referrer,
+                timestamp: Date.now()
+            })
+        }).finally(() => {
+            location.replace("' . $safeRedirect . '");
+        });
+    </script>';
     echo '</head><body></body></html>';
     exit;
 }

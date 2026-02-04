@@ -33,7 +33,23 @@ require_once '../push/push-log.php'; // Push notification logging
 // (header Location מוסיף להיסטוריה וגורם ללולאה כשלוחצים חזור)
 if (isset($_SESSION['user_id'])) {
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<script>location.replace("/dashboard/index.php");</script>';
+    echo '<script>
+        // DEBUG: Already logged in redirect
+        fetch("/dashboard/dashboards/cemeteries/api/debug-log.php", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                event: "LOGIN_ALREADY_AUTHENTICATED",
+                from: "/auth/login.php",
+                to: "/dashboard/index.php",
+                historyLength: history.length,
+                referrer: document.referrer,
+                timestamp: Date.now()
+            })
+        }).finally(() => {
+            location.replace("/dashboard/index.php");
+        });
+    </script>';
     echo '</head><body></body></html>';
     exit;
 }

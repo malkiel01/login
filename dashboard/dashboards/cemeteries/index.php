@@ -175,12 +175,16 @@ $isAdminUser = isAdmin();
                         if (!('navigation' in window)) return [];
                         var entries = window.navigation.entries();
                         var result = [];
+                        var currentIdx = window.navigation.currentEntry.index;
                         for (var i = 0; i < Math.min(entries.length, 100); i++) {
                             var entry = entries[i];
                             var urlPart = entry.url ? entry.url.split('/').pop() : 'N/A';
+                            var fullPath = entry.url ? new URL(entry.url).pathname + (new URL(entry.url).hash || '') : 'N/A';
                             result.push({
                                 idx: entry.index,
+                                cur: entry.index === currentIdx ? '>>>' : '',  // סימון ה-entry הנוכחי
                                 url: urlPart,
+                                path: fullPath,
                                 same: entry.sameDocument,
                                 type: urlPart.indexOf('#app-') === 0 ? 'FAKE' : (urlPart.indexOf('login') >= 0 ? 'LOGIN' : 'REAL')
                             });
@@ -242,8 +246,14 @@ $isAdminUser = isAdmin();
                         m: getModalInfo()
                     };
 
-                    // הוסף רשימת entries רק לאירועים חשובים
-                    if (['PAGE_LOAD', 'BACK', 'PAGE_ADD', 'HEARTBEAT', 'INIT_DONE'].indexOf(event) >= 0) {
+                    // הוסף רשימת entries לכל אירועי שינוי מצב
+                    var stateChangeEvents = [
+                        'PAGE_LOAD', 'BACK', 'BACK_DEBOUNCE', 'PAGE_ADD', 'HEARTBEAT', 'INIT_DONE',
+                        'NAV_TRAVERSE', 'NAV_CHANGE', 'NAV_EVENT', 'POPSTATE', 'HASHCHANGE',
+                        'MODAL_CLOSE_ON_BACK', 'MODAL_CLOSED', 'BACK_NO_MODAL_EXIT',
+                        'BEFOREUNLOAD', 'PAGEHIDE', 'PAGESHOW_RESTORE'
+                    ];
+                    if (stateChangeEvents.indexOf(event) >= 0) {
                         logEntry.entries = getAllEntries();
                     }
 

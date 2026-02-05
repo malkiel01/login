@@ -139,12 +139,11 @@ $isAdminUser = isAdmin();
             body: JSON.stringify({event: 'SCRIPT_START', time: Date.now()})
         });
 
-        // ========== COMPREHENSIVE BACK BUTTON HANDLER v4 ==========
-        // גרסה עם לוגים מפורטים לכל פעולה
+        // ========== BACK BUTTON HANDLER v5 ==========
+        // גרסה פשוטה - בלי FAKE pages, רק מודלים
         (function() {
             try {
                 var DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
-                var HISTORY_BUFFER_SIZE = 50;
                 var HEARTBEAT_INTERVAL = 5000; // כל 5 שניות
 
                 // === מידע גלובלי ===
@@ -232,7 +231,7 @@ $isAdminUser = isAdmin();
                 // === פונקציית לוג ===
                 function log(event, data) {
                     var logEntry = {
-                        v: '4.0',
+                        v: '5.0',
                         sid: SESSION_ID,
                         n: eventLog.length + 1,
                         e: event,
@@ -328,15 +327,6 @@ $isAdminUser = isAdmin();
                         hash: currentHash
                     });
 
-                    // בדוק trap state
-                    if (history.state && history.state.isTrap) {
-                        log('TRAP_HIT', { action: 'pushing 3 pages' });
-                        addPage('FAKE', 'trap_hit');
-                        addPage('FAKE', 'trap_hit');
-                        addPage('FAKE', 'trap_hit');
-                        return;
-                    }
-
                     // יש מודל - או מהDOM או מהstate
                     if (hasModal || stateHasModal || isNotifHash) {
                         log('MODAL_CLOSE', {
@@ -428,26 +418,14 @@ $isAdminUser = isAdmin();
                 function continueInit() {
                     log('INIT_CONTINUE', { historyLen: history.length, hash: location.hash });
 
-                    // צור trap אם צריך
-                    if (history.length <= 2) {
-                        createTrap();
-                    }
-
-                    // דחוף buffer
-                    log('BUFFER_START', { size: HISTORY_BUFFER_SIZE });
-                    for (var i = 0; i < HISTORY_BUFFER_SIZE; i++) {
-                        addPage('FAKE', 'init');
-                    }
-                    log('BUFFER_DONE', { totalPages: pagesAdded.length });
+                    // v5: בלי FAKE pages!
+                    // הרעיון: רק מודלים של התראות דוחפים history
+                    // Chrome לא יזהה "back button abuse" כי אין דחיפות מיותרות
+                    log('INIT_NO_BUFFER', { reason: 'v5 - no fake pages, only modal history' });
 
                     // === popstate ===
                     window.addEventListener('popstate', function(e) {
                         log('POPSTATE', { state: e.state });
-                        if (e.state && e.state.isTrap) {
-                            log('POPSTATE_TRAP', { action: 'push page' });
-                            addPage('FAKE', 'popstate_trap');
-                            return;
-                        }
                         handleBack('popstate', e.state);
                     });
 

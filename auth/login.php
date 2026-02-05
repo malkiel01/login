@@ -246,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
 }
 ?>
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html dir="rtl" lang="he" style="visibility:hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -613,13 +613,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         var hideStyle = document.getElementById('hide-until-ready');
 
         function showLoginPage() {
-            // הסר את ה-style שמסתיר - זה מגלה את הדף
+            // הסר את ה-style שמסתיר
             if (hideStyle && hideStyle.parentNode) {
                 hideStyle.parentNode.removeChild(hideStyle);
             }
+            // הצג את ה-HTML (היה מוסתר ב-inline style)
+            document.documentElement.style.visibility = 'visible';
         }
 
         function ensureHidden() {
+            // וודא שכל הדף מוסתר
+            document.documentElement.style.visibility = 'hidden';
             // אם ה-style הוסר, הוסף אותו מחדש
             if (!document.getElementById('hide-until-ready')) {
                 var style = document.createElement('style');

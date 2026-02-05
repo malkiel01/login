@@ -61,6 +61,19 @@ window.NotificationTemplates = {
         console.log('[NotificationTemplates] Showing notification type:', type);
         this._log('SHOW', { type: type, notificationId: notification.id, title: notification.title });
 
+        // הוסף page להיסטוריה כשמודל נפתח - כך כל התראה היא "מסך" בפני עצמו
+        try {
+            const modalState = {
+                modal: true,
+                notificationId: notification.id,
+                openedAt: Date.now()
+            };
+            history.pushState(modalState, '', location.href);
+            this._log('HISTORY_PUSH', { notificationId: notification.id });
+        } catch(e) {
+            console.warn('[NotificationTemplates] Failed to push history:', e);
+        }
+
         switch (type) {
             case this.TYPES.INFO:
                 return this.showInfoNotification(notification, options);

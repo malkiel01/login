@@ -303,48 +303,55 @@ $isAdminUser = isAdmin();
                     log('TRAP_CREATE', { historyLength: history.length });
                 }
 
-                // === טיפול בכפתור חזור ===
+                // === v6: גישה חדשה - מבטלים את הניווט אחורה כשיש מודל ===
+                var isAbsorbingBack = false;  // דגל למניעת לולאה
+
                 function handleBack(source, info) {
+                    // אם אנחנו באמצע ביטול ניווט, מתעלמים
+                    if (isAbsorbingBack) {
+                        log('BACK_ABSORBED_IGNORE', { reason: 'absorbing in progress' });
+                        return;
+                    }
+
                     backPressCount++;
 
-                    var modalInfo = getModalInfo();
-                    var hasModal = modalInfo.hasModal;
-
-                    // בדוק גם את ה-hash - אם זה hash של התראה
-                    var currentHash = location.hash || '';
-                    var isNotifHash = currentHash.indexOf('#notif-') === 0;
-
-                    // בדוק גם את ה-state
-                    var stateHasModal = history.state && history.state.isNotificationModal;
+                    // בדוק אם יש מודל פתוח בDOM
+                    var overlay = document.querySelector('.notification-overlay');
+                    var hasModalInDOM = !!overlay;
 
                     log('BACK', {
                         src: source,
                         num: backPressCount,
-                        info: info,
-                        hasModal: hasModal,
-                        isNotifHash: isNotifHash,
-                        stateHasModal: stateHasModal,
-                        hash: currentHash
+                        hasModalInDOM: hasModalInDOM,
+                        hash: location.hash || 'none'
                     });
 
-                    // יש מודל - או מהDOM או מהstate
-                    if (hasModal || stateHasModal || isNotifHash) {
-                        log('MODAL_CLOSE', {
-                            modalClass: modalInfo.modalClass,
-                            reason: hasModal ? 'dom' : (stateHasModal ? 'state' : 'hash')
-                        });
+                    if (hasModalInDOM) {
+                        // יש מודל פתוח!
+                        // 1. נבטל את הניווט אחורה על ידי חזרה קדימה
+                        // 2. נסגור את המודל
+                        log('MODAL_BACK_ABSORB', { action: 'go forward to cancel back' });
+
+                        isAbsorbingBack = true;
+                        history.go(1);  // בטל את הניווט אחורה
+
+                        // סגור את המודל
                         if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
                             NotificationTemplates.close();
                         } else {
-                            var overlay = document.querySelector('.notification-overlay');
-                            if (overlay) { overlay.remove(); document.body.style.overflow = ''; }
+                            overlay.remove();
+                            document.body.style.overflow = '';
                         }
-                        // לא דוחפים pages אחרי סגירת מודל!
-                        // זה מה שגרם לכרום לסגור את האפליקציה - יותר מדי same-document navigations
-                        log('MODAL_CLOSED_DONE', { reason: 'no extra push to prevent chrome bug' });
+
+                        // אפס את הדגל אחרי זמן קצר
+                        setTimeout(function() {
+                            isAbsorbingBack = false;
+                            log('BACK_ABSORB_DONE', { navIndex: window.navigation ? window.navigation.currentEntry.index : -1 });
+                        }, 100);
+
                     } else {
-                        // אין מודל - לא דוחפים כלום, יש לנו מספיק buffer
-                        log('BACK_NO_MODAL', { action: 'no push needed' });
+                        // אין מודל - תן לניווט להמשיך כרגיל (יציאה מהאפליקציה)
+                        log('BACK_NO_MODAL_EXIT', { action: 'letting app exit' });
                     }
                 }
 
@@ -418,14 +425,11 @@ $isAdminUser = isAdmin();
                 function continueInit() {
                     log('INIT_CONTINUE', { historyLen: history.length, hash: location.hash });
 
-                    // v5.1: נוסיף 2 buffer entries בלבד
-                    // זה יוצר "רשת ביטחון" כדי ש-Chrome לא ידלג ישירות ל-login.php
-                    // ההיסטוריה תראה: login.php -> / -> #app-1 -> #app-2 -> #notif-xxx
-                    var bufferState1 = { app: 'cemeteries', isBuffer: true, bufferIndex: 1 };
-                    var bufferState2 = { app: 'cemeteries', isBuffer: true, bufferIndex: 2 };
-                    history.pushState(bufferState1, '', '#app-1');
-                    history.pushState(bufferState2, '', '#app-2');
-                    log('BUFFER_ADDED', { count: 2, reason: 'safety net for chrome' });
+                    // v6: אין צורך ב-buffer entries
+                    // ההיסטוריה: login=0, dashboard=1, modal=2 (תמיד)
+                    // כשפותחים התראה - pushState ל-#modal (אם אין) או replaceState (אם כבר יש)
+                    // כשלוחצים back עם מודל פתוח - history.go(1) מבטל את הניווט + סגירת המודל
+                    log('V6_NO_BUFFER', { reason: 'using go(1) to cancel back instead' });
 
                     // === popstate ===
                     window.addEventListener('popstate', function(e) {
@@ -481,14 +485,9 @@ $isAdminUser = isAdmin();
                                             }
                                         });
                                     } else {
-                                        log('CANT_INTERCEPT', { from: currIdx, to: destIdx });
-                                        try {
-                                            addPage('FAKE', 'cant_intercept');
-                                            history.go(1);
-                                            log('GO_FORWARD', { attempted: true });
-                                        } catch(err) {
-                                            log('GO_FORWARD_ERR', { error: err.message });
-                                        }
+                                        // v6: לא ניתן ליירט - זה cross-document navigation
+                                        // נתן ל-popstate לטפל בזה
+                                        log('CANT_INTERCEPT', { from: currIdx, to: destIdx, action: 'let popstate handle' });
                                     }
                                 }
                             } else if (e.navigationType === 'push' || e.navigationType === 'replace') {
@@ -515,10 +514,8 @@ $isAdminUser = isAdmin();
                     // === pageshow ===
                     window.addEventListener('pageshow', function(e) {
                         if (e.persisted) {
-                            log('PAGESHOW_RESTORE', { action: 'pushing buffer' });
-                            for (var j = 0; j < HISTORY_BUFFER_SIZE; j++) {
-                                addPage('FAKE', 'bfcache_restore');
-                            }
+                            // v6: לא צריך להוסיף pages - רק לוג
+                            log('PAGESHOW_RESTORE', { action: 'v6 no buffer needed' });
                         }
                     });
 

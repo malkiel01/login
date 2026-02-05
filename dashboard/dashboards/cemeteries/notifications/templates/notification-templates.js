@@ -61,8 +61,8 @@ window.NotificationTemplates = {
         console.log('[NotificationTemplates] Showing notification type:', type);
         this._log('SHOW', { type: type, notificationId: notification.id, title: notification.title });
 
-        // הוסף page להיסטוריה כשמודל נפתח - כל התראה היא "מסך" בפני עצמו
-        // חשוב: משתמשים ב-URL ייחודי כדי שכרום יתייחס לזה כדף נפרד
+        // v6: שיטה חדשה - כל ההתראות משתמשות באותו entry בהיסטוריה
+        // ההיסטוריה צריכה להיות: login=0, dashboard=1, modal=2 (תמיד!)
         try {
             const modalState = {
                 modal: true,
@@ -70,17 +70,34 @@ window.NotificationTemplates = {
                 openedAt: Date.now(),
                 isNotificationModal: true
             };
-            // URL ייחודי עם hash מיוחד להתראה זו
-            const notifHash = '#notif-' + notification.id + '-' + Date.now();
-            history.pushState(modalState, '', notifHash);
-            this._log('HISTORY_PUSH', {
-                notificationId: notification.id,
-                hash: notifHash,
-                historyLength: history.length
-            });
+            const modalHash = '#modal';  // hash קבוע לכל ההתראות
+
+            // בדוק אם כבר יש לנו entry של modal בהיסטוריה
+            const currentHash = location.hash || '';
+            const alreadyHasModalEntry = currentHash === '#modal' ||
+                                         currentHash.indexOf('#notif-') === 0 ||
+                                         (history.state && history.state.isNotificationModal);
+
+            if (alreadyHasModalEntry) {
+                // כבר יש entry - נחליף אותו (נשאר באותו index)
+                history.replaceState(modalState, '', modalHash);
+                this._log('HISTORY_REPLACE', {
+                    notificationId: notification.id,
+                    historyLength: history.length,
+                    navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+                });
+            } else {
+                // אין entry - נוסיף אחד חדש (עובר מ-index 1 ל-index 2)
+                history.pushState(modalState, '', modalHash);
+                this._log('HISTORY_PUSH', {
+                    notificationId: notification.id,
+                    historyLength: history.length,
+                    navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+                });
+            }
         } catch(e) {
-            console.warn('[NotificationTemplates] Failed to push history:', e);
-            this._log('HISTORY_PUSH_ERROR', { error: e.message });
+            console.warn('[NotificationTemplates] Failed to update history:', e);
+            this._log('HISTORY_ERROR', { error: e.message });
         }
 
         switch (type) {

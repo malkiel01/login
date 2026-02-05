@@ -61,17 +61,26 @@ window.NotificationTemplates = {
         console.log('[NotificationTemplates] Showing notification type:', type);
         this._log('SHOW', { type: type, notificationId: notification.id, title: notification.title });
 
-        // הוסף page להיסטוריה כשמודל נפתח - כך כל התראה היא "מסך" בפני עצמו
+        // הוסף page להיסטוריה כשמודל נפתח - כל התראה היא "מסך" בפני עצמו
+        // חשוב: משתמשים ב-URL ייחודי כדי שכרום יתייחס לזה כדף נפרד
         try {
             const modalState = {
                 modal: true,
                 notificationId: notification.id,
-                openedAt: Date.now()
+                openedAt: Date.now(),
+                isNotificationModal: true
             };
-            history.pushState(modalState, '', location.href);
-            this._log('HISTORY_PUSH', { notificationId: notification.id });
+            // URL ייחודי עם hash מיוחד להתראה זו
+            const notifHash = '#notif-' + notification.id + '-' + Date.now();
+            history.pushState(modalState, '', notifHash);
+            this._log('HISTORY_PUSH', {
+                notificationId: notification.id,
+                hash: notifHash,
+                historyLength: history.length
+            });
         } catch(e) {
             console.warn('[NotificationTemplates] Failed to push history:', e);
+            this._log('HISTORY_PUSH_ERROR', { error: e.message });
         }
 
         switch (type) {

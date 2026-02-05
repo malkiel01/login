@@ -215,10 +215,16 @@ $isAdminUser = isAdmin();
                         var hasTemplates = typeof NotificationTemplates !== 'undefined';
                         var activeModal = hasTemplates ? NotificationTemplates.activeModal : null;
                         var domOverlay = document.querySelector('.notification-overlay');
+                        var currentHash = location.hash || '';
+                        var isNotifHash = currentHash.indexOf('#notif-') === 0;
+                        var stateHasModal = history.state && history.state.isNotificationModal;
                         return {
-                            hasModal: !!activeModal || !!domOverlay,
+                            hasModal: !!activeModal || !!domOverlay || isNotifHash || stateHasModal,
                             modalClass: activeModal ? activeModal.className : (domOverlay ? domOverlay.className : null),
-                            bodyOverflow: document.body.style.overflow
+                            bodyOverflow: document.body.style.overflow,
+                            isNotifHash: isNotifHash,
+                            stateHasModal: stateHasModal,
+                            hash: currentHash
                         };
                     } catch(e) { return { error: e.message }; }
                 }
@@ -305,11 +311,21 @@ $isAdminUser = isAdmin();
                     var modalInfo = getModalInfo();
                     var hasModal = modalInfo.hasModal;
 
+                    // בדוק גם את ה-hash - אם זה hash של התראה
+                    var currentHash = location.hash || '';
+                    var isNotifHash = currentHash.indexOf('#notif-') === 0;
+
+                    // בדוק גם את ה-state
+                    var stateHasModal = history.state && history.state.isNotificationModal;
+
                     log('BACK', {
                         src: source,
                         num: backPressCount,
                         info: info,
-                        hasModal: hasModal
+                        hasModal: hasModal,
+                        isNotifHash: isNotifHash,
+                        stateHasModal: stateHasModal,
+                        hash: currentHash
                     });
 
                     // בדוק trap state
@@ -321,8 +337,12 @@ $isAdminUser = isAdmin();
                         return;
                     }
 
-                    if (hasModal) {
-                        log('MODAL_CLOSE', { modalClass: modalInfo.modalClass });
+                    // יש מודל - או מהDOM או מהstate
+                    if (hasModal || stateHasModal || isNotifHash) {
+                        log('MODAL_CLOSE', {
+                            modalClass: modalInfo.modalClass,
+                            reason: hasModal ? 'dom' : (stateHasModal ? 'state' : 'hash')
+                        });
                         if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
                             NotificationTemplates.close();
                         } else {

@@ -98,8 +98,10 @@ window.NotificationTemplates = {
                     });
                 }, 50);
 
-            } else if (navIndex === 1) {
-                // אין entry קדימה - צריך ליצור
+            } else if (navIndex <= 1) {
+                // v18: navIndex 0 או 1 - צריך ליצור entry חדש
+                // index 0 = אחרי ניקוי היסטוריה (login נמחק)
+                // index 1 = מצב רגיל (login ב-0, dashboard ב-1)
                 history.pushState(modalState, '', '#modal');
                 this._log('HISTORY_PUSH', {
                     notificationId: notification.id,
@@ -107,7 +109,7 @@ window.NotificationTemplates = {
                     navIndex: window.navigation ? window.navigation.currentEntry.index : -1
                 });
             } else {
-                // כבר ב-index 2 או מצב אחר - רק נעדכן
+                // כבר ב-index 2 או יותר - רק נעדכן
                 history.replaceState(modalState, '', '#modal');
                 this._log('HISTORY_REPLACE', {
                     notificationId: notification.id,

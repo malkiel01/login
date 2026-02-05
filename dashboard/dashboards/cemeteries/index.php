@@ -447,6 +447,15 @@ $isAdminUser = isAdmin();
                         });
 
                         window.navigation.addEventListener('navigate', function(e) {
+                            // לוג כל אירוע ניווט!
+                            log('NAV_EVENT', {
+                                type: e.navigationType,
+                                canIntercept: e.canIntercept,
+                                hashChange: e.hashChange,
+                                destUrl: e.destination.url ? e.destination.url.split('/').pop() : 'N/A',
+                                destIdx: e.destination.index
+                            });
+
                             if (e.navigationType === 'traverse') {
                                 var currIdx = window.navigation.currentEntry.index;
                                 var destIdx = e.destination.index;

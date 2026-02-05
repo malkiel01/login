@@ -139,247 +139,115 @@ $isAdminUser = isAdmin();
             body: JSON.stringify({event: 'SCRIPT_START', time: Date.now()})
         });
 
-        // ========== COMPREHENSIVE BACK BUTTON HANDLER v3.2 ==========
-        // פתרון לבעיית כפתור החזרה ב-Android PWA
-        // הבעיה: כש-historyLength === 1, Navigation API מחזיר canIntercept: false
-        // הפתרון v3.2: buffer עמוק של 50 states למניעת הגעה ל-index 0
+        // ========== COMPREHENSIVE BACK BUTTON HANDLER v4 ==========
+        // גרסה עם לוגים מפורטים לכל פעולה
         (function() {
             try {
                 var DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
                 var HISTORY_BUFFER_SIZE = 50;
+                var HEARTBEAT_INTERVAL = 5000; // כל 5 שניות
 
                 // === מידע גלובלי ===
                 var SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 var PAGE_LOAD_TIME = Date.now();
                 var backPressCount = 0;
-                var statesPushedLog = [];
                 var eventLog = [];
                 var isPWA = window.matchMedia('(display-mode: standalone)').matches ||
                             window.navigator.standalone === true;
                 var currentBufferIndex = 0;
                 var initialHistoryLength = history.length;
                 var trapStateCreated = false;
+                var lastKnownNavIndex = -1;
+                var pagesAdded = []; // רשימת כל הדפים שנוספו
 
-                // === פונקציות עזר - דיבוג מורחב ===
+                // === פונקציות עזר ===
 
-                // מידע מלא על Navigation API
-                function getNavigationAPIInfo() {
+                // רשימת כל ה-entries בהיסטוריה (עד 100)
+                function getAllEntries() {
                     try {
-                        if (!('navigation' in window)) {
-                            return { available: false };
-                        }
-                        var nav = window.navigation;
-                        var entries = nav.entries();
-                        var entriesSummary = [];
-                        for (var i = 0; i < Math.min(entries.length, 20); i++) {
+                        if (!('navigation' in window)) return [];
+                        var entries = window.navigation.entries();
+                        var result = [];
+                        for (var i = 0; i < Math.min(entries.length, 100); i++) {
                             var entry = entries[i];
-                            entriesSummary.push({
-                                index: entry.index,
-                                url: entry.url ? entry.url.split('/').pop() : 'N/A', // רק שם הקובץ
-                                key: entry.key ? entry.key.substring(0, 8) : 'N/A',
-                                sameDocument: entry.sameDocument,
-                                hasState: entry.getState ? !!entry.getState() : false
+                            var urlPart = entry.url ? entry.url.split('/').pop() : 'N/A';
+                            result.push({
+                                idx: entry.index,
+                                url: urlPart,
+                                same: entry.sameDocument,
+                                type: urlPart.indexOf('#app-') === 0 ? 'FAKE' : (urlPart.indexOf('login') >= 0 ? 'LOGIN' : 'REAL')
                             });
                         }
-                        return {
-                            available: true,
-                            currentIndex: nav.currentEntry ? nav.currentEntry.index : -1,
-                            currentKey: nav.currentEntry ? nav.currentEntry.key : 'N/A',
-                            currentUrl: nav.currentEntry ? nav.currentEntry.url : 'N/A',
-                            entriesLength: entries.length,
-                            canGoBack: nav.canGoBack,
-                            canGoForward: nav.canGoForward,
-                            entries: entriesSummary
-                        };
-                    } catch(e) { return { error: e.message }; }
+                        return result;
+                    } catch(e) { return [{ error: e.message }]; }
                 }
 
-                // מידע על איך הדף נטען
-                function getNavigationTiming() {
+                // מצב נוכחי מלא
+                function getFullState() {
                     try {
-                        var perf = performance.getEntriesByType('navigation')[0];
+                        var navIndex = 'navigation' in window ? window.navigation.currentEntry.index : -1;
+                        var navLength = 'navigation' in window ? window.navigation.entries().length : 0;
                         return {
-                            type: perf ? perf.type : 'unknown', // navigate, reload, back_forward, prerender
-                            redirectCount: perf ? perf.redirectCount : 0,
-                            duration: perf ? Math.round(perf.duration) : 0
-                        };
-                    } catch(e) { return { error: e.message }; }
-                }
-
-                // מידע מורחב על PWA
-                function getPWAInfo() {
-                    try {
-                        return {
-                            standalone: window.matchMedia('(display-mode: standalone)').matches,
-                            fullscreen: window.matchMedia('(display-mode: fullscreen)').matches,
-                            minimalUI: window.matchMedia('(display-mode: minimal-ui)').matches,
-                            browser: window.matchMedia('(display-mode: browser)').matches,
-                            navigatorStandalone: window.navigator.standalone === true,
-                            referrer: document.referrer || 'none',
-                            documentURL: location.href,
+                            historyLength: history.length,
+                            historyState: history.state,
+                            navIndex: navIndex,
+                            navLength: navLength,
+                            currentUrl: location.href,
                             hash: location.hash || 'none',
-                            pathname: location.pathname,
-                            isSecure: location.protocol === 'https:'
-                        };
-                    } catch(e) { return { error: e.message }; }
-                }
-
-                function getEnvironmentInfo() {
-                    try {
-                        return {
-                            isPWA: isPWA,
-                            userAgent: navigator.userAgent,
-                            platform: navigator.platform,
-                            screenSize: window.innerWidth + 'x' + window.innerHeight,
-                            devicePixelRatio: window.devicePixelRatio,
-                            online: navigator.onLine,
-                            visibilityState: document.visibilityState,
-                            hasNavigationAPI: 'navigation' in window,
-                            initialHistoryLength: initialHistoryLength,
-                            trapStateCreated: trapStateCreated
-                        };
-                    } catch(e) { return { error: e.message }; }
-                }
-
-                function getHistoryInfo() {
-                    try {
-                        return {
-                            length: history.length,
-                            currentState: history.state,
-                            scrollRestoration: history.scrollRestoration,
                             bufferIndex: currentBufferIndex,
-                            navigationIndex: 'navigation' in window ? window.navigation.currentEntry.index : 'N/A',
-                            navigationLength: 'navigation' in window ? window.navigation.entries().length : 'N/A'
+                            canGoBack: 'navigation' in window ? window.navigation.canGoBack : 'N/A',
+                            canGoForward: 'navigation' in window ? window.navigation.canGoForward : 'N/A'
                         };
                     } catch(e) { return { error: e.message }; }
                 }
 
+                // מידע על מודל
                 function getModalInfo() {
                     try {
                         var hasTemplates = typeof NotificationTemplates !== 'undefined';
                         var activeModal = hasTemplates ? NotificationTemplates.activeModal : null;
                         var domOverlay = document.querySelector('.notification-overlay');
-
                         return {
-                            notificationTemplatesLoaded: hasTemplates,
-                            hasActiveModal: !!activeModal,
-                            activeModalClass: activeModal ? activeModal.className : null,
-                            domOverlayFound: !!domOverlay,
-                            domOverlayVisible: domOverlay ? domOverlay.offsetParent !== null : false,
+                            hasModal: !!activeModal || !!domOverlay,
+                            modalClass: activeModal ? activeModal.className : (domOverlay ? domOverlay.className : null),
                             bodyOverflow: document.body.style.overflow
                         };
                     } catch(e) { return { error: e.message }; }
                 }
 
-                // === פונקציית לוג מורחבת ===
-                function log(event, eventData, includeFullNavInfo) {
-                    eventData = eventData || {};
+                // === פונקציית לוג ===
+                function log(event, data) {
                     var logEntry = {
-                        sessionId: SESSION_ID,
-                        eventNumber: eventLog.length + 1,
-                        event: event,
-                        timestamp: new Date().toISOString(),
-                        msSincePageLoad: Date.now() - PAGE_LOAD_TIME,
-                        eventData: eventData,
-                        history: getHistoryInfo(),
-                        modals: getModalInfo(),
-                        environment: getEnvironmentInfo(),
-                        pwa: getPWAInfo(),
-                        timing: getNavigationTiming()
+                        v: '4.0',
+                        sid: SESSION_ID,
+                        n: eventLog.length + 1,
+                        e: event,
+                        t: Date.now() - PAGE_LOAD_TIME,
+                        ts: new Date().toISOString(),
+                        d: data || {},
+                        s: getFullState(),
+                        m: getModalInfo()
                     };
 
-                    // הוסף מידע מלא על Navigation API רק כשצריך (זה הרבה data)
-                    if (includeFullNavInfo) {
-                        logEntry.navigationAPI = getNavigationAPIInfo();
+                    // הוסף רשימת entries רק לאירועים חשובים
+                    if (['PAGE_LOAD', 'BACK', 'PAGE_ADD', 'HEARTBEAT', 'INIT_DONE'].indexOf(event) >= 0) {
+                        logEntry.entries = getAllEntries();
                     }
 
-                    eventLog.push({ event: event, time: Date.now() });
-                    console.log('[BACK_HANDLER_V3.2]', event, logEntry);
+                    eventLog.push({ e: event, t: Date.now() });
+                    console.log('[V4]', event, logEntry);
 
                     navigator.sendBeacon ?
                         navigator.sendBeacon(DEBUG_URL, JSON.stringify(logEntry)) :
-                        fetch(DEBUG_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(logEntry),
-                            keepalive: true
-                        }).catch(function() {});
+                        fetch(DEBUG_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logEntry), keepalive: true }).catch(function() {});
 
                     return logEntry;
                 }
 
-                // === טיפול בכפתור חזור ===
-                function handleBackButton(source, stateInfo) {
-                    backPressCount++;
+                // === הוספת דף להיסטוריה (עם לוג) ===
+                function addPage(type, reason) {
+                    var beforeState = getFullState();
 
-                    log('BACK_BUTTON_DETECTED', {
-                        source: source,
-                        pressNumber: backPressCount,
-                        stateInfo: stateInfo
-                    });
-
-                    // בדוק אם הגענו ל-trap state
-                    var currentState = history.state;
-                    if (currentState && currentState.isTrap) {
-                        log('TRAP_STATE_REACHED', {
-                            message: 'User reached trap state, pushing forward'
-                        });
-                        // דחוף buffer חדש וחזור קדימה
-                        pushBufferState();
-                        pushBufferState();
-                        pushBufferState();
-                        return;
-                    }
-
-                    var modalInfo = getModalInfo();
-                    var isModalOpen = modalInfo.hasActiveModal ||
-                                       (modalInfo.domOverlayFound && modalInfo.domOverlayVisible);
-
-                    if (isModalOpen) {
-                        log('CLOSING_MODAL', { modalInfo: modalInfo });
-
-                        if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
-                            NotificationTemplates.close();
-                        } else {
-                            var overlay = document.querySelector('.notification-overlay');
-                            if (overlay) {
-                                overlay.remove();
-                                document.body.style.overflow = '';
-                            }
-                        }
-
-                        // אחרי סגירת מודל - דחוף כמה buffer states למניעת יציאה
-                        log('PUSHING_EXTRA_BUFFER', { reason: 'modal closed' });
-                        for (var b = 0; b < 5; b++) {
-                            pushBufferState();
-                        }
-                    } else {
-                        // אין מודל - דחוף state רגיל
-                        pushBufferState();
-                    }
-                }
-
-                // === יצירת trap state ===
-                function createTrapState() {
-                    var trapState = {
-                        app: 'cemeteries',
-                        isTrap: true,
-                        createdAt: Date.now(),
-                        sessionId: SESSION_ID
-                    };
-
-                    // סמן את הדף הנוכחי כ-trap
-                    history.replaceState(trapState, '', location.href);
-                    trapStateCreated = true;
-
-                    log('TRAP_STATE_CREATED', {
-                        message: 'Current page marked as trap state',
-                        historyLength: history.length
-                    });
-                }
-
-                // === דחיפת state לbuffer ===
-                function pushBufferState() {
                     currentBufferIndex++;
                     var state = {
                         app: 'cemeteries',
@@ -388,10 +256,96 @@ $isAdminUser = isAdmin();
                         pushedAt: Date.now(),
                         sessionId: SESSION_ID
                     };
-
                     var newHash = '#app-' + currentBufferIndex;
+
                     history.pushState(state, '', newHash);
-                    statesPushedLog.push(state);
+
+                    var afterState = getFullState();
+
+                    var pageInfo = {
+                        type: type, // 'FAKE'
+                        reason: reason, // 'init', 'back_pressed', 'modal_closed'
+                        url: newHash,
+                        bufferIdx: currentBufferIndex,
+                        before: { navIdx: beforeState.navIndex, navLen: beforeState.navLength },
+                        after: { navIdx: afterState.navIndex, navLen: afterState.navLength }
+                    };
+
+                    pagesAdded.push(pageInfo);
+                    log('PAGE_ADD', pageInfo);
+
+                    return pageInfo;
+                }
+
+                // === יצירת trap state ===
+                function createTrap() {
+                    var trapState = {
+                        app: 'cemeteries',
+                        isTrap: true,
+                        createdAt: Date.now(),
+                        sessionId: SESSION_ID
+                    };
+                    history.replaceState(trapState, '', location.href);
+                    trapStateCreated = true;
+                    log('TRAP_CREATE', { historyLength: history.length });
+                }
+
+                // === טיפול בכפתור חזור ===
+                function handleBack(source, info) {
+                    backPressCount++;
+
+                    var modalInfo = getModalInfo();
+                    var hasModal = modalInfo.hasModal;
+
+                    log('BACK', {
+                        src: source,
+                        num: backPressCount,
+                        info: info,
+                        hasModal: hasModal
+                    });
+
+                    // בדוק trap state
+                    if (history.state && history.state.isTrap) {
+                        log('TRAP_HIT', { action: 'pushing 3 pages' });
+                        addPage('FAKE', 'trap_hit');
+                        addPage('FAKE', 'trap_hit');
+                        addPage('FAKE', 'trap_hit');
+                        return;
+                    }
+
+                    if (hasModal) {
+                        log('MODAL_CLOSE', { modalClass: modalInfo.modalClass });
+                        if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
+                            NotificationTemplates.close();
+                        } else {
+                            var overlay = document.querySelector('.notification-overlay');
+                            if (overlay) { overlay.remove(); document.body.style.overflow = ''; }
+                        }
+                        // דחוף 5 pages אחרי סגירת מודל
+                        for (var b = 0; b < 5; b++) {
+                            addPage('FAKE', 'modal_closed');
+                        }
+                    } else {
+                        // אין מודל - דחוף page אחד
+                        addPage('FAKE', 'back_no_modal');
+                    }
+                }
+
+                // === HEARTBEAT - דופק כל כמה שניות ===
+                function startHeartbeat() {
+                    setInterval(function() {
+                        var currentNavIndex = 'navigation' in window ? window.navigation.currentEntry.index : -1;
+
+                        // רשום רק אם השתנה משהו או כל 30 שניות
+                        if (currentNavIndex !== lastKnownNavIndex || eventLog.length % 6 === 0) {
+                            log('HEARTBEAT', {
+                                lastIdx: lastKnownNavIndex,
+                                currIdx: currentNavIndex,
+                                changed: currentNavIndex !== lastKnownNavIndex
+                            });
+                            lastKnownNavIndex = currentNavIndex;
+                        }
+                    }, HEARTBEAT_INTERVAL);
                 }
 
                 // === אתחול ===
@@ -399,286 +353,186 @@ $isAdminUser = isAdmin();
                 var isAppHash = currentHash.indexOf('#app-') === 0;
                 var needsRealNavigation = history.length === 1 && !isAppHash && isPWA;
 
-                // לוג ראשוני עם כל המידע
-                log('PAGE_LOAD_V3.2', {
-                    message: 'Back button handler v3.2 starting (buffer=50)',
+                log('PAGE_LOAD', {
                     isPWA: isPWA,
-                    historyLength: history.length,
-                    currentHash: currentHash,
-                    isAppHash: isAppHash,
-                    needsRealNavigation: needsRealNavigation,
-                    needsTrap: history.length <= 2,
-                    locationHref: location.href,
-                    documentReferrer: document.referrer || 'none'
-                }, true); // true = כולל מידע מלא על Navigation API
-
-                // === רישום hashchange listener מוקדם ===
-                // חשוב: נרשם לפני כל דבר אחר כדי לתפוס את ה-hashchange
-                window.addEventListener('hashchange', function(e) {
-                    log('HASHCHANGE_DETECTED', {
-                        oldURL: e.oldURL,
-                        newURL: e.newURL,
-                        oldHash: e.oldURL ? e.oldURL.split('#')[1] || 'none' : 'none',
-                        newHash: e.newURL ? e.newURL.split('#')[1] || 'none' : 'none',
-                        historyLengthAfter: history.length
-                    }, true);
+                    historyLen: history.length,
+                    hash: currentHash,
+                    needsRealNav: needsRealNavigation,
+                    referrer: document.referrer || 'none',
+                    userAgent: navigator.userAgent
                 });
 
-                // === רישום error listener ===
+                // === רישום listeners מוקדמים ===
+
+                // Error listener
                 window.addEventListener('error', function(e) {
-                    log('JS_ERROR', {
-                        message: e.message,
-                        filename: e.filename,
-                        lineno: e.lineno,
-                        colno: e.colno
-                    });
+                    log('ERROR', { msg: e.message, file: e.filename, line: e.lineno });
                 });
 
-                // === פתרון קריטי ===
-                // כש-historyLength === 1, Chrome לא יורה Navigation API events
-                // כי אנחנו ב-index 0 ואין לאן לחזור
-                // הפתרון: ליצור היסטוריה אמיתית באמצעות שינוי hash
+                // Navigation API - currententrychange (לתפוס כל שינוי!)
+                if ('navigation' in window) {
+                    window.navigation.addEventListener('currententrychange', function(e) {
+                        log('NAV_CHANGE', {
+                            from: e.from ? { idx: e.from.index, url: e.from.url ? e.from.url.split('/').pop() : 'N/A' } : null,
+                            to: { idx: window.navigation.currentEntry.index, url: window.navigation.currentEntry.url ? window.navigation.currentEntry.url.split('/').pop() : 'N/A' }
+                        });
+                    });
+                }
+
+                // === פתרון ל-historyLength === 1 ===
                 if (needsRealNavigation) {
-                    log('CREATING_REAL_HISTORY', {
-                        message: 'historyLength is 1, navigating to hash to create history',
-                        currentUrl: location.href,
-                        targetUrl: location.href.split('#')[0] + '#app-init'
-                    }, true);
+                    log('CREATE_REAL_HIST', { reason: 'historyLength is 1' });
 
-                    // הוסף listener ל-hashchange לפני הניווט
-                    var hashChangeHandler = function(e) {
-                        log('HASH_NAVIGATION_COMPLETE', {
-                            message: 'Hash navigation completed',
-                            oldURL: e.oldURL,
-                            newURL: e.newURL,
-                            newHistoryLength: history.length
-                        }, true);
-                        // הסר את ה-listener
-                        window.removeEventListener('hashchange', hashChangeHandler);
-                    };
-                    window.addEventListener('hashchange', hashChangeHandler);
-
-                    // נווט ל-hash - זה יוסיף entry אמיתי להיסטוריה
                     var baseUrl = location.href.split('#')[0];
                     location.href = baseUrl + '#app-init';
 
-                    log('HASH_NAVIGATION_INITIATED', {
-                        message: 'location.href changed, waiting for hashchange',
-                        newUrl: baseUrl + '#app-init'
-                    });
+                    log('HASH_NAV_START', { target: baseUrl + '#app-init' });
 
-                    // הדף לא יטען מחדש! hashchange יקרה
-                    // אז נמשיך לאתחול אחרי timeout קצר
                     setTimeout(function() {
-                        log('TIMEOUT_AFTER_HASH_NAV', {
-                            message: 'Timeout fired after hash navigation',
-                            historyLength: history.length,
-                            currentHash: location.hash
-                        }, true);
-
-                        // עכשיו נמשיך לאתחול
-                        continueInitialization();
+                        log('HASH_NAV_DONE', { historyLen: history.length, hash: location.hash });
+                        continueInit();
                     }, 100);
 
                     return;
                 }
 
-                // המשך אתחול רגיל
-                continueInitialization();
+                continueInit();
 
-                function continueInitialization() {
-                    log('CONTINUE_INIT', {
-                        message: 'Continuing initialization',
-                        historyLength: history.length,
-                        currentHash: location.hash
-                    }, true);
+                function continueInit() {
+                    log('INIT_CONTINUE', { historyLen: history.length, hash: location.hash });
 
-                // אם historyLength קטן או שווה ל-2, צור trap state
-                if (history.length <= 2) {
-                    createTrapState();
-                }
+                    // צור trap אם צריך
+                    if (history.length <= 2) {
+                        createTrap();
+                    }
 
-                // דחוף buffer של states
-                log('PUSHING_BUFFER', { size: HISTORY_BUFFER_SIZE });
-                for (var i = 0; i < HISTORY_BUFFER_SIZE; i++) {
-                    pushBufferState();
-                }
-                log('BUFFER_READY', {
-                    historyLength: history.length,
-                    currentIndex: currentBufferIndex
-                });
+                    // דחוף buffer
+                    log('BUFFER_START', { size: HISTORY_BUFFER_SIZE });
+                    for (var i = 0; i < HISTORY_BUFFER_SIZE; i++) {
+                        addPage('FAKE', 'init');
+                    }
+                    log('BUFFER_DONE', { totalPages: pagesAdded.length });
 
-                // === גישה 1: popstate ===
-                window.addEventListener('popstate', function(e) {
-                    log('POPSTATE_EVENT', { state: e.state });
+                    // === popstate ===
+                    window.addEventListener('popstate', function(e) {
+                        log('POPSTATE', { state: e.state });
+                        if (e.state && e.state.isTrap) {
+                            log('POPSTATE_TRAP', { action: 'push page' });
+                            addPage('FAKE', 'popstate_trap');
+                            return;
+                        }
+                        handleBack('popstate', e.state);
+                    });
 
-                    // בדוק אם הגענו ל-trap state
-                    if (e.state && e.state.isTrap) {
-                        log('POPSTATE_TRAP_DETECTED', {
-                            message: 'Trap state detected in popstate, going forward'
+                    // === hashchange ===
+                    window.addEventListener('hashchange', function(e) {
+                        var oldHash = e.oldURL ? e.oldURL.split('#')[1] || '' : '';
+                        var newHash = e.newURL ? e.newURL.split('#')[1] || '' : '';
+                        log('HASHCHANGE', { old: oldHash, new: newHash });
+                    });
+
+                    // === Navigation API traverse ===
+                    if ('navigation' in window) {
+                        log('NAV_API_INIT', {
+                            idx: window.navigation.currentEntry.index,
+                            len: window.navigation.entries().length
                         });
-                        // דחוף buffer חדש ולך קדימה
-                        pushBufferState();
-                        return;
-                    }
 
-                    handleBackButton('popstate', e.state);
-                });
+                        window.navigation.addEventListener('navigate', function(e) {
+                            if (e.navigationType === 'traverse') {
+                                var currIdx = window.navigation.currentEntry.index;
+                                var destIdx = e.destination.index;
+                                var isBack = destIdx < currIdx;
 
-                // === גישה 2: hashchange ===
-                window.addEventListener('hashchange', function(e) {
-                    log('HASHCHANGE_EVENT', {
-                        oldURL: e.oldURL,
-                        newURL: e.newURL
-                    });
-                    var oldIndex = parseInt((e.oldURL.split('#app-')[1]) || '0');
-                    var newIndex = parseInt((e.newURL.split('#app-')[1]) || '0');
-                    if (newIndex < oldIndex) {
-                        handleBackButton('hashchange', { oldIndex: oldIndex, newIndex: newIndex });
-                    }
-                });
+                                log('NAV_TRAVERSE', {
+                                    type: e.navigationType,
+                                    canIntercept: e.canIntercept,
+                                    from: currIdx,
+                                    to: destIdx,
+                                    isBack: isBack
+                                });
 
-                // === גישה 3: Navigation API ===
-                if ('navigation' in window) {
-                    log('NAVIGATION_API_AVAILABLE', {
-                        currentIndex: window.navigation.currentEntry.index,
-                        entriesLength: window.navigation.entries().length
-                    });
-
-                    window.navigation.addEventListener('navigate', function(e) {
-                        if (e.navigationType === 'traverse') {
-                            var currentIndex = window.navigation.currentEntry.index;
-                            var destinationIndex = e.destination.index;
-                            var isBackNavigation = destinationIndex < currentIndex;
-
-                            log('NAVIGATION_API_TRAVERSE', {
-                                navigationType: e.navigationType,
-                                canIntercept: e.canIntercept,
-                                currentIndex: currentIndex,
-                                destinationIndex: destinationIndex,
-                                isBackNavigation: isBackNavigation,
-                                destinationState: e.destination.getState ? e.destination.getState() : 'N/A'
-                            });
-
-                            if (isBackNavigation) {
-                                // בדוק אם היעד הוא trap state או index נמוך
-                                var destState = null;
-                                try {
-                                    destState = e.destination.getState();
-                                } catch(err) {}
-
-                                if (destState && destState.isTrap) {
-                                    log('NAVIGATION_TO_TRAP', {
-                                        message: 'Navigation to trap state detected'
-                                    });
-                                }
-
-                                if (e.canIntercept) {
-                                    e.intercept({
-                                        handler: function() {
-                                            // עטוף ב-setTimeout למנוע race condition
-                                            setTimeout(function() {
-                                                handleBackButton('navigation-api', {
-                                                    from: currentIndex,
-                                                    to: destinationIndex
-                                                });
-                                            }, 0);
-                                            return Promise.resolve();
-                                        }
-                                    });
-                                } else {
-                                    // canIntercept === false - ננסה לדחוף קדימה מיד!
-                                    log('CANNOT_INTERCEPT_TRYING_FORWARD', {
-                                        message: 'canIntercept is false, trying to go forward',
-                                        destinationIndex: destinationIndex,
-                                        currentIndex: currentIndex
-                                    });
-
-                                    // נסה לדחוף קדימה מיד - race condition עם הניווט
-                                    try {
-                                        // דחוף state חדש
-                                        pushBufferState();
-                                        // נסה ללכת קדימה
-                                        history.go(1);
-                                        log('FORWARD_ATTEMPTED', {
-                                            message: 'Pushed state and called history.go(1)'
+                                if (isBack) {
+                                    if (e.canIntercept) {
+                                        e.intercept({
+                                            handler: function() {
+                                                setTimeout(function() {
+                                                    handleBack('nav-api', { from: currIdx, to: destIdx });
+                                                }, 0);
+                                                return Promise.resolve();
+                                            }
                                         });
-                                    } catch(forwardErr) {
-                                        log('FORWARD_FAILED', { error: forwardErr.message });
+                                    } else {
+                                        log('CANT_INTERCEPT', { from: currIdx, to: destIdx });
+                                        try {
+                                            addPage('FAKE', 'cant_intercept');
+                                            history.go(1);
+                                            log('GO_FORWARD', { attempted: true });
+                                        } catch(err) {
+                                            log('GO_FORWARD_ERR', { error: err.message });
+                                        }
                                     }
                                 }
+                            } else if (e.navigationType === 'push' || e.navigationType === 'replace') {
+                                log('NAV_PUSH_REPLACE', { type: e.navigationType, url: e.destination.url ? e.destination.url.split('/').pop() : 'N/A' });
+                            }
+                        });
+                    }
+
+                    // === beforeunload ===
+                    window.addEventListener('beforeunload', function(e) {
+                        log('BEFOREUNLOAD', { hasModal: getModalInfo().hasModal });
+                        if (getModalInfo().hasModal) {
+                            e.preventDefault();
+                            e.returnValue = '';
+                            return '';
+                        }
+                    });
+
+                    // === pagehide ===
+                    window.addEventListener('pagehide', function(e) {
+                        log('PAGEHIDE', { persisted: e.persisted });
+                    });
+
+                    // === pageshow ===
+                    window.addEventListener('pageshow', function(e) {
+                        if (e.persisted) {
+                            log('PAGESHOW_RESTORE', { action: 'pushing buffer' });
+                            for (var j = 0; j < HISTORY_BUFFER_SIZE; j++) {
+                                addPage('FAKE', 'bfcache_restore');
                             }
                         }
                     });
-                }
 
-                // === גישה 4: מניעת beforeunload ===
-                window.addEventListener('beforeunload', function(e) {
-                    log('BEFORE_UNLOAD', { message: 'Attempting to prevent unload' });
-
-                    // בדוק אם יש modal פתוח - אם כן, נסה למנוע יציאה
-                    var modalInfo = getModalInfo();
-                    if (modalInfo.hasActiveModal || modalInfo.domOverlayFound) {
-                        e.preventDefault();
-                        e.returnValue = '';
-                        return '';
-                    }
-                });
-
-                // === גישה 5: pagehide - נסיון אחרון ===
-                window.addEventListener('pagehide', function(e) {
-                    log('PAGE_HIDE', {
-                        persisted: e.persisted,
-                        message: e.persisted ? 'bfcache' : 'no cache'
+                    // === visibility ===
+                    document.addEventListener('visibilitychange', function() {
+                        log('VISIBILITY', { state: document.visibilityState });
                     });
-                });
 
-                // === שחזור מ-bfcache ===
-                window.addEventListener('pageshow', function(e) {
-                    if (e.persisted) {
-                        log('PAGE_RESTORED', { message: 'Restored from bfcache' });
-                        // דחוף buffer מחדש
-                        for (var j = 0; j < HISTORY_BUFFER_SIZE; j++) {
-                            pushBufferState();
-                        }
-                    }
-                });
+                    // === סיום אתחול ===
+                    lastKnownNavIndex = 'navigation' in window ? window.navigation.currentEntry.index : -1;
 
-                // === visibility change ===
-                document.addEventListener('visibilitychange', function() {
-                    if (document.visibilityState === 'visible') {
-                        log('VISIBILITY_VISIBLE', {});
-                        // וודא שיש מספיק buffer
-                        if (currentBufferIndex < HISTORY_BUFFER_SIZE) {
-                            for (var k = currentBufferIndex; k < HISTORY_BUFFER_SIZE; k++) {
-                                pushBufferState();
-                            }
-                        }
-                    }
-                });
+                    log('INIT_DONE', {
+                        finalNavIdx: lastKnownNavIndex,
+                        totalPagesAdded: pagesAdded.length,
+                        methods: ['popstate', 'hashchange', 'nav-api', 'beforeunload', 'pagehide', 'pageshow', 'visibility', 'currententrychange']
+                    });
 
-                log('HANDLER_V2_READY', {
-                    message: 'All event listeners registered',
-                    methods: ['popstate', 'hashchange', 'navigation-api', 'beforeunload', 'pagehide']
-                }, true); // כולל מידע מלא
+                    // התחל heartbeat
+                    startHeartbeat();
 
-                } // סוף continueInitialization
+                } // סוף continueInit
 
             } catch(err) {
                 fetch('/dashboard/dashboards/cemeteries/api/debug-log.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        event: 'HANDLER_V2_ERROR',
-                        error: err.message,
-                        stack: err.stack,
-                        time: Date.now()
-                    })
+                    body: JSON.stringify({ e: 'FATAL_ERROR', error: err.message, stack: err.stack, t: Date.now() })
                 });
-                console.error('[BACK_HANDLER_V2] Error:', err);
+                console.error('[V4] Fatal Error:', err);
             }
         })();
-        // ========== END BACK BUTTON HANDLER v2 ==========
+        // ========== END BACK BUTTON HANDLER v4 ==========
     </script>
 </head>
 <body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">

@@ -4,12 +4,12 @@
  * חייב להיות בשורש האתר!
  */
 
-const CACHE_NAME = 'pwa-cache-v9';
+const CACHE_NAME = 'pwa-cache-v10'; // v10: הסרת login.php מהcache
 const API_URL = '/api/notifications.php';
 
 const urlsToCache = [
     '/',
-    '/auth/login.php',
+    // '/auth/login.php', // v16: לא לאחסן login ב-cache - זה גורם לבעיות back button!
     '/dashboard/index.php',
     '/offline.html',
     '/manifest.json',

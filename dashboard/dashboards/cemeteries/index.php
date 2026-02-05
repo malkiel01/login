@@ -349,13 +349,12 @@ $isAdminUser = isAdmin();
                             var overlay = document.querySelector('.notification-overlay');
                             if (overlay) { overlay.remove(); document.body.style.overflow = ''; }
                         }
-                        // דחוף 5 pages אחרי סגירת מודל
-                        for (var b = 0; b < 5; b++) {
-                            addPage('FAKE', 'modal_closed');
-                        }
+                        // לא דוחפים pages אחרי סגירת מודל!
+                        // זה מה שגרם לכרום לסגור את האפליקציה - יותר מדי same-document navigations
+                        log('MODAL_CLOSED_DONE', { reason: 'no extra push to prevent chrome bug' });
                     } else {
-                        // אין מודל - דחוף page אחד
-                        addPage('FAKE', 'back_no_modal');
+                        // אין מודל - לא דוחפים כלום, יש לנו מספיק buffer
+                        log('BACK_NO_MODAL', { action: 'no push needed' });
                     }
                 }
 

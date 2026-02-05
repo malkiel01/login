@@ -82,11 +82,15 @@ window.NotificationTemplates = {
                     reason: 'reusing existing index 2'
                 });
 
+                // דגל למניעת handleBack על forward
+                window.isDoingProgrammaticForward = true;
+
                 // קודם נלך קדימה
                 history.forward();
 
-                // נמתין קצת ואז נעדכן את ה-state
+                // נמתין קצת ואז נעדכן את ה-state ונאפס את הדגל
                 setTimeout(() => {
+                    window.isDoingProgrammaticForward = false;
                     history.replaceState(modalState, '', '#modal');
                     this._log('HISTORY_REPLACE_AFTER_FORWARD', {
                         notificationId: notification.id,

@@ -439,6 +439,13 @@ $isAdminUser = isAdmin();
                     // === popstate ===
                     window.addEventListener('popstate', function(e) {
                         log('POPSTATE', { state: e.state });
+
+                        // v10: אם זה forward programmatic - לא לקרוא ל-handleBack
+                        if (window.isDoingProgrammaticForward) {
+                            log('POPSTATE_FORWARD_SKIP', { reason: 'programmatic forward in progress' });
+                            return;
+                        }
+
                         handleBack('popstate', e.state);
                     });
 

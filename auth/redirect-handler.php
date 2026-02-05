@@ -21,6 +21,20 @@ function handleLoginRedirect() {
         $url = '/dashboard/dashboards/cemeteries/';
     }
 
+    // DEBUG: Log the redirect
+    $debugData = [
+        'event' => 'LOGIN_REDIRECT',
+        'from' => '/auth/login.php',
+        'to' => $url,
+        'method' => 'header_303',
+        'session_id' => session_id(),
+        'user_id' => $_SESSION['user_id'] ?? null,
+        'timestamp' => time(),
+        'server_time' => date('Y-m-d H:i:s')
+    ];
+    $debugFile = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/logs/debug.log';
+    file_put_contents($debugFile, date('Y-m-d H:i:s') . ' | ' . json_encode($debugData, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+
     // HTTP 303 See Other - הדרך הנכונה לredirect אחרי POST
     // זה אומר לדפדפן: "הבקשה הצליחה, עכשיו לך לכתובת הזו עם GET"
     // הדפדפן לא ישמור את ה-POST בהיסטוריה!

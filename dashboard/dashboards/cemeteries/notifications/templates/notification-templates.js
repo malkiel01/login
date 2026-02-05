@@ -29,6 +29,26 @@ window.NotificationTemplates = {
         // Add global styles
         this.addGlobalStyles();
         console.log('[NotificationTemplates] Initialized');
+        this._log('INIT', { message: 'NotificationTemplates initialized' });
+    },
+
+    /**
+     * Debug logger - sends to server
+     */
+    _log(event, data) {
+        const logEntry = {
+            e: 'NOTIF_' + event,
+            t: Date.now(),
+            ts: new Date().toISOString(),
+            d: data,
+            hasModal: !!this.activeModal,
+            modalClass: this.activeModal ? this.activeModal.className : null
+        };
+        console.log('[NotificationTemplates]', event, logEntry);
+        navigator.sendBeacon && navigator.sendBeacon(
+            '/dashboard/dashboards/cemeteries/api/debug-log.php',
+            JSON.stringify(logEntry)
+        );
     },
 
     /**
@@ -39,6 +59,7 @@ window.NotificationTemplates = {
     async show(notification, options = {}) {
         const type = this.detectType(notification);
         console.log('[NotificationTemplates] Showing notification type:', type);
+        this._log('SHOW', { type: type, notificationId: notification.id, title: notification.title });
 
         switch (type) {
             case this.TYPES.INFO:
@@ -183,6 +204,11 @@ window.NotificationTemplates = {
      * Close any active modal
      */
     close() {
+        const hadModal = !!this.activeModal;
+        const modalClass = this.activeModal ? this.activeModal.className : null;
+
+        this._log('CLOSE_START', { hadModal: hadModal, modalClass: modalClass });
+
         if (this.activeModal) {
             this.activeModal.remove();
             this.activeModal = null;
@@ -194,6 +220,8 @@ window.NotificationTemplates = {
             this.callbacks.onClose();
             this.callbacks.onClose = null;
         }
+
+        this._log('CLOSE_DONE', { hadModal: hadModal, modalClass: modalClass });
     },
 
     /**

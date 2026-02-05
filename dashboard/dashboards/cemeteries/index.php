@@ -153,7 +153,15 @@ $isAdminUser = isAdmin();
                 var backPressCount = 0;
                 var eventLog = [];
                 var isPWA = window.matchMedia('(display-mode: standalone)').matches ||
-                            window.navigator.standalone === true;
+                            window.navigator.standalone === true ||
+                            localStorage.getItem('isPWA') === 'true' ||
+                            (document.referrer === '' && history.length === 1);
+
+                // שמור לסשנים הבאים
+                if (isPWA) {
+                    try { localStorage.setItem('isPWA', 'true'); } catch(e) {}
+                }
+
                 var currentBufferIndex = 0;
                 var initialHistoryLength = history.length;
                 var trapStateCreated = false;

@@ -303,16 +303,8 @@ $isAdminUser = isAdmin();
                     log('TRAP_CREATE', { historyLength: history.length });
                 }
 
-                // === v6: גישה חדשה - מבטלים את הניווט אחורה כשיש מודל ===
-                var isAbsorbingBack = false;  // דגל למניעת לולאה
-
+                // === v7: גישה פשוטה - back סוגר מודל והולך לדשבורד ===
                 function handleBack(source, info) {
-                    // אם אנחנו באמצע ביטול ניווט, מתעלמים
-                    if (isAbsorbingBack) {
-                        log('BACK_ABSORBED_IGNORE', { reason: 'absorbing in progress' });
-                        return;
-                    }
-
                     backPressCount++;
 
                     // בדוק אם יש מודל פתוח בDOM
@@ -327,13 +319,9 @@ $isAdminUser = isAdmin();
                     });
 
                     if (hasModalInDOM) {
-                        // יש מודל פתוח!
-                        // 1. נבטל את הניווט אחורה על ידי חזרה קדימה
-                        // 2. נסגור את המודל
-                        log('MODAL_BACK_ABSORB', { action: 'go forward to cancel back' });
-
-                        isAbsorbingBack = true;
-                        history.go(1);  // בטל את הניווט אחורה
+                        // יש מודל פתוח - סגור אותו
+                        // הניווט כבר קרה (מ-#modal לדשבורד), רק צריך לסגור את המודל
+                        log('MODAL_CLOSE_ON_BACK', { action: 'closing modal, navigation continues to dashboard' });
 
                         // סגור את המודל
                         if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
@@ -343,11 +331,7 @@ $isAdminUser = isAdmin();
                             document.body.style.overflow = '';
                         }
 
-                        // אפס את הדגל אחרי זמן קצר
-                        setTimeout(function() {
-                            isAbsorbingBack = false;
-                            log('BACK_ABSORB_DONE', { navIndex: window.navigation ? window.navigation.currentEntry.index : -1 });
-                        }, 100);
+                        log('MODAL_CLOSED', { navIndex: window.navigation ? window.navigation.currentEntry.index : -1 });
 
                     } else {
                         // אין מודל - תן לניווט להמשיך כרגיל (יציאה מהאפליקציה)

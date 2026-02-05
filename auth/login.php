@@ -34,9 +34,12 @@ header('Pragma: no-cache');
 header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי מיידית
-// שימוש ב-header() כי זה קורה ברמת HTTP - המשתמש לא רואה את הדף בכלל!
+// חשוב: משתמשים ב-location.replace() כדי לא להוסיף את login להיסטוריה!
+// זה פותר את הבעיה של back → login → redirect → dashboard loop
 if (isset($_SESSION['user_id'])) {
-    header('Location: /dashboard/dashboards/cemeteries/', true, 302);
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace("/dashboard/dashboards/cemeteries/");</script>';
+    echo '</head><body></body></html>';
     exit;
 }
 

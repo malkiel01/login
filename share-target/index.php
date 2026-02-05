@@ -435,7 +435,7 @@ $sharedDataJson = json_encode($sharedData, JSON_UNESCAPED_UNICODE);
                 </div>
                 <h2>נדרשת התחברות</h2>
                 <p>כדי לשמור את התוכן המשותף, יש להתחבר לחשבון שלך</p>
-                <a href="/auth/login.php?redirect=<?= urlencode('/share-target/?' . http_build_query($_GET)) ?>" class="login-btn">
+                <a href="#" onclick="location.replace('/auth/login.php?redirect=<?= urlencode('/share-target/?' . http_build_query($_GET)) ?>'); return false;" class="login-btn">
                     התחבר
                 </a>
             </div>

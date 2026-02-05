@@ -65,7 +65,8 @@ function getTokenInitScript(): string {
  * @return string
  */
 function getAuthCheckScript(bool $redirectToLogin = true): string {
-    $redirectCode = $redirectToLogin ? "window.location.href = '/auth/login.php';" : '';
+    // v16: שימוש ב-location.replace() כדי לא להוסיף login להיסטוריה!
+    $redirectCode = $redirectToLogin ? "location.replace('/auth/login.php');" : '';
 
     return "
     <script>
@@ -98,7 +99,8 @@ function getLogoutScript(): string {
             if (window.persistentAuth) {
                 await window.persistentAuth.logout();
             }
-            window.location.href = '/auth/login.php';
+            // v16: location.replace() כדי לא להוסיף login להיסטוריה
+            location.replace('/auth/login.php');
         }
     </script>
     ";

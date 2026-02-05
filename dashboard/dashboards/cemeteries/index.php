@@ -78,6 +78,62 @@ $isAdminUser = isAdmin();
     <meta name="theme-color" content="<?= $statusBarColor ?>">
     <title><?php echo DASHBOARD_NAME; ?></title>
     <link rel="icon" href="data:,">
+
+    <!-- DEBUG: לוג היסטוריית הניווט -->
+    <script>
+    (function() {
+        var debugData = {
+            event: 'DASHBOARD_LOAD',
+            timestamp: Date.now(),
+            historyLength: history.length,
+            currentURL: location.href,
+            referrer: document.referrer,
+            navigationEntries: []
+        };
+
+        // Navigation API (אם קיים)
+        if (window.navigation) {
+            try {
+                var entries = navigation.entries();
+                debugData.currentEntryIndex = navigation.currentEntry ? navigation.currentEntry.index : -1;
+                debugData.canGoBack = navigation.canGoBack;
+                debugData.canGoForward = navigation.canGoForward;
+
+                entries.forEach(function(entry, i) {
+                    debugData.navigationEntries.push({
+                        index: i,
+                        url: entry.url,
+                        key: entry.key,
+                        isCurrent: entry === navigation.currentEntry
+                    });
+                });
+            } catch(e) {
+                debugData.navigationError = e.message;
+            }
+        } else {
+            debugData.navigationAPI = 'NOT_SUPPORTED';
+        }
+
+        // שלח ללוג
+        fetch('/dashboard/dashboards/cemeteries/api/debug-log.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(debugData)
+        });
+
+        // הצג בקונסול
+        console.log('🔍 HISTORY DEBUG:', debugData);
+
+        // אם יש login בהיסטוריה - התראה!
+        if (debugData.navigationEntries.length > 0) {
+            debugData.navigationEntries.forEach(function(entry) {
+                if (entry.url && entry.url.indexOf('login') !== -1) {
+                    console.error('⚠️ LOGIN.PHP נמצא בהיסטוריה!', entry);
+                }
+            });
+        }
+    })();
+    </script>
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">

@@ -324,7 +324,7 @@ require_once 'permissions/permissions-init.php';
             <button class="btn" onclick="testJavaScript()">🧪 בדוק JavaScript</button>
             <button class="btn" onclick="window.location.reload()">🔄 רענן</button>
             <button class="btn" onclick="window.location.href='/permissions/debug/permissions-debug.php'">🔧 דף דיבוג מלא</button>
-            <button class="btn" onclick="window.location.href='/auth/login.php'">🔐 חזור להתחברות</button>
+            <button class="btn" onclick="location.replace('/auth/login.php')">🔐 חזור להתחברות</button>
         </div>
         
         <!-- Debug Info -->

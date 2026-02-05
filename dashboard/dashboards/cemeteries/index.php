@@ -380,17 +380,30 @@ $isAdminUser = isAdmin();
                     var overlay = document.querySelector('.notification-overlay');
                     var hasModalInDOM = !!overlay;
 
+                    // v19: דיבוג מפורט
+                    var navIdx = window.navigation ? window.navigation.currentEntry.index : -1;
+                    var navLen = window.navigation ? window.navigation.entries().length : -1;
+                    var canBack = window.navigation ? window.navigation.canGoBack : null;
+
                     log('BACK', {
                         src: source,
                         num: backPressCount,
                         hasModalInDOM: hasModalInDOM,
-                        hash: location.hash || 'none'
+                        hash: location.hash || 'none',
+                        navIdx: navIdx,
+                        navLen: navLen,
+                        canBack: canBack,
+                        histLen: history.length
                     });
 
                     if (hasModalInDOM) {
                         // יש מודל פתוח - סגור אותו
                         // הניווט כבר קרה (מ-#modal לדשבורד), רק צריך לסגור את המודל
-                        log('MODAL_CLOSE_ON_BACK', { action: 'closing modal, navigation continues to dashboard' });
+                        log('MODAL_CLOSE_ON_BACK', {
+                            action: 'closing modal, navigation continues to dashboard',
+                            navIdx: navIdx,
+                            canBack: canBack
+                        });
 
                         // סגור את המודל
                         if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
@@ -400,11 +413,23 @@ $isAdminUser = isAdmin();
                             document.body.style.overflow = '';
                         }
 
-                        log('MODAL_CLOSED', { navIndex: window.navigation ? window.navigation.currentEntry.index : -1 });
+                        // v19: לוג אחרי סגירת מודל
+                        var newNavIdx = window.navigation ? window.navigation.currentEntry.index : -1;
+                        var newCanBack = window.navigation ? window.navigation.canGoBack : null;
+                        log('MODAL_CLOSED', {
+                            navIdxBefore: navIdx,
+                            navIdxAfter: newNavIdx,
+                            canBackAfter: newCanBack
+                        });
 
                     } else {
                         // אין מודל - תן לניווט להמשיך כרגיל (יציאה מהאפליקציה)
-                        log('BACK_NO_MODAL_EXIT', { action: 'letting app exit' });
+                        log('BACK_NO_MODAL_EXIT', {
+                            action: 'letting app exit',
+                            navIdx: navIdx,
+                            canBack: canBack,
+                            hash: location.hash
+                        });
                     }
                 }
 

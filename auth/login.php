@@ -264,11 +264,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
     <?php echo csrfMeta(); ?>
     <?php echo csrfScript(); ?>
 
-    <!-- v12: הסתרה מיידית למניעת הבזק בעת bfcache redirect -->
-    <style id="hide-until-ready">.login-container{opacity:0;transition:opacity .15s}</style>
+    <!-- v13: הסתרה אגרסיבית למניעת הבזק -->
+    <style id="hide-until-ready">
+        body.checking-session .login-container { display:none !important; }
+    </style>
+    <script>document.documentElement.className='checking-session';</script>
 
 </head>
-<body>
+<body class="checking-session">
     <div class="login-container">
         <div class="login-header">
             <h1><i class="fas fa-shopping-cart"></i> <?php echo SITE_NAME; ?></h1>
@@ -607,19 +610,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         });
     </script>
 
-    <!-- v12: הגנה מפני bfcache + הסתרה עד שמוודאים שהמשתמש לא מחובר -->
+    <!-- v13: הגנה מפני bfcache + הסתרה עד שמוודאים שהמשתמש לא מחובר -->
     <script>
     (function() {
-        var loginContainer = document.querySelector('.login-container');
-        var hideStyle = document.getElementById('hide-until-ready');
-
         function showLoginPage() {
-            // הצג את דף הלוגין
-            if (loginContainer) loginContainer.style.opacity = '1';
-            if (hideStyle) hideStyle.remove();
+            // הסר את ה-class שמסתיר את הדף
+            document.body.classList.remove('checking-session');
+            document.documentElement.classList.remove('checking-session');
         }
 
-        function checkAndRedirect(fromCache) {
+        function hideLoginPage() {
+            // וודא שהדף מוסתר
+            document.body.classList.add('checking-session');
+        }
+
+        function checkAndRedirect() {
+            hideLoginPage(); // וודא שמוסתר לפני הבדיקה
             fetch('/auth/check-session.php', { credentials: 'include' })
                 .then(r => r.json())
                 .then(data => {
@@ -640,13 +646,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         // בדיקה בטעינת דף (כולל מקאש)
         window.addEventListener('pageshow', function(e) {
             if (e.persisted) {
-                // הדף נטען מ-bfcache
-                checkAndRedirect(true);
+                // הדף נטען מ-bfcache - הסתר מיד ובדוק
+                checkAndRedirect();
             }
         });
 
         // בדיקה בטעינה רגילה
-        checkAndRedirect(false);
+        checkAndRedirect();
     })();
     </script>
 

@@ -36,11 +36,37 @@ function handleLoginRedirect() {
     $debugFile = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/logs/debug.log';
     file_put_contents($debugFile, date('Y-m-d H:i:s') . ' | ' . json_encode($debugData, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 
-    // v12: location.replace() עם דף שקוף לחלוטין
-    // הדף הזמני לא יראה כלום - רק רקע לבן וredirect מיידי
+    // v17: הבעיה - form POST יוצר entry חדש בהיסטוריה!
+    // אז location.replace מחליף רק את ה-POST, אבל ה-GET של login נשאר.
+    // הפתרון: לחזור אחורה לתחילת ההיסטוריה ואז להחליף
+    $urlJson = json_encode($url);
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<style>*{margin:0;padding:0}body{background:#fff}</style>'; // רקע לבן נקי
-    echo '<script>location.replace(' . json_encode($url) . ');</script>';
+    echo '<style>*{margin:0;padding:0}body{background:#fff}</style>';
+    echo '<script>
+    (function() {
+        var targetUrl = ' . $urlJson . ';
+
+        // v17: נקה את כל ההיסטוריה על ידי מעבר לתחילה והחלפה
+        // history.length כולל את הדף הנוכחי, אז צריך לחזור length-1 צעדים
+        var stepsBack = history.length - 1;
+
+        if (stepsBack > 0) {
+            // יש היסטוריה - נחזור לתחילה ונחליף
+            // נשתמש ב-popstate event לתפוס את הרגע שחזרנו
+            window.addEventListener("popstate", function onPop() {
+                window.removeEventListener("popstate", onPop);
+                // עכשיו אנחנו ב-entry הראשון - נחליף אותו
+                location.replace(targetUrl);
+            }, {once: true});
+
+            // חזור לתחילת ההיסטוריה
+            history.go(-stepsBack);
+        } else {
+            // אין היסטוריה קודמת - פשוט החלף
+            location.replace(targetUrl);
+        }
+    })();
+    </script>';
     echo '</head><body></body></html>';
     exit;
 }

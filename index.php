@@ -44,24 +44,23 @@ function jsRedirect($url) {
     exit;
 }
 
-// בדוק אם המשתמש מחובר - הפנה מיידית ברמת HTTP
+// v16: תמיד להשתמש ב-location.replace() כדי לא להוסיף להיסטוריה
+// כך ה-index.php לעולם לא יישאר בהיסטוריה
 if (isset($_SESSION['user_id'])) {
+    // מחובר - הפנה לדשבורד
     if (isset($_SESSION['redirect_after_login'])) {
         $redirect = $_SESSION['redirect_after_login'];
         unset($_SESSION['redirect_after_login']);
-        header('Location: ' . $redirect, true, 302);
+        jsRedirect($redirect);
     } else {
-        header('Location: /dashboard/dashboards/cemeteries/', true, 302);
+        jsRedirect('/dashboard/dashboards/cemeteries/');
     }
-    exit;
 } else {
-    // המשתמש לא מחובר
+    // לא מחובר - הפנה ללוגין
     if (isset($_SESSION['redirect_after_login'])) {
-        // העבר את ה-redirect ללוגין
         $redirect = $_SESSION['redirect_after_login'];
         jsRedirect('/auth/login.php?redirect_to=' . urlencode($redirect));
     } else {
-        // ללוגין רגיל
         jsRedirect('/auth/login.php');
     }
 }

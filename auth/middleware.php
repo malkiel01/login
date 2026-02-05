@@ -289,7 +289,11 @@ function requireAuth(?string $requiredPermission = null, bool $isApi = false): v
         $currentUrl = $_SERVER['REQUEST_URI'] ?? '/dashboard';
         $_SESSION['redirect_after_login'] = $currentUrl;
 
-        header('Location: /auth/login.php');
+        // v16: שימוש ב-location.replace() כדי לא להוסיף entries להיסטוריה
+        // זה מונע את הבעיה של back → login → dashboard loop
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+        echo '<script>location.replace("/auth/login.php");</script>';
+        echo '</head><body></body></html>';
         exit;
     }
 

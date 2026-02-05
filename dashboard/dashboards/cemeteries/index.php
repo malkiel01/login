@@ -418,10 +418,14 @@ $isAdminUser = isAdmin();
                 function continueInit() {
                     log('INIT_CONTINUE', { historyLen: history.length, hash: location.hash });
 
-                    // v5: בלי FAKE pages!
-                    // הרעיון: רק מודלים של התראות דוחפים history
-                    // Chrome לא יזהה "back button abuse" כי אין דחיפות מיותרות
-                    log('INIT_NO_BUFFER', { reason: 'v5 - no fake pages, only modal history' });
+                    // v5.1: נוסיף 2 buffer entries בלבד
+                    // זה יוצר "רשת ביטחון" כדי ש-Chrome לא ידלג ישירות ל-login.php
+                    // ההיסטוריה תראה: login.php -> / -> #app-1 -> #app-2 -> #notif-xxx
+                    var bufferState1 = { app: 'cemeteries', isBuffer: true, bufferIndex: 1 };
+                    var bufferState2 = { app: 'cemeteries', isBuffer: true, bufferIndex: 2 };
+                    history.pushState(bufferState1, '', '#app-1');
+                    history.pushState(bufferState2, '', '#app-2');
+                    log('BUFFER_ADDED', { count: 2, reason: 'safety net for chrome' });
 
                     // === popstate ===
                     window.addEventListener('popstate', function(e) {

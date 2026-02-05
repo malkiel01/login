@@ -79,58 +79,50 @@ $isAdminUser = isAdmin();
     <title><?php echo DASHBOARD_NAME; ?></title>
     <link rel="icon" href="data:,">
 
-    <!-- DEBUG: לוג היסטוריית הניווט -->
+    <!-- v18: ניקוי היסטוריה מיד בטעינת הדשבורד -->
     <script>
     (function() {
-        var debugData = {
-            event: 'DASHBOARD_LOAD',
-            timestamp: Date.now(),
-            historyLength: history.length,
-            currentURL: location.href,
-            referrer: document.referrer,
-            navigationEntries: []
-        };
+        // v18: בדוק אם צריך לנקות היסטוריה (בא מ-redirect-handler)
+        var needsClean = sessionStorage.getItem('__cleanHistory');
 
-        // Navigation API (אם קיים)
-        if (window.navigation) {
-            try {
-                var entries = navigation.entries();
-                debugData.currentEntryIndex = navigation.currentEntry ? navigation.currentEntry.index : -1;
-                debugData.canGoBack = navigation.canGoBack;
-                debugData.canGoForward = navigation.canGoForward;
+        if (needsClean) {
+            console.log('[v18] 🧹 מנקה היסטוריה אחרי התחברות');
+            sessionStorage.removeItem('__cleanHistory');
+            sessionStorage.removeItem('__historyLength');
 
-                entries.forEach(function(entry, i) {
-                    debugData.navigationEntries.push({
-                        index: i,
-                        url: entry.url,
-                        key: entry.key,
-                        isCurrent: entry === navigation.currentEntry
-                    });
-                });
-            } catch(e) {
-                debugData.navigationError = e.message;
-            }
-        } else {
-            debugData.navigationAPI = 'NOT_SUPPORTED';
+            // החלף את ה-entry הנוכחי - זה מוחק את הקודמים מבחינת back
+            history.replaceState({clean: true, t: Date.now()}, '', '/dashboard/dashboards/cemeteries/');
+            console.log('[v18] ✅ היסטוריה נוקתה');
+            return;
         }
 
-        // שלח ללוג
-        fetch('/dashboard/dashboards/cemeteries/api/debug-log.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(debugData)
-        });
+        // v18: בדיקה נוספת עם Navigation API
+        if (window.navigation) {
+            var entries = navigation.entries();
+            var currentIndex = navigation.currentEntry ? navigation.currentEntry.index : -1;
 
-        // הצג בקונסול
-        console.log('🔍 HISTORY DEBUG:', debugData);
-
-        // אם יש login בהיסטוריה - התראה!
-        if (debugData.navigationEntries.length > 0) {
-            debugData.navigationEntries.forEach(function(entry) {
-                if (entry.url && entry.url.indexOf('login') !== -1) {
-                    console.error('⚠️ LOGIN.PHP נמצא בהיסטוריה!', entry);
+            // חפש login.php בהיסטוריה
+            var loginIndex = -1;
+            for (var i = 0; i < entries.length; i++) {
+                if (entries[i].url && entries[i].url.indexOf('/auth/login') !== -1) {
+                    loginIndex = i;
+                    break;
                 }
-            });
+            }
+
+            // אם login נמצא בהיסטוריה ואנחנו אחריו - צריך לתקן!
+            if (loginIndex >= 0 && currentIndex > loginIndex) {
+                console.log('[v18] 🔧 מתקן היסטוריה - login.php נמצא ב-index', loginIndex);
+
+                // נסה לנווט אחורה ולהחליף
+                var stepsBack = currentIndex - loginIndex;
+
+                // שמור שצריך להחליף כשנגיע לשם
+                sessionStorage.setItem('__replaceLogin', '1');
+
+                // חזור ל-login
+                history.go(-stepsBack);
+            }
         }
     })();
     </script>

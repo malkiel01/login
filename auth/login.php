@@ -604,9 +604,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         });
     </script>
 
-    <!-- v16: הגנה מפני bfcache + הצגת הדף רק אם לא מחובר -->
+    <!-- v18: ניקוי היסטוריה + הגנה מפני bfcache -->
     <script>
     (function() {
+        // v18: אם הגענו לכאן מ-history.go() כדי לנקות היסטוריה - החלף בדשבורד!
+        var needsReplace = sessionStorage.getItem('__replaceLogin');
+        if (needsReplace) {
+            console.log('[v18] 🔄 מחליף login.php בדשבורד');
+            sessionStorage.removeItem('__replaceLogin');
+            location.replace('/dashboard/dashboards/cemeteries/');
+            return; // אל תציג את הדף
+        }
+
         // הצג את הדף מיידית - הגענו לכאן רק אם לא מחוברים
         document.documentElement.style.display = '';
 

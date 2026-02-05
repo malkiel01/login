@@ -246,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
 }
 ?>
 <!DOCTYPE html>
-<html dir="rtl" lang="he" style="visibility:hidden">
+<html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -263,9 +263,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
     <!-- CSRF Protection -->
     <?php echo csrfMeta(); ?>
     <?php echo csrfScript(); ?>
-
-    <!-- v14: הסתרה מוחלטת - הכל מוסתר עד שמוכח אחרת -->
-    <style id="hide-until-ready">.login-container{display:none !important}</style>
 
 </head>
 <body>
@@ -607,64 +604,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         });
     </script>
 
-    <!-- v14: הגנה מפני bfcache - הדף מוסתר כברירת מחדל -->
+    <!-- v16: הגנה מפני bfcache - אם המשתמש מחובר, הפנה לדשבורד -->
     <script>
-    (function() {
-        var hideStyle = document.getElementById('hide-until-ready');
-
-        function showLoginPage() {
-            // הסר את ה-style שמסתיר
-            if (hideStyle && hideStyle.parentNode) {
-                hideStyle.parentNode.removeChild(hideStyle);
-            }
-            // הצג את ה-HTML (היה מוסתר ב-inline style)
-            document.documentElement.style.visibility = 'visible';
-        }
-
-        function ensureHidden() {
-            // וודא שכל הדף מוסתר
-            document.documentElement.style.visibility = 'hidden';
-            // אם ה-style הוסר, הוסף אותו מחדש
-            if (!document.getElementById('hide-until-ready')) {
-                var style = document.createElement('style');
-                style.id = 'hide-until-ready';
-                style.textContent = '.login-container{display:none !important}';
-                document.head.appendChild(style);
-                hideStyle = style;
-            }
-        }
-
-        function checkAndRedirect() {
-            ensureHidden(); // וודא שמוסתר לפני הבדיקה
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            // הדף נטען מ-bfcache - בדוק אם מחובר
             fetch('/auth/check-session.php', { credentials: 'include' })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.logged_in) {
-                        // המשתמש מחובר - הפנה לדשבורד (הדף נשאר מוסתר)
                         location.replace('/dashboard/dashboards/cemeteries/');
-                    } else {
-                        // המשתמש לא מחובר - הצג את דף הלוגין
-                        showLoginPage();
                     }
-                })
-                .catch(function() {
-                    // שגיאה - הצג את הדף בכל מקרה
-                    showLoginPage();
                 });
         }
-
-        // בדיקה בטעינת דף (כולל מקאש)
-        window.addEventListener('pageshow', function(e) {
-            if (e.persisted) {
-                // הדף נטען מ-bfcache - וודא הסתרה ובדוק
-                ensureHidden();
-                checkAndRedirect();
-            }
-        });
-
-        // בדיקה בטעינה רגילה
-        checkAndRedirect();
-    })();
+    });
     </script>
 
 </body>

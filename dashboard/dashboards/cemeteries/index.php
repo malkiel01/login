@@ -303,8 +303,19 @@ $isAdminUser = isAdmin();
                     log('TRAP_CREATE', { historyLength: history.length });
                 }
 
-                // === v7: גישה פשוטה - back סוגר מודל והולך לדשבורד ===
+                // === v8: מניעת קריאה כפולה ל-handleBack ===
+                var lastBackTime = 0;
+                var BACK_DEBOUNCE_MS = 100;  // מינימום זמן בין קריאות
+
                 function handleBack(source, info) {
+                    // מניעת קריאה כפולה - גם popstate וגם nav-api קוראים לנו
+                    var now = Date.now();
+                    if (now - lastBackTime < BACK_DEBOUNCE_MS) {
+                        log('BACK_DEBOUNCE', { source: source, timeSinceLast: now - lastBackTime });
+                        return;
+                    }
+                    lastBackTime = now;
+
                     backPressCount++;
 
                     // בדוק אם יש מודל פתוח בDOM

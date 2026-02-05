@@ -10,7 +10,8 @@ if (isset($_GET['redirect_to'])) {
 }
 
 // פונקציה לטיפול בהפניה אחרי התחברות מוצלחת
-// שימוש ב-header() - הדרך הנכונה! לא יוצר entry בהיסטוריה
+// v11: שימוש ב-location.replace() כדי למחוק את דף הלוגין מההיסטוריה לחלוטין!
+// זה פותר את הבעיה של back מהדשבורד שהולך ללוגין במקום לצאת מהאפליקציה
 function handleLoginRedirect() {
     if (isset($_SESSION['redirect_after_login'])) {
         $redirect = $_SESSION['redirect_after_login'];
@@ -26,7 +27,7 @@ function handleLoginRedirect() {
         'event' => 'LOGIN_REDIRECT',
         'from' => '/auth/login.php',
         'to' => $url,
-        'method' => 'header_303',
+        'method' => 'location_replace', // v11: שינוי מ-header_303 ל-location.replace
         'session_id' => session_id(),
         'user_id' => $_SESSION['user_id'] ?? null,
         'timestamp' => time(),
@@ -35,10 +36,12 @@ function handleLoginRedirect() {
     $debugFile = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/logs/debug.log';
     file_put_contents($debugFile, date('Y-m-d H:i:s') . ' | ' . json_encode($debugData, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 
-    // HTTP 303 See Other - הדרך הנכונה לredirect אחרי POST
-    // זה אומר לדפדפן: "הבקשה הצליחה, עכשיו לך לכתובת הזו עם GET"
-    // הדפדפן לא ישמור את ה-POST בהיסטוריה!
-    header('Location: ' . $url, true, 303);
+    // v11: location.replace() במקום header redirect
+    // זה מחליף את ה-entry הנוכחי (login) בהיסטוריה במקום להוסיף חדש
+    // כך שכשלוחצים back מהדשבורד - יוצאים מהאפליקציה (אין entry של login!)
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace(' . json_encode($url) . ');</script>';
+    echo '</head><body></body></html>';
     exit;
 }
 

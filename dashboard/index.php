@@ -23,10 +23,12 @@ $dashboardType = getUserDashboardType($userId);
 // טען config של הדשבורד
 require_once __DIR__ . '/config.php';
 
-// בדוק אם יש redirect מוגדר בקונפיג - הפנה מיידית ברמת HTTP
+// v16: בדוק אם יש redirect מוגדר בקונפיג - הפנה עם location.replace
 if (defined('DASHBOARD_TYPES') && isset(DASHBOARD_TYPES[$dashboardType]['redirect'])) {
     $redirect = DASHBOARD_TYPES[$dashboardType]['redirect'];
-    header('Location: ' . $redirect, true, 302);
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace(' . json_encode($redirect) . ');</script>';
+    echo '</head><body></body></html>';
     exit;
 }
 

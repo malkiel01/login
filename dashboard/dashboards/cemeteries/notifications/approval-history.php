@@ -9,9 +9,12 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-init.php';
 
-// User must be logged in
+// User must be logged in - v16: use location.replace to prevent history pollution
 if (!isLoggedIn()) {
-    header('Location: /auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    $redirect = '/auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']);
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace(' . json_encode($redirect) . ');</script>';
+    echo '</head><body></body></html>';
     exit;
 }
 

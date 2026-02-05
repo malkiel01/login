@@ -1,9 +1,11 @@
 <?php
 // dashboard/dashboards/admin.php - דשבורד מנהל מערכת
 
-// בדיקת הרשאות
+// v16: בדיקת הרשאות - use location.replace to prevent history pollution
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /auth/login.php');
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>location.replace("/auth/login.php");</script>';
+    echo '</head><body></body></html>';
     exit;
 }
 

@@ -581,6 +581,27 @@ $isAdminUser = isAdmin();
                         });
                     }
 
+                    // === v19: currententrychange - אולי יותר אמין ===
+                    if ('navigation' in window) {
+                        window.navigation.addEventListener('currententrychange', function(e) {
+                            var from = e.from ? e.from.index : -1;
+                            var to = window.navigation.currentEntry ? window.navigation.currentEntry.index : -1;
+                            log('NAV_ENTRY_CHANGE', {
+                                from: from,
+                                to: to,
+                                hasModal: getModalInfo().hasModal
+                            });
+
+                            // אם עברנו אחורה ויש מודל - סגור את המודל
+                            if (to < from && getModalInfo().hasModal) {
+                                log('NAV_ENTRY_CHANGE_CLOSE_MODAL', { from: from, to: to });
+                                if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
+                                    NotificationTemplates.close();
+                                }
+                            }
+                        });
+                    }
+
                     // === beforeunload ===
                     window.addEventListener('beforeunload', function(e) {
                         log('BEFOREUNLOAD', { hasModal: getModalInfo().hasModal });

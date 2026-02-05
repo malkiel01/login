@@ -36,10 +36,10 @@ function handleLoginRedirect() {
     $debugFile = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/logs/debug.log';
     file_put_contents($debugFile, date('Y-m-d H:i:s') . ' | ' . json_encode($debugData, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 
-    // v11: location.replace() במקום header redirect
-    // זה מחליף את ה-entry הנוכחי (login) בהיסטוריה במקום להוסיף חדש
-    // כך שכשלוחצים back מהדשבורד - יוצאים מהאפליקציה (אין entry של login!)
+    // v12: location.replace() עם דף שקוף לחלוטין
+    // הדף הזמני לא יראה כלום - רק רקע לבן וredirect מיידי
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<style>*{margin:0;padding:0}body{background:#fff}</style>'; // רקע לבן נקי
     echo '<script>location.replace(' . json_encode($url) . ');</script>';
     echo '</head><body></body></html>';
     exit;

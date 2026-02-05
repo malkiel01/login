@@ -264,6 +264,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
     <?php echo csrfMeta(); ?>
     <?php echo csrfScript(); ?>
 
+    <!-- v12: הסתרה מיידית למניעת הבזק בעת bfcache redirect -->
+    <style id="hide-until-ready">.login-container{opacity:0;transition:opacity .15s}</style>
+
 </head>
 <body>
     <div class="login-container">
@@ -604,34 +607,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         });
     </script>
 
-    <!-- הגנה מפני bfcache - אם הדף נטען מקאש אבל המשתמש מחובר -->
+    <!-- v12: הגנה מפני bfcache + הסתרה עד שמוודאים שהמשתמש לא מחובר -->
     <script>
     (function() {
+        var loginContainer = document.querySelector('.login-container');
+        var hideStyle = document.getElementById('hide-until-ready');
+
+        function showLoginPage() {
+            // הצג את דף הלוגין
+            if (loginContainer) loginContainer.style.opacity = '1';
+            if (hideStyle) hideStyle.remove();
+        }
+
+        function checkAndRedirect(fromCache) {
+            fetch('/auth/check-session.php', { credentials: 'include' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.logged_in) {
+                        // המשתמש מחובר - הפנה לדשבורד (הדף נשאר מוסתר)
+                        location.replace('/dashboard/dashboards/cemeteries/');
+                    } else {
+                        // המשתמש לא מחובר - הצג את דף הלוגין
+                        showLoginPage();
+                    }
+                })
+                .catch(function() {
+                    // שגיאה - הצג את הדף בכל מקרה
+                    showLoginPage();
+                });
+        }
+
         // בדיקה בטעינת דף (כולל מקאש)
         window.addEventListener('pageshow', function(e) {
             if (e.persisted) {
-                // הדף נטען מ-bfcache - בדוק session עם השרת
-                fetch('/auth/check-session.php', { credentials: 'include' })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.logged_in) {
-                            // המשתמש מחובר - הפנה לדשבורד
-                            location.replace('/dashboard/dashboards/cemeteries/');
-                        }
-                    })
-                    .catch(() => {});
+                // הדף נטען מ-bfcache
+                checkAndRedirect(true);
             }
         });
 
-        // בדיקה גם בטעינה רגילה
-        fetch('/auth/check-session.php', { credentials: 'include' })
-            .then(r => r.json())
-            .then(data => {
-                if (data.logged_in) {
-                    location.replace('/dashboard/dashboards/cemeteries/');
-                }
-            })
-            .catch(() => {});
+        // בדיקה בטעינה רגילה
+        checkAndRedirect(false);
     })();
     </script>
 

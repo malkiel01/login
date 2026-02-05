@@ -246,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
 }
 ?>
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html dir="rtl" lang="he" style="display:none">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -604,20 +604,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register']) && !$isLo
         });
     </script>
 
-    <!-- v16: הגנה מפני bfcache - אם המשתמש מחובר, הפנה לדשבורד -->
+    <!-- v16: הגנה מפני bfcache + הצגת הדף רק אם לא מחובר -->
     <script>
-    window.addEventListener('pageshow', function(e) {
-        if (e.persisted) {
-            // הדף נטען מ-bfcache - בדוק אם מחובר
-            fetch('/auth/check-session.php', { credentials: 'include' })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.logged_in) {
-                        location.replace('/dashboard/dashboards/cemeteries/');
-                    }
-                });
-        }
-    });
+    (function() {
+        // הצג את הדף מיידית - הגענו לכאן רק אם לא מחוברים
+        document.documentElement.style.display = '';
+
+        // הגנה מ-bfcache - אם הדף נטען מ-cache, בדוק session
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                // הדף נטען מ-bfcache - בדוק אם מחובר
+                fetch('/auth/check-session.php', { credentials: 'include' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.logged_in) {
+                            location.replace('/dashboard/dashboards/cemeteries/');
+                        }
+                    });
+            }
+        });
+    })();
     </script>
 
 </body>

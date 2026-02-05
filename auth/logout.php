@@ -59,7 +59,10 @@ if (ini_get("session.use_cookies")) {
 // השמדת הסשן
 session_destroy();
 
-// הפניה לדף ההתחברות
-header("Location: login.php");
+// v16: שימוש ב-location.replace() כדי לא להוסיף login להיסטוריה
+// זה מונע את הבעיה של back מדשבורד שמציג login
+echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+echo '<script>location.replace("/auth/login.php");</script>';
+echo '</head><body></body></html>';
 exit;
 ?>

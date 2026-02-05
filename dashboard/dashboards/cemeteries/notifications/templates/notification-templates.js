@@ -61,8 +61,8 @@ window.NotificationTemplates = {
         console.log('[NotificationTemplates] Showing notification type:', type);
         this._log('SHOW', { type: type, notificationId: notification.id, title: notification.title });
 
-        // v6: שיטה חדשה - כל ההתראות משתמשות באותו entry בהיסטוריה
-        // ההיסטוריה צריכה להיות: login=0, dashboard=1, modal=2 (תמיד!)
+        // v9: גישה חדשה למניעת Chrome back button abuse
+        // במקום pushState חדש בכל פעם, נשתמש ב-forward() אם יש entry קיים
         try {
             const modalState = {
                 modal: true,
@@ -70,29 +70,44 @@ window.NotificationTemplates = {
                 openedAt: Date.now(),
                 isNotificationModal: true
             };
-            const modalHash = '#modal';  // hash קבוע לכל ההתראות
 
-            // בדוק אם כבר יש לנו entry של modal בהיסטוריה
-            const currentHash = location.hash || '';
-            const alreadyHasModalEntry = currentHash === '#modal' ||
-                                         currentHash.indexOf('#notif-') === 0 ||
-                                         (history.state && history.state.isNotificationModal);
+            const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+            const canGoForward = window.navigation ? window.navigation.canGoForward : false;
 
-            if (alreadyHasModalEntry) {
-                // כבר יש entry - נחליף אותו (נשאר באותו index)
-                history.replaceState(modalState, '', modalHash);
-                this._log('HISTORY_REPLACE', {
+            if (canGoForward && navIndex === 1) {
+                // יש entry קדימה (index 2) - נלך אליו ונעדכן
+                this._log('HISTORY_FORWARD', {
+                    notificationId: notification.id,
+                    from: navIndex,
+                    reason: 'reusing existing index 2'
+                });
+
+                // קודם נלך קדימה
+                history.forward();
+
+                // נמתין קצת ואז נעדכן את ה-state
+                setTimeout(() => {
+                    history.replaceState(modalState, '', '#modal');
+                    this._log('HISTORY_REPLACE_AFTER_FORWARD', {
+                        notificationId: notification.id,
+                        navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+                    });
+                }, 50);
+
+            } else if (navIndex === 1) {
+                // אין entry קדימה - צריך ליצור
+                history.pushState(modalState, '', '#modal');
+                this._log('HISTORY_PUSH', {
                     notificationId: notification.id,
                     historyLength: history.length,
                     navIndex: window.navigation ? window.navigation.currentEntry.index : -1
                 });
             } else {
-                // אין entry - נוסיף אחד חדש (עובר מ-index 1 ל-index 2)
-                history.pushState(modalState, '', modalHash);
-                this._log('HISTORY_PUSH', {
+                // כבר ב-index 2 או מצב אחר - רק נעדכן
+                history.replaceState(modalState, '', '#modal');
+                this._log('HISTORY_REPLACE', {
                     notificationId: notification.id,
-                    historyLength: history.length,
-                    navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+                    navIndex: navIndex
                 });
             }
         } catch(e) {

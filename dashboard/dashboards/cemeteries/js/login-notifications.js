@@ -149,29 +149,34 @@ window.LoginNotificationsNav = {
             index: index,
             url: url,
             historyLengthBefore: history.length,
-            currentHash: location.hash
+            currentHash: location.hash,
+            currentUrl: location.href
         });
 
-        // CRITICAL FIX: Push a real dashboard state before navigating
-        // This ensures back button returns to dashboard instead of closing app
-        // The #app-init hash doesn't count as a "real" entry for Chrome Android
+        // FIX v2: Replace current #app-init with clean dashboard URL
+        // The #app-init hash confuses Chrome Android's back navigation
+        // By replacing it with a clean URL, back button works properly
         try {
-            history.pushState(
-                { dashboard: true, beforeNotification: index, t: Date.now() },
-                '',
-                '/dashboard/dashboards/cemeteries/'
-            );
-            this.log('NAVIGATE_PUSH_DASHBOARD', {
-                historyLengthAfter: history.length
-            });
+            if (location.hash === '#app-init' || location.hash.startsWith('#app-')) {
+                history.replaceState(
+                    { dashboard: true, cleanedForNotification: index, t: Date.now() },
+                    '',
+                    '/dashboard/dashboards/cemeteries/'
+                );
+                this.log('NAVIGATE_REPLACE_HASH', {
+                    removedHash: location.hash,
+                    historyLength: history.length
+                });
+            }
         } catch(e) {
-            this.log('NAVIGATE_PUSH_ERROR', { error: e.message });
+            this.log('NAVIGATE_REPLACE_ERROR', { error: e.message });
         }
 
         this.log('NAVIGATE', {
             index: index,
             url: url,
-            historyLengthNow: history.length
+            historyLengthNow: history.length,
+            urlAfterReplace: location.href
         });
 
         // Use regular navigation (not replace) so back button works

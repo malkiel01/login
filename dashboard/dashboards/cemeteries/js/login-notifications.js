@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.9.0 - FIX: Also reload after LAST notification if at navIndex 0
+ * @version 5.10.0 - FIX: Don't set notifications_done in notification-view, let dashboard handle reload first
  *
  * Flow:
  * 1. Dashboard loads → wait 5 seconds → navigate to notification-view.php?index=0
@@ -179,8 +179,22 @@ window.LoginNotificationsNav = {
                 location.href = '/dashboard/dashboards/cemeteries/?_next=' + Date.now();
                 return;
             } else {
-                // All done
-                this.log('ALL_DONE', { reason: 'nextIndex is null' });
+                // All done - but check if we need to reload first for safety
+                // FIX v5.10: If at navIndex 0, reload to create buffer entry before marking done
+                const currentNavIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+
+                if (currentNavIndex === 0) {
+                    this.log('RELOAD_AFTER_LAST_FROM_ALL_DONE', {
+                        reason: 'finished all notifications but at navIndex 0, need buffer entry',
+                        navIndex: currentNavIndex
+                    });
+                    // Set notifications_done BEFORE reload so we don't loop
+                    sessionStorage.setItem(this.config.sessionDoneKey, 'true');
+                    location.href = '/dashboard/dashboards/cemeteries/?_final=' + Date.now();
+                    return;
+                }
+
+                this.log('ALL_DONE', { reason: 'nextIndex is null', navIndex: currentNavIndex });
                 sessionStorage.setItem(this.config.sessionDoneKey, 'true');
             }
         } else {

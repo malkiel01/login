@@ -354,13 +354,16 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         log('HISTORY_REPLACE_STATE', { index: currentIndex });
 
         // Save next index to sessionStorage
+        // FIX v5.10: For LAST notification, DON'T set notifications_done yet!
+        // Let the dashboard handle it so RELOAD_AFTER_LAST can fire
         if (nextIndex < totalNotifications) {
             sessionStorage.setItem('notification_next_index', nextIndex.toString());
             log('SESSION_SET_NEXT', { nextIndex: nextIndex });
         } else {
-            sessionStorage.setItem('notifications_done', 'true');
+            // Last notification - clear next_index but DON'T set done yet
+            // Dashboard will set it after handling came_from_notification
             sessionStorage.removeItem('notification_next_index');
-            log('SESSION_SET_DONE', { reason: 'all shown' });
+            log('SESSION_LAST_NOTIFICATION', { reason: 'last notification - dashboard will set done' });
         }
 
         // Mark that we came from notification view

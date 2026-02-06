@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.7.0 - ENHANCED DEBUG: Full state logging to find 2nd notification issue
+ * @version 5.8.0 - FIX: Always reload dashboard before navigating to next notification
  *
  * Flow:
  * 1. Dashboard loads → wait 5 seconds → navigate to notification-view.php?index=0
@@ -44,7 +44,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'LOGIN_NOTIF_NAV',
-            v: '5.7',
+            v: '5.8',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -133,19 +133,26 @@ window.LoginNotificationsNav = {
                 navIndex: currentNavIndex,
                 entries: allEntries,
                 canGoBack: window.navigation ? window.navigation.canGoBack : 'N/A',
-                canGoForward: window.navigation ? window.navigation.canGoForward : 'N/A',
-                willReload: currentNavIndex === 0 ? 'YES - navIndex is 0' : 'NO - navIndex > 0'
+                canGoForward: window.navigation ? window.navigation.canGoForward : 'N/A'
             });
 
             if (nextIndex !== null) {
-                // More notifications to show - start timer
                 const idx = parseInt(nextIndex, 10);
-                this.log('START_TIMER_FOR_NEXT', {
+
+                // FIX v5.8: ALWAYS reload before next notification
+                // Chrome Android PWA has issues with bfcache pages - navigation from
+                // bfcached page doesn't create proper history entries
+                // Solution: Always do a fresh reload before navigating to next notification
+                this.log('RELOAD_BEFORE_NEXT', {
                     index: idx,
                     navIndex: currentNavIndex,
-                    willReloadOnNavigate: currentNavIndex === 0
+                    reason: 'Always reload to ensure fresh navigation state'
                 });
-                this.startTimer(idx);
+
+                // Save the next index and reload
+                sessionStorage.setItem('pending_notification_index', idx.toString());
+                location.href = '/dashboard/dashboards/cemeteries/?_next=' + Date.now();
+                return;
             } else {
                 // All done
                 this.log('ALL_DONE', { reason: 'nextIndex is null' });

@@ -75,11 +75,11 @@ window.NotificationTemplates = {
             const canGoForward = window.navigation ? window.navigation.canGoForward : false;
 
             if (canGoForward && navIndex === 1) {
-                // יש entry קדימה (index 2) - נלך אליו ונעדכן
+                // v21: יש entry קדימה - נלך אליו ונעדכן, ואז נוסיף buffer
                 this._log('HISTORY_FORWARD', {
                     notificationId: notification.id,
                     from: navIndex,
-                    reason: 'reusing existing index 2'
+                    reason: 'reusing existing entry'
                 });
 
                 // דגל למניעת handleBack על forward
@@ -96,25 +96,74 @@ window.NotificationTemplates = {
                         notificationId: notification.id,
                         navIndex: window.navigation ? window.navigation.currentEntry.index : -1
                     });
+
+                    // v21: הוסף buffer גם כאן
+                    setTimeout(() => {
+                        const bufferState = {
+                            buffer: true,
+                            forNotification: notification.id,
+                            modalOpenedAt: modalState.openedAt
+                        };
+                        history.pushState(bufferState, '', '#buffer');
+                        this._log('HISTORY_PUSH_BUFFER_AFTER_FWD', {
+                            notificationId: notification.id,
+                            historyLength: history.length,
+                            navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+                        });
+                    }, 100);
                 }, 50);
 
             } else if (navIndex <= 1) {
-                // v18: navIndex 0 או 1 - צריך ליצור entry חדש
-                // index 0 = אחרי ניקוי היסטוריה (login נמחק)
-                // index 1 = מצב רגיל (login ב-0, dashboard ב-1)
+                // v21: Buffer Entry Pattern!
+                // הבעיה: Chrome Android מדלג על JS events כשהוא מחליט לסגור את האפליקציה
+                // הפתרון: הוספת entry נוסף (#buffer) אחרי #modal
+                // כך back הולך קודם ל-buffer, ואנחנו יכולים לטפל בזה
+
+                // שלב 1: push #modal
                 history.pushState(modalState, '', '#modal');
-                this._log('HISTORY_PUSH', {
+                this._log('HISTORY_PUSH_MODAL', {
                     notificationId: notification.id,
                     historyLength: history.length,
                     navIndex: window.navigation ? window.navigation.currentEntry.index : -1
                 });
+
+                // שלב 2: push #buffer (entry נוסף כ"כרית ביטחון")
+                setTimeout(() => {
+                    const bufferState = {
+                        buffer: true,
+                        forNotification: notification.id,
+                        modalOpenedAt: modalState.openedAt
+                    };
+                    history.pushState(bufferState, '', '#buffer');
+                    this._log('HISTORY_PUSH_BUFFER', {
+                        notificationId: notification.id,
+                        historyLength: history.length,
+                        navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+                    });
+                }, 100);
+
             } else {
-                // כבר ב-index 2 או יותר - רק נעדכן
+                // כבר ב-index 2 או יותר - רק נעדכן ונוסיף buffer
                 history.replaceState(modalState, '', '#modal');
                 this._log('HISTORY_REPLACE', {
                     notificationId: notification.id,
                     navIndex: navIndex
                 });
+
+                // גם כאן נוסיף buffer
+                setTimeout(() => {
+                    const bufferState = {
+                        buffer: true,
+                        forNotification: notification.id,
+                        modalOpenedAt: modalState.openedAt
+                    };
+                    history.pushState(bufferState, '', '#buffer');
+                    this._log('HISTORY_PUSH_BUFFER_AFTER_REPLACE', {
+                        notificationId: notification.id,
+                        historyLength: history.length,
+                        navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+                    });
+                }, 100);
             }
         } catch(e) {
             console.warn('[NotificationTemplates] Failed to update history:', e);

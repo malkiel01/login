@@ -365,6 +365,9 @@ $isAdminUser = isAdmin();
                 var lastBackTime = 0;
                 var BACK_DEBOUNCE_MS = 100;  // מינימום זמן בין קריאות
 
+                // v21: flag לסימון שבאנו מ-buffer (כדי לא לסגור מודל)
+                var justCameFromBuffer = false;
+
                 function handleBack(source, info) {
                     // מניעת קריאה כפולה - גם popstate וגם nav-api קוראים לנו
                     var now = Date.now();
@@ -380,6 +383,11 @@ $isAdminUser = isAdmin();
                     var overlay = document.querySelector('.notification-overlay');
                     var hasModalInDOM = !!overlay;
 
+                    // v21: בדוק אם אנחנו על buffer
+                    var currentHash = location.hash || '';
+                    var isOnBuffer = currentHash === '#buffer' || (history.state && history.state.buffer);
+                    var isOnModal = currentHash === '#modal' || (history.state && history.state.modal);
+
                     // v19: דיבוג מפורט
                     var navIdx = window.navigation ? window.navigation.currentEntry.index : -1;
                     var navLen = window.navigation ? window.navigation.entries().length : -1;
@@ -389,12 +397,25 @@ $isAdminUser = isAdmin();
                         src: source,
                         num: backPressCount,
                         hasModalInDOM: hasModalInDOM,
-                        hash: location.hash || 'none',
+                        hash: currentHash,
+                        isOnBuffer: isOnBuffer,
+                        isOnModal: isOnModal,
                         navIdx: navIdx,
                         navLen: navLen,
                         canBack: canBack,
                         histLen: history.length
                     });
+
+                    // v21: אם באנו מ-buffer - לא לסגור את המודל
+                    // currententrychange כבר טיפל בזה והפעיל את ה-flag
+                    if (justCameFromBuffer) {
+                        log('BACK_FROM_BUFFER', {
+                            action: 'buffer consumed, modal stays open',
+                            navIdx: navIdx,
+                            flag: justCameFromBuffer
+                        });
+                        return; // לא לעשות כלום - המודל יישאר פתוח
+                    }
 
                     if (hasModalInDOM) {
                         // יש מודל פתוח - סגור אותו
@@ -428,26 +449,46 @@ $isAdminUser = isAdmin();
                             action: 'letting app exit',
                             navIdx: navIdx,
                             canBack: canBack,
-                            hash: location.hash
+                            hash: currentHash
                         });
                     }
                 }
 
                 // === HEARTBEAT - דופק כל כמה שניות ===
-                function startHeartbeat() {
-                    setInterval(function() {
-                        var currentNavIndex = 'navigation' in window ? window.navigation.currentEntry.index : -1;
+                var heartbeatCount = 0;
+                var heartbeatIntervalId = null;
 
-                        // רשום רק אם השתנה משהו או כל 30 שניות
-                        if (currentNavIndex !== lastKnownNavIndex || eventLog.length % 6 === 0) {
-                            log('HEARTBEAT', {
-                                lastIdx: lastKnownNavIndex,
-                                currIdx: currentNavIndex,
-                                changed: currentNavIndex !== lastKnownNavIndex
-                            });
-                            lastKnownNavIndex = currentNavIndex;
+                function startHeartbeat() {
+                    heartbeatIntervalId = setInterval(function() {
+                        try {
+                            heartbeatCount++;
+                            var currentNavIndex = 'navigation' in window ? window.navigation.currentEntry.index : -1;
+
+                            // v20: תמיד רשום כל 6 פעימות (30 שניות)
+                            var shouldLog = (heartbeatCount % 6 === 0) || (currentNavIndex !== lastKnownNavIndex);
+
+                            if (shouldLog) {
+                                log('HEARTBEAT', {
+                                    lastIdx: lastKnownNavIndex,
+                                    currIdx: currentNavIndex,
+                                    changed: currentNavIndex !== lastKnownNavIndex,
+                                    beatNum: heartbeatCount,
+                                    intervalId: heartbeatIntervalId
+                                });
+                                lastKnownNavIndex = currentNavIndex;
+                            }
+                        } catch(e) {
+                            // שגיאה ב-heartbeat - רשום אותה!
+                            navigator.sendBeacon(DEBUG_URL, JSON.stringify({
+                                e: 'HEARTBEAT_ERROR',
+                                error: e.message,
+                                beatNum: heartbeatCount,
+                                t: Date.now()
+                            }));
                         }
                     }, HEARTBEAT_INTERVAL);
+
+                    log('HEARTBEAT_STARTED', { intervalId: heartbeatIntervalId });
                 }
 
                 // === אתחול ===
@@ -581,19 +622,57 @@ $isAdminUser = isAdmin();
                         });
                     }
 
-                    // === v19: currententrychange - אולי יותר אמין ===
+                    // === v21: currententrychange - עם תמיכה ב-Buffer Entry ===
                     if ('navigation' in window) {
                         window.navigation.addEventListener('currententrychange', function(e) {
                             var from = e.from ? e.from.index : -1;
                             var to = window.navigation.currentEntry ? window.navigation.currentEntry.index : -1;
+                            var currentHash = location.hash || '';
+                            var isFromBuffer = currentHash === '' && history.state && history.state.buffer;
+                            var isAtModal = currentHash === '#modal' || (history.state && history.state.modal);
+
                             log('NAV_ENTRY_CHANGE', {
                                 from: from,
                                 to: to,
-                                hasModal: getModalInfo().hasModal
+                                hasModal: getModalInfo().hasModal,
+                                currentHash: currentHash,
+                                isFromBuffer: isFromBuffer,
+                                isAtModal: isAtModal,
+                                historyState: history.state
                             });
 
-                            // אם עברנו אחורה ויש מודל - סגור את המודל
+                            // v21: אם באנו מ-buffer ל-modal - לא לסגור!
+                            // הניווט: back מ-#buffer(2) ל-#modal(1) = עדיין מודל פתוח
+                            // רק back מ-#modal(1) ל-dashboard(0) = סגור מודל
                             if (to < from && getModalInfo().hasModal) {
+                                // בדוק אם עברנו מ-buffer ל-modal (עדיין צריך להישאר פתוח)
+                                var fromUrl = e.from && e.from.url ? e.from.url : '';
+                                var toUrl = window.navigation.currentEntry.url || '';
+
+                                var fromIsBuffer = fromUrl.indexOf('#buffer') >= 0;
+                                var toIsModal = toUrl.indexOf('#modal') >= 0;
+
+                                log('NAV_ENTRY_CHANGE_CHECK', {
+                                    fromUrl: fromUrl.split('/').pop(),
+                                    toUrl: toUrl.split('/').pop(),
+                                    fromIsBuffer: fromIsBuffer,
+                                    toIsModal: toIsModal
+                                });
+
+                                if (fromIsBuffer && toIsModal) {
+                                    // באנו מ-buffer ל-modal - לא לסגור, המודל עדיין פתוח
+                                    log('NAV_ENTRY_CHANGE_BUFFER_TO_MODAL', {
+                                        action: 'keeping modal open, setting flag',
+                                        from: from,
+                                        to: to
+                                    });
+                                    // v21: סמן שבאנו מ-buffer כדי ש-handleBack ידע לא לסגור
+                                    justCameFromBuffer = true;
+                                    setTimeout(function() { justCameFromBuffer = false; }, 500);
+                                    return; // לא לסגור!
+                                }
+
+                                // לא מ-buffer - סגור את המודל
                                 log('NAV_ENTRY_CHANGE_CLOSE_MODAL', { from: from, to: to });
                                 if (typeof NotificationTemplates !== 'undefined' && NotificationTemplates.close) {
                                     NotificationTemplates.close();
@@ -620,8 +699,18 @@ $isAdminUser = isAdmin();
                     // === pageshow ===
                     window.addEventListener('pageshow', function(e) {
                         if (e.persisted) {
-                            // v6: לא צריך להוסיף pages - רק לוג
-                            log('PAGESHOW_RESTORE', { action: 'v6 no buffer needed' });
+                            // v20: שחזור מ-bfcache - ודא ש-heartbeat עדיין רץ
+                            log('PAGESHOW_RESTORE', {
+                                persisted: true,
+                                heartbeatCount: heartbeatCount,
+                                heartbeatIntervalId: heartbeatIntervalId
+                            });
+
+                            // בדוק אם צריך להתחיל heartbeat מחדש
+                            if (!heartbeatIntervalId) {
+                                log('PAGESHOW_RESTART_HEARTBEAT', { reason: 'interval was null' });
+                                startHeartbeat();
+                            }
                         }
                     });
 

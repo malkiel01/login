@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.8.0 - FIX: Always reload dashboard before navigating to next notification
+ * @version 5.9.0 - FIX: Also reload after LAST notification if at navIndex 0
  *
  * Flow:
  * 1. Dashboard loads → wait 5 seconds → navigate to notification-view.php?index=0
@@ -44,7 +44,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'LOGIN_NOTIF_NAV',
-            v: '5.8',
+            v: '5.9',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -88,7 +88,32 @@ window.LoginNotificationsNav = {
 
         // Check if notifications are done for this session
         if (sessionStorage.getItem(this.config.sessionDoneKey) === 'true') {
-            this.log('SKIP_DONE', { reason: 'notifications_done is true' });
+            // FIX v5.9: Even if done, check if we just came from last notification
+            // and are at navIndex 0 - need to reload for safety
+            const cameFromNotif = sessionStorage.getItem(this.config.sessionCameFromKey);
+            const currentNavIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+
+            if (cameFromNotif === 'true' && currentNavIndex === 0) {
+                sessionStorage.removeItem(this.config.sessionCameFromKey);
+                this.log('RELOAD_AFTER_LAST', {
+                    reason: 'just finished all notifications but at navIndex 0, need buffer entry',
+                    navIndex: currentNavIndex
+                });
+                // Reload to create buffer entry - prevents back from closing app
+                location.href = '/dashboard/dashboards/cemeteries/?_final=' + Date.now();
+                return;
+            }
+
+            // Clear came_from flag if set
+            if (cameFromNotif === 'true') {
+                sessionStorage.removeItem(this.config.sessionCameFromKey);
+            }
+
+            this.log('SKIP_DONE', {
+                reason: 'notifications_done is true',
+                navIndex: currentNavIndex,
+                cameFromNotif: cameFromNotif
+            });
             return;
         }
 

@@ -4,11 +4,14 @@
  * דף ניהול ומחיקת התראות
  */
 
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/api/api-auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-init.php';
 
-// רק אדמין
+// בדיקת הרשאות - רק אדמין
+requireDashboard(['admin']);
+
 if (!isAdmin()) {
-    die('אין הרשאה');
+    die('אין הרשאה - רק אדמין');
 }
 
 $pdo = getDBConnection();

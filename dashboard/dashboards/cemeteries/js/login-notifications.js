@@ -15,7 +15,9 @@ window.LoginNotifications = {
     state: {
         isActive: false,
         queue: [],
-        currentIndex: 0
+        currentIndex: 0,
+        isShowingNotification: false, // v4.1: Guard against double-show
+        closeInProgress: false // v4.1: Guard against double-close
     },
 
     /**
@@ -97,17 +99,29 @@ window.LoginNotifications = {
 
     /**
      * הצגת ההתראה הבאה
+     * v4.1: Added guards against race conditions
      */
     showNextNotification() {
+        // v4.1: Guard against double-show
+        if (this.state.isShowingNotification) {
+            console.log('[LoginNotifications] Already showing, skip');
+            return;
+        }
+
         if (this.state.currentIndex >= this.state.queue.length) {
             console.log('[LoginNotifications] All done');
             this.finish();
             return;
         }
 
+        this.state.isShowingNotification = true;
+        this.state.closeInProgress = false;
+
         const notification = this.state.queue[this.state.currentIndex];
         const counter = `${this.state.currentIndex + 1}/${this.state.queue.length}`;
-        console.log('[LoginNotifications] Showing', counter, notification.title);
+        const currentShowId = this.state.currentIndex; // v4.1: Track which notification we're showing
+
+        console.log('[LoginNotifications] Showing', counter, notification.title, 'id:', notification.id);
 
         // נקה callback קודם
         NotificationTemplates.callbacks.onClose = null;
@@ -121,9 +135,21 @@ window.LoginNotifications = {
         // הגדר callback לסגירה - רק אחרי שההתראה מוצגת
         setTimeout(() => {
             NotificationTemplates.onClose(() => {
-                console.log('[LoginNotifications] Notification closed');
+                // v4.1: Guard against double-close for same notification
+                if (this.state.closeInProgress || this.state.currentIndex !== currentShowId) {
+                    console.log('[LoginNotifications] Double-close prevented', currentShowId);
+                    return;
+                }
+                this.state.closeInProgress = true;
+
+                console.log('[LoginNotifications] Notification closed, index:', this.state.currentIndex);
+                this.state.isShowingNotification = false;
                 this.state.currentIndex++;
-                setTimeout(() => this.showNextNotification(), 300);
+
+                setTimeout(() => {
+                    this.state.closeInProgress = false;
+                    this.showNextNotification();
+                }, 300);
             });
         }, 100);
     },
@@ -162,7 +188,9 @@ window.LoginNotifications = {
         this.state = {
             isActive: false,
             queue: [],
-            currentIndex: 0
+            currentIndex: 0,
+            isShowingNotification: false,
+            closeInProgress: false
         };
     }
 };

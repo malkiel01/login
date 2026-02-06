@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.6.0 - FIX: Reload dashboard if at navIndex 0 before notification
+ * @version 5.7.0 - ENHANCED DEBUG: Full state logging to find 2nd notification issue
  *
  * Flow:
  * 1. Dashboard loads → wait 5 seconds → navigate to notification-view.php?index=0
@@ -44,7 +44,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'LOGIN_NOTIF_NAV',
-            v: '5.6',
+            v: '5.7',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -121,12 +121,30 @@ window.LoginNotificationsNav = {
             // Clear the flag
             sessionStorage.removeItem(this.config.sessionCameFromKey);
 
-            this.log('RETURNED_FROM_NOTIFICATION', { nextIndex: nextIndex });
+            // CRITICAL DEBUG: Log full state when returning from notification
+            const currentNavIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+            const allEntries = window.navigation ? window.navigation.entries().map(e => ({
+                idx: e.index,
+                url: e.url ? e.url.split('/').pop() : 'N/A'
+            })) : [];
+
+            this.log('RETURNED_FROM_NOTIFICATION', {
+                nextIndex: nextIndex,
+                navIndex: currentNavIndex,
+                entries: allEntries,
+                canGoBack: window.navigation ? window.navigation.canGoBack : 'N/A',
+                canGoForward: window.navigation ? window.navigation.canGoForward : 'N/A',
+                willReload: currentNavIndex === 0 ? 'YES - navIndex is 0' : 'NO - navIndex > 0'
+            });
 
             if (nextIndex !== null) {
                 // More notifications to show - start timer
                 const idx = parseInt(nextIndex, 10);
-                this.log('START_TIMER_FOR_NEXT', { index: idx });
+                this.log('START_TIMER_FOR_NEXT', {
+                    index: idx,
+                    navIndex: currentNavIndex,
+                    willReloadOnNavigate: currentNavIndex === 0
+                });
                 this.startTimer(idx);
             } else {
                 // All done
@@ -152,6 +170,13 @@ window.LoginNotificationsNav = {
         this.log('TIMER_START', { index: index, delayMs: this.config.delayMs });
 
         this.state.timerId = setTimeout(() => {
+            // Log state right before navigation
+            const navIndexNow = window.navigation ? window.navigation.currentEntry.index : -1;
+            this.log('TIMER_FIRED', {
+                index: index,
+                navIndex: navIndexNow,
+                willReload: navIndexNow === 0
+            });
             this.navigateToNotification(index);
         }, this.config.delayMs);
     },
@@ -198,10 +223,20 @@ window.LoginNotificationsNav = {
             return;
         }
 
+        // CRITICAL: This is where 2nd notification goes - NOT reloading
+        const allEntries = window.navigation ? window.navigation.entries().map(e => ({
+            idx: e.index,
+            url: e.url ? e.url.split('/').pop() : 'N/A'
+        })) : [];
+
         this.log('NAVIGATE_DIRECT', {
             index: index,
             historyLength: history.length,
-            navIndex: navIndex
+            navIndex: navIndex,
+            entries: allEntries,
+            canGoBack: window.navigation ? window.navigation.canGoBack : 'N/A',
+            canGoForward: window.navigation ? window.navigation.canGoForward : 'N/A',
+            ISSUE_CHECK: navIndex === 0 ? 'BUG! Should have reloaded!' : 'OK - navIndex > 0'
         });
 
         this.log('NAVIGATE', {
@@ -276,9 +311,32 @@ window.LoginNotificationsNav = {
     // When page is restored from bfcache, DOMContentLoaded doesn't fire
     // but pageshow with persisted=true does
     window.addEventListener('pageshow', function(e) {
+        // Log EVERY pageshow event, not just persisted
+        const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+        const entries = window.navigation ? window.navigation.entries().map(entry => ({
+            idx: entry.index,
+            url: entry.url ? entry.url.split('/').pop() : 'N/A'
+        })) : [];
+
+        LoginNotificationsNav.log('PAGESHOW', {
+            persisted: e.persisted,
+            navIndex: navIndex,
+            entries: entries,
+            historyLength: history.length,
+            came_from: sessionStorage.getItem('came_from_notification'),
+            next_idx: sessionStorage.getItem('notification_next_index')
+        });
+
         if (e.persisted) {
             // Page restored from bfcache - need to re-check for notifications
             console.log('[LoginNotificationsNav] pageshow persisted - checking for pending notifications');
+
+            LoginNotificationsNav.log('BFCACHE_RESTORE', {
+                navIndex: navIndex,
+                entries: entries,
+                canGoBack: window.navigation ? window.navigation.canGoBack : 'N/A',
+                canGoForward: window.navigation ? window.navigation.canGoForward : 'N/A'
+            });
 
             // Reset initialized flag so init() will run
             LoginNotificationsNav.state.initialized = false;

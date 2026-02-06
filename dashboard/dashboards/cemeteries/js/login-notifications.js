@@ -1,220 +1,156 @@
 /**
- * Login Notifications Manager
- * מציג התראות שלא נקראו בעת כניסה למערכת
+ * Login Notifications - Page Navigation System
+ * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 4.0.0 - Clean version without history manipulation
+ * @version 5.0.0 - Complete rewrite with page-based navigation
+ *
+ * Flow:
+ * 1. Dashboard loads → wait 5 seconds → navigate to notification-view.php?index=0
+ * 2. User sees notification → presses back → returns to dashboard
+ * 3. Dashboard detects return from notification → wait 5 seconds → navigate to next notification
+ * 4. Repeat until all notifications shown
  */
 
-window.LoginNotifications = {
+window.LoginNotificationsNav = {
     config: {
-        maxNotifications: 5,
-        sessionKey: 'login_notifications_shown',
-        apiUrl: '/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php'
+        delayMs: 5000, // 5 seconds
+        notificationUrl: '/dashboard/dashboards/cemeteries/notifications/notification-view.php',
+        sessionDoneKey: 'notifications_done',
+        sessionNextIndexKey: 'notification_next_index',
+        sessionCameFromKey: 'came_from_notification'
     },
 
     state: {
-        isActive: false,
-        queue: [],
-        currentIndex: 0,
-        isShowingNotification: false, // v4.1: Guard against double-show
-        closeInProgress: false // v4.1: Guard against double-close
+        timerId: null,
+        initialized: false
     },
 
     /**
-     * אתחול
+     * Initialize the notification system
      */
-    async init() {
-        console.log('[LoginNotifications] init v4.0');
+    init() {
+        if (this.state.initialized) {
+            console.log('[LoginNotificationsNav] Already initialized');
+            return;
+        }
+        this.state.initialized = true;
 
-        if (sessionStorage.getItem(this.config.sessionKey)) {
-            console.log('[LoginNotifications] Already shown this session');
+        console.log('[LoginNotificationsNav] v5.0 - Page Navigation System');
+
+        // Check if notifications are done for this session
+        if (sessionStorage.getItem(this.config.sessionDoneKey) === 'true') {
+            console.log('[LoginNotificationsNav] All notifications done for this session');
             return;
         }
 
-        const ready = await this.waitForDependencies();
-        if (!ready) {
-            console.log('[LoginNotifications] Dependencies not ready');
-            return;
-        }
+        // Check if we came back from notification page (via back button)
+        const cameFromNotification = sessionStorage.getItem(this.config.sessionCameFromKey);
+        const nextIndex = sessionStorage.getItem(this.config.sessionNextIndexKey);
 
-        await this.loadAndShowNotifications();
-    },
+        if (cameFromNotification === 'true') {
+            // Clear the flag
+            sessionStorage.removeItem(this.config.sessionCameFromKey);
 
-    async waitForDependencies() {
-        const maxWait = 5000;
-        let waited = 0;
-        while (waited < maxWait) {
-            if (typeof NotificationTemplates !== 'undefined' &&
-                typeof NotificationTemplates.show === 'function') {
-                return true;
+            console.log('[LoginNotificationsNav] Returned from notification page');
+
+            if (nextIndex !== null) {
+                // More notifications to show - start timer
+                console.log('[LoginNotificationsNav] More notifications pending, next index:', nextIndex);
+                this.startTimer(parseInt(nextIndex, 10));
+            } else {
+                // All done
+                console.log('[LoginNotificationsNav] All notifications shown');
+                sessionStorage.setItem(this.config.sessionDoneKey, 'true');
             }
-            await new Promise(r => setTimeout(r, 100));
-            waited += 100;
+        } else {
+            // First load - check if we should show notifications
+            // Start from index 0
+            console.log('[LoginNotificationsNav] First load - starting from index 0');
+            this.startTimer(0);
         }
-        return false;
-    },
-
-    async loadAndShowNotifications() {
-        try {
-            const response = await fetch(`${this.config.apiUrl}?action=get_unread`, {
-                credentials: 'include'
-            });
-            const data = await response.json();
-
-            if (!data.success || !data.notifications || data.notifications.length === 0) {
-                console.log('[LoginNotifications] No notifications');
-                sessionStorage.setItem(this.config.sessionKey, 'true');
-                return;
-            }
-
-            this.state.queue = this.sortByPriority(data.notifications)
-                .slice(0, this.config.maxNotifications);
-            this.state.currentIndex = 0;
-            this.state.isActive = true;
-
-            // סמן מיד שההתראות הוצגו - למנוע הצגה חוזרת אם הדף נטען מחדש
-            sessionStorage.setItem(this.config.sessionKey, 'true');
-
-            console.log('[LoginNotifications] Found', this.state.queue.length, 'notifications');
-
-            this.showNextNotification();
-
-        } catch (error) {
-            console.error('[LoginNotifications] Error:', error);
-        }
-    },
-
-    sortByPriority(notifications) {
-        const priority = { 'urgent': 1, 'warning': 2, 'info': 3 };
-        return notifications.sort((a, b) => {
-            if (a.requires_approval !== b.requires_approval) {
-                return a.requires_approval ? -1 : 1;
-            }
-            const pa = priority[a.notification_type] || 3;
-            const pb = priority[b.notification_type] || 3;
-            if (pa !== pb) return pa - pb;
-            return new Date(b.created_at) - new Date(a.created_at);
-        });
     },
 
     /**
-     * הצגת ההתראה הבאה
-     * v4.1: Added guards against race conditions
+     * Start the countdown timer
      */
-    showNextNotification() {
-        // v4.1: Guard against double-show
-        if (this.state.isShowingNotification) {
-            console.log('[LoginNotifications] Already showing, skip');
-            return;
+    startTimer(index) {
+        // Clear any existing timer
+        if (this.state.timerId) {
+            clearTimeout(this.state.timerId);
         }
 
-        if (this.state.currentIndex >= this.state.queue.length) {
-            console.log('[LoginNotifications] All done');
-            this.finish();
-            return;
-        }
+        console.log('[LoginNotificationsNav] Starting 5 second timer for notification index:', index);
 
-        this.state.isShowingNotification = true;
-        this.state.closeInProgress = false;
-
-        const notification = this.state.queue[this.state.currentIndex];
-        const counter = `${this.state.currentIndex + 1}/${this.state.queue.length}`;
-        const currentShowId = this.state.currentIndex; // v4.1: Track which notification we're showing
-
-        console.log('[LoginNotifications] Showing', counter, notification.title, 'id:', notification.id);
-
-        // נקה callback קודם
-        NotificationTemplates.callbacks.onClose = null;
-
-        // הצג את ההתראה
-        NotificationTemplates.show(notification, {
-            autoDismiss: false,
-            showCounter: this.state.queue.length > 1 ? counter : null
-        });
-
-        // הגדר callback לסגירה - רק אחרי שההתראה מוצגת
-        setTimeout(() => {
-            NotificationTemplates.onClose(() => {
-                // v4.1: Guard against double-close for same notification
-                if (this.state.closeInProgress || this.state.currentIndex !== currentShowId) {
-                    console.log('[LoginNotifications] Double-close prevented', currentShowId);
-                    return;
-                }
-                this.state.closeInProgress = true;
-
-                console.log('[LoginNotifications] Notification closed, index:', this.state.currentIndex);
-                this.state.isShowingNotification = false;
-                this.state.currentIndex++;
-
-                setTimeout(() => {
-                    this.state.closeInProgress = false;
-                    this.showNextNotification();
-                }, 300);
-            });
-        }, 100);
+        this.state.timerId = setTimeout(() => {
+            this.navigateToNotification(index);
+        }, this.config.delayMs);
     },
 
     /**
-     * סיום
+     * Navigate to the notification page
      */
-    finish() {
-        this.state.isActive = false;
-        sessionStorage.setItem(this.config.sessionKey, 'true');
+    navigateToNotification(index) {
+        const url = `${this.config.notificationUrl}?index=${index}`;
+        console.log('[LoginNotificationsNav] Navigating to:', url);
 
-        if (typeof updateMyNotificationsCount === 'function') {
-            updateMyNotificationsCount();
+        // Use regular navigation (not replace) so back button works
+        window.location.href = url;
+    },
+
+    /**
+     * Cancel pending navigation (e.g., if user interacts)
+     */
+    cancel() {
+        if (this.state.timerId) {
+            console.log('[LoginNotificationsNav] Timer cancelled');
+            clearTimeout(this.state.timerId);
+            this.state.timerId = null;
         }
     },
 
     /**
-     * דילוג על כל ההתראות
+     * Skip all notifications
      */
     skipAll() {
-        NotificationTemplates.callbacks.onClose = null;
-        this.state.queue = [];
-        this.finish();
-        if (NotificationTemplates.activeModal) {
-            NotificationTemplates.activeModal.remove();
-            NotificationTemplates.activeModal = null;
-            document.body.style.overflow = '';
-        }
+        this.cancel();
+        sessionStorage.setItem(this.config.sessionDoneKey, 'true');
+        sessionStorage.removeItem(this.config.sessionNextIndexKey);
+        console.log('[LoginNotificationsNav] Skipped all notifications');
     },
 
     /**
-     * איפוס (לבדיקות)
+     * Reset (for testing)
      */
     reset() {
-        sessionStorage.removeItem(this.config.sessionKey);
-        this.state = {
-            isActive: false,
-            queue: [],
-            currentIndex: 0,
-            isShowingNotification: false,
-            closeInProgress: false
-        };
+        this.cancel();
+        sessionStorage.removeItem(this.config.sessionDoneKey);
+        sessionStorage.removeItem(this.config.sessionNextIndexKey);
+        sessionStorage.removeItem(this.config.sessionCameFromKey);
+        this.state.initialized = false;
+        console.log('[LoginNotificationsNav] Reset complete');
+    },
+
+    /**
+     * Test: trigger notification navigation immediately
+     */
+    testNow(index = 0) {
+        console.log('[LoginNotificationsNav] Test - navigating immediately to index:', index);
+        this.navigateToNotification(index);
     }
 };
 
-// אתחול
+// Initialize on page load
 (function() {
-    function setup() {
-        let initialized = false;
-        const initOnce = () => {
-            if (initialized) return;
-            initialized = true;
-            LoginNotifications.init();
-        };
-
-        window.addEventListener('notificationTemplatesReady', () => {
-            setTimeout(initOnce, 500);
-        });
-
-        setTimeout(initOnce, 3000);
+    function init() {
+        // Small delay to let the page render first
+        setTimeout(() => {
+            LoginNotificationsNav.init();
+        }, 500);
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setup);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        setup();
+        init();
     }
 })();

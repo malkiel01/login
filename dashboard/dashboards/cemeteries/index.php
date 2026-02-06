@@ -1200,6 +1200,6 @@ $isAdminUser = isAdmin();
     <script src="/js/approval-modal.js?v=20260201"></script>
 
     <!-- Login Notifications - מערכת התראות מבוססת ניווט לדף נפרד -->
-    <script src="/dashboard/dashboards/cemeteries/js/login-notifications.js?v=20260206_v5"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/login-notifications.js?v=20260206_v10"></script>
 </body>
 </html>

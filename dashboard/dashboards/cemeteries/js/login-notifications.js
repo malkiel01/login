@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.1.0 - With comprehensive debug logging
+ * @version 5.6.0 - FIX: Reload dashboard if at navIndex 0 before notification
  *
  * Flow:
  * 1. Dashboard loads → wait 5 seconds → navigate to notification-view.php?index=0
@@ -44,7 +44,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'LOGIN_NOTIF_NAV',
-            v: '5.1',
+            v: '5.6',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -82,12 +82,29 @@ window.LoginNotificationsNav = {
 
         this.log('INIT_START', {
             referrer: document.referrer,
-            url: location.href
+            url: location.href,
+            navIndex: window.navigation ? window.navigation.currentEntry.index : -1
         });
 
         // Check if notifications are done for this session
         if (sessionStorage.getItem(this.config.sessionDoneKey) === 'true') {
             this.log('SKIP_DONE', { reason: 'notifications_done is true' });
+            return;
+        }
+
+        // FIX v6: Check if we just reloaded to create a buffer entry
+        const pendingIndex = sessionStorage.getItem('pending_notification_index');
+        if (pendingIndex !== null) {
+            sessionStorage.removeItem('pending_notification_index');
+            const idx = parseInt(pendingIndex, 10);
+            this.log('PENDING_NOTIFICATION', {
+                index: idx,
+                navIndex: window.navigation ? window.navigation.currentEntry.index : -1
+            });
+            // Navigate directly - now we have a real entry to go back to
+            setTimeout(() => {
+                this.navigateToNotification(idx);
+            }, 100);
             return;
         }
 
@@ -153,24 +170,39 @@ window.LoginNotificationsNav = {
             currentUrl: location.href
         });
 
-        // FIX v2: Replace current #app-init with clean dashboard URL
-        // The #app-init hash confuses Chrome Android's back navigation
-        // By replacing it with a clean URL, back button works properly
-        try {
-            if (location.hash === '#app-init' || location.hash.startsWith('#app-')) {
-                history.replaceState(
-                    { dashboard: true, cleanedForNotification: index, t: Date.now() },
-                    '',
-                    '/dashboard/dashboards/cemeteries/'
-                );
-                this.log('NAVIGATE_REPLACE_HASH', {
-                    removedHash: location.hash,
-                    historyLength: history.length
-                });
-            }
-        } catch(e) {
-            this.log('NAVIGATE_REPLACE_ERROR', { error: e.message });
+        // FIX v6: Force a REAL page reload before notification
+        // Chrome Android PWA only respects real navigation entries (not pushState)
+        // By reloading the dashboard first with a special param, we ensure
+        // there's always a real entry to go back to
+        const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+
+        this.log('NAVIGATE_CHECK', {
+            index: index,
+            historyLength: history.length,
+            navIndex: navIndex
+        });
+
+        // If we're at navIndex 0 (PWA start), we need to create a real entry first
+        // Otherwise back from notification will try to go before entry 0 = app closes
+        if (navIndex === 0) {
+            this.log('NAVIGATE_AT_START', {
+                action: 'reload_first',
+                reason: 'at navIndex 0, need buffer entry'
+            });
+
+            // Save that we need to navigate after reload
+            sessionStorage.setItem('pending_notification_index', index.toString());
+
+            // Reload the page - this creates a REAL navigation entry
+            location.href = '/dashboard/dashboards/cemeteries/?_nav=' + Date.now();
+            return;
         }
+
+        this.log('NAVIGATE_DIRECT', {
+            index: index,
+            historyLength: history.length,
+            navIndex: navIndex
+        });
 
         this.log('NAVIGATE', {
             index: index,
@@ -239,4 +271,23 @@ window.LoginNotificationsNav = {
     } else {
         init();
     }
+
+    // CRITICAL: Handle bfcache restore (back button from notification)
+    // When page is restored from bfcache, DOMContentLoaded doesn't fire
+    // but pageshow with persisted=true does
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            // Page restored from bfcache - need to re-check for notifications
+            console.log('[LoginNotificationsNav] pageshow persisted - checking for pending notifications');
+
+            // Reset initialized flag so init() will run
+            LoginNotificationsNav.state.initialized = false;
+            LoginNotificationsNav.state.pageLoadTime = Date.now();
+
+            // Re-initialize to check for next notification
+            setTimeout(() => {
+                LoginNotificationsNav.init();
+            }, 500);
+        }
+    });
 })();

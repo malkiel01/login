@@ -293,32 +293,110 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
     </div>
 
     <script>
-        // Store the next notification index
+        const DEBUG_URL = '/dashboard/dashboards/cemeteries/api/debug-log.php';
         const nextIndex = <?php echo $nextIndex; ?>;
         const totalNotifications = <?php echo $totalNotifications; ?>;
+        const currentIndex = <?php echo $index; ?>;
+        const PAGE_LOAD_TIME = Date.now();
+
+        // Logging function
+        function log(event, data) {
+            const navInfo = window.navigation ? {
+                navIndex: window.navigation.currentEntry.index,
+                navLength: window.navigation.entries().length,
+                canGoBack: window.navigation.canGoBack,
+                canGoForward: window.navigation.canGoForward
+            } : { navApi: 'not supported' };
+
+            const payload = {
+                page: 'NOTIFICATION_VIEW',
+                e: event,
+                t: Date.now() - PAGE_LOAD_TIME,
+                ts: new Date().toISOString(),
+                idx: currentIndex,
+                next: nextIndex,
+                total: totalNotifications,
+                d: data,
+                nav: navInfo,
+                hist: {
+                    length: history.length,
+                    state: history.state
+                },
+                session: {
+                    came_from: sessionStorage.getItem('came_from_notification'),
+                    next_idx: sessionStorage.getItem('notification_next_index'),
+                    done: sessionStorage.getItem('notifications_done')
+                }
+            };
+
+            console.log('[NotificationView]', event, payload);
+
+            try {
+                navigator.sendBeacon(DEBUG_URL, JSON.stringify(payload));
+            } catch(e) {
+                console.error('Log failed:', e);
+            }
+        }
+
+        // Log page load
+        log('PAGE_LOAD', {
+            referrer: document.referrer,
+            url: location.href,
+            hash: location.hash
+        });
+
+        // CRITICAL: Ensure this page has a proper history entry
+        history.replaceState(
+            { notification: true, index: currentIndex, t: Date.now() },
+            '',
+            location.href
+        );
+        log('HISTORY_REPLACE_STATE', { index: currentIndex });
 
         // Save next index to sessionStorage
         if (nextIndex < totalNotifications) {
-            sessionStorage.setItem('notification_next_index', nextIndex);
+            sessionStorage.setItem('notification_next_index', nextIndex.toString());
+            log('SESSION_SET_NEXT', { nextIndex: nextIndex });
         } else {
-            // All notifications shown
             sessionStorage.setItem('notifications_done', 'true');
             sessionStorage.removeItem('notification_next_index');
+            log('SESSION_SET_DONE', { reason: 'all shown' });
         }
 
-        console.log('[NotificationView] Showing notification <?php echo $index + 1; ?>/<?php echo $totalNotifications; ?>');
-        console.log('[NotificationView] Next index:', nextIndex);
+        // Mark that we came from notification view
+        sessionStorage.setItem('came_from_notification', 'true');
 
         // Skip all notifications
         function skipAll() {
+            log('SKIP_ALL', {});
             sessionStorage.setItem('notifications_done', 'true');
             sessionStorage.removeItem('notification_next_index');
-            // Use location.replace to avoid adding to history
             location.replace('/dashboard/dashboards/cemeteries/');
         }
 
-        // Mark that we came from notification view (for back button detection)
-        sessionStorage.setItem('came_from_notification', 'true');
+        // Listen for back button / navigation events
+        window.addEventListener('popstate', function(e) {
+            log('POPSTATE', { state: e.state });
+        });
+
+        window.addEventListener('pagehide', function(e) {
+            log('PAGEHIDE', { persisted: e.persisted });
+        });
+
+        window.addEventListener('beforeunload', function(e) {
+            log('BEFOREUNLOAD', {});
+        });
+
+        if ('navigation' in window) {
+            window.navigation.addEventListener('navigate', function(e) {
+                log('NAV_EVENT', {
+                    type: e.navigationType,
+                    destUrl: e.destination.url ? e.destination.url.split('/').pop() : 'N/A'
+                });
+            });
+        }
+
+        log('INIT_COMPLETE', {});
     </script>
 </body>
 </html>

@@ -145,10 +145,33 @@ window.LoginNotificationsNav = {
     navigateToNotification(index) {
         const url = `${this.config.notificationUrl}?index=${index}`;
 
+        this.log('NAVIGATE_PREP', {
+            index: index,
+            url: url,
+            historyLengthBefore: history.length,
+            currentHash: location.hash
+        });
+
+        // CRITICAL FIX: Push a real dashboard state before navigating
+        // This ensures back button returns to dashboard instead of closing app
+        // The #app-init hash doesn't count as a "real" entry for Chrome Android
+        try {
+            history.pushState(
+                { dashboard: true, beforeNotification: index, t: Date.now() },
+                '',
+                '/dashboard/dashboards/cemeteries/'
+            );
+            this.log('NAVIGATE_PUSH_DASHBOARD', {
+                historyLengthAfter: history.length
+            });
+        } catch(e) {
+            this.log('NAVIGATE_PUSH_ERROR', { error: e.message });
+        }
+
         this.log('NAVIGATE', {
             index: index,
             url: url,
-            historyLengthBefore: history.length
+            historyLengthNow: history.length
         });
 
         // Use regular navigation (not replace) so back button works

@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.17.0 - POPSTATE TRAP (Navigation API canIntercept=false for traverse)
+ * @version 5.18.0 - Enhanced logging before dashboard redirect
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -298,7 +298,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const totalNotifications = <?php echo $totalNotifications; ?>;
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
-        const VERSION = '5.17';
+        const VERSION = '5.18';
 
         // ========== COMPREHENSIVE STATE SNAPSHOT ==========
         function getFullState() {
@@ -577,6 +577,28 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
                     });
                     location.replace(nextUrl);
                 } else {
+                    // ========== v5.18: Detailed logging before dashboard redirect ==========
+                    const navEntries = window.navigation ? window.navigation.entries() : [];
+                    const currentNavIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+
+                    log('BEFORE_DASHBOARD_REDIRECT', {
+                        question: 'מה מצב ההיסטוריה לפני חזרה לדשבורד?',
+                        historyLength: history.length,
+                        historyState: history.state,
+                        navCurrentIndex: currentNavIndex,
+                        navEntriesCount: navEntries.length,
+                        allNavEntries: navEntries.map((e, i) => ({
+                            idx: i,
+                            url: e.url || 'N/A',
+                            key: e.key ? e.key.substring(0, 8) : 'N/A',
+                            isCurrent: i === currentNavIndex
+                        })),
+                        stepsBackToDashboard: currentNavIndex,
+                        recommendation: currentNavIndex > 0 ?
+                            'אפשר לעשות history.go(-' + currentNavIndex + ') לחזור לדשבורד' :
+                            'כבר בדשבורד או אין מידע'
+                    });
+
                     log('<<< POPSTATE_REDIRECT_DASHBOARD', {
                         question: 'האם חוזרים לדשבורד?',
                         answer: 'כן! זו הייתה ההתראה האחרונה'

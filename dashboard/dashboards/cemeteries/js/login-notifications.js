@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.14.0 - FIX: Force page reload with query param (hash-only changes don't reload)
+ * @version 5.18.0 - Enhanced dashboard logging for back button debugging
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores
@@ -72,7 +72,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'DASHBOARD',
-            v: '5.14',
+            v: '5.18',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -138,6 +138,26 @@ window.LoginNotificationsNav = {
         if (cameFrom === 'true') {
             // Clear the flag immediately
             sessionStorage.removeItem(this.config.sessionCameFromKey);
+
+            // ========== v5.18: Enhanced return logging ==========
+            const navEntries = window.navigation ? window.navigation.entries() : [];
+            this.log('DASHBOARD_RETURN', {
+                question: 'חזרנו לדשבורד מהתראות?',
+                answer: 'כן!',
+                historyLength: history.length,
+                historyState: history.state,
+                navEntriesCount: navEntries.length,
+                navCurrentIndex: window.navigation ? window.navigation.currentEntry.index : -1,
+                allNavEntries: navEntries.map((e, i) => ({
+                    idx: i,
+                    url: e.url || 'N/A',
+                    key: e.key ? e.key.substring(0, 8) : 'N/A'
+                })),
+                nextIdx: nextIdx,
+                urlParams: location.search,
+                urlHash: location.hash
+            });
+
             this.log('STEP3_CAME_FROM_TRUE', { cleared: 'came_from_notification' });
 
             if (nextIdx !== null) {
@@ -309,6 +329,20 @@ window.LoginNotificationsNav = {
     } else {
         init();
     }
+
+    // ========== v5.18: Dashboard popstate listener for debugging ==========
+    window.addEventListener('popstate', function(e) {
+        LoginNotificationsNav.log('>>> DASHBOARD_POPSTATE', {
+            question: 'לחצו Back בדשבורד?',
+            answer: 'כן! popstate התקבל',
+            state: e.state,
+            historyLength: history.length,
+            navCurrentIndex: window.navigation ? window.navigation.currentEntry.index : -1,
+            navEntriesCount: window.navigation ? window.navigation.entries().length : -1,
+            canGoBack: window.navigation ? window.navigation.canGoBack : 'N/A',
+            url: location.href
+        });
+    });
 
     // CRITICAL: Handle bfcache restore (back button from notification)
     window.addEventListener('pageshow', function(e) {

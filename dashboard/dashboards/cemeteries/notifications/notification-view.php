@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.19.0 - FIX: Use history.go() instead of location.replace() to return to dashboard
+ * @version 5.21.0 - Enhanced logging for dashboard return flow
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -298,7 +298,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const totalNotifications = <?php echo $totalNotifications; ?>;
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
-        const VERSION = '5.19';
+        const VERSION = '5.21';
 
         // ========== COMPREHENSIVE STATE SNAPSHOT ==========
         function getFullState() {
@@ -399,6 +399,27 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             howManyLeft: totalNotifications - currentIndex - 1
         });
 
+        // ========== v5.20: TRANSITION TIMING ==========
+        const transitionStartTime = sessionStorage.getItem('_transition_start');
+        if (transitionStartTime) {
+            const transitionDuration = Date.now() - parseInt(transitionStartTime, 10);
+            const fromIndex = sessionStorage.getItem('_transition_from_index');
+            sessionStorage.removeItem('_transition_start');
+            sessionStorage.removeItem('_transition_from_index');
+
+            log('⏱️ TRANSITION_COMPLETE', {
+                question: 'כמה זמן לקח המעבר?',
+                answer: transitionDuration + 'ms',
+                fromNotification: fromIndex,
+                toNotification: currentIndex,
+                duration_ms: transitionDuration,
+                isFlickerNoticeable: transitionDuration > 100 ? 'כן - יותר מ-100ms' : 'לא - פחות מ-100ms',
+                performanceGrade: transitionDuration < 50 ? 'מצוין' :
+                                  transitionDuration < 150 ? 'סביר' :
+                                  transitionDuration < 300 ? 'איטי' : 'מאוד איטי'
+            });
+        }
+
         // Compare with previous notification (if stored)
         const prevNotifData = sessionStorage.getItem('_prev_notif_state');
         if (prevNotifData) {
@@ -469,6 +490,26 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
                 question: 'מה יקרה כשילחצו חזור?',
                 answer: 'נחזור לדשבורד - זו ההתראה האחרונה!'
             });
+        }
+
+        // ========== v5.20: Performance API timing ==========
+        if (window.performance && performance.getEntriesByType) {
+            const navTiming = performance.getEntriesByType('navigation')[0];
+            if (navTiming) {
+                log('📊 PERFORMANCE_TIMING', {
+                    question: 'מה הביצועים של טעינת הדף?',
+                    type: navTiming.type, // navigate, reload, back_forward
+                    dns_ms: Math.round(navTiming.domainLookupEnd - navTiming.domainLookupStart),
+                    tcp_ms: Math.round(navTiming.connectEnd - navTiming.connectStart),
+                    request_ms: Math.round(navTiming.responseStart - navTiming.requestStart),
+                    response_ms: Math.round(navTiming.responseEnd - navTiming.responseStart),
+                    domParse_ms: Math.round(navTiming.domInteractive - navTiming.responseEnd),
+                    domComplete_ms: Math.round(navTiming.domComplete - navTiming.domInteractive),
+                    total_ms: Math.round(navTiming.loadEventStart - navTiming.startTime),
+                    transferSize: navTiming.transferSize,
+                    wasFromCache: navTiming.transferSize === 0
+                });
+            }
         }
 
         log('<<< PAGE_LOAD_COMPLETE', {
@@ -567,13 +608,31 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
 
                 // Navigate to next notification or dashboard
                 if (nextIndex < totalNotifications) {
+                    // ========== v5.21: Log session storage state before navigation ==========
+                    log('📋 SESSION_STATE_BEFORE_NAV', {
+                        question: 'מה מצב ה-sessionStorage לפני ניווט?',
+                        came_from_notification: sessionStorage.getItem('came_from_notification'),
+                        notification_next_index: sessionStorage.getItem('notification_next_index'),
+                        notifications_done: sessionStorage.getItem('notifications_done'),
+                        nav_to_notification: sessionStorage.getItem('nav_to_notification'),
+                        note: 'הערכים האלה יקראו על ידי הדשבורד'
+                    });
+
                     const nextUrl = '/dashboard/dashboards/cemeteries/notifications/notification-view.php?index=' + nextIndex;
+
+                    // ========== v5.20: Store transition start time ==========
+                    sessionStorage.setItem('_transition_start', Date.now().toString());
+                    sessionStorage.setItem('_transition_from_index', currentIndex.toString());
+
                     log('<<< POPSTATE_REDIRECT_NEXT', {
                         question: 'האם עוברים להתראה הבאה?',
-                        answer: 'כן!',
+                        answer: 'כן! (ישירות, בלי דשבורד)',
                         from: currentIndex,
                         to: nextIndex,
-                        url: nextUrl
+                        url: nextUrl,
+                        method: 'location.replace',
+                        transitionStarted: Date.now(),
+                        warning: '⚠️ זה עוקף את הדשבורד - המשתמש לא יראה את הדשבורד בין התראות!'
                     });
                     location.replace(nextUrl);
                 } else {

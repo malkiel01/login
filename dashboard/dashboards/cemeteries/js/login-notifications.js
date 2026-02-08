@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.18.0 - Enhanced dashboard logging for back button debugging
+ * @version 5.21.0 - Enhanced logging for dashboard return flow
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores
@@ -72,7 +72,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'DASHBOARD',
-            v: '5.18',
+            v: '5.21',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -165,17 +165,30 @@ window.LoginNotificationsNav = {
                 const idx = parseInt(nextIdx, 10);
                 sessionStorage.removeItem(this.config.sessionNextIndexKey);
 
-                this.log('STEP3A_HAS_NEXT', {
+                this.log('🔔 STEP3A_HAS_NEXT', {
+                    question: 'יש עוד התראות להציג?',
+                    answer: 'כן!',
                     nextIndex: idx,
-                    action: 'v5.13: navigate via buffer'
+                    currentAction: 'מציג דשבורד למשתמש',
+                    nextAction: 'אחרי 5 שניות נעבור להתראה ' + idx,
+                    delayMs: this.config.delayMs
                 });
 
-                // v5.13: Navigate to next notification (will add buffer if needed)
-                setTimeout(() => {
-                    this.navigateToNotification(idx);
-                }, 300);
+                // v5.21: Start 5 second timer (same as first notification)
+                this.log('⏳ TIMER_STARTING_FOR_NEXT', {
+                    question: 'האם הטיימר מתחיל?',
+                    answer: 'כן! ' + this.config.delayMs + 'ms',
+                    forNotificationIndex: idx,
+                    userWillSee: 'דשבורד למשך 5 שניות'
+                });
 
-                this.log('<<< INIT_EXIT_WILL_NAV_NEXT', { nextIndex: idx, delay: 300 });
+                this.startTimer(idx);
+
+                this.log('<<< INIT_EXIT_TIMER_FOR_NEXT', {
+                    nextIndex: idx,
+                    delayMs: this.config.delayMs,
+                    expectedNavTime: new Date(Date.now() + this.config.delayMs).toISOString()
+                });
                 return;
 
             } else {
@@ -210,13 +223,29 @@ window.LoginNotificationsNav = {
     startTimer(index) {
         if (this.state.timerId) {
             clearTimeout(this.state.timerId);
-            this.log('TIMER_CLEARED_OLD', {});
+            this.log('TIMER_CLEARED_OLD', { reason: 'new timer starting' });
         }
 
-        this.log('>>> TIMER_START', { index: index, delayMs: this.config.delayMs });
+        const startTime = Date.now();
+        this.log('>>> TIMER_START', {
+            question: 'האם הטיימר התחיל?',
+            answer: 'כן!',
+            forNotificationIndex: index,
+            delayMs: this.config.delayMs,
+            willFireAt: new Date(startTime + this.config.delayMs).toISOString()
+        });
 
         this.state.timerId = setTimeout(() => {
-            this.log('TIMER_FIRED', { index: index });
+            const actualDelay = Date.now() - startTime;
+            this.log('🚀 TIMER_FIRED', {
+                question: 'האם הטיימר נורה?',
+                answer: 'כן!',
+                forNotificationIndex: index,
+                expectedDelay: this.config.delayMs,
+                actualDelay: actualDelay,
+                drift: actualDelay - this.config.delayMs,
+                action: 'מנווט להתראה ' + index
+            });
             this.navigateToNotification(index);
         }, this.config.delayMs);
     },

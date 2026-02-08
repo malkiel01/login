@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.18.0 - Enhanced logging before dashboard redirect
+ * @version 5.19.0 - FIX: Use history.go() instead of location.replace() to return to dashboard
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -298,7 +298,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const totalNotifications = <?php echo $totalNotifications; ?>;
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
-        const VERSION = '5.18';
+        const VERSION = '5.19';
 
         // ========== COMPREHENSIVE STATE SNAPSHOT ==========
         function getFullState() {
@@ -601,13 +601,22 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
 
                     log('<<< POPSTATE_REDIRECT_DASHBOARD', {
                         question: 'האם חוזרים לדשבורד?',
-                        answer: 'כן! זו הייתה ההתראה האחרונה'
+                        answer: 'כן! זו הייתה ההתראה האחרונה',
+                        method: currentNavIndex > 0 ? 'history.go(-' + currentNavIndex + ')' : 'location.replace (fallback)'
                     });
                     sessionStorage.setItem('notifications_done', 'true');
                     sessionStorage.removeItem('notification_next_index');
                     sessionStorage.removeItem('came_from_notification');
                     sessionStorage.removeItem('_prev_notif_state');
-                    location.replace('/dashboard/dashboards/cemeteries/');
+
+                    // v5.19: Use history.go() to jump directly to original dashboard
+                    // This clears all intermediate entries (buffer, notifications, traps)
+                    if (currentNavIndex > 0) {
+                        history.go(-currentNavIndex);
+                    } else {
+                        // Fallback if Navigation API not available
+                        location.replace('/dashboard/dashboards/cemeteries/');
+                    }
                 }
             }
         });

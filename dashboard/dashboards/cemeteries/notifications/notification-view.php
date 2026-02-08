@@ -305,8 +305,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
                 session: {
                     came_from: sessionStorage.getItem('came_from_notification'),
                     next_idx: sessionStorage.getItem('notification_next_index'),
-                    done: sessionStorage.getItem('notifications_done'),
-                    pending: sessionStorage.getItem('pending_notification_index')
+                    done: sessionStorage.getItem('notifications_done')
                 },
                 nav: window.navigation ? {
                     index: window.navigation.currentEntry.index,
@@ -323,13 +322,13 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             };
         }
 
-        // Logging function - ENHANCED v5.11
+        // Logging function - v5.12
         function log(event, data) {
             const state = getFullState();
 
             const payload = {
                 page: 'NOTIF_VIEW',
-                v: '5.11',
+                v: '5.12',
                 e: event,
                 t: Date.now() - PAGE_LOAD_TIME,
                 ts: new Date().toISOString(),

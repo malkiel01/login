@@ -2,12 +2,18 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.11.0 - FIX: ALWAYS reload after last notification (uniform behavior)
+ * @version 5.12.0 - FIX: No reloads! Use pushState to preserve history stack on Chrome Android
+ *
+ * Key changes in 5.12:
+ * - Removed all location.href reloads that were resetting history
+ * - Use history.pushState to add buffer entries before navigating
+ * - Navigate directly to next notification without page reload
+ * - This preserves Chrome Android PWA history stack
  *
  * Flow:
- * 1. Dashboard loads → wait 5 seconds → navigate to notification-view.php?index=0
- * 2. User sees notification → presses back → returns to dashboard
- * 3. Dashboard detects return from notification → wait 5 seconds → navigate to next notification
+ * 1. Dashboard loads → wait 5 seconds → pushState(buffer) → navigate to notification
+ * 2. User presses back → returns to dashboard (buffer entry)
+ * 3. Dashboard detects return → pushState(buffer) → navigate to next notification
  * 4. Repeat until all notifications shown
  */
 
@@ -35,8 +41,7 @@ window.LoginNotificationsNav = {
             session: {
                 came_from: sessionStorage.getItem(this.config.sessionCameFromKey),
                 next_idx: sessionStorage.getItem(this.config.sessionNextIndexKey),
-                done: sessionStorage.getItem(this.config.sessionDoneKey),
-                pending: sessionStorage.getItem('pending_notification_index')
+                done: sessionStorage.getItem(this.config.sessionDoneKey)
             },
             nav: window.navigation ? {
                 index: window.navigation.currentEntry.index,
@@ -58,14 +63,14 @@ window.LoginNotificationsNav = {
     },
 
     /**
-     * Send debug log to server - ENHANCED v5.11
+     * Send debug log to server - v5.12
      */
     log(event, data) {
         const state = this.getFullState();
 
         const payload = {
             page: 'DASHBOARD',
-            v: '5.11',
+            v: '5.12',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -104,67 +109,58 @@ window.LoginNotificationsNav = {
             return;
         }
 
-        // ========== STEP 2: Check pending notification ==========
-        const pendingIndex = sessionStorage.getItem('pending_notification_index');
-        this.log('STEP2_CHECK_PENDING', { pendingIndex: pendingIndex });
-
-        if (pendingIndex !== null) {
-            sessionStorage.removeItem('pending_notification_index');
-            const idx = parseInt(pendingIndex, 10);
-            this.log('STEP2_PENDING_FOUND', { index: idx, action: 'will navigate to notification' });
-
-            setTimeout(() => {
-                this.navigateToNotification(idx);
-            }, 100);
-            this.log('<<< INIT_EXIT_PENDING', { scheduledNavTo: idx });
-            return;
-        }
-
-        // ========== STEP 3: Check if came from notification ==========
+        // ========== STEP 2: Check if came from notification ==========
+        // v5.12: Simplified - removed pending_notification_index (no longer needed without reloads)
         const cameFrom = sessionStorage.getItem(this.config.sessionCameFromKey);
         const nextIdx = sessionStorage.getItem(this.config.sessionNextIndexKey);
-        this.log('STEP3_CHECK_CAME_FROM', { cameFrom: cameFrom, nextIdx: nextIdx });
+        this.log('STEP2_CHECK_CAME_FROM', { cameFrom: cameFrom, nextIdx: nextIdx });
 
         if (cameFrom === 'true') {
             // Clear the flag immediately
             sessionStorage.removeItem(this.config.sessionCameFromKey);
-            this.log('STEP3_CAME_FROM_TRUE', { cleared: 'came_from_notification' });
+            this.log('STEP2_CAME_FROM_TRUE', { cleared: 'came_from_notification' });
 
             if (nextIdx !== null) {
                 // ========== BRANCH A: More notifications to show ==========
                 const idx = parseInt(nextIdx, 10);
-                this.log('STEP3A_HAS_NEXT', {
+                sessionStorage.removeItem(this.config.sessionNextIndexKey);
+
+                this.log('STEP2A_HAS_NEXT', {
                     nextIndex: idx,
-                    action: 'reload dashboard then navigate to notification'
+                    action: 'v5.12: navigate directly without reload'
                 });
 
-                sessionStorage.setItem('pending_notification_index', idx.toString());
-                this.log('STEP3A_SET_PENDING', { pendingIndex: idx });
+                // v5.12: NO RELOAD! Navigate directly to next notification
+                // This preserves Chrome Android history stack
+                setTimeout(() => {
+                    this.navigateToNotification(idx);
+                }, 300);
 
-                const reloadUrl = '/dashboard/dashboards/cemeteries/?_next=' + Date.now();
-                this.log('<<< INIT_EXIT_RELOAD_FOR_NEXT', { reloadUrl: reloadUrl, nextIndex: idx });
-                location.href = reloadUrl;
+                this.log('<<< INIT_EXIT_WILL_NAV_NEXT', { nextIndex: idx, delay: 300 });
                 return;
 
             } else {
                 // ========== BRANCH B: Last notification - all done ==========
-                // v5.11: ALWAYS reload for uniform behavior
-                this.log('STEP3B_NO_NEXT', {
-                    action: 'last notification done - reload for safety'
+                this.log('STEP2B_NO_NEXT', {
+                    action: 'v5.12: all done - stay on dashboard'
                 });
 
                 sessionStorage.setItem(this.config.sessionDoneKey, 'true');
-                this.log('STEP3B_SET_DONE', { done: 'true' });
+                this.log('STEP2B_SET_DONE', { done: 'true' });
 
-                const reloadUrl = '/dashboard/dashboards/cemeteries/?_final=' + Date.now();
-                this.log('<<< INIT_EXIT_RELOAD_FINAL', { reloadUrl: reloadUrl });
-                location.href = reloadUrl;
+                // v5.12: NO RELOAD! Just clean up URL if needed
+                if (location.hash || location.search) {
+                    history.replaceState(null, '', location.pathname);
+                    this.log('STEP2B_URL_CLEANED', { newUrl: location.pathname });
+                }
+
+                this.log('<<< INIT_EXIT_DONE', { reason: 'all notifications shown' });
                 return;
             }
         }
 
-        // ========== STEP 4: First load - start timer ==========
-        this.log('STEP4_FIRST_LOAD', { action: 'start timer for first notification' });
+        // ========== STEP 3: First load - start timer ==========
+        this.log('STEP3_FIRST_LOAD', { action: 'start timer for first notification' });
         this.startTimer(0);
         this.log('<<< INIT_EXIT_TIMER_STARTED', { timerIndex: 0, delayMs: this.config.delayMs });
     },
@@ -188,41 +184,49 @@ window.LoginNotificationsNav = {
 
     /**
      * Navigate to the notification page
+     * v5.12: Always add buffer entry via pushState before navigating
      */
     navigateToNotification(index) {
         const url = `${this.config.notificationUrl}?index=${index}`;
         const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+        const histLen = history.length;
 
         // ========== ENTRY POINT ==========
         this.log('>>> NAVIGATE_ENTER', {
             targetIndex: index,
             targetUrl: url,
-            currentNavIndex: navIndex
+            currentNavIndex: navIndex,
+            historyLength: histLen
         });
 
-        // If we're at navIndex 0, need to reload first
-        if (navIndex === 0) {
-            this.log('NAVIGATE_AT_NAV0', {
-                action: 'reload dashboard first',
-                reason: 'at navIndex 0, need buffer entry before notification'
-            });
+        // v5.12: Always add a buffer entry using pushState
+        // This ensures back from notification returns here, not to PWA start
+        // pushState doesn't cause page reload - just adds to history
+        const bufferState = {
+            buffer: true,
+            forNotification: index,
+            t: Date.now()
+        };
 
-            sessionStorage.setItem('pending_notification_index', index.toString());
-            const reloadUrl = '/dashboard/dashboards/cemeteries/?_nav=' + Date.now();
-            this.log('<<< NAVIGATE_EXIT_RELOAD', { reloadUrl: reloadUrl, pendingIndex: index });
-            location.href = reloadUrl;
-            return;
-        }
-
-        // navIndex > 0, safe to navigate directly
-        this.log('NAVIGATE_DIRECT', {
-            targetIndex: index,
+        this.log('NAVIGATE_PUSH_BUFFER', {
+            index: index,
             navIndex: navIndex,
-            historyLength: history.length
+            newHash: '#b' + index
         });
 
-        this.log('<<< NAVIGATE_EXIT_GO', { url: url, notificationIndex: index });
-        window.location.href = url;
+        history.pushState(bufferState, '', location.pathname + '#b' + index);
+
+        // Small delay to ensure history is updated before navigation
+        setTimeout(() => {
+            const newNavIndex = window.navigation ? window.navigation.currentEntry.index : -1;
+            this.log('<<< NAVIGATE_EXIT_GO', {
+                url: url,
+                notificationIndex: index,
+                navIndexAfterPush: newNavIndex,
+                historyLengthAfterPush: history.length
+            });
+            window.location.href = url;
+        }, 50);
     },
 
     /**

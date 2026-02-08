@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.22.0 - Works with notification-view.php v5.22 (5-second wait fix)
+ * @version 5.23.0 - Add View Transitions API + Prefetch for smooth transitions
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores
@@ -218,6 +218,30 @@ window.LoginNotificationsNav = {
     },
 
     /**
+     * Prefetch a notification page for faster loading
+     * v5.23: Add link rel=prefetch to preload the page
+     */
+    prefetchNotification(index) {
+        const url = `${this.config.notificationUrl}?index=${index}`;
+
+        // Remove any existing prefetch links
+        const existing = document.querySelector('link[rel="prefetch"][data-notification]');
+        if (existing) existing.remove();
+
+        // Add new prefetch link
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        link.setAttribute('data-notification', index);
+        document.head.appendChild(link);
+
+        this.log('PREFETCH_ADDED', {
+            url: url,
+            notificationIndex: index
+        });
+    },
+
+    /**
      * Start the countdown timer
      */
     startTimer(index) {
@@ -225,6 +249,9 @@ window.LoginNotificationsNav = {
             clearTimeout(this.state.timerId);
             this.log('TIMER_CLEARED_OLD', { reason: 'new timer starting' });
         }
+
+        // v5.23: Prefetch the notification page immediately
+        this.prefetchNotification(index);
 
         const startTime = Date.now();
         this.log('>>> TIMER_START', {

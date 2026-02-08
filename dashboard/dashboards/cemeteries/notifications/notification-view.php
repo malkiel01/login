@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.22.0 - Fix: Return to dashboard between notifications (5-second wait)
+ * @version 5.23.0 - Add View Transitions API + Prefetch for smooth transitions
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -113,7 +113,11 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="view-transition" content="same-origin">
     <title>התראה - <?php echo DASHBOARD_NAME; ?></title>
+    <?php if ($nextIndex < $totalNotifications): ?>
+    <link rel="prefetch" href="/dashboard/dashboards/cemeteries/notifications/notification-view.php?index=<?php echo $nextIndex; ?>">
+    <?php endif; ?>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
     <style>
@@ -121,6 +125,35 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        /* View Transitions API - smooth fade between pages */
+        @view-transition {
+            navigation: auto;
+        }
+
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 0.25s;
+            animation-timing-function: ease-in-out;
+        }
+
+        ::view-transition-old(root) {
+            animation-name: fade-out;
+        }
+
+        ::view-transition-new(root) {
+            animation-name: fade-in;
+        }
+
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         body {

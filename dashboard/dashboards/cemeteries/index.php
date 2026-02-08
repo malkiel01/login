@@ -65,6 +65,7 @@ $isAdminUser = isAdmin();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
     <?php
     // צבע שורת הסטטוס של הפלאפון - לפי ערכת הנושא
     if ($isDarkMode) {
@@ -151,6 +152,32 @@ $isAdminUser = isAdmin();
     <!-- Pending Badges (Entity Approval) -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/pending-badges.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/pending-section.css">
+
+    <!-- View Transitions API - smooth page transitions -->
+    <style>
+        @view-transition {
+            navigation: auto;
+        }
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 0.25s;
+            animation-timing-function: ease-in-out;
+        }
+        ::view-transition-old(root) {
+            animation-name: fade-out;
+        }
+        ::view-transition-new(root) {
+            animation-name: fade-in;
+        }
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 
     <!-- User Permissions for JavaScript -->
     <script>

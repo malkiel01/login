@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.23.0 - Add View Transitions API + Prefetch for smooth transitions
+ * @version 5.24.0 - Fade-out animation before navigation to reduce flicker
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores
@@ -218,6 +218,38 @@ window.LoginNotificationsNav = {
     },
 
     /**
+     * Fade out page and navigate
+     * v5.24: Smooth transition by fading out before navigation
+     */
+    fadeOutAndNavigate(url) {
+        // Add fade-out style if not exists
+        if (!document.getElementById('fade-out-style')) {
+            const style = document.createElement('style');
+            style.id = 'fade-out-style';
+            style.textContent = `
+                .page-fade-out {
+                    animation: pageExit 0.2s ease-out forwards;
+                }
+                @keyframes pageExit {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Start fade out
+        document.body.classList.add('page-fade-out');
+
+        this.log('FADE_OUT_START', { url: url });
+
+        // Navigate after animation
+        setTimeout(() => {
+            window.location.href = url;
+        }, 200);
+    },
+
+    /**
      * Prefetch a notification page for faster loading
      * v5.23: Add link rel=prefetch to preload the page
      */
@@ -315,7 +347,7 @@ window.LoginNotificationsNav = {
             sessionStorage.setItem('nav_to_notification', index.toString());
 
             this.log('<<< NAVIGATE_EXIT_TO_BUFFER', { bufferUrl: bufferUrl, pendingNotification: index });
-            window.location.href = bufferUrl;
+            this.fadeOutAndNavigate(bufferUrl);
             return;
         }
 
@@ -326,7 +358,7 @@ window.LoginNotificationsNav = {
         });
 
         this.log('<<< NAVIGATE_EXIT_GO', { url: url, notificationIndex: index });
-        window.location.href = url;
+        this.fadeOutAndNavigate(url);
     },
 
     /**

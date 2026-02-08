@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.23.0 - Add View Transitions API + Prefetch for smooth transitions
+ * @version 5.24.0 - Fade-out animation before navigation to reduce flicker
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -156,6 +156,25 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             to { opacity: 1; }
         }
 
+        /* v5.24: Page enter/exit animations */
+        @keyframes pageEnter {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pageExit {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .page-fade-in {
+            animation: pageEnter 0.2s ease-out forwards;
+        }
+
+        .page-fade-out {
+            animation: pageExit 0.2s ease-out forwards;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: <?php echo $typeColor['gradient']; ?>;
@@ -297,7 +316,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         }
     </style>
 </head>
-<body class="<?php echo implode(' ', $bodyClasses); ?>">
+<body class="<?php echo implode(' ', $bodyClasses); ?> page-fade-in">
     <div class="notification-card">
         <div class="card-header">
             <span class="counter"><?php echo $counter; ?></span>
@@ -420,6 +439,16 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             } catch(e) {
                 console.error('Log failed:', e);
             }
+        }
+
+        // ========== v5.24: Fade out and navigate ==========
+        function fadeOutAndGo(steps) {
+            log('FADE_OUT_START', { steps: steps });
+            document.body.classList.remove('page-fade-in');
+            document.body.classList.add('page-fade-out');
+            setTimeout(() => {
+                history.go(steps);
+            }, 200);
         }
 
         // ========== PAGE LOAD - DETAILED LOGGING ==========
@@ -660,7 +689,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
                         method: 'history.go(-' + currentNavIndex + ')',
                         flow: 'דשבורד יציג 5 שניות → אז יעבור להתראה ' + nextIndex
                     });
-                    history.go(-currentNavIndex);
+                    fadeOutAndGo(-currentNavIndex);
                 } else {
                     // ========== v5.18: Detailed logging before dashboard redirect ==========
                     const navEntries = window.navigation ? window.navigation.entries() : [];
@@ -697,7 +726,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
                     // v5.19: Use history.go() to jump directly to original dashboard
                     // This clears all intermediate entries (buffer, notifications, traps)
                     if (currentNavIndex > 0) {
-                        history.go(-currentNavIndex);
+                        fadeOutAndGo(-currentNavIndex);
                     } else {
                         // Fallback if Navigation API not available
                         location.replace('/dashboard/dashboards/cemeteries/');

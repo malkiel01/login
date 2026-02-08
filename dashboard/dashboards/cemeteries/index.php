@@ -153,29 +153,21 @@ $isAdminUser = isAdmin();
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/pending-badges.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/pending-section.css">
 
-    <!-- View Transitions API - smooth page transitions -->
+    <!-- v5.24: Smooth page transitions -->
     <style>
-        @view-transition {
-            navigation: auto;
+        @keyframes pageEnter {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        ::view-transition-old(root),
-        ::view-transition-new(root) {
-            animation-duration: 0.25s;
-            animation-timing-function: ease-in-out;
-        }
-        ::view-transition-old(root) {
-            animation-name: fade-out;
-        }
-        ::view-transition-new(root) {
-            animation-name: fade-in;
-        }
-        @keyframes fade-out {
+        @keyframes pageExit {
             from { opacity: 1; }
             to { opacity: 0; }
         }
-        @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .page-fade-in {
+            animation: pageEnter 0.2s ease-out forwards;
+        }
+        .page-fade-out {
+            animation: pageExit 0.2s ease-out forwards;
         }
     </style>
 
@@ -212,7 +204,7 @@ $isAdminUser = isAdmin();
         // Backup saved to: js/back-button-handler-v5-BACKUP.js
     </script>
 </head>
-<body class="<?= implode(' ', $bodyClasses) ?>" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">
+<body class="<?= implode(' ', $bodyClasses) ?> page-fade-in" data-theme="<?= $isDarkMode ? 'dark' : 'light' ?>" data-color-scheme="<?= $isDarkMode ? '' : $colorScheme ?>" style="--base-font-size: <?= $fontSize ?>px;" data-device-type="<?= $detectedDeviceType ?>">
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->
     <svg style="display: none;">
         <!-- Refresh Icon - Modern circular arrows -->

@@ -299,34 +299,42 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
 
-        // Logging function
-        function log(event, data) {
-            const navInfo = window.navigation ? {
-                navIndex: window.navigation.currentEntry.index,
-                navLength: window.navigation.entries().length,
-                canGoBack: window.navigation.canGoBack,
-                canGoForward: window.navigation.canGoForward
-            } : { navApi: 'not supported' };
-
-            const payload = {
-                page: 'NOTIFICATION_VIEW',
-                e: event,
-                t: Date.now() - PAGE_LOAD_TIME,
-                ts: new Date().toISOString(),
-                idx: currentIndex,
-                next: nextIndex,
-                total: totalNotifications,
-                d: data,
-                nav: navInfo,
-                hist: {
-                    length: history.length,
-                    state: history.state
-                },
+        // Get full state
+        function getFullState() {
+            return {
                 session: {
                     came_from: sessionStorage.getItem('came_from_notification'),
                     next_idx: sessionStorage.getItem('notification_next_index'),
-                    done: sessionStorage.getItem('notifications_done')
+                    done: sessionStorage.getItem('notifications_done'),
+                    pending: sessionStorage.getItem('pending_notification_index')
+                },
+                nav: window.navigation ? {
+                    index: window.navigation.currentEntry.index,
+                    length: window.navigation.entries().length,
+                    canGoBack: window.navigation.canGoBack,
+                    canGoForward: window.navigation.canGoForward
+                } : { api: 'N/A' },
+                notification: {
+                    current: currentIndex,
+                    next: nextIndex,
+                    total: totalNotifications,
+                    isLast: nextIndex >= totalNotifications
                 }
+            };
+        }
+
+        // Logging function - ENHANCED v5.11
+        function log(event, data) {
+            const state = getFullState();
+
+            const payload = {
+                page: 'NOTIF_VIEW',
+                v: '5.11',
+                e: event,
+                t: Date.now() - PAGE_LOAD_TIME,
+                ts: new Date().toISOString(),
+                d: data,
+                state: state
             };
 
             console.log('[NotificationView]', event, payload);
@@ -338,68 +346,64 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             }
         }
 
-        // Log page load
-        log('PAGE_LOAD', {
-            referrer: document.referrer,
-            url: location.href,
-            hash: location.hash
+        // ========== NOTIFICATION VIEW INIT ==========
+        log('>>> NOTIF_VIEW_ENTER', {
+            index: currentIndex,
+            isLast: nextIndex >= totalNotifications
         });
 
-        // CRITICAL: Ensure this page has a proper history entry
+        // Set up history state
         history.replaceState(
             { notification: true, index: currentIndex, t: Date.now() },
             '',
             location.href
         );
-        log('HISTORY_REPLACE_STATE', { index: currentIndex });
+        log('HISTORY_STATE_SET', { index: currentIndex });
 
-        // Save next index to sessionStorage
-        // FIX v5.10: For LAST notification, DON'T set notifications_done yet!
-        // Let the dashboard handle it so RELOAD_AFTER_LAST can fire
+        // ========== SET SESSION STORAGE ==========
+        // ALWAYS set came_from_notification
+        sessionStorage.setItem('came_from_notification', 'true');
+        log('SESSION_SET_CAME_FROM', { value: 'true' });
+
+        // Set next_index OR clear it for last notification
         if (nextIndex < totalNotifications) {
             sessionStorage.setItem('notification_next_index', nextIndex.toString());
-            log('SESSION_SET_NEXT', { nextIndex: nextIndex });
+            log('SESSION_SET_NEXT_INDEX', {
+                nextIndex: nextIndex,
+                hasMoreNotifications: true
+            });
         } else {
-            // Last notification - clear next_index but DON'T set done yet
-            // Dashboard will set it after handling came_from_notification
             sessionStorage.removeItem('notification_next_index');
-            log('SESSION_LAST_NOTIFICATION', { reason: 'last notification - dashboard will set done' });
+            log('SESSION_CLEAR_NEXT_INDEX', {
+                reason: 'this is the LAST notification',
+                hasMoreNotifications: false
+            });
         }
 
-        // Mark that we came from notification view
-        sessionStorage.setItem('came_from_notification', 'true');
+        log('<<< NOTIF_VIEW_READY', {
+            userAction: 'waiting for BACK button press',
+            willReturnTo: 'dashboard'
+        });
 
         // Skip all notifications
         function skipAll() {
-            log('SKIP_ALL', {});
+            log('SKIP_ALL_CLICKED', {});
             sessionStorage.setItem('notifications_done', 'true');
             sessionStorage.removeItem('notification_next_index');
             location.replace('/dashboard/dashboards/cemeteries/');
         }
 
-        // Listen for back button / navigation events
-        window.addEventListener('popstate', function(e) {
-            log('POPSTATE', { state: e.state });
-        });
-
+        // Listen for navigation events
         window.addEventListener('pagehide', function(e) {
-            log('PAGEHIDE', { persisted: e.persisted });
+            log('>>> PAGEHIDE', {
+                persisted: e.persisted,
+                willBeCached: e.persisted
+            });
         });
 
         window.addEventListener('beforeunload', function(e) {
-            log('BEFOREUNLOAD', {});
+            log('>>> BEFOREUNLOAD', { reason: 'page unloading' });
         });
-
-        if ('navigation' in window) {
-            window.navigation.addEventListener('navigate', function(e) {
-                log('NAV_EVENT', {
-                    type: e.navigationType,
-                    destUrl: e.destination.url ? e.destination.url.split('/').pop() : 'N/A'
-                });
-            });
-        }
-
-        log('INIT_COMPLETE', {});
     </script>
 </body>
 </html>

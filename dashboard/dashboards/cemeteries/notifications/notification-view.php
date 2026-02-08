@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 1.0.0
+ * @version 5.16.0 - COMPREHENSIVE LOGGING + Navigation API intercept
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -298,45 +298,89 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const totalNotifications = <?php echo $totalNotifications; ?>;
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
+        const VERSION = '5.16';
 
-        // Get full state
+        // ========== COMPREHENSIVE STATE SNAPSHOT ==========
         function getFullState() {
+            const navApi = window.navigation;
+            const entries = navApi ? navApi.entries() : [];
+
             return {
+                // Session storage state
                 session: {
                     came_from: sessionStorage.getItem('came_from_notification'),
                     next_idx: sessionStorage.getItem('notification_next_index'),
-                    done: sessionStorage.getItem('notifications_done')
+                    done: sessionStorage.getItem('notifications_done'),
+                    nav_pending: sessionStorage.getItem('nav_to_notification')
                 },
-                nav: window.navigation ? {
-                    index: window.navigation.currentEntry.index,
-                    length: window.navigation.entries().length,
-                    canGoBack: window.navigation.canGoBack,
-                    canGoForward: window.navigation.canGoForward
-                } : { api: 'N/A' },
+                // Navigation API state
+                nav: navApi ? {
+                    currentIndex: navApi.currentEntry.index,
+                    currentUrl: navApi.currentEntry.url,
+                    currentKey: navApi.currentEntry.key,
+                    entriesCount: entries.length,
+                    canGoBack: navApi.canGoBack,
+                    canGoForward: navApi.canGoForward,
+                    allEntries: entries.map((e, i) => ({
+                        idx: i,
+                        url: e.url ? e.url.split('/').pop().substring(0, 40) : 'N/A',
+                        key: e.key ? e.key.substring(0, 8) : 'N/A'
+                    }))
+                } : { api: 'NOT_AVAILABLE' },
+                // History API state
+                history: {
+                    length: history.length,
+                    state: history.state,
+                    scrollRestoration: history.scrollRestoration
+                },
+                // Current notification info
                 notification: {
                     current: currentIndex,
                     next: nextIndex,
                     total: totalNotifications,
-                    isLast: nextIndex >= totalNotifications
+                    isFirst: currentIndex === 0,
+                    isLast: nextIndex >= totalNotifications,
+                    remaining: totalNotifications - currentIndex - 1
+                },
+                // Page info
+                page: {
+                    url: location.href,
+                    pathname: location.pathname,
+                    search: location.search,
+                    referrer: document.referrer || 'none',
+                    visibilityState: document.visibilityState
                 }
             };
         }
 
-        // Logging function - v5.14
-        function log(event, data) {
+        // ========== ENHANCED LOGGING - v5.16 ==========
+        let logSequence = 0;
+        function log(event, data, extra = {}) {
+            logSequence++;
             const state = getFullState();
+            const now = Date.now();
 
             const payload = {
+                // Meta
                 page: 'NOTIF_VIEW',
-                v: '5.14',
+                v: VERSION,
+                seq: logSequence,
+                notifIdx: currentIndex,
+
+                // Event info
                 e: event,
-                t: Date.now() - PAGE_LOAD_TIME,
+                t: now - PAGE_LOAD_TIME,
                 ts: new Date().toISOString(),
+
+                // Data
                 d: data,
+                extra: extra,
+
+                // Full state
                 state: state
             };
 
-            console.log('[NotificationView]', event, payload);
+            console.log(`[NotificationView #${currentIndex}]`, event, payload);
 
             try {
                 navigator.sendBeacon(DEBUG_URL, JSON.stringify(payload));
@@ -345,11 +389,53 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             }
         }
 
-        // ========== NOTIFICATION VIEW INIT ==========
-        log('>>> NOTIF_VIEW_ENTER', {
-            index: currentIndex,
-            isLast: nextIndex >= totalNotifications
+        // ========== PAGE LOAD - DETAILED LOGGING ==========
+        log('>>> PAGE_LOAD_START', {
+            question: 'האם הגענו לדף התראה?',
+            answer: 'כן!',
+            notificationIndex: currentIndex,
+            isFirstNotification: currentIndex === 0,
+            isLastNotification: nextIndex >= totalNotifications,
+            howManyLeft: totalNotifications - currentIndex - 1
         });
+
+        // Compare with previous notification (if stored)
+        const prevNotifData = sessionStorage.getItem('_prev_notif_state');
+        if (prevNotifData) {
+            try {
+                const prev = JSON.parse(prevNotifData);
+                log('COMPARE_WITH_PREVIOUS', {
+                    question: 'מה השתנה מההתראה הקודמת?',
+                    previous: {
+                        notifIndex: prev.notifIndex,
+                        historyLength: prev.historyLength,
+                        navIndex: prev.navIndex,
+                        entriesCount: prev.entriesCount
+                    },
+                    current: {
+                        notifIndex: currentIndex,
+                        historyLength: history.length,
+                        navIndex: window.navigation ? window.navigation.currentEntry.index : -1,
+                        entriesCount: window.navigation ? window.navigation.entries().length : -1
+                    },
+                    changes: {
+                        notifIndexChange: currentIndex - prev.notifIndex,
+                        historyLengthChange: history.length - prev.historyLength,
+                        navIndexChange: window.navigation ?
+                            window.navigation.currentEntry.index - prev.navIndex : 'N/A'
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Store current state for next notification comparison
+        sessionStorage.setItem('_prev_notif_state', JSON.stringify({
+            notifIndex: currentIndex,
+            historyLength: history.length,
+            navIndex: window.navigation ? window.navigation.currentEntry.index : -1,
+            entriesCount: window.navigation ? window.navigation.entries().length : -1,
+            timestamp: Date.now()
+        }));
 
         // Set up history state
         history.replaceState(
@@ -357,52 +443,229 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             '',
             location.href
         );
-        log('HISTORY_STATE_SET', { index: currentIndex });
+        log('HISTORY_STATE_SET', {
+            index: currentIndex,
+            newState: history.state
+        });
 
-        // ========== SET SESSION STORAGE ==========
-        // ALWAYS set came_from_notification
+        // ========== SESSION STORAGE SETUP ==========
         sessionStorage.setItem('came_from_notification', 'true');
-        log('SESSION_SET_CAME_FROM', { value: 'true' });
 
-        // Set next_index OR clear it for last notification
         if (nextIndex < totalNotifications) {
             sessionStorage.setItem('notification_next_index', nextIndex.toString());
-            log('SESSION_SET_NEXT_INDEX', {
-                nextIndex: nextIndex,
-                hasMoreNotifications: true
+            log('SESSION_CONFIGURED', {
+                came_from: 'true',
+                next_index: nextIndex,
+                hasMore: true,
+                question: 'מה יקרה כשילחצו חזור?',
+                answer: 'נעבור להתראה ' + nextIndex
             });
         } else {
             sessionStorage.removeItem('notification_next_index');
-            log('SESSION_CLEAR_NEXT_INDEX', {
-                reason: 'this is the LAST notification',
-                hasMoreNotifications: false
+            log('SESSION_CONFIGURED', {
+                came_from: 'true',
+                next_index: null,
+                hasMore: false,
+                question: 'מה יקרה כשילחצו חזור?',
+                answer: 'נחזור לדשבורד - זו ההתראה האחרונה!'
             });
         }
 
-        log('<<< NOTIF_VIEW_READY', {
-            userAction: 'waiting for BACK button press',
-            willReturnTo: 'dashboard'
+        log('<<< PAGE_LOAD_COMPLETE', {
+            status: 'מחכה ללחיצת כפתור חזור',
+            whatWillHappen: nextIndex < totalNotifications ?
+                'יעבור להתראה ' + nextIndex :
+                'יחזור לדשבורד'
         });
 
-        // Skip all notifications
+        // ========== SKIP ALL ==========
         function skipAll() {
-            log('SKIP_ALL_CLICKED', {});
+            log('USER_ACTION_SKIP_ALL', {
+                question: 'המשתמש לחץ דלג על הכל?',
+                answer: 'כן!',
+                action: 'מנקה sessionStorage וחוזר לדשבורד'
+            });
             sessionStorage.setItem('notifications_done', 'true');
             sessionStorage.removeItem('notification_next_index');
+            sessionStorage.removeItem('_prev_notif_state');
             location.replace('/dashboard/dashboards/cemeteries/');
         }
 
-        // Listen for navigation events
+        // ========== NAVIGATION EVENTS MONITORING ==========
         window.addEventListener('pagehide', function(e) {
-            log('>>> PAGEHIDE', {
+            log('>>> EVENT_PAGEHIDE', {
+                question: 'הדף נסגר/מוסתר?',
                 persisted: e.persisted,
+                meaning: e.persisted ? 'נשמר ב-bfcache' : 'לא נשמר',
                 willBeCached: e.persisted
             });
         });
 
         window.addEventListener('beforeunload', function(e) {
-            log('>>> BEFOREUNLOAD', { reason: 'page unloading' });
+            log('>>> EVENT_BEFOREUNLOAD', {
+                question: 'הדף עומד להיסגר?',
+                answer: 'כן!',
+                reason: 'navigation or close'
+            });
         });
+
+        // Monitor ALL navigation events
+        if (window.navigation) {
+            navigation.addEventListener('navigateerror', function(e) {
+                log('!!! NAVIGATE_ERROR', {
+                    question: 'האם הניווט נכשל?',
+                    answer: 'כן!',
+                    error: e.error ? e.error.toString() : 'unknown'
+                });
+            });
+
+            navigation.addEventListener('navigatesuccess', function(e) {
+                log('NAVIGATE_SUCCESS', {
+                    question: 'האם הניווט הצליח?',
+                    answer: 'כן!'
+                });
+            });
+        }
+
+        // ========== v5.16: COMPREHENSIVE BACK BUTTON INTERCEPT ==========
+        if (window.navigation) {
+            log('INTERCEPT_SETUP_START', {
+                question: 'האם Navigation API זמין?',
+                answer: 'כן!',
+                currentNavIndex: navigation.currentEntry.index,
+                canGoBack: navigation.canGoBack,
+                entriesCount: navigation.entries().length
+            });
+
+            navigation.addEventListener('navigate', function(event) {
+                const isBackNavigation = event.navigationType === 'traverse' &&
+                    event.destination.index < navigation.currentEntry.index;
+                const isForwardNavigation = event.navigationType === 'traverse' &&
+                    event.destination.index > navigation.currentEntry.index;
+
+                log('>>> NAVIGATE_EVENT_FIRED', {
+                    question: 'האם קיבלנו אירוע ניווט?',
+                    answer: 'כן!',
+                    navigationType: event.navigationType,
+                    isBackNavigation: isBackNavigation,
+                    isForwardNavigation: isForwardNavigation,
+                    canIntercept: event.canIntercept,
+                    hashChange: event.hashChange,
+                    fromIndex: navigation.currentEntry.index,
+                    toIndex: event.destination.index,
+                    destinationUrl: event.destination.url,
+                    userInitiated: event.userInitiated,
+                    downloadRequest: event.downloadRequest
+                });
+
+                if (isBackNavigation) {
+                    log('>>> BACK_BUTTON_DETECTED', {
+                        question: 'האם זוהי לחיצה על כפתור חזור?',
+                        answer: 'כן! זוהתה לחיצת BACK',
+                        fromIndex: navigation.currentEntry.index,
+                        toIndex: event.destination.index,
+                        currentNotification: currentIndex,
+                        nextNotification: nextIndex,
+                        hasMoreNotifications: nextIndex < totalNotifications,
+                        historyLength: history.length,
+                        canGoBack: navigation.canGoBack,
+                        willIntercept: event.canIntercept
+                    });
+
+                    if (!event.canIntercept) {
+                        log('!!! CANNOT_INTERCEPT', {
+                            question: 'האם אפשר ליירט?',
+                            answer: 'לא! אי אפשר ליירט את הניווט הזה',
+                            reason: 'canIntercept is false',
+                            consequence: 'Chrome יטפל בניווט - עלול לסגור את האפליקציה'
+                        });
+                        return;
+                    }
+
+                    log('INTERCEPT_STARTING', {
+                        question: 'האם מתחילים יירוט?',
+                        answer: 'כן! קוראים ל-event.intercept()',
+                        willNavigateTo: nextIndex < totalNotifications ?
+                            'notification ' + nextIndex :
+                            'dashboard'
+                    });
+
+                    event.intercept({
+                        handler: async () => {
+                            log('INTERCEPT_HANDLER_RUNNING', {
+                                question: 'האם ה-handler רץ?',
+                                answer: 'כן! אנחנו בתוך ה-intercept handler',
+                                willDoNow: nextIndex < totalNotifications ?
+                                    'location.replace להתראה ' + nextIndex :
+                                    'location.replace לדשבורד'
+                            });
+
+                            if (nextIndex < totalNotifications) {
+                                const nextUrl = '/dashboard/dashboards/cemeteries/notifications/notification-view.php?index=' + nextIndex;
+
+                                log('<<< REDIRECTING_TO_NEXT_NOTIFICATION', {
+                                    question: 'האם עוברים להתראה הבאה?',
+                                    answer: 'כן!',
+                                    from: currentIndex,
+                                    to: nextIndex,
+                                    url: nextUrl,
+                                    method: 'location.replace',
+                                    remainingAfterThis: totalNotifications - nextIndex - 1
+                                });
+
+                                location.replace(nextUrl);
+                            } else {
+                                log('<<< REDIRECTING_TO_DASHBOARD', {
+                                    question: 'האם חוזרים לדשבורד?',
+                                    answer: 'כן! זו הייתה ההתראה האחרונה',
+                                    notificationsShown: totalNotifications,
+                                    settingDone: true,
+                                    method: 'location.replace'
+                                });
+
+                                sessionStorage.setItem('notifications_done', 'true');
+                                sessionStorage.removeItem('notification_next_index');
+                                sessionStorage.removeItem('came_from_notification');
+                                sessionStorage.removeItem('_prev_notif_state');
+                                location.replace('/dashboard/dashboards/cemeteries/');
+                            }
+                        }
+                    });
+
+                    log('INTERCEPT_CALLED', {
+                        question: 'האם event.intercept() נקרא בהצלחה?',
+                        answer: 'כן! הניווט יירוט'
+                    });
+
+                } else if (isForwardNavigation) {
+                    log('FORWARD_NAVIGATION_DETECTED', {
+                        question: 'האם זו לחיצה קדימה?',
+                        answer: 'כן, אבל לא מיירטים',
+                        fromIndex: navigation.currentEntry.index,
+                        toIndex: event.destination.index
+                    });
+                } else {
+                    log('OTHER_NAVIGATION', {
+                        navigationType: event.navigationType,
+                        notIntercepting: true
+                    });
+                }
+            });
+
+            log('<<< INTERCEPT_SETUP_COMPLETE', {
+                question: 'האם היירוט מוכן?',
+                answer: 'כן! מחכים ללחיצת חזור',
+                listeningFor: 'navigate events with traverse type'
+            });
+
+        } else {
+            log('!!! NO_NAVIGATION_API', {
+                question: 'האם Navigation API זמין?',
+                answer: 'לא! אי אפשר ליירט',
+                consequence: 'לחיצת חזור תטופל על ידי Chrome - עלול לסגור את האפליקציה',
+                userAgent: navigator.userAgent
+            });
+        }
     </script>
 </body>
 </html>

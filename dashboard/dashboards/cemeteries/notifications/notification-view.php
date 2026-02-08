@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.16.0 - COMPREHENSIVE LOGGING + Navigation API intercept
+ * @version 5.17.0 - POPSTATE TRAP (Navigation API canIntercept=false for traverse)
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -298,7 +298,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const totalNotifications = <?php echo $totalNotifications; ?>;
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
-        const VERSION = '5.16';
+        const VERSION = '5.17';
 
         // ========== COMPREHENSIVE STATE SNAPSHOT ==========
         function getFullState() {
@@ -527,145 +527,75 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             });
         }
 
-        // ========== v5.16: COMPREHENSIVE BACK BUTTON INTERCEPT ==========
-        if (window.navigation) {
-            log('INTERCEPT_SETUP_START', {
-                question: 'האם Navigation API זמין?',
-                answer: 'כן!',
-                currentNavIndex: navigation.currentEntry.index,
-                canGoBack: navigation.canGoBack,
-                entriesCount: navigation.entries().length
+        // ========== v5.17: POPSTATE TRAP ==========
+        // Navigation API canIntercept is FALSE for traverse (back/forward)
+        // Solution: Use pushState to create a "trap" entry, then listen for popstate
+
+        const TRAP_STATE = { trap: true, notifIndex: currentIndex, timestamp: Date.now() };
+
+        // Push a trap entry - when user presses back, they hit this first
+        history.pushState(TRAP_STATE, '', location.href);
+
+        log('TRAP_CREATED', {
+            question: 'האם יצרנו מלכודת להיסטוריה?',
+            answer: 'כן! pushState נקרא',
+            trapState: TRAP_STATE,
+            newHistoryLength: history.length
+        });
+
+        // Listen for popstate - fires when user presses back and hits our trap
+        window.addEventListener('popstate', function(e) {
+            log('>>> POPSTATE_FIRED', {
+                question: 'האם המשתמש לחץ חזור?',
+                answer: 'כן! popstate התקבל',
+                state: e.state,
+                isTrap: e.state && e.state.trap,
+                historyLength: history.length
             });
 
-            navigation.addEventListener('navigate', function(event) {
-                const isBackNavigation = event.navigationType === 'traverse' &&
-                    event.destination.index < navigation.currentEntry.index;
-                const isForwardNavigation = event.navigationType === 'traverse' &&
-                    event.destination.index > navigation.currentEntry.index;
-
-                log('>>> NAVIGATE_EVENT_FIRED', {
-                    question: 'האם קיבלנו אירוע ניווט?',
-                    answer: 'כן!',
-                    navigationType: event.navigationType,
-                    isBackNavigation: isBackNavigation,
-                    isForwardNavigation: isForwardNavigation,
-                    canIntercept: event.canIntercept,
-                    hashChange: event.hashChange,
-                    fromIndex: navigation.currentEntry.index,
-                    toIndex: event.destination.index,
-                    destinationUrl: event.destination.url,
-                    userInitiated: event.userInitiated,
-                    downloadRequest: event.downloadRequest
+            // Check if we're back at the notification (from trap)
+            // or if this is a real back navigation
+            if (e.state && e.state.notification) {
+                // User pressed back and hit our notification state
+                // This means they came back from the trap
+                log('POPSTATE_AT_NOTIFICATION', {
+                    question: 'האם חזרנו להתראה?',
+                    answer: 'כן! המשתמש בהתראה',
+                    notificationIndex: e.state.index,
+                    action: 'ננווט להתראה הבאה או לדשבורד'
                 });
 
-                if (isBackNavigation) {
-                    log('>>> BACK_BUTTON_DETECTED', {
-                        question: 'האם זוהי לחיצה על כפתור חזור?',
-                        answer: 'כן! זוהתה לחיצת BACK',
-                        fromIndex: navigation.currentEntry.index,
-                        toIndex: event.destination.index,
-                        currentNotification: currentIndex,
-                        nextNotification: nextIndex,
-                        hasMoreNotifications: nextIndex < totalNotifications,
-                        historyLength: history.length,
-                        canGoBack: navigation.canGoBack,
-                        willIntercept: event.canIntercept
+                // Navigate to next notification or dashboard
+                if (nextIndex < totalNotifications) {
+                    const nextUrl = '/dashboard/dashboards/cemeteries/notifications/notification-view.php?index=' + nextIndex;
+                    log('<<< POPSTATE_REDIRECT_NEXT', {
+                        question: 'האם עוברים להתראה הבאה?',
+                        answer: 'כן!',
+                        from: currentIndex,
+                        to: nextIndex,
+                        url: nextUrl
                     });
-
-                    if (!event.canIntercept) {
-                        log('!!! CANNOT_INTERCEPT', {
-                            question: 'האם אפשר ליירט?',
-                            answer: 'לא! אי אפשר ליירט את הניווט הזה',
-                            reason: 'canIntercept is false',
-                            consequence: 'Chrome יטפל בניווט - עלול לסגור את האפליקציה'
-                        });
-                        return;
-                    }
-
-                    log('INTERCEPT_STARTING', {
-                        question: 'האם מתחילים יירוט?',
-                        answer: 'כן! קוראים ל-event.intercept()',
-                        willNavigateTo: nextIndex < totalNotifications ?
-                            'notification ' + nextIndex :
-                            'dashboard'
-                    });
-
-                    event.intercept({
-                        handler: async () => {
-                            log('INTERCEPT_HANDLER_RUNNING', {
-                                question: 'האם ה-handler רץ?',
-                                answer: 'כן! אנחנו בתוך ה-intercept handler',
-                                willDoNow: nextIndex < totalNotifications ?
-                                    'location.replace להתראה ' + nextIndex :
-                                    'location.replace לדשבורד'
-                            });
-
-                            if (nextIndex < totalNotifications) {
-                                const nextUrl = '/dashboard/dashboards/cemeteries/notifications/notification-view.php?index=' + nextIndex;
-
-                                log('<<< REDIRECTING_TO_NEXT_NOTIFICATION', {
-                                    question: 'האם עוברים להתראה הבאה?',
-                                    answer: 'כן!',
-                                    from: currentIndex,
-                                    to: nextIndex,
-                                    url: nextUrl,
-                                    method: 'location.replace',
-                                    remainingAfterThis: totalNotifications - nextIndex - 1
-                                });
-
-                                location.replace(nextUrl);
-                            } else {
-                                log('<<< REDIRECTING_TO_DASHBOARD', {
-                                    question: 'האם חוזרים לדשבורד?',
-                                    answer: 'כן! זו הייתה ההתראה האחרונה',
-                                    notificationsShown: totalNotifications,
-                                    settingDone: true,
-                                    method: 'location.replace'
-                                });
-
-                                sessionStorage.setItem('notifications_done', 'true');
-                                sessionStorage.removeItem('notification_next_index');
-                                sessionStorage.removeItem('came_from_notification');
-                                sessionStorage.removeItem('_prev_notif_state');
-                                location.replace('/dashboard/dashboards/cemeteries/');
-                            }
-                        }
-                    });
-
-                    log('INTERCEPT_CALLED', {
-                        question: 'האם event.intercept() נקרא בהצלחה?',
-                        answer: 'כן! הניווט יירוט'
-                    });
-
-                } else if (isForwardNavigation) {
-                    log('FORWARD_NAVIGATION_DETECTED', {
-                        question: 'האם זו לחיצה קדימה?',
-                        answer: 'כן, אבל לא מיירטים',
-                        fromIndex: navigation.currentEntry.index,
-                        toIndex: event.destination.index
-                    });
+                    location.replace(nextUrl);
                 } else {
-                    log('OTHER_NAVIGATION', {
-                        navigationType: event.navigationType,
-                        notIntercepting: true
+                    log('<<< POPSTATE_REDIRECT_DASHBOARD', {
+                        question: 'האם חוזרים לדשבורד?',
+                        answer: 'כן! זו הייתה ההתראה האחרונה'
                     });
+                    sessionStorage.setItem('notifications_done', 'true');
+                    sessionStorage.removeItem('notification_next_index');
+                    sessionStorage.removeItem('came_from_notification');
+                    sessionStorage.removeItem('_prev_notif_state');
+                    location.replace('/dashboard/dashboards/cemeteries/');
                 }
-            });
+            }
+        });
 
-            log('<<< INTERCEPT_SETUP_COMPLETE', {
-                question: 'האם היירוט מוכן?',
-                answer: 'כן! מחכים ללחיצת חזור',
-                listeningFor: 'navigate events with traverse type'
-            });
-
-        } else {
-            log('!!! NO_NAVIGATION_API', {
-                question: 'האם Navigation API זמין?',
-                answer: 'לא! אי אפשר ליירט',
-                consequence: 'לחיצת חזור תטופל על ידי Chrome - עלול לסגור את האפליקציה',
-                userAgent: navigator.userAgent
-            });
-        }
+        log('<<< POPSTATE_TRAP_READY', {
+            question: 'האם המלכודת מוכנה?',
+            answer: 'כן! מחכים ל-popstate',
+            currentHistoryLength: history.length,
+            trapActive: true
+        });
     </script>
 </body>
 </html>

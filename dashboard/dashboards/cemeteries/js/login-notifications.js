@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.21.0 - Enhanced logging for dashboard return flow
+ * @version 5.22.0 - Works with notification-view.php v5.22 (5-second wait fix)
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores

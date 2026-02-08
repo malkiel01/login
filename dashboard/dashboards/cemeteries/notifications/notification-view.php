@@ -3,7 +3,7 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.21.0 - Enhanced logging for dashboard return flow
+ * @version 5.22.0 - Fix: Return to dashboard between notifications (5-second wait)
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -608,33 +608,26 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
 
                 // Navigate to next notification or dashboard
                 if (nextIndex < totalNotifications) {
-                    // ========== v5.21: Log session storage state before navigation ==========
-                    log('📋 SESSION_STATE_BEFORE_NAV', {
-                        question: 'מה מצב ה-sessionStorage לפני ניווט?',
+                    // ========== v5.22: Go back to dashboard, let it handle 5-second timer ==========
+                    const currentNavIndex = window.navigation ? window.navigation.currentEntry.index : 1;
+
+                    log('📋 SESSION_STATE_BEFORE_DASHBOARD', {
+                        question: 'מה מצב ה-sessionStorage לפני חזרה לדשבורד?',
                         came_from_notification: sessionStorage.getItem('came_from_notification'),
                         notification_next_index: sessionStorage.getItem('notification_next_index'),
                         notifications_done: sessionStorage.getItem('notifications_done'),
-                        nav_to_notification: sessionStorage.getItem('nav_to_notification'),
-                        note: 'הערכים האלה יקראו על ידי הדשבורד'
+                        note: 'הדשבורד יקרא את הערכים האלה ויתחיל טיימר של 5 שניות'
                     });
 
-                    const nextUrl = '/dashboard/dashboards/cemeteries/notifications/notification-view.php?index=' + nextIndex;
-
-                    // ========== v5.20: Store transition start time ==========
-                    sessionStorage.setItem('_transition_start', Date.now().toString());
-                    sessionStorage.setItem('_transition_from_index', currentIndex.toString());
-
-                    log('<<< POPSTATE_REDIRECT_NEXT', {
-                        question: 'האם עוברים להתראה הבאה?',
-                        answer: 'כן! (ישירות, בלי דשבורד)',
+                    log('<<< POPSTATE_TO_DASHBOARD', {
+                        question: 'לאן ננווט?',
+                        answer: 'לדשבורד! (עם טיימר 5 שניות)',
                         from: currentIndex,
-                        to: nextIndex,
-                        url: nextUrl,
-                        method: 'location.replace',
-                        transitionStarted: Date.now(),
-                        warning: '⚠️ זה עוקף את הדשבורד - המשתמש לא יראה את הדשבורד בין התראות!'
+                        nextNotification: nextIndex,
+                        method: 'history.go(-' + currentNavIndex + ')',
+                        flow: 'דשבורד יציג 5 שניות → אז יעבור להתראה ' + nextIndex
                     });
-                    location.replace(nextUrl);
+                    history.go(-currentNavIndex);
                 } else {
                     // ========== v5.18: Detailed logging before dashboard redirect ==========
                     const navEntries = window.navigation ? window.navigation.entries() : [];

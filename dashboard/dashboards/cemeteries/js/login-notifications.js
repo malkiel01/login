@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.13.0 - FIX: Use location.href (not pushState) for proper Chrome Android history
+ * @version 5.14.0 - FIX: Force page reload with query param (hash-only changes don't reload)
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores
@@ -65,14 +65,14 @@ window.LoginNotificationsNav = {
     },
 
     /**
-     * Send debug log to server - v5.13
+     * Send debug log to server - v5.14
      */
     log(event, data) {
         const state = this.getFullState();
 
         const payload = {
             page: 'DASHBOARD',
-            v: '5.13',
+            v: '5.14',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -203,13 +203,13 @@ window.LoginNotificationsNav = {
 
     /**
      * Navigate to the notification page
-     * v5.13: Use location.href (not pushState) for proper Chrome Android history
+     * v5.14: Use query param (not hash) to force page reload
      */
     navigateToNotification(index) {
         const url = `${this.config.notificationUrl}?index=${index}`;
         const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
         const histLen = history.length;
-        const currentHash = location.hash;
+        const currentSearch = location.search;
 
         // ========== ENTRY POINT ==========
         this.log('>>> NAVIGATE_ENTER', {
@@ -217,23 +217,24 @@ window.LoginNotificationsNav = {
             targetUrl: url,
             currentNavIndex: navIndex,
             historyLength: histLen,
-            currentHash: currentHash
+            currentSearch: currentSearch
         });
 
-        // v5.13: Check if we need to add a buffer entry
-        // We need buffer if we're at navIndex 0 OR if we're on root (no hash)
-        const needsBuffer = navIndex === 0 || !currentHash.startsWith('#b');
-        const bufferHash = '#b' + index;
-        const bufferUrl = location.pathname + bufferHash;
+        // v5.14: Check if we need to add a buffer entry
+        // We need buffer if we're at navIndex 0 OR if we don't have a buffer param
+        const hasBuffer = currentSearch.includes('_b=');
+        const needsBuffer = navIndex === 0 || !hasBuffer;
+
+        // Use query param to force reload (hash doesn't reload!)
+        const bufferUrl = location.pathname + '?_b=' + index + '_' + Date.now();
 
         if (needsBuffer) {
             this.log('NAVIGATE_NEED_BUFFER', {
-                reason: navIndex === 0 ? 'at navIndex 0' : 'no buffer hash',
+                reason: navIndex === 0 ? 'at navIndex 0' : 'no buffer param',
                 bufferUrl: bufferUrl
             });
 
-            // v5.13: Use location.href to create a REAL page navigation entry
-            // This creates a "strong" history entry that Chrome Android respects
+            // v5.14: Use location.href with query param to force reload
             // Store the notification index to navigate after buffer loads
             sessionStorage.setItem('nav_to_notification', index.toString());
 
@@ -245,7 +246,7 @@ window.LoginNotificationsNav = {
         // Already have a buffer entry, navigate directly to notification
         this.log('NAVIGATE_DIRECT', {
             reason: 'already have buffer',
-            currentHash: currentHash
+            currentSearch: currentSearch
         });
 
         this.log('<<< NAVIGATE_EXIT_GO', { url: url, notificationIndex: index });

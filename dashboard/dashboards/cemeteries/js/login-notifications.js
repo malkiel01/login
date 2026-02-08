@@ -2,18 +2,20 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.12.0 - FIX: No reloads! Use pushState to preserve history stack on Chrome Android
+ * @version 5.13.0 - FIX: Use location.href (not pushState) for proper Chrome Android history
  *
- * Key changes in 5.12:
- * - Removed all location.href reloads that were resetting history
- * - Use history.pushState to add buffer entries before navigating
- * - Navigate directly to next notification without page reload
- * - This preserves Chrome Android PWA history stack
+ * Key insight from 5.12 failure:
+ * - pushState creates "weak" history entries that Chrome Android PWA ignores
+ * - location.href creates "strong" entries that work properly
+ *
+ * Key insight from 5.11 issue:
+ * - Reloading to DIFFERENT URLs (?_nav, ?_next) was resetting history
+ * - Solution: Use hash (#b0, #b1) on SAME base URL
  *
  * Flow:
- * 1. Dashboard loads → wait 5 seconds → pushState(buffer) → navigate to notification
- * 2. User presses back → returns to dashboard (buffer entry)
- * 3. Dashboard detects return → pushState(buffer) → navigate to next notification
+ * 1. Dashboard loads → wait 5 seconds → location.href(#b0) → navigate to notification
+ * 2. User presses back → returns to dashboard#b0 (real page load)
+ * 3. Dashboard detects return → location.href(#b1) → navigate to next notification
  * 4. Repeat until all notifications shown
  */
 
@@ -63,14 +65,14 @@ window.LoginNotificationsNav = {
     },
 
     /**
-     * Send debug log to server - v5.12
+     * Send debug log to server - v5.13
      */
     log(event, data) {
         const state = this.getFullState();
 
         const payload = {
             page: 'DASHBOARD',
-            v: '5.12',
+            v: '5.13',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -109,29 +111,46 @@ window.LoginNotificationsNav = {
             return;
         }
 
-        // ========== STEP 2: Check if came from notification ==========
-        // v5.12: Simplified - removed pending_notification_index (no longer needed without reloads)
+        // ========== STEP 2: Check if pending navigation to notification ==========
+        // v5.13: After buffer page load, navigate to the pending notification
+        const pendingNav = sessionStorage.getItem('nav_to_notification');
+        this.log('STEP2_CHECK_PENDING_NAV', { pendingNav: pendingNav, hash: location.hash });
+
+        if (pendingNav !== null) {
+            sessionStorage.removeItem('nav_to_notification');
+            const idx = parseInt(pendingNav, 10);
+            this.log('STEP2_PENDING_NAV_FOUND', { index: idx, action: 'will navigate to notification' });
+
+            // Small delay to ensure page is fully loaded
+            setTimeout(() => {
+                const url = `${this.config.notificationUrl}?index=${idx}`;
+                this.log('<<< NAVIGATE_FROM_BUFFER', { url: url, index: idx });
+                window.location.href = url;
+            }, 100);
+            return;
+        }
+
+        // ========== STEP 3: Check if came from notification ==========
         const cameFrom = sessionStorage.getItem(this.config.sessionCameFromKey);
         const nextIdx = sessionStorage.getItem(this.config.sessionNextIndexKey);
-        this.log('STEP2_CHECK_CAME_FROM', { cameFrom: cameFrom, nextIdx: nextIdx });
+        this.log('STEP3_CHECK_CAME_FROM', { cameFrom: cameFrom, nextIdx: nextIdx });
 
         if (cameFrom === 'true') {
             // Clear the flag immediately
             sessionStorage.removeItem(this.config.sessionCameFromKey);
-            this.log('STEP2_CAME_FROM_TRUE', { cleared: 'came_from_notification' });
+            this.log('STEP3_CAME_FROM_TRUE', { cleared: 'came_from_notification' });
 
             if (nextIdx !== null) {
                 // ========== BRANCH A: More notifications to show ==========
                 const idx = parseInt(nextIdx, 10);
                 sessionStorage.removeItem(this.config.sessionNextIndexKey);
 
-                this.log('STEP2A_HAS_NEXT', {
+                this.log('STEP3A_HAS_NEXT', {
                     nextIndex: idx,
-                    action: 'v5.12: navigate directly without reload'
+                    action: 'v5.13: navigate via buffer'
                 });
 
-                // v5.12: NO RELOAD! Navigate directly to next notification
-                // This preserves Chrome Android history stack
+                // v5.13: Navigate to next notification (will add buffer if needed)
                 setTimeout(() => {
                     this.navigateToNotification(idx);
                 }, 300);
@@ -141,17 +160,17 @@ window.LoginNotificationsNav = {
 
             } else {
                 // ========== BRANCH B: Last notification - all done ==========
-                this.log('STEP2B_NO_NEXT', {
-                    action: 'v5.12: all done - stay on dashboard'
+                this.log('STEP3B_NO_NEXT', {
+                    action: 'v5.13: all done - stay on dashboard'
                 });
 
                 sessionStorage.setItem(this.config.sessionDoneKey, 'true');
-                this.log('STEP2B_SET_DONE', { done: 'true' });
+                this.log('STEP3B_SET_DONE', { done: 'true' });
 
-                // v5.12: NO RELOAD! Just clean up URL if needed
+                // Clean up URL if needed
                 if (location.hash || location.search) {
                     history.replaceState(null, '', location.pathname);
-                    this.log('STEP2B_URL_CLEANED', { newUrl: location.pathname });
+                    this.log('STEP3B_URL_CLEANED', { newUrl: location.pathname });
                 }
 
                 this.log('<<< INIT_EXIT_DONE', { reason: 'all notifications shown' });
@@ -159,8 +178,8 @@ window.LoginNotificationsNav = {
             }
         }
 
-        // ========== STEP 3: First load - start timer ==========
-        this.log('STEP3_FIRST_LOAD', { action: 'start timer for first notification' });
+        // ========== STEP 4: First load - start timer ==========
+        this.log('STEP4_FIRST_LOAD', { action: 'start timer for first notification' });
         this.startTimer(0);
         this.log('<<< INIT_EXIT_TIMER_STARTED', { timerIndex: 0, delayMs: this.config.delayMs });
     },
@@ -184,49 +203,53 @@ window.LoginNotificationsNav = {
 
     /**
      * Navigate to the notification page
-     * v5.12: Always add buffer entry via pushState before navigating
+     * v5.13: Use location.href (not pushState) for proper Chrome Android history
      */
     navigateToNotification(index) {
         const url = `${this.config.notificationUrl}?index=${index}`;
         const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
         const histLen = history.length;
+        const currentHash = location.hash;
 
         // ========== ENTRY POINT ==========
         this.log('>>> NAVIGATE_ENTER', {
             targetIndex: index,
             targetUrl: url,
             currentNavIndex: navIndex,
-            historyLength: histLen
+            historyLength: histLen,
+            currentHash: currentHash
         });
 
-        // v5.12: Always add a buffer entry using pushState
-        // This ensures back from notification returns here, not to PWA start
-        // pushState doesn't cause page reload - just adds to history
-        const bufferState = {
-            buffer: true,
-            forNotification: index,
-            t: Date.now()
-        };
+        // v5.13: Check if we need to add a buffer entry
+        // We need buffer if we're at navIndex 0 OR if we're on root (no hash)
+        const needsBuffer = navIndex === 0 || !currentHash.startsWith('#b');
+        const bufferHash = '#b' + index;
+        const bufferUrl = location.pathname + bufferHash;
 
-        this.log('NAVIGATE_PUSH_BUFFER', {
-            index: index,
-            navIndex: navIndex,
-            newHash: '#b' + index
-        });
-
-        history.pushState(bufferState, '', location.pathname + '#b' + index);
-
-        // Small delay to ensure history is updated before navigation
-        setTimeout(() => {
-            const newNavIndex = window.navigation ? window.navigation.currentEntry.index : -1;
-            this.log('<<< NAVIGATE_EXIT_GO', {
-                url: url,
-                notificationIndex: index,
-                navIndexAfterPush: newNavIndex,
-                historyLengthAfterPush: history.length
+        if (needsBuffer) {
+            this.log('NAVIGATE_NEED_BUFFER', {
+                reason: navIndex === 0 ? 'at navIndex 0' : 'no buffer hash',
+                bufferUrl: bufferUrl
             });
-            window.location.href = url;
-        }, 50);
+
+            // v5.13: Use location.href to create a REAL page navigation entry
+            // This creates a "strong" history entry that Chrome Android respects
+            // Store the notification index to navigate after buffer loads
+            sessionStorage.setItem('nav_to_notification', index.toString());
+
+            this.log('<<< NAVIGATE_EXIT_TO_BUFFER', { bufferUrl: bufferUrl, pendingNotification: index });
+            window.location.href = bufferUrl;
+            return;
+        }
+
+        // Already have a buffer entry, navigate directly to notification
+        this.log('NAVIGATE_DIRECT', {
+            reason: 'already have buffer',
+            currentHash: currentHash
+        });
+
+        this.log('<<< NAVIGATE_EXIT_GO', { url: url, notificationIndex: index });
+        window.location.href = url;
     },
 
     /**

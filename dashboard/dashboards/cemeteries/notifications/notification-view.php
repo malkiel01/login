@@ -322,13 +322,13 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
             };
         }
 
-        // Logging function - v5.12
+        // Logging function - v5.13
         function log(event, data) {
             const state = getFullState();
 
             const payload = {
                 page: 'NOTIF_VIEW',
-                v: '5.12',
+                v: '5.13',
                 e: event,
                 t: Date.now() - PAGE_LOAD_TIME,
                 ts: new Date().toISOString(),

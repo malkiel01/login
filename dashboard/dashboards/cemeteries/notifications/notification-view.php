@@ -3,7 +3,12 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 5.24.0 - Fade-out animation before navigation to reduce flicker
+ * @version 6.0.0 - Real notifications from database (push_notifications table)
+ *
+ * Changes in v6.0:
+ * - Replaced fake notifications with real data from push_notifications table
+ * - Marks notifications as read when viewed
+ * - Supports notification types: info, warning, urgent
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -24,46 +29,74 @@ $userId = getCurrentUserId();
 // Get notification index from URL (0-based)
 $index = (int)($_GET['index'] ?? 0);
 
-// FAKE NOTIFICATIONS FOR TESTING
-$fakeNotifications = [
-    [
-        'id' => 'fake_1',
-        'title' => 'התראת בדיקה #1',
-        'body' => 'זוהי התראה ראשונה לבדיקת המערכת החדשה. לחץ על כפתור החזרה כדי לחזור לדשבורד.',
-        'notification_type' => 'info',
-        'created_at' => date('Y-m-d H:i:s'),
-        'icon' => '🔔'
-    ],
-    [
-        'id' => 'fake_2',
-        'title' => 'התראה דחופה #2',
-        'body' => 'התראה שנייה - סוג דחוף. המערכת עובדת כמו שצריך!',
-        'notification_type' => 'urgent',
-        'created_at' => date('Y-m-d H:i:s'),
-        'icon' => '🚨'
-    ],
-    [
-        'id' => 'fake_3',
-        'title' => 'אזהרה #3',
-        'body' => 'התראה שלישית ואחרונה - סוג אזהרה. אחרי זה תחזור לדשבורד ולא יהיו יותר התראות.',
-        'notification_type' => 'warning',
-        'created_at' => date('Y-m-d H:i:s'),
-        'icon' => '⚠️'
-    ]
+// ========== FETCH REAL NOTIFICATIONS FROM DATABASE ==========
+// Get unread notifications for this user from push_notifications table
+$stmt = $pdo->prepare("
+    SELECT
+        pn.id,
+        pn.scheduled_notification_id,
+        pn.title,
+        pn.body,
+        pn.url,
+        pn.created_at,
+        COALESCE(sn.notification_type, 'info') as notification_type,
+        sn.requires_approval
+    FROM push_notifications pn
+    LEFT JOIN scheduled_notifications sn ON sn.id = pn.scheduled_notification_id
+    WHERE pn.user_id = ?
+      AND pn.is_read = 0
+    ORDER BY pn.created_at DESC
+    LIMIT 50
+");
+$stmt->execute([$userId]);
+$dbNotifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Map notification types to icons
+$typeIcons = [
+    'urgent' => '🚨',
+    'warning' => '⚠️',
+    'info' => '🔔'
 ];
 
-$totalNotifications = count($fakeNotifications);
+// Format notifications for display
+$realNotifications = [];
+foreach ($dbNotifications as $n) {
+    $type = $n['notification_type'] ?? 'info';
+    $realNotifications[] = [
+        'id' => $n['id'],
+        'scheduled_notification_id' => $n['scheduled_notification_id'],
+        'title' => $n['title'],
+        'body' => $n['body'],
+        'url' => $n['url'],
+        'notification_type' => $type,
+        'created_at' => $n['created_at'],
+        'icon' => $typeIcons[$type] ?? '🔔',
+        'requires_approval' => $n['requires_approval']
+    ];
+}
 
-// Check if index is valid
-if ($index >= $totalNotifications) {
-    // No more notifications - redirect back to dashboard
+$totalNotifications = count($realNotifications);
+
+// Check if index is valid or no notifications at all
+if ($totalNotifications === 0 || $index >= $totalNotifications) {
+    // No notifications or no more notifications - redirect back to dashboard
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
     echo '<script>sessionStorage.setItem("notifications_done", "true"); location.replace("/dashboard/dashboards/cemeteries/");</script>';
     echo '</head><body></body></html>';
     exit;
 }
 
-$notification = $fakeNotifications[$index];
+$notification = $realNotifications[$index];
+
+// ========== MARK NOTIFICATION AS READ ==========
+// Mark this notification as read when viewing
+$markReadStmt = $pdo->prepare("
+    UPDATE push_notifications
+    SET is_read = 1
+    WHERE id = ?
+      AND user_id = ?
+");
+$markReadStmt->execute([$notification['id'], $userId]);
 $nextIndex = $index + 1;
 $counter = ($index + 1) . '/' . $totalNotifications;
 
@@ -350,7 +383,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const totalNotifications = <?php echo $totalNotifications; ?>;
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
-        const VERSION = '5.21';
+        const VERSION = '6.0';
 
         // ========== COMPREHENSIVE STATE SNAPSHOT ==========
         function getFullState() {

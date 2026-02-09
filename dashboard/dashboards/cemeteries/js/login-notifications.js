@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 5.24.0 - Fade-out animation before navigation to reduce flicker
+ * @version 6.0.0 - Real notifications from database
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores
@@ -72,7 +72,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'DASHBOARD',
-            v: '5.21',
+            v: '6.0',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),

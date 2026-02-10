@@ -135,13 +135,18 @@ const EntityPending = {
     openApproval(pendingId) {
         const url = `/dashboard/dashboards/cemeteries/notifications/entity-approve.php?id=${pendingId}`;
 
+        // Try to get ApprovalModal - check current window and parent (for iframe context)
+        const modal = (typeof ApprovalModal !== 'undefined') ? ApprovalModal :
+                      (window.parent && typeof window.parent.ApprovalModal !== 'undefined') ? window.parent.ApprovalModal :
+                      null;
+
         // Use ApprovalModal for unified UX (same as notification flow)
-        if (typeof ApprovalModal !== 'undefined') {
+        if (modal) {
             // Initialize modal if needed
-            ApprovalModal.init();
+            modal.init();
 
             // Set onClose callback to refresh data
-            ApprovalModal.onClose = () => {
+            modal.onClose = () => {
                 this.cache.clear();
                 if (typeof refreshData === 'function') {
                     refreshData();
@@ -151,7 +156,7 @@ const EntityPending = {
             };
 
             // Show the entity approval iframe directly
-            ApprovalModal.showEntityApprovalIframe(url);
+            modal.showEntityApprovalIframe(url);
         } else if (typeof PopupManager !== 'undefined') {
             // Fallback to PopupManager
             PopupManager.create({

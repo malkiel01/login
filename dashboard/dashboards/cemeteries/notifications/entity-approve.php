@@ -3,7 +3,12 @@
  * Entity Approval Page
  * Shows pending entity operation details and allows authorizers to approve/reject
  *
- * @version 2.1.0 - Handle back button in notification flow
+ * @version 2.2.0 - Allow owner (creator) to view and cancel
+ *
+ * Changes in v2.2:
+ * - Allow owner (creator) of the request to view the page in read-only mode
+ * - Add cancel button for owner to cancel their own pending request
+ * - Works with ApprovalModal for unified UX from pending approvals table
  *
  * Changes in v2.1:
  * - Add history management for back button (prevent app close)
@@ -47,8 +52,12 @@ if (!$pending) {
 // Check if user is an authorizer for this entity/action
 $isAuthorizer = $approvalService->isAuthorizer($userId, $pending['entity_type'], $pending['action']);
 
-if (!$isAuthorizer) {
-    die('אינך מורשה לאשר פעולה זו');
+// Check if user is the owner (creator) of this operation
+$isOwner = ($pending['requested_by'] == $userId);
+
+// Allow access if user is authorizer OR owner
+if (!$isAuthorizer && !$isOwner) {
+    die('אינך מורשה לצפות בפעולה זו');
 }
 
 // Get approval status for this user
@@ -828,8 +837,8 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
             </div>
             <?php endif; ?>
 
-            <!-- Actions -->
-            <?php if (!$alreadyResponded && !$isExpired && !$alreadyCompleted): ?>
+            <!-- Actions for AUTHORIZERS (approve/reject) -->
+            <?php if ($isAuthorizer && !$alreadyResponded && !$isExpired && !$alreadyCompleted): ?>
             <div class="actions">
                 <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()">
                     אישור
@@ -853,6 +862,28 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
 
             <div class="biometric-notice">
                 ניתן לאמת באמצעות טביעת אצבע או זיהוי פנים לאבטחה נוספת
+            </div>
+
+            <!-- Owner who is also authorizer can cancel their own request -->
+            <?php if ($isOwner): ?>
+            <div class="owner-cancel-option" style="margin-top: 16px; text-align: center;">
+                <button type="button" class="btn btn-small btn-secondary" onclick="handleCancel()" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">
+                    ביטול הבקשה שלי
+                </button>
+            </div>
+            <?php endif; ?>
+            <?php endif; ?>
+
+            <!-- Actions for OWNER (creator) who is NOT an authorizer - cancel only, read-only view -->
+            <?php if ($isOwner && !$isAuthorizer && !$alreadyCompleted): ?>
+            <div class="owner-notice message-box message-warning" style="margin-top: 20px;">
+                <strong>זוהי בקשה שיצרת</strong><br>
+                הבקשה ממתינה לאישור מגורמים מוסמכים. באפשרותך לבטל את הבקשה.
+            </div>
+            <div class="actions">
+                <button type="button" class="btn btn-reject" id="cancelBtn" onclick="handleCancel()">
+                    ביטול הבקשה
+                </button>
             </div>
             <?php endif; ?>
         </div>
@@ -1044,6 +1075,39 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
                 console.error('Error:', error);
                 showLoading(false);
                 alert('שגיאה בעת הדחייה');
+            }
+        }
+
+        // Cancel operation - for owner (creator) only
+        async function handleCancel() {
+            if (!confirm('האם אתה בטוח שברצונך לבטל את הבקשה?')) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/entity-approval-api.php?action=cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pendingId: pendingId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showLoading(false);
+                    showResultMessage('rejected', 'הבקשה בוטלה');
+                } else {
+                    showLoading(false);
+                    alert('שגיאה: ' + (data.error || 'לא ניתן לבטל'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showLoading(false);
+                alert('שגיאה בעת ביטול הבקשה');
             }
         }
     </script>

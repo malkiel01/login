@@ -1,7 +1,7 @@
 /**
  * Entity Pending Operations Helper
  * Handles pending approval badges and status display
- * @version 1.0.0
+ * @version 1.1.0 - Use ApprovalModal for unified UX
  */
 
 const EntityPending = {
@@ -129,20 +129,39 @@ const EntityPending = {
     },
 
     /**
-     * Open approval page
-     * @param {number} pendingId
+     * Open approval page - uses ApprovalModal for unified UX
+     * @param {number} pendingId - The pending_entity_operations.id
      */
     openApproval(pendingId) {
-        if (typeof PopupManager !== 'undefined') {
+        const url = `/dashboard/dashboards/cemeteries/notifications/entity-approve.php?id=${pendingId}`;
+
+        // Use ApprovalModal for unified UX (same as notification flow)
+        if (typeof ApprovalModal !== 'undefined') {
+            // Initialize modal if needed
+            ApprovalModal.init();
+
+            // Set onClose callback to refresh data
+            ApprovalModal.onClose = () => {
+                this.cache.clear();
+                if (typeof refreshData === 'function') {
+                    refreshData();
+                } else if (typeof loadData === 'function') {
+                    loadData();
+                }
+            };
+
+            // Show the entity approval iframe directly
+            ApprovalModal.showEntityApprovalIframe(url);
+        } else if (typeof PopupManager !== 'undefined') {
+            // Fallback to PopupManager
             PopupManager.create({
                 id: 'entity-approval-popup-' + pendingId,
                 type: 'iframe',
-                src: `/dashboard/dashboards/cemeteries/notifications/entity-approve.php?id=${pendingId}`,
+                src: url,
                 title: 'אישור פעולה',
                 width: 650,
                 height: 700,
                 onClose: () => {
-                    // Clear cache and refresh
                     this.cache.clear();
                     if (typeof refreshData === 'function') {
                         refreshData();
@@ -152,7 +171,7 @@ const EntityPending = {
                 }
             });
         } else {
-            window.open(`/dashboard/dashboards/cemeteries/notifications/entity-approve.php?id=${pendingId}`, '_blank');
+            window.open(url, '_blank');
         }
     },
 

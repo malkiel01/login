@@ -164,17 +164,105 @@ if (isset($_GET['fullscreen']) || isset($_GET['from_notification'])) {
             padding: 20px;
         }
 
-        /* Fullscreen mode - like modal in notification center */
+        /* Fullscreen mode - mobile-first design like embed-mode */
         body.fullscreen-mode {
-            padding: 0;
-            align-items: stretch;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            background: var(--bg-primary) !important;
+            min-height: 100vh;
+        }
+
+        /* Fullscreen: Show sticky header */
+        body.fullscreen-mode .embed-header {
+            display: block !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            width: 100%;
+            background: linear-gradient(135deg, <?= $themeColorPrimary ?> 0%, <?= $themeColorDark ?> 100%);
+            color: white;
+            padding: 14px 20px;
+            padding-top: calc(14px + env(safe-area-inset-top, 0px));
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            box-sizing: border-box;
         }
 
         body.fullscreen-mode .approval-card {
+            margin-top: calc(46px + env(safe-area-inset-top, 0px));
             max-width: none;
             border-radius: 0;
             box-shadow: none;
-            min-height: 100vh;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.fullscreen-mode .card-header {
+            padding: 16px 20px;
+            background: var(--bg-secondary, #f1f5f9);
+            color: var(--text-primary, #1e293b);
+        }
+
+        body.fullscreen-mode .card-header h1 {
+            color: var(--text-primary, #1e293b);
+        }
+
+        body.fullscreen-mode .card-header .subtitle {
+            color: var(--text-secondary, #475569);
+            opacity: 1;
+        }
+
+        body.fullscreen-mode .card-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            padding-bottom: 140px; /* Space for fixed buttons + biometric notice */
+        }
+
+        body.fullscreen-mode .actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0;
+            padding: 16px 20px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            flex-direction: row !important; /* Always in one row */
+        }
+
+        body.fullscreen-mode .biometric-notice {
+            position: fixed;
+            bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+            left: 0;
+            right: 0;
+            background: var(--bg-primary);
+            padding: 8px 20px;
+            z-index: 99;
+        }
+
+        body.fullscreen-mode .rejection-form {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 101;
         }
 
         .approval-card {

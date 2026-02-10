@@ -13,6 +13,23 @@ window.InfoModal = {
     onCloseCallback: null,
 
     /**
+     * Send debug log to server
+     */
+    _log(event, data = {}) {
+        const payload = {
+            page: 'INFO_MODAL',
+            e: event,
+            historyLength: history.length,
+            ts: new Date().toISOString(),
+            d: data
+        };
+        console.log('[InfoModal]', event, payload);
+        try {
+            navigator.sendBeacon('/dashboard/dashboards/cemeteries/api/debug-log.php', JSON.stringify(payload));
+        } catch(e) {}
+    },
+
+    /**
      * Initialize the modal (call once on page load)
      */
     init() {
@@ -200,13 +217,15 @@ window.InfoModal = {
         this._popstateHandler = (e) => {
             // Skip if we triggered this popstate ourselves (via history.back in close())
             if (this._ignoreNextPopstate) {
-                console.log('[InfoModal] popstate ignored (self-triggered)');
+                this._log('POPSTATE_IGNORED');
                 this._ignoreNextPopstate = false;
                 return;
             }
 
-            console.log('[InfoModal] popstate fired, modal visible:', this.modalElement?.style.display !== 'none');
-            if (this.modalElement && this.modalElement.style.display !== 'none') {
+            const modalVisible = this.modalElement?.style.display !== 'none';
+            this._log('POPSTATE_FIRED', { modalVisible });
+
+            if (this.modalElement && modalVisible) {
                 // Mark that we're closing via popstate (browser already went back)
                 this._closedViaPopstate = true;
                 this.close();
@@ -251,9 +270,9 @@ window.InfoModal = {
         }
 
         // Push history state for back button
-        console.log('[InfoModal] Before pushState, history length:', history.length);
+        this._log('BEFORE_PUSH_STATE', { notificationId: notification.id });
         history.pushState({ infoModal: true, notificationId: notification.id }, '', window.location.href);
-        console.log('[InfoModal] After pushState, history length:', history.length);
+        this._log('AFTER_PUSH_STATE', { notificationId: notification.id });
 
         // Prevent page scroll
         document.body.style.overflow = 'hidden';
@@ -261,7 +280,7 @@ window.InfoModal = {
         // Show modal
         this.modalElement.style.display = 'flex';
 
-        console.log('[InfoModal] Showing notification:', notification.id, notification.title);
+        this._log('SHOW_NOTIFICATION', { id: notification.id, title: notification.title });
     },
 
     /**
@@ -283,7 +302,7 @@ window.InfoModal = {
         const closedViaPopstate = this._closedViaPopstate;
         this._closedViaPopstate = false; // Reset flag
 
-        console.log('[InfoModal] Closed, via popstate:', closedViaPopstate, 'history length:', history.length);
+        this._log('CLOSE', { viaPopstate: closedViaPopstate });
 
         // Mark as read
         if (this.currentNotification && this.currentNotification.id) {
@@ -300,7 +319,7 @@ window.InfoModal = {
             // We need to go back to remove the pushed state
             // But this will trigger popstate - set flag to ignore it
             this._ignoreNextPopstate = true;
-            console.log('[InfoModal] Going back in history to clean up');
+            this._log('GOING_BACK_IN_HISTORY');
             history.back();
         }
 

@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 
-require_once __DIR__ . '/../../notifications/api/NotificationLogger.php';
+require_once __DIR__ . '/../../notifications/core/NotificationLogger.php';
 require_once __DIR__ . '/../../../../../push/NotificationService.php';
 require_once __DIR__ . '/../../config.php';
 

@@ -2,7 +2,7 @@
  * Login Notifications - Page Navigation System
  * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
  *
- * @version 6.0.0 - Real notifications from database
+ * @version 6.1.0 - Clear done flag on fresh login
  *
  * Key insight from 5.12 failure:
  * - pushState creates "weak" history entries that Chrome Android PWA ignores
@@ -72,7 +72,7 @@ window.LoginNotificationsNav = {
 
         const payload = {
             page: 'DASHBOARD',
-            v: '6.0',
+            v: '6.1',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
@@ -101,6 +101,20 @@ window.LoginNotificationsNav = {
             return;
         }
         this.state.initialized = true;
+
+        // ========== v6.1: Clear done flag on fresh login ==========
+        // If user just logged in (referrer is login page), clear the done flag
+        const referrer = document.referrer || '';
+        const isFromLogin = referrer.includes('login.php') || referrer.includes('/auth/');
+
+        if (isFromLogin) {
+            sessionStorage.removeItem(this.config.sessionDoneKey);
+            this.log('FRESH_LOGIN_DETECTED', {
+                question: 'האם זו התחברות חדשה?',
+                answer: 'כן! מנקה notifications_done',
+                referrer: referrer
+            });
+        }
 
         // ========== STEP 1: Check if done ==========
         const isDone = sessionStorage.getItem(this.config.sessionDoneKey) === 'true';

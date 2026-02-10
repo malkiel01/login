@@ -110,8 +110,8 @@ if ($notification['requires_approval'] && !empty($notification['url'])) {
     } else {
         echo 'sessionStorage.removeItem("notification_next_index");';
     }
-    // Redirect to the approval page
-    echo 'location.replace("' . htmlspecialchars($notification['url'], ENT_QUOTES) . '");';
+    // Redirect to the approval page (use href, not replace, to keep history for back button)
+    echo 'location.href = "' . htmlspecialchars($notification['url'], ENT_QUOTES) . '";';
     echo '</script>';
     echo '</head><body></body></html>';
     exit;

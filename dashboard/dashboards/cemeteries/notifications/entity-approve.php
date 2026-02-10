@@ -3,7 +3,11 @@
  * Entity Approval Page
  * Shows pending entity operation details and allows authorizers to approve/reject
  *
- * @version 2.0.0 - Integrate with notification flow
+ * @version 2.1.0 - Handle back button in notification flow
+ *
+ * Changes in v2.1:
+ * - Add history management for back button (prevent app close)
+ * - Push trap state and listen for popstate
  *
  * Changes in v2.0:
  * - After approve/reject, redirect to dashboard instead of reload
@@ -863,6 +867,28 @@ if (isset($_GET['embed'])) {
     <script src="/js/biometric-auth.js"></script>
     <script>
         const pendingId = <?= $pendingId ?>;
+
+        // ========== v2.1: HISTORY MANAGEMENT FOR BACK BUTTON ==========
+        // This prevents back button from closing the app
+        (function() {
+            // Check if we came from notification flow
+            const cameFromNotification = sessionStorage.getItem('came_from_notification') === 'true';
+
+            if (cameFromNotification) {
+                // Push a trap state so back button has somewhere to go
+                history.pushState({ approvalTrap: true, pendingId: pendingId }, '', '#approval');
+
+                // Listen for back button
+                window.addEventListener('popstate', function(e) {
+                    // User pressed back - go to dashboard
+                    // Keep the session flags so notification flow continues
+                    location.replace('/dashboard/dashboards/cemeteries/');
+                });
+
+                console.log('[EntityApprove] History trap set for notification flow');
+            }
+        })();
+        // ========== END HISTORY MANAGEMENT ==========
 
         function showLoading(show) {
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';

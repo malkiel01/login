@@ -16,7 +16,7 @@
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/api/api-auth.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/push/send-push.php';
-require_once __DIR__ . '/NotificationLogger.php';
+require_once __DIR__ . '/../core/NotificationLogger.php';
 
 // בדוק הרשאות לניהול התראות
 if (!isAdmin() && !hasModulePermission('notifications', 'view')) {
@@ -288,8 +288,6 @@ function handleCreate(PDO $pdo, array $input, NotificationLogger $logger): void 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
-    $status = $sendNow ? 'pending' : 'pending';
-
     $stmt->execute([
         $title,
         $body,
@@ -297,7 +295,7 @@ function handleCreate(PDO $pdo, array $input, NotificationLogger $logger): void 
         json_encode($targetUsers),
         $scheduledAt,
         $url,
-        $status,
+        'pending',
         $createdBy,
         $requiresApproval,
         $approvalMessage,

@@ -11,7 +11,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/auth/token-init.php';
-require_once __DIR__ . '/NotificationLogger.php';
+require_once __DIR__ . '/../core/NotificationLogger.php';
 
 // Permission check
 if (!isLoggedIn()) {

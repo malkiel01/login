@@ -7,7 +7,7 @@
  */
 
 require_once __DIR__ . '/../../api/api-auth.php';
-require_once __DIR__ . '/NotificationLogger.php';
+require_once __DIR__ . '/../core/NotificationLogger.php';
 
 header('Content-Type: application/json');
 

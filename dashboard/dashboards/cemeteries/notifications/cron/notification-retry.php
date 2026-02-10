@@ -42,7 +42,7 @@ try {
     createDeliveryTableIfNeeded($pdo);
 
     // 1. Process scheduled notifications that are due
-    processScheduledNotifications($pdo, $stats);
+    processScheduledForRetry($pdo, $stats);
 
     // 2. Retry failed deliveries
     retryFailedDeliveries($pdo, $stats);
@@ -107,9 +107,11 @@ function createDeliveryTableIfNeeded(PDO $pdo): void {
 }
 
 /**
- * Process scheduled notifications that are due
+ * Process scheduled notifications that are due (Retry-specific version)
+ * Note: This is separate from the main processScheduledNotifications() in NotificationService
+ * because it creates delivery records for retry tracking
  */
-function processScheduledNotifications(PDO $pdo, array &$stats): void {
+function processScheduledForRetry(PDO $pdo, array &$stats): void {
     // Find notifications that are scheduled and due
     $stmt = $pdo->prepare("
         SELECT * FROM scheduled_notifications
@@ -173,7 +175,7 @@ function retryFailedDeliveries(PDO $pdo, array &$stats): void {
         $stats['processed']++;
 
         try {
-            $result = sendPushToUser(
+            $result = retrySendToUser(
                 $pdo,
                 $delivery['user_id'],
                 $delivery['title'],
@@ -227,9 +229,11 @@ function createOrUpdateDeliveryRecord(PDO $pdo, int $notificationId, int $userId
 }
 
 /**
- * Send push notification to a specific user
+ * Send push notification to a specific user (Retry-specific version)
+ * Note: This is separate from the main sendPushToUser() in send-push.php
+ * because it has different signature and sends to only one subscription (for retry logic)
  */
-function sendPushToUser(PDO $pdo, int $userId, string $title, string $body, ?string $url, int $notificationId, bool $requiresApproval = false): array {
+function retrySendToUser(PDO $pdo, int $userId, string $title, string $body, ?string $url, int $notificationId, bool $requiresApproval = false): array {
     // Get user's push subscription
     $stmt = $pdo->prepare("
         SELECT * FROM push_subscriptions

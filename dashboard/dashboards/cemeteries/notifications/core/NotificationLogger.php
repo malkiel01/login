@@ -1,20 +1,92 @@
 <?php
 /**
- * NotificationLogger - Comprehensive notification event logging
+ * NotificationLogger - Comprehensive Notification Event Logging System
  *
- * @version 1.0.0
- * @created 2026-01-29
+ * This class provides detailed logging for all notification-related events,
+ * enabling monitoring, debugging, analytics, and audit trails.
+ *
+ * PURPOSE:
+ * - Track the full lifecycle of notifications (created → sent → delivered → read)
+ * - Record delivery attempts, successes, and failures with error details
+ * - Log user interactions (viewed, clicked, approved, rejected)
+ * - Support analytics with device/browser breakdowns
+ * - Enable debugging with detailed error logging
+ *
+ * EVENT TYPES LOGGED:
+ * - created: Notification created in system
+ * - send_attempt: Push send attempted
+ * - delivered: Successfully delivered to push service
+ * - failed: Delivery failed (with error details)
+ * - retry: Retry attempt made
+ * - viewed: User viewed notification
+ * - clicked: User clicked notification
+ * - read: Marked as read
+ * - scheduled: Scheduled for future delivery
+ * - approval_sent: Approval request sent
+ * - approved: User approved
+ * - rejected: User rejected
+ * - expired: Approval expired
+ * - subscription_created: New push subscription registered
+ * - subscription_removed: Subscription removed/expired
+ * - test_started: Test run started
+ * - test_completed: Test run completed
+ * - feedback_*: Feedback notifications sent
+ *
+ * DATABASE TABLE:
+ * Uses `notification_logs` table with indexes for efficient querying.
+ * Create via migration: sql/notification_logs.sql
+ *
+ * USAGE:
+ * ```php
+ * $logger = NotificationLogger::getInstance();
+ * $logger->logCreated($notificationId, $userId, $notification);
+ * $logger->logDelivered($notificationId, $userId);
+ * ```
+ *
+ * @package     Notifications
+ * @subpackage  Core
+ * @version     1.1.0 - Now uses UserAgentParser utility
+ * @since       1.0.0
+ * @created     2026-01-29
+ * @see         UserAgentParser For User-Agent parsing
  */
 
+// Load shared User-Agent parser utility (same directory)
+require_once __DIR__ . '/UserAgentParser.php';
+
+/**
+ * NotificationLogger - Singleton class for notification event logging
+ *
+ * Provides methods for logging all notification events with device info,
+ * error tracking, and statistics generation.
+ *
+ * SINGLETON PATTERN:
+ * Use getInstance() to get the shared instance for consistent database
+ * connections across the application.
+ *
+ * @package Notifications
+ * @since   1.0.0
+ */
 class NotificationLogger {
+    /** @var PDO Database connection instance */
     private PDO $conn;
+
+    /** @var NotificationLogger|null Singleton instance */
     private static ?NotificationLogger $instance = null;
 
+    /**
+     * Constructor - Initialize logger with database connection
+     *
+     * @param PDO|null $conn Optional database connection. If null, calls getDBConnection()
+     *
+     * @note The table should be created via migration, not auto-created,
+     *       to prevent implicit commits during active transactions.
+     */
     public function __construct(?PDO $conn = null) {
         if ($conn) {
             $this->conn = $conn;
         } else {
-            require_once __DIR__ . '/../../config.php';
+            require_once __DIR__ . '/../config.php';
             $this->conn = getDBConnection();
         }
         // Note: ensureTableExists() removed to prevent implicit commit during active transactions
@@ -22,7 +94,13 @@ class NotificationLogger {
     }
 
     /**
-     * Get singleton instance
+     * Get singleton instance of NotificationLogger
+     *
+     * Returns the shared logger instance, creating it if necessary.
+     *
+     * @param PDO|null $conn Optional database connection for first initialization
+     *
+     * @return self The singleton NotificationLogger instance
      */
     public static function getInstance(?PDO $conn = null): self {
         if (self::$instance === null) {
@@ -32,46 +110,32 @@ class NotificationLogger {
     }
 
     /**
-     * Ensure the logs table exists
-     */
-    private function ensureTableExists(): void {
-        $sql = "CREATE TABLE IF NOT EXISTS notification_logs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            notification_id INT NULL,
-            user_id INT NULL,
-            subscription_id INT NULL,
-            event_type VARCHAR(50) NOT NULL,
-            notification_title VARCHAR(255) NULL,
-            notification_body TEXT NULL,
-            notification_type VARCHAR(50) NULL,
-            device_type VARCHAR(50) NULL,
-            os VARCHAR(50) NULL,
-            browser VARCHAR(50) NULL,
-            user_agent TEXT NULL,
-            ip_address VARCHAR(45) NULL,
-            push_endpoint VARCHAR(500) NULL,
-            http_status INT NULL,
-            error_code VARCHAR(50) NULL,
-            error_message TEXT NULL,
-            extra_data JSON NULL,
-            test_run_id VARCHAR(36) NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_notification_id (notification_id),
-            INDEX idx_user_id (user_id),
-            INDEX idx_event_type (event_type),
-            INDEX idx_created_at (created_at),
-            INDEX idx_test_run_id (test_run_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-
-        try {
-            $this->conn->exec($sql);
-        } catch (PDOException $e) {
-            error_log("[NotificationLogger] Failed to create table: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Log a notification event
+     * Log a notification event to the database
+     *
+     * Core logging method used by all specific log* methods.
+     * Inserts a record into notification_logs with all available data.
+     *
+     * @param string $eventType Event type identifier (e.g., 'created', 'delivered')
+     * @param array  $data      Event data with optional keys:
+     *                          - notification_id: int
+     *                          - user_id: int
+     *                          - subscription_id: int
+     *                          - notification_title: string
+     *                          - notification_body: string
+     *                          - notification_type: string
+     *                          - device_type: string
+     *                          - os: string
+     *                          - browser: string
+     *                          - user_agent: string
+     *                          - ip_address: string
+     *                          - push_endpoint: string
+     *                          - http_status: int
+     *                          - error_code: string
+     *                          - error_message: string
+     *                          - extra_data: array (will be JSON encoded)
+     *                          - test_run_id: string
+     *
+     * @return int The new log entry ID, or 0 on failure
      */
     public function log(string $eventType, array $data = []): int {
         $sql = "INSERT INTO notification_logs (
@@ -118,7 +182,16 @@ class NotificationLogger {
     }
 
     /**
-     * Log notification created event
+     * Log notification creation event
+     *
+     * Called when a new notification is created in scheduled_notifications.
+     * Records creator info, notification content, and target users.
+     *
+     * @param int   $notificationId The new notification ID
+     * @param int   $creatorId      User ID who created the notification
+     * @param array $notification   Notification data with title, body, type, targets
+     *
+     * @return int The log entry ID
      */
     public function logCreated(int $notificationId, int $creatorId, array $notification): int {
         $deviceInfo = $this->parseUserAgent();
@@ -359,53 +432,41 @@ class NotificationLogger {
     }
 
     /**
-     * Parse User-Agent to get device info
+     * Parse User-Agent string to extract device information
+     *
+     * Uses the shared UserAgentParser utility for consistent parsing
+     * across all notification system components.
+     *
+     * @param string|null $ua User-Agent string (defaults to $_SERVER['HTTP_USER_AGENT'])
+     *
+     * @return array Device info with keys:
+     *               - device: 'iPhone'|'iPad'|'Android Phone'|'Android Tablet'|'Desktop'|'Unknown'
+     *               - os: 'iOS'|'Android'|'Windows'|'macOS'|'Linux'|'Unknown'
+     *               - browser: 'Chrome'|'Safari'|'Firefox'|'Edge'|'Unknown'
+     *
+     * @see UserAgentParser::parse() For the underlying implementation
      */
     public function parseUserAgent(?string $ua = null): array {
-        $ua = $ua ?? ($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown');
-
-        $device = 'Unknown';
-        $os = 'Unknown';
-        $browser = 'Unknown';
-
-        // Detect OS
-        if (preg_match('/iPhone|iPad|iPod/i', $ua)) {
-            $os = 'iOS';
-            $device = preg_match('/iPad/i', $ua) ? 'Tablet' : 'Mobile';
-        } elseif (preg_match('/Android/i', $ua)) {
-            $os = 'Android';
-            $device = preg_match('/Mobile/i', $ua) ? 'Mobile' : 'Tablet';
-        } elseif (preg_match('/Windows/i', $ua)) {
-            $os = 'Windows';
-            $device = 'Desktop';
-        } elseif (preg_match('/Mac OS X/i', $ua)) {
-            $os = 'macOS';
-            $device = 'Desktop';
-        } elseif (preg_match('/Linux/i', $ua)) {
-            $os = 'Linux';
-            $device = 'Desktop';
-        }
-
-        // Detect Browser
-        if (preg_match('/Edg/i', $ua)) {
-            $browser = 'Edge';
-        } elseif (preg_match('/Chrome/i', $ua)) {
-            $browser = 'Chrome';
-        } elseif (preg_match('/Safari/i', $ua) && !preg_match('/Chrome/i', $ua)) {
-            $browser = 'Safari';
-        } elseif (preg_match('/Firefox/i', $ua)) {
-            $browser = 'Firefox';
-        }
-
-        return [
-            'device' => $device,
-            'os' => $os,
-            'browser' => $browser
-        ];
+        return UserAgentParser::parse($ua);
     }
 
     /**
-     * Get logs with filters
+     * Retrieve log entries with optional filters
+     *
+     * Queries notification_logs table with flexible filtering options.
+     * Results are sorted by created_at DESC (newest first).
+     *
+     * @param array $filters Optional filters:
+     *                       - notification_id: int
+     *                       - user_id: int
+     *                       - event_type: string
+     *                       - test_run_id: string
+     *                       - date_from: string (Y-m-d H:i:s)
+     *                       - date_to: string (Y-m-d H:i:s)
+     * @param int   $limit   Maximum records to return (default: 50)
+     * @param int   $offset  Number of records to skip (for pagination)
+     *
+     * @return array Array of log entries as associative arrays
      */
     public function getLogs(array $filters = [], int $limit = 50, int $offset = 0): array {
         $where = ['1=1'];
@@ -499,7 +560,20 @@ class NotificationLogger {
     }
 
     /**
-     * Get statistics
+     * Get notification statistics for a time period
+     *
+     * Calculates aggregate statistics including event counts,
+     * delivery rates, approval rates, and device breakdowns.
+     *
+     * @param string $period Time period: '1h', '24h', '7d', or '30d'
+     *
+     * @return array Statistics with keys:
+     *               - period: string - The requested period
+     *               - total_events: int - Total logged events
+     *               - event_counts: array - Count per event type
+     *               - delivery_rate: float - % of sends that delivered
+     *               - approval_rate: float - % of approvals approved
+     *               - device_breakdown: array - Count per device type
      */
     public function getStats(string $period = '24h'): array {
         $periodMap = [
@@ -555,7 +629,14 @@ class NotificationLogger {
     }
 
     /**
-     * Get timeline for a specific notification
+     * Get the complete timeline/history for a specific notification
+     *
+     * Returns all log entries for a notification in chronological order,
+     * including user names for display. Useful for debugging and auditing.
+     *
+     * @param int $notificationId The notification ID to get timeline for
+     *
+     * @return array Array of log entries with user_name included
      */
     public function getTimeline(int $notificationId): array {
         $sql = "SELECT nl.*, u.name as user_name
@@ -570,7 +651,14 @@ class NotificationLogger {
     }
 
     /**
-     * Clean old logs
+     * Delete old log entries to maintain database size
+     *
+     * Removes log entries older than the specified number of days.
+     * Should be called periodically via cron job.
+     *
+     * @param int $daysToKeep Number of days of logs to retain (default: 30)
+     *
+     * @return int Number of rows deleted
      */
     public function cleanOldLogs(int $daysToKeep = 30): int {
         $sql = "DELETE FROM notification_logs
@@ -582,10 +670,28 @@ class NotificationLogger {
 
     /**
      * Send feedback notification to the original sender
-     * @param int $notificationId - The scheduled_notification ID
-     * @param int $userId - The user who triggered the event
-     * @param string $eventType - 'viewed', 'approved', 'rejected'
-     * @return bool
+     *
+     * When a notification has notify_sender=true and a recipient interacts
+     * with it (views, approves, or rejects), this method sends a push
+     * notification back to the original sender informing them of the action.
+     *
+     * PROCESS:
+     * 1. Check if feedback was already sent (prevent duplicates)
+     * 2. Fetch original notification and check notify_sender flag
+     * 3. Build appropriate feedback message based on event type
+     * 4. Log the feedback event
+     * 5. Send push notification to sender
+     *
+     * FEEDBACK MESSAGES (Hebrew):
+     * - viewed: "ההודעה שלך נצפתה" (Your message was viewed)
+     * - approved: "ההודעה שלך אושרה ✓" (Your message was approved)
+     * - rejected: "ההודעה שלך נדחתה ✗" (Your message was rejected)
+     *
+     * @param int    $notificationId The scheduled_notification ID
+     * @param int    $userId         The user who triggered the event (recipient)
+     * @param string $eventType      Event type: 'viewed', 'approved', or 'rejected'
+     *
+     * @return bool True if feedback was sent, false if skipped or failed
      */
     public function sendFeedbackToSender(int $notificationId, int $userId, string $eventType): bool {
         // Check if feedback was already sent for this event (prevent duplicates)
@@ -649,7 +755,7 @@ class NotificationLogger {
         ]);
 
         // Send push notification to the sender
-        require_once __DIR__ . '/../../../../../push/send-push.php';
+        require_once __DIR__ . '/../../../../push/send-push.php';
 
         $result = sendPushToUser(
             $senderId,

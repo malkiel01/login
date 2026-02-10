@@ -3,10 +3,12 @@
  * Notification Tester
  * Automated testing system for notification functionality
  *
- * @version 1.0.0
+ * @package     Notifications
+ * @subpackage  Tests
+ * @version     1.0.0
  */
 
-require_once __DIR__ . '/NotificationLogger.php';
+require_once __DIR__ . '/../core/NotificationLogger.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/push/send-push.php';
 
 class NotificationTester {

@@ -97,15 +97,9 @@ $originalData = json_decode($pending['original_data'], true) ?? [];
 
 // Load user settings for theme
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/user-settings/api/UserSettingsManager.php';
+require_once __DIR__ . '/core/UserAgentParser.php';
 
-function detectDeviceType() {
-    if (isset($_COOKIE['deviceType']) && in_array($_COOKIE['deviceType'], ['mobile', 'desktop'])) {
-        return $_COOKIE['deviceType'];
-    }
-    return 'desktop';
-}
-
-$userSettingsManager = new UserSettingsManager($pdo, $userId, detectDeviceType());
+$userSettingsManager = new UserSettingsManager($pdo, $userId, UserAgentParser::detectDeviceType());
 $userPrefs = $userSettingsManager->getAllWithDefaults();
 
 $isDarkMode = isset($userPrefs['darkMode']) && ($userPrefs['darkMode']['value'] === true || $userPrefs['darkMode']['value'] === 'true');

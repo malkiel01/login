@@ -74,22 +74,9 @@ $alreadyResponded = $approval && in_array($approval['status'], ['approved', 'rej
 
 // Load user settings for theme
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/user-settings/api/UserSettingsManager.php';
+require_once __DIR__ . '/core/UserAgentParser.php';
 
-function detectDeviceType() {
-    if (isset($_COOKIE['deviceType']) && in_array($_COOKIE['deviceType'], ['mobile', 'desktop'])) {
-        return $_COOKIE['deviceType'];
-    }
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-    $mobileKeywords = ['Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 'BlackBerry', 'Windows Phone'];
-    foreach ($mobileKeywords as $keyword) {
-        if (stripos($userAgent, $keyword) !== false) {
-            return 'mobile';
-        }
-    }
-    return 'desktop';
-}
-
-$detectedDeviceType = detectDeviceType();
+$detectedDeviceType = UserAgentParser::detectDeviceType();
 $userSettingsManager = new UserSettingsManager($pdo, $userId, $detectedDeviceType);
 $userPrefs = $userSettingsManager->getAllWithDefaults();
 

@@ -34,7 +34,7 @@ register_shutdown_function(function() {
 });
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/api/api-auth.php';
-require_once __DIR__ . '/NotificationTester.php';
+require_once __DIR__ . '/../tests/NotificationTester.php';
 
 header('Content-Type: application/json');
 

@@ -529,6 +529,9 @@ window.ApprovalModal = {
 
         } catch (error) {
             console.error('Error loading approval:', error);
+            // DEBUG: Show alert with full error details
+            alert('DEBUG ERROR:\n' + error.message + '\n\nStack: ' + (error.stack || 'N/A'));
+
             if (window.NotificationTemplates) {
                 window.NotificationTemplates.showInfoNotification({
                     title: 'שגיאה',

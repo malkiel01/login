@@ -98,9 +98,8 @@ $notification = $realNotifications[$index];
 // Instead of navigating to a separate page, set flags and return to dashboard.
 // Dashboard will open ApprovalModal which provides consistent UX.
 if ($notification['requires_approval'] && !empty($notification['url'])) {
-    // Extract notification ID from URL (e.g., entity-approve.php?id=123)
-    preg_match('/id=(\d+)/', $notification['url'], $matches);
-    $approvalId = $matches[1] ?? $notification['scheduled_notification_id'];
+    // Use the scheduled_notification_id - this is what ApprovalModal expects
+    $approvalId = $notification['scheduled_notification_id'];
 
     $nextIndexForApproval = $index + 1;
     $hasMore = ($nextIndexForApproval < $totalNotifications);

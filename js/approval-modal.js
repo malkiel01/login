@@ -10,6 +10,23 @@ window.ApprovalModal = {
     currentNotificationId: null,
 
     /**
+     * Send debug log to server
+     */
+    _log(event, data = {}) {
+        const payload = {
+            page: 'APPROVAL_MODAL',
+            e: event,
+            historyLength: history.length,
+            ts: new Date().toISOString(),
+            d: data
+        };
+        console.log('[ApprovalModal]', event, payload);
+        try {
+            navigator.sendBeacon('/dashboard/dashboards/cemeteries/api/debug-log.php', JSON.stringify(payload));
+        } catch(e) {}
+    },
+
+    /**
      * Initialize the modal (call once on page load)
      */
     init() {
@@ -343,13 +360,27 @@ window.ApprovalModal = {
 
         // Handle back button - behavior depends on modal mode
         this._popstateHandler = (e) => {
-            if (this.modalElement && this.modalElement.style.display !== 'none') {
+            const modalVisible = this.modalElement && this.modalElement.style.display !== 'none';
+            this._log('POPSTATE_FIRED', { modalVisible, allowBackClose: this._allowBackClose });
+
+            if (modalVisible) {
                 if (this._allowBackClose) {
                     // Entity approval mode - allow back to close
+                    this._log('POPSTATE_CLOSING');
+                    this._closedViaPopstate = true;
                     this.close();
                 } else {
                     // Regular approval mode - block back navigation
-                    history.pushState(null, '', window.location.href);
+                    // IMPORTANT: Only push ONE state to restore, use flag to prevent accumulation
+                    if (!this._blockingBackNavigation) {
+                        this._blockingBackNavigation = true;
+                        this._log('POPSTATE_BLOCKING');
+                        history.pushState({ approvalModal: true, blocking: true }, '', window.location.href);
+                        // Reset flag after a short delay to allow next back press
+                        setTimeout(() => { this._blockingBackNavigation = false; }, 100);
+                    } else {
+                        this._log('POPSTATE_BLOCKED_ALREADY');
+                    }
                 }
             }
         };
@@ -497,7 +528,9 @@ window.ApprovalModal = {
             if (btnReject) btnReject.disabled = false;
 
             // Push history state to block back navigation
+            this._log('BEFORE_PUSH_STATE', { notificationId });
             history.pushState({ approvalModal: true }, '', window.location.href);
+            this._log('AFTER_PUSH_STATE', { notificationId });
 
             // Prevent page scroll
             document.body.style.overflow = 'hidden';

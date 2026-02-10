@@ -102,6 +102,10 @@ if ($notification['requires_approval'] && !empty($notification['url'])) {
     $nextIndexForApproval = $index + 1;
     $hasMore = ($nextIndexForApproval < $totalNotifications);
 
+    // Add fullscreen parameter to URL for proper display
+    $approvalUrl = $notification['url'];
+    $approvalUrl .= (strpos($approvalUrl, '?') !== false ? '&' : '?') . 'fullscreen=1';
+
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
     echo '<script>';
     echo 'sessionStorage.setItem("came_from_notification", "true");';
@@ -111,7 +115,7 @@ if ($notification['requires_approval'] && !empty($notification['url'])) {
         echo 'sessionStorage.removeItem("notification_next_index");';
     }
     // Redirect to the approval page (use href, not replace, to keep history for back button)
-    echo 'location.href = "' . htmlspecialchars($notification['url'], ENT_QUOTES) . '";';
+    echo 'location.href = "' . htmlspecialchars($approvalUrl, ENT_QUOTES) . '";';
     echo '</script>';
     echo '</head><body></body></html>';
     exit;

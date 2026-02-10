@@ -120,6 +120,10 @@ if (!$isDarkMode) {
 if (isset($_GET['embed'])) {
     $bodyClasses[] = 'embed-mode';
 }
+// Add fullscreen mode when coming from notification flow
+if (isset($_GET['fullscreen']) || isset($_GET['from_notification'])) {
+    $bodyClasses[] = 'fullscreen-mode';
+}
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -164,6 +168,19 @@ if (isset($_GET['embed'])) {
             align-items: center;
             justify-content: center;
             padding: 20px;
+        }
+
+        /* Fullscreen mode - like modal in notification center */
+        body.fullscreen-mode {
+            padding: 0;
+            align-items: stretch;
+        }
+
+        body.fullscreen-mode .approval-card {
+            max-width: none;
+            border-radius: 0;
+            box-shadow: none;
+            min-height: 100vh;
         }
 
         .approval-card {

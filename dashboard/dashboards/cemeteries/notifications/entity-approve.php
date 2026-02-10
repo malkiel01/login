@@ -452,6 +452,24 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
             margin-top: 12px;
         }
 
+        .owner-cancel-option {
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .btn-cancel-own {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .btn-cancel-own:hover {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -866,24 +884,24 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
 
             <!-- Owner who is also authorizer can cancel their own request -->
             <?php if ($isOwner): ?>
-            <div class="owner-cancel-option" style="margin-top: 16px; text-align: center;">
-                <button type="button" class="btn btn-small btn-secondary" onclick="handleCancel()" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">
+            <div class="owner-cancel-option">
+                <button type="button" class="btn btn-small btn-cancel-own" onclick="handleCancel()">
                     ביטול הבקשה שלי
                 </button>
             </div>
             <?php endif; ?>
             <?php endif; ?>
 
-            <!-- Actions for OWNER (creator) who is NOT an authorizer - cancel only, read-only view -->
+            <!-- Actions for OWNER (creator) who is NOT an authorizer - cancel only -->
             <?php if ($isOwner && !$isAuthorizer && !$alreadyCompleted): ?>
-            <div class="owner-notice message-box message-warning" style="margin-top: 20px;">
-                <strong>זוהי בקשה שיצרת</strong><br>
-                הבקשה ממתינה לאישור מגורמים מוסמכים. באפשרותך לבטל את הבקשה.
-            </div>
             <div class="actions">
                 <button type="button" class="btn btn-reject" id="cancelBtn" onclick="handleCancel()">
                     ביטול הבקשה
                 </button>
+            </div>
+
+            <div class="biometric-notice">
+                זוהי בקשה שיצרת. הבקשה ממתינה לאישור מגורמים מוסמכים.
             </div>
             <?php endif; ?>
         </div>

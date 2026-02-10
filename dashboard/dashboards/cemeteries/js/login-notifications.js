@@ -91,8 +91,16 @@ window.LoginNotificationsNav = {
 
     /**
      * Initialize the notification system
+     * v6.2: DISABLED - auto notifications cause too many page reloads
+     * Users can view notifications in "ההתראות שלי" instead
      */
     init() {
+        // ========== v6.2: DISABLED ==========
+        // The auto-notification system causes flickering and multiple page loads.
+        // Users can access their notifications via the sidebar menu.
+        console.log('[LoginNotificationsNav] Auto-notifications disabled (v6.2). Use "ההתראות שלי" instead.');
+        return;
+
         // ========== ENTRY POINT ==========
         this.log('>>> INIT_ENTER', { initialized: this.state.initialized });
 

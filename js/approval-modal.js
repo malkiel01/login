@@ -359,24 +359,39 @@ window.ApprovalModal = {
         // NO close on Escape key - user MUST respond
 
         // Handle back button - behavior depends on modal mode
+        // FLAGS USED:
+        //   _ignoreNextPopstate: Set when WE call history.back(), so we ignore the resulting popstate
+        //   _closedViaPopstate: Set when USER pressed back, so close() knows not to call history.back()
+        //   _allowBackClose: true for entity approvals (closeable), false for regular approvals (blocked)
+        //   _hasHistoryState: true when we've pushed a state that needs cleanup on close
         this._popstateHandler = (e) => {
+            // Skip if we triggered this popstate ourselves (via history.back() in close())
+            // Without this, we'd re-enter close() when cleaning up history
+            if (this._ignoreNextPopstate) {
+                this._log('POPSTATE_IGNORED');
+                this._ignoreNextPopstate = false;
+                return;
+            }
+
             const modalVisible = this.modalElement && this.modalElement.style.display !== 'none';
             this._log('POPSTATE_FIRED', { modalVisible, allowBackClose: this._allowBackClose });
 
             if (modalVisible) {
                 if (this._allowBackClose) {
-                    // Entity approval mode - allow back to close
+                    // Entity approval mode - back button CLOSES the modal
+                    // Mark that we're closing via popstate so close() knows not to call history.back()
                     this._log('POPSTATE_CLOSING');
                     this._closedViaPopstate = true;
                     this.close();
                 } else {
-                    // Regular approval mode - block back navigation
-                    // IMPORTANT: Only push ONE state to restore, use flag to prevent accumulation
+                    // Regular approval mode - back button is BLOCKED (user must approve/reject)
+                    // Re-push the state to "undo" the back navigation
                     if (!this._blockingBackNavigation) {
                         this._blockingBackNavigation = true;
                         this._log('POPSTATE_BLOCKING');
                         history.pushState({ approvalModal: true, blocking: true }, '', window.location.href);
-                        // Reset flag after a short delay to allow next back press
+                        this._hasHistoryState = true;
+                        // Reset flag after delay to allow next back press attempt
                         setTimeout(() => { this._blockingBackNavigation = false; }, 100);
                     } else {
                         this._log('POPSTATE_BLOCKED_ALREADY');
@@ -530,6 +545,7 @@ window.ApprovalModal = {
             // Push history state to block back navigation
             this._log('BEFORE_PUSH_STATE', { notificationId });
             history.pushState({ approvalModal: true }, '', window.location.href);
+            this._hasHistoryState = true;
             this._log('AFTER_PUSH_STATE', { notificationId });
 
             // Prevent page scroll
@@ -877,6 +893,7 @@ window.ApprovalModal = {
 
         // Push history state - this creates a new "screen" that back button will close
         history.pushState({ entityApproval: true }, '', window.location.href);
+        this._hasHistoryState = true;
 
         // Allow back button to close this modal (unlike regular approval)
         this._allowBackClose = true;
@@ -1046,8 +1063,38 @@ window.ApprovalModal = {
 
     /**
      * Close the modal (only called internally after response)
+     *
+     * HISTORY STATE MANAGEMENT:
+     * -------------------------
+     * When opening the modal, we push a history state (pushState) to enable back button handling.
+     * When closing, we need to clean up this state:
+     *
+     * 1. If closed via POPSTATE (user pressed back button):
+     *    - Browser already went back in history (popstate fired = browser navigated)
+     *    - We do NOT call history.back() - would go back twice!
+     *    - Just close the modal and call the callback
+     *
+     * 2. If closed via OTHER means (autoClose, iframe message, button click, escape key):
+     *    - Browser did NOT go back yet
+     *    - We MUST call history.back() to remove our pushed state
+     *    - Set _ignoreNextPopstate flag so the resulting popstate is ignored
+     *
+     * This prevents history accumulation where each notification adds states
+     * that never get removed, requiring multiple back presses.
      */
     close() {
+        // Prevent re-entry (close() can be called multiple times from different triggers)
+        if (this._isClosing) return;
+        this._isClosing = true;
+
+        // Capture flags before reset - we need to know HOW we got here
+        const closedViaPopstate = this._closedViaPopstate;  // Was back button pressed?
+        const hadHistoryState = this._hasHistoryState;       // Did we push a state when opening?
+        this._closedViaPopstate = false;
+        this._hasHistoryState = false;
+
+        this._log('CLOSE', { viaPopstate: closedViaPopstate, hadHistoryState: hadHistoryState });
+
         if (this.modalElement) {
             this.modalElement.style.display = 'none';
             // Reset to fullscreen mode for next use
@@ -1098,12 +1145,32 @@ window.ApprovalModal = {
         // Reset back button behavior
         this._allowBackClose = false;
 
+        // Save callback before cleanup
+        const callback = this.onClose;
+        this.onClose = null;
+
+        // CRITICAL: History state cleanup to prevent accumulation
+        // --------------------------------------------------------
+        // Problem: Each notification pushes a state. If we don't clean up, history grows:
+        //   Initial: 4 states
+        //   After 3 notifications without cleanup: 7 states = 3 extra back presses needed!
+        //
+        // Solution:
+        //   - closedViaPopstate=true → browser already went back → do nothing
+        //   - closedViaPopstate=false → browser didn't go back → we must call history.back()
+        if (hadHistoryState && !closedViaPopstate) {
+            this._log('GOING_BACK_IN_HISTORY');
+            // Set flag so the resulting popstate event is ignored (we triggered it, not the user)
+            this._ignoreNextPopstate = true;
+            history.back();
+        }
+
+        this._isClosing = false;
+
         // קריאה ל-callback אם הוגדר (לעדכון אייפריים וכו')
         // NOTE: onClose callback handles notification flow continuation (set by login-notifications.js)
         // Do NOT add additional flow handling here to avoid double-processing
-        if (typeof this.onClose === 'function') {
-            const callback = this.onClose;
-            this.onClose = null; // איפוס לפני הקריאה למניעת לופ אינסופי
+        if (typeof callback === 'function') {
             callback();
         }
     },

@@ -754,25 +754,30 @@ class NotificationLogger {
             'extra_data' => ['sender_id' => $senderId]
         ]);
 
-        // Send push notification to the sender
-        require_once __DIR__ . '/../../../../push/send-push.php';
+        // Send push notification to the sender (wrapped in try-catch to prevent breaking caller)
+        try {
+            require_once __DIR__ . '/../../../../push/send-push.php';
 
-        $result = sendPushToUser(
-            $senderId,
-            $feedbackTitle,
-            $feedbackBody,
-            null,  // url
-            null,  // icon
-            [      // options
-                'type' => 'feedback',
-                'original_notification_id' => $notificationId,
-                'event_type' => $eventType,
-                'triggered_by' => $userId
-            ]
-        );
+            $result = sendPushToUser(
+                $senderId,
+                $feedbackTitle,
+                $feedbackBody,
+                null,  // url
+                null,  // icon
+                [      // options
+                    'type' => 'feedback',
+                    'original_notification_id' => $notificationId,
+                    'event_type' => $eventType,
+                    'triggered_by' => $userId
+                ]
+            );
 
-        error_log("[Feedback] Sending to sender {$senderId}: {$feedbackTitle} - Result: " . json_encode($result));
+            error_log("[Feedback] Sending to sender {$senderId}: {$feedbackTitle} - Result: " . json_encode($result));
 
-        return $result['sent'] > 0;
+            return $result['sent'] > 0;
+        } catch (Exception $e) {
+            error_log("[Feedback] Failed to send feedback: " . $e->getMessage());
+            return false;
+        }
     }
 }

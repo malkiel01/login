@@ -1,7 +1,21 @@
 <?php
 /**
- * API לניהול התראות Push
- * api/notifications.php
+ * Notifications Polling API
+ *
+ * PURPOSE: Fallback polling mechanism for browsers without Web Push support.
+ * Works with push_notifications table for direct delivery tracking.
+ *
+ * NOTE: This is NOT a duplicate of NotificationService.php!
+ * - NotificationService.php = Sends Web Push notifications (scheduled_notifications table)
+ * - This API = Polling fallback for clients (push_notifications table)
+ *
+ * Used by:
+ * - notification-modal.js (mark_read)
+ * - service-worker.js (check_undelivered)
+ * - listener.js (check_undelivered)
+ * - approval-modal.js (mark_read)
+ *
+ * @version 1.1.0 - Added documentation
  */
 
 session_start();

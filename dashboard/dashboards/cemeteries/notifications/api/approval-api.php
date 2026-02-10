@@ -260,12 +260,16 @@ function handleGetNotification(PDO $pdo, int $userId, NotificationLogger $logger
         }
     }
 
-    // Log notification viewed
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-    $logger->logViewed($notificationId, $userId, $userAgent);
+    // Log notification viewed (non-critical - don't let it break the response)
+    try {
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $logger->logViewed($notificationId, $userId, $userAgent);
 
-    // Send feedback to sender if enabled (first view)
-    $logger->sendFeedbackToSender($notificationId, $userId, 'viewed');
+        // Send feedback to sender if enabled (first view)
+        $logger->sendFeedbackToSender($notificationId, $userId, 'viewed');
+    } catch (Exception $logError) {
+        error_log("[approval-api] Logger error (non-critical): " . $logError->getMessage());
+    }
 
     echo json_encode([
         'success' => true,

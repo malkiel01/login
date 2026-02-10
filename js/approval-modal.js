@@ -368,7 +368,25 @@ window.ApprovalModal = {
             const response = await fetch(`/dashboard/dashboards/cemeteries/notifications/api/approval-api.php?action=get_notification&id=${notificationId}`, {
                 credentials: 'include'
             });
-            const data = await response.json();
+
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`שגיאת שרת: ${response.status}`);
+            }
+
+            // Try to parse JSON, handle empty response
+            const text = await response.text();
+            if (!text || text.trim() === '') {
+                throw new Error('תגובה ריקה מהשרת');
+            }
+
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
+                console.error('[ApprovalModal] JSON parse error:', parseError, 'Response:', text.substring(0, 200));
+                throw new Error('תגובה לא תקינה מהשרת');
+            }
 
             if (!data.success) {
                 throw new Error(data.error || 'שגיאה בטעינת ההתראה');

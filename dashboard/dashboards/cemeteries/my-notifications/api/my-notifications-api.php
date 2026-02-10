@@ -80,7 +80,7 @@ function getUnreadNotifications($conn, $userId) {
             pn.is_delivered,
             pn.created_at,
             pn.delivered_at,
-            'info' as notification_type,
+            COALESCE(sn.notification_type, 'info') as notification_type,
             na.status as approval_status,
             na.responded_at as approval_responded_at,
             sn.requires_approval
@@ -132,7 +132,7 @@ function getHistoryNotifications($conn, $userId, $offset, $limit) {
             pn.is_delivered,
             pn.created_at,
             pn.delivered_at,
-            'info' as notification_type,
+            COALESCE(sn.notification_type, 'info') as notification_type,
             na.status as approval_status,
             na.responded_at as approval_responded_at,
             sn.requires_approval

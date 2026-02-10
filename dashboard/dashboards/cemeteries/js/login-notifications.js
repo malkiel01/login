@@ -1,83 +1,59 @@
 /**
- * Login Notifications - Page Navigation System
- * מערכת התראות חדשה - מבוססת ניווט לדף נפרד
+ * Login Notifications - Modal-Based System
+ * Shows notifications in modals without page navigation
  *
- * @version 6.1.0 - Clear done flag on fresh login
+ * @version 7.0.0 - Complete rewrite to modal-based approach
  *
- * Key insight from 5.12 failure:
- * - pushState creates "weak" history entries that Chrome Android PWA ignores
- * - location.href creates "strong" entries that work properly
- *
- * Key insight from 5.11 issue:
- * - Reloading to DIFFERENT URLs (?_nav, ?_next) was resetting history
- * - Solution: Use hash (#b0, #b1) on SAME base URL
+ * Key changes from v6.x:
+ * - No page navigation at all - everything is modals
+ * - Uses InfoModal for regular notifications
+ * - Uses ApprovalModal for approval notifications
+ * - Each notification waits for modal close before showing next
+ * - No buffer pages, no page reloads, no flickering
  *
  * Flow:
- * 1. Dashboard loads → wait 5 seconds → location.href(#b0) → navigate to notification
- * 2. User presses back → returns to dashboard#b0 (real page load)
- * 3. Dashboard detects return → location.href(#b1) → navigate to next notification
- * 4. Repeat until all notifications shown
+ * 1. Dashboard loads → wait 5 seconds
+ * 2. Fetch notifications from API
+ * 3. Show first notification in modal
+ * 4. User closes modal → wait 5 seconds → show next
+ * 5. Repeat until all shown
  */
 
 window.LoginNotificationsNav = {
     config: {
-        delayMs: 5000, // 5 seconds
-        notificationUrl: '/dashboard/dashboards/cemeteries/notifications/notification-view.php',
+        delayMs: 5000, // 5 seconds between notifications
+        apiUrl: '/dashboard/dashboards/cemeteries/my-notifications/api/my-notifications-api.php',
         sessionDoneKey: 'notifications_done',
-        sessionNextIndexKey: 'notification_next_index',
-        sessionCameFromKey: 'came_from_notification',
         debugUrl: '/dashboard/dashboards/cemeteries/api/debug-log.php'
     },
 
     state: {
         timerId: null,
         initialized: false,
+        notifications: [],
+        currentIndex: 0,
+        modalOpen: false,
         pageLoadTime: Date.now()
     },
 
     /**
-     * Get full state snapshot for debugging
-     */
-    getFullState() {
-        return {
-            session: {
-                came_from: sessionStorage.getItem(this.config.sessionCameFromKey),
-                next_idx: sessionStorage.getItem(this.config.sessionNextIndexKey),
-                done: sessionStorage.getItem(this.config.sessionDoneKey)
-            },
-            nav: window.navigation ? {
-                index: window.navigation.currentEntry.index,
-                length: window.navigation.entries().length,
-                canGoBack: window.navigation.canGoBack,
-                canGoForward: window.navigation.canGoForward,
-                entries: window.navigation.entries().map(e => ({
-                    i: e.index,
-                    u: e.url ? e.url.split('/').pop().substring(0, 30) : 'N/A'
-                }))
-            } : { api: 'N/A' },
-            hist: {
-                length: history.length,
-                state: history.state
-            },
-            url: location.href.split('/').pop(),
-            referrer: document.referrer ? document.referrer.split('/').pop() : 'none'
-        };
-    },
-
-    /**
-     * Send debug log to server - v5.14
+     * Send debug log to server
      */
     log(event, data) {
-        const state = this.getFullState();
-
         const payload = {
             page: 'DASHBOARD',
-            v: '6.1',
+            v: '7.0',
             e: event,
             t: Date.now() - this.state.pageLoadTime,
             ts: new Date().toISOString(),
             d: data,
-            state: state
+            state: {
+                initialized: this.state.initialized,
+                notificationsCount: this.state.notifications.length,
+                currentIndex: this.state.currentIndex,
+                modalOpen: this.state.modalOpen,
+                done: sessionStorage.getItem(this.config.sessionDoneKey)
+            }
         };
 
         console.log('[LoginNotificationsNav]', event, payload);
@@ -93,7 +69,6 @@ window.LoginNotificationsNav = {
      * Initialize the notification system
      */
     init() {
-        // ========== ENTRY POINT ==========
         this.log('>>> INIT_ENTER', { initialized: this.state.initialized });
 
         if (this.state.initialized) {
@@ -102,281 +77,243 @@ window.LoginNotificationsNav = {
         }
         this.state.initialized = true;
 
-        // ========== v6.1: Clear done flag on fresh login ==========
-        // If user just logged in (referrer is login page), clear the done flag
+        // Clear done flag on fresh login
         const referrer = document.referrer || '';
         const isFromLogin = referrer.includes('login.php') || referrer.includes('/auth/');
 
         if (isFromLogin) {
             sessionStorage.removeItem(this.config.sessionDoneKey);
-            this.log('FRESH_LOGIN_DETECTED', {
-                question: 'האם זו התחברות חדשה?',
-                answer: 'כן! מנקה notifications_done',
-                referrer: referrer
-            });
+            this.log('FRESH_LOGIN_DETECTED', { referrer: referrer });
         }
 
-        // ========== STEP 1: Check if done ==========
+        // Check if done
         const isDone = sessionStorage.getItem(this.config.sessionDoneKey) === 'true';
-        this.log('STEP1_CHECK_DONE', { isDone: isDone });
-
         if (isDone) {
             this.log('<<< INIT_EXIT_DONE', { reason: 'notifications already done' });
             return;
         }
 
-        // ========== STEP 2: Check if pending navigation to notification ==========
-        // v5.13: After buffer page load, navigate to the pending notification
-        const pendingNav = sessionStorage.getItem('nav_to_notification');
-        this.log('STEP2_CHECK_PENDING_NAV', { pendingNav: pendingNav, hash: location.hash });
+        // Check if we're in the notification flow with a pending approval
+        const cameFromNotification = sessionStorage.getItem('came_from_notification') === 'true';
+        const pendingApprovalId = sessionStorage.getItem('pendingApprovalId');
+        const nextIndex = sessionStorage.getItem('notification_next_index');
 
-        if (pendingNav !== null) {
-            sessionStorage.removeItem('nav_to_notification');
-            const idx = parseInt(pendingNav, 10);
-            this.log('STEP2_PENDING_NAV_FOUND', { index: idx, action: 'will navigate to notification' });
+        if (cameFromNotification && pendingApprovalId) {
+            // We're in the notification flow and there's an approval to show
+            this.log('NOTIFICATION_FLOW_APPROVAL', {
+                approvalId: pendingApprovalId,
+                nextIndex: nextIndex
+            });
 
-            // Small delay to ensure page is fully loaded
-            setTimeout(() => {
-                const url = `${this.config.notificationUrl}?index=${idx}`;
-                this.log('<<< NAVIGATE_FROM_BUFFER', { url: url, index: idx });
-                window.location.href = url;
-            }, 100);
+            // Clear the pending approval (we'll show it now)
+            sessionStorage.removeItem('pendingApprovalId');
+
+            this.state.modalOpen = true;
+
+            // Set up callback for when modal closes
+            const self = this;
+            const hasMore = nextIndex !== null;
+            const idx = hasMore ? parseInt(nextIndex, 10) : 0;
+
+            if (window.ApprovalModal) {
+                window.ApprovalModal.onClose = function() {
+                    self.log('APPROVAL_MODAL_CLOSED', { approvalId: pendingApprovalId });
+                    self.state.modalOpen = false;
+                    sessionStorage.removeItem('came_from_notification');
+
+                    if (hasMore) {
+                        sessionStorage.removeItem('notification_next_index');
+                        self.log('CONTINUE_FLOW', { nextIndex: idx });
+                        self.startTimer(idx);
+                    } else {
+                        sessionStorage.setItem(self.config.sessionDoneKey, 'true');
+                        self.log('ALL_NOTIFICATIONS_DONE', {});
+                    }
+                };
+
+                // Show the modal
+                window.ApprovalModal.show(parseInt(pendingApprovalId));
+            }
             return;
         }
 
-        // ========== STEP 3: Check if came from notification ==========
-        const cameFrom = sessionStorage.getItem(this.config.sessionCameFromKey);
-        const nextIdx = sessionStorage.getItem(this.config.sessionNextIndexKey);
-        this.log('STEP3_CHECK_CAME_FROM', { cameFrom: cameFrom, nextIdx: nextIdx });
+        // Start the 5 second timer
+        this.log('STEP_START_TIMER', { delayMs: this.config.delayMs });
+        this.startTimer();
+    },
 
-        if (cameFrom === 'true') {
-            // Clear the flag immediately
-            sessionStorage.removeItem(this.config.sessionCameFromKey);
-
-            // ========== v5.18: Enhanced return logging ==========
-            const navEntries = window.navigation ? window.navigation.entries() : [];
-            this.log('DASHBOARD_RETURN', {
-                question: 'חזרנו לדשבורד מהתראות?',
-                answer: 'כן!',
-                historyLength: history.length,
-                historyState: history.state,
-                navEntriesCount: navEntries.length,
-                navCurrentIndex: window.navigation ? window.navigation.currentEntry.index : -1,
-                allNavEntries: navEntries.map((e, i) => ({
-                    idx: i,
-                    url: e.url || 'N/A',
-                    key: e.key ? e.key.substring(0, 8) : 'N/A'
-                })),
-                nextIdx: nextIdx,
-                urlParams: location.search,
-                urlHash: location.hash
-            });
-
-            this.log('STEP3_CAME_FROM_TRUE', { cleared: 'came_from_notification' });
-
-            if (nextIdx !== null) {
-                // ========== BRANCH A: More notifications to show ==========
-                const idx = parseInt(nextIdx, 10);
-                sessionStorage.removeItem(this.config.sessionNextIndexKey);
-
-                this.log('🔔 STEP3A_HAS_NEXT', {
-                    question: 'יש עוד התראות להציג?',
-                    answer: 'כן!',
-                    nextIndex: idx,
-                    currentAction: 'מציג דשבורד למשתמש',
-                    nextAction: 'אחרי 5 שניות נעבור להתראה ' + idx,
-                    delayMs: this.config.delayMs
-                });
-
-                // v5.21: Start 5 second timer (same as first notification)
-                this.log('⏳ TIMER_STARTING_FOR_NEXT', {
-                    question: 'האם הטיימר מתחיל?',
-                    answer: 'כן! ' + this.config.delayMs + 'ms',
-                    forNotificationIndex: idx,
-                    userWillSee: 'דשבורד למשך 5 שניות'
-                });
-
-                this.startTimer(idx);
-
-                this.log('<<< INIT_EXIT_TIMER_FOR_NEXT', {
-                    nextIndex: idx,
-                    delayMs: this.config.delayMs,
-                    expectedNavTime: new Date(Date.now() + this.config.delayMs).toISOString()
-                });
-                return;
-
-            } else {
-                // ========== BRANCH B: Last notification - all done ==========
-                this.log('STEP3B_NO_NEXT', {
-                    action: 'v5.13: all done - stay on dashboard'
-                });
-
-                sessionStorage.setItem(this.config.sessionDoneKey, 'true');
-                this.log('STEP3B_SET_DONE', { done: 'true' });
-
-                // Clean up URL if needed
-                if (location.hash || location.search) {
-                    history.replaceState(null, '', location.pathname);
-                    this.log('STEP3B_URL_CLEANED', { newUrl: location.pathname });
-                }
-
-                this.log('<<< INIT_EXIT_DONE', { reason: 'all notifications shown' });
-                return;
-            }
+    /**
+     * Start timer for showing notification
+     */
+    startTimer(startFromIndex = 0) {
+        // Don't start timer if a modal is open
+        if (this.state.modalOpen) {
+            this.log('TIMER_SKIP_MODAL_OPEN', {});
+            return;
         }
 
-        // ========== STEP 4: First load - start timer ==========
-        this.log('STEP4_FIRST_LOAD', { action: 'start timer for first notification' });
-        this.startTimer(0);
-        this.log('<<< INIT_EXIT_TIMER_STARTED', { timerIndex: 0, delayMs: this.config.delayMs });
-    },
-
-    /**
-     * Fade out page and navigate
-     * v5.24: Smooth transition by fading out before navigation
-     */
-    fadeOutAndNavigate(url) {
-        // Add fade-out style if not exists
-        if (!document.getElementById('fade-out-style')) {
-            const style = document.createElement('style');
-            style.id = 'fade-out-style';
-            style.textContent = `
-                .page-fade-out {
-                    animation: pageExit 0.2s ease-out forwards;
-                }
-                @keyframes pageExit {
-                    from { opacity: 1; }
-                    to { opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // Start fade out
-        document.body.classList.add('page-fade-out');
-
-        this.log('FADE_OUT_START', { url: url });
-
-        // Navigate after animation
-        setTimeout(() => {
-            window.location.href = url;
-        }, 200);
-    },
-
-    /**
-     * Prefetch a notification page for faster loading
-     * v5.23: Add link rel=prefetch to preload the page
-     */
-    prefetchNotification(index) {
-        const url = `${this.config.notificationUrl}?index=${index}`;
-
-        // Remove any existing prefetch links
-        const existing = document.querySelector('link[rel="prefetch"][data-notification]');
-        if (existing) existing.remove();
-
-        // Add new prefetch link
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = url;
-        link.setAttribute('data-notification', index);
-        document.head.appendChild(link);
-
-        this.log('PREFETCH_ADDED', {
-            url: url,
-            notificationIndex: index
-        });
-    },
-
-    /**
-     * Start the countdown timer
-     */
-    startTimer(index) {
         if (this.state.timerId) {
             clearTimeout(this.state.timerId);
-            this.log('TIMER_CLEARED_OLD', { reason: 'new timer starting' });
         }
 
-        // v5.23: Prefetch the notification page immediately
-        this.prefetchNotification(index);
+        this.state.currentIndex = startFromIndex;
 
-        const startTime = Date.now();
         this.log('>>> TIMER_START', {
-            question: 'האם הטיימר התחיל?',
-            answer: 'כן!',
-            forNotificationIndex: index,
-            delayMs: this.config.delayMs,
-            willFireAt: new Date(startTime + this.config.delayMs).toISOString()
+            startFromIndex: startFromIndex,
+            delayMs: this.config.delayMs
         });
 
         this.state.timerId = setTimeout(() => {
-            const actualDelay = Date.now() - startTime;
-            this.log('🚀 TIMER_FIRED', {
-                question: 'האם הטיימר נורה?',
-                answer: 'כן!',
-                forNotificationIndex: index,
-                expectedDelay: this.config.delayMs,
-                actualDelay: actualDelay,
-                drift: actualDelay - this.config.delayMs,
-                action: 'מנווט להתראה ' + index
-            });
-            this.navigateToNotification(index);
+            this.log('TIMER_FIRED', { index: startFromIndex });
+            this.fetchAndShowNotifications(startFromIndex);
         }, this.config.delayMs);
     },
 
     /**
-     * Navigate to the notification page
-     * v5.14: Use query param (not hash) to force page reload
+     * Fetch notifications and show the one at index
      */
-    navigateToNotification(index) {
-        const url = `${this.config.notificationUrl}?index=${index}`;
-        const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
-        const histLen = history.length;
-        const currentSearch = location.search;
+    async fetchAndShowNotifications(index) {
+        try {
+            const response = await fetch(this.config.apiUrl + '?action=get_unread', {
+                credentials: 'include'
+            });
+            const data = await response.json();
 
-        // ========== ENTRY POINT ==========
-        this.log('>>> NAVIGATE_ENTER', {
-            targetIndex: index,
-            targetUrl: url,
-            currentNavIndex: navIndex,
-            historyLength: histLen,
-            currentSearch: currentSearch
-        });
+            if (!data.success || !data.notifications || data.notifications.length === 0) {
+                this.log('NO_NOTIFICATIONS', {});
+                sessionStorage.setItem(this.config.sessionDoneKey, 'true');
+                return;
+            }
 
-        // v5.14: Check if we need to add a buffer entry
-        // We need buffer if we're at navIndex 0 OR if we don't have a buffer param
-        const hasBuffer = currentSearch.includes('_b=');
-        const needsBuffer = navIndex === 0 || !hasBuffer;
+            this.state.notifications = data.notifications;
+            const total = this.state.notifications.length;
 
-        // Use query param to force reload (hash doesn't reload!)
-        const bufferUrl = location.pathname + '?_b=' + index + '_' + Date.now();
-
-        if (needsBuffer) {
-            this.log('NAVIGATE_NEED_BUFFER', {
-                reason: navIndex === 0 ? 'at navIndex 0' : 'no buffer param',
-                bufferUrl: bufferUrl
+            this.log('FETCHED_NOTIFICATIONS', {
+                count: total,
+                showingIndex: index
             });
 
-            // v5.14: Use location.href with query param to force reload
-            // Store the notification index to navigate after buffer loads
-            sessionStorage.setItem('nav_to_notification', index.toString());
+            if (index >= total) {
+                this.log('INDEX_OUT_OF_BOUNDS', { index: index, total: total });
+                sessionStorage.setItem(this.config.sessionDoneKey, 'true');
+                return;
+            }
 
-            this.log('<<< NAVIGATE_EXIT_TO_BUFFER', { bufferUrl: bufferUrl, pendingNotification: index });
-            this.fadeOutAndNavigate(bufferUrl);
-            return;
+            this.showNotification(index);
+
+        } catch (error) {
+            this.log('FETCH_ERROR', { error: error.message });
+            console.error('[LoginNotificationsNav] Fetch error:', error);
         }
-
-        // Already have a buffer entry, navigate directly to notification
-        this.log('NAVIGATE_DIRECT', {
-            reason: 'already have buffer',
-            currentSearch: currentSearch
-        });
-
-        this.log('<<< NAVIGATE_EXIT_GO', { url: url, notificationIndex: index });
-        this.fadeOutAndNavigate(url);
     },
 
     /**
-     * Cancel pending navigation (e.g., if user interacts)
+     * Show notification at index
+     */
+    showNotification(index) {
+        const notification = this.state.notifications[index];
+        const total = this.state.notifications.length;
+        const counter = (index + 1) + '/' + total;
+        const hasMore = (index + 1) < total;
+
+        this.log('>>> SHOW_NOTIFICATION', {
+            index: index,
+            id: notification.id,
+            title: notification.title,
+            requiresApproval: notification.requires_approval,
+            hasMore: hasMore
+        });
+
+        this.state.modalOpen = true;
+
+        if (notification.requires_approval == 1 || notification.requires_approval === true) {
+            // Use ApprovalModal for approval notifications
+            this.showApprovalNotification(notification, index, hasMore);
+        } else {
+            // Use InfoModal for regular notifications
+            this.showInfoNotification(notification, index, counter, hasMore);
+        }
+    },
+
+    /**
+     * Show approval notification using ApprovalModal
+     */
+    showApprovalNotification(notification, index, hasMore) {
+        const notificationId = notification.scheduled_notification_id || notification.id;
+
+        // Set up session storage for the flow
+        sessionStorage.setItem('came_from_notification', 'true');
+        if (hasMore) {
+            sessionStorage.setItem('notification_next_index', (index + 1).toString());
+        } else {
+            sessionStorage.removeItem('notification_next_index');
+        }
+
+        // Set up callback for when ApprovalModal closes
+        if (window.ApprovalModal) {
+            const self = this;
+            window.ApprovalModal.onClose = function() {
+                self.log('APPROVAL_MODAL_CLOSED', { notificationId: notificationId });
+                self.state.modalOpen = false;
+
+                if (hasMore) {
+                    self.log('WAIT_FOR_NEXT', { nextIndex: index + 1 });
+                    self.startTimer(index + 1);
+                } else {
+                    sessionStorage.setItem(self.config.sessionDoneKey, 'true');
+                    sessionStorage.removeItem('came_from_notification');
+                    self.log('ALL_NOTIFICATIONS_DONE', {});
+                }
+            };
+
+            this.log('SHOWING_APPROVAL_MODAL', { notificationId: notificationId });
+            window.ApprovalModal.show(notificationId);
+        } else {
+            console.error('[LoginNotificationsNav] ApprovalModal not found');
+            this.state.modalOpen = false;
+        }
+    },
+
+    /**
+     * Show info notification using InfoModal
+     */
+    showInfoNotification(notification, index, counter, hasMore) {
+        if (!window.InfoModal) {
+            console.error('[LoginNotificationsNav] InfoModal not found');
+            this.state.modalOpen = false;
+            return;
+        }
+
+        const self = this;
+
+        this.log('SHOWING_INFO_MODAL', {
+            id: notification.id,
+            counter: counter
+        });
+
+        // Show the modal with a callback for when it closes
+        window.InfoModal.show(notification, counter, function() {
+            self.log('INFO_MODAL_CLOSED', { id: notification.id });
+            self.state.modalOpen = false;
+
+            // Check if skip all was clicked
+            if (sessionStorage.getItem(self.config.sessionDoneKey) === 'true') {
+                self.log('SKIP_ALL_DETECTED', {});
+                return;
+            }
+
+            if (hasMore) {
+                self.log('WAIT_FOR_NEXT', { nextIndex: index + 1 });
+                self.startTimer(index + 1);
+            } else {
+                sessionStorage.setItem(self.config.sessionDoneKey, 'true');
+                self.log('ALL_NOTIFICATIONS_DONE', {});
+            }
+        });
+    },
+
+    /**
+     * Cancel pending timer
      */
     cancel() {
         if (this.state.timerId) {
@@ -392,7 +329,7 @@ window.LoginNotificationsNav = {
     skipAll() {
         this.cancel();
         sessionStorage.setItem(this.config.sessionDoneKey, 'true');
-        sessionStorage.removeItem(this.config.sessionNextIndexKey);
+        sessionStorage.removeItem('notification_next_index');
         console.log('[LoginNotificationsNav] Skipped all notifications');
     },
 
@@ -402,18 +339,22 @@ window.LoginNotificationsNav = {
     reset() {
         this.cancel();
         sessionStorage.removeItem(this.config.sessionDoneKey);
-        sessionStorage.removeItem(this.config.sessionNextIndexKey);
-        sessionStorage.removeItem(this.config.sessionCameFromKey);
+        sessionStorage.removeItem('notification_next_index');
+        sessionStorage.removeItem('came_from_notification');
+        sessionStorage.removeItem('pendingApprovalId');
         this.state.initialized = false;
+        this.state.notifications = [];
+        this.state.currentIndex = 0;
+        this.state.modalOpen = false;
         console.log('[LoginNotificationsNav] Reset complete');
     },
 
     /**
-     * Test: trigger notification navigation immediately
+     * Test: show notification immediately
      */
     testNow(index = 0) {
-        console.log('[LoginNotificationsNav] Test - navigating immediately to index:', index);
-        this.navigateToNotification(index);
+        console.log('[LoginNotificationsNav] Test - showing immediately from index:', index);
+        this.fetchAndShowNotifications(index);
     }
 };
 
@@ -432,39 +373,12 @@ window.LoginNotificationsNav = {
         init();
     }
 
-    // ========== v5.18: Dashboard popstate listener for debugging ==========
-    window.addEventListener('popstate', function(e) {
-        LoginNotificationsNav.log('>>> DASHBOARD_POPSTATE', {
-            question: 'לחצו Back בדשבורד?',
-            answer: 'כן! popstate התקבל',
-            state: e.state,
-            historyLength: history.length,
-            navCurrentIndex: window.navigation ? window.navigation.currentEntry.index : -1,
-            navEntriesCount: window.navigation ? window.navigation.entries().length : -1,
-            canGoBack: window.navigation ? window.navigation.canGoBack : 'N/A',
-            url: location.href
-        });
-    });
-
-    // CRITICAL: Handle bfcache restore (back button from notification)
+    // Handle bfcache restore
     window.addEventListener('pageshow', function(e) {
-        LoginNotificationsNav.log('>>> PAGESHOW', {
-            persisted: e.persisted,
-            type: e.persisted ? 'BFCACHE_RESTORE' : 'FRESH_LOAD'
-        });
-
         if (e.persisted) {
-            // Page restored from bfcache - need to re-check for notifications
-            LoginNotificationsNav.log('BFCACHE_DETECTED', {
-                action: 'will re-run init()',
-                reason: 'page restored from back-forward cache'
-            });
-
-            // Reset initialized flag so init() will run
+            LoginNotificationsNav.log('BFCACHE_RESTORE', {});
             LoginNotificationsNav.state.initialized = false;
             LoginNotificationsNav.state.pageLoadTime = Date.now();
-
-            // Re-initialize to check for next notification
             setTimeout(() => {
                 LoginNotificationsNav.init();
             }, 500);

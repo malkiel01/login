@@ -529,8 +529,6 @@ window.ApprovalModal = {
 
         } catch (error) {
             console.error('Error loading approval:', error);
-            // DEBUG: Show alert with full error details
-            alert('DEBUG ERROR:\n' + error.message + '\n\nStack: ' + (error.stack || 'N/A'));
 
             if (window.NotificationTemplates) {
                 window.NotificationTemplates.showInfoNotification({
@@ -1057,33 +1055,13 @@ window.ApprovalModal = {
         // Reset back button behavior
         this._allowBackClose = false;
 
-        // קריאה ל-callback אם הוגדר (לעדכון אייפריים וכו')
+        // קריאה ל-callback אם הוגדר
+        // LoginNotificationsNav sets this callback to handle the notification flow
         if (typeof this.onClose === 'function') {
-            this.onClose();
-            this.onClose = null; // איפוס
+            const callback = this.onClose;
+            this.onClose = null; // איפוס לפני הקריאה
+            callback();
         }
-
-        // ========== SMART NOTIFICATION FLOW HANDLING ==========
-        // If we came from the automatic notification flow, continue to the next notification
-        const fromNotificationFlow = sessionStorage.getItem('came_from_notification') === 'true';
-
-        if (fromNotificationFlow) {
-            const nextIdx = sessionStorage.getItem('notification_next_index');
-
-            if (nextIdx !== null) {
-                // There are more notifications - start timer for next one
-                console.log('[ApprovalModal] Continuing notification flow to index:', nextIdx);
-                if (window.LoginNotificationsNav) {
-                    window.LoginNotificationsNav.startTimer(parseInt(nextIdx, 10));
-                }
-            } else {
-                // This was the last notification - clean up
-                console.log('[ApprovalModal] Notification flow complete');
-                sessionStorage.removeItem('came_from_notification');
-                sessionStorage.setItem('notifications_done', 'true');
-            }
-        }
-        // If not from notification flow (e.g., opened from "my notifications"), just close normally
     },
 
     /**
@@ -1145,12 +1123,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if returning from settings with pending approval
     const pendingApprovalId = sessionStorage.getItem('pendingApprovalId');
 
+    // If we're in the notification flow, let LoginNotificationsNav handle everything
+    const inNotificationFlow = sessionStorage.getItem('came_from_notification') === 'true';
+
     if (approvalId) {
         // Clear any pending approval since we have a direct one
         sessionStorage.removeItem('pendingApprovalId');
         ApprovalModal.show(parseInt(approvalId));
-    } else if (pendingApprovalId) {
+    } else if (pendingApprovalId && !inNotificationFlow) {
         // Returning from settings - show the pending approval
+        // But skip if we're in notification flow (LoginNotificationsNav will handle it)
         sessionStorage.removeItem('pendingApprovalId');
         ApprovalModal.show(parseInt(pendingApprovalId));
     }

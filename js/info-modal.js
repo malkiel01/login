@@ -198,8 +198,17 @@ window.InfoModal = {
 
         // Handle back button to close
         this._popstateHandler = (e) => {
+            // Skip if we triggered this popstate ourselves (via history.back in close())
+            if (this._ignoreNextPopstate) {
+                console.log('[InfoModal] popstate ignored (self-triggered)');
+                this._ignoreNextPopstate = false;
+                return;
+            }
+
+            console.log('[InfoModal] popstate fired, modal visible:', this.modalElement?.style.display !== 'none');
             if (this.modalElement && this.modalElement.style.display !== 'none') {
-                e.preventDefault();
+                // Mark that we're closing via popstate (browser already went back)
+                this._closedViaPopstate = true;
                 this.close();
             }
         };
@@ -242,7 +251,9 @@ window.InfoModal = {
         }
 
         // Push history state for back button
+        console.log('[InfoModal] Before pushState, history length:', history.length);
         history.pushState({ infoModal: true, notificationId: notification.id }, '', window.location.href);
+        console.log('[InfoModal] After pushState, history length:', history.length);
 
         // Prevent page scroll
         document.body.style.overflow = 'hidden';
@@ -257,24 +268,44 @@ window.InfoModal = {
      * Close the modal
      */
     close() {
+        // Prevent re-entry
+        if (this._isClosing) return;
+        this._isClosing = true;
+
         if (this.modalElement) {
             this.modalElement.style.display = 'none';
         }
 
         document.body.style.overflow = '';
 
+        // If we're NOT closing via popstate (e.g., skip all button),
+        // we need to go back in history to clean up the pushed state
+        const closedViaPopstate = this._closedViaPopstate;
+        this._closedViaPopstate = false; // Reset flag
+
+        console.log('[InfoModal] Closed, via popstate:', closedViaPopstate, 'history length:', history.length);
+
         // Mark as read
         if (this.currentNotification && this.currentNotification.id) {
             this.markAsRead(this.currentNotification.id);
         }
 
-        console.log('[InfoModal] Closed');
+        // Save callback before cleanup
+        const callback = this.onCloseCallback;
+        this.onCloseCallback = null;
+        this.currentNotification = null;
+        this._isClosing = false;
+
+        if (!closedViaPopstate) {
+            // We need to go back to remove the pushed state
+            // But this will trigger popstate - set flag to ignore it
+            this._ignoreNextPopstate = true;
+            console.log('[InfoModal] Going back in history to clean up');
+            history.back();
+        }
 
         // Call the callback
-        if (typeof this.onCloseCallback === 'function') {
-            const callback = this.onCloseCallback;
-            this.onCloseCallback = null;
-            this.currentNotification = null;
+        if (typeof callback === 'function') {
             callback();
         }
     },

@@ -528,9 +528,17 @@ window.ApprovalModal = {
             }
 
         } catch (error) {
-            console.error('Error loading approval:', error);
-            // DEBUG: Show alert with full error details
-            alert('DEBUG ERROR:\n' + error.message + '\n\nStack: ' + (error.stack || 'N/A'));
+            console.error('[ApprovalModal] Error loading approval:', error);
+            // Log to debug endpoint instead of blocking with alert
+            try {
+                navigator.sendBeacon('/dashboard/dashboards/cemeteries/api/debug-log.php', JSON.stringify({
+                    page: 'APPROVAL_MODAL',
+                    e: 'SHOW_ERROR',
+                    error: error.message,
+                    stack: error.stack,
+                    ts: new Date().toISOString()
+                }));
+            } catch(e) {}
 
             if (window.NotificationTemplates) {
                 window.NotificationTemplates.showInfoNotification({
@@ -1058,32 +1066,13 @@ window.ApprovalModal = {
         this._allowBackClose = false;
 
         // קריאה ל-callback אם הוגדר (לעדכון אייפריים וכו')
+        // NOTE: onClose callback handles notification flow continuation (set by login-notifications.js)
+        // Do NOT add additional flow handling here to avoid double-processing
         if (typeof this.onClose === 'function') {
-            this.onClose();
-            this.onClose = null; // איפוס
+            const callback = this.onClose;
+            this.onClose = null; // איפוס לפני הקריאה למניעת לופ אינסופי
+            callback();
         }
-
-        // ========== SMART NOTIFICATION FLOW HANDLING ==========
-        // If we came from the automatic notification flow, continue to the next notification
-        const fromNotificationFlow = sessionStorage.getItem('came_from_notification') === 'true';
-
-        if (fromNotificationFlow) {
-            const nextIdx = sessionStorage.getItem('notification_next_index');
-
-            if (nextIdx !== null) {
-                // There are more notifications - start timer for next one
-                console.log('[ApprovalModal] Continuing notification flow to index:', nextIdx);
-                if (window.LoginNotificationsNav) {
-                    window.LoginNotificationsNav.startTimer(parseInt(nextIdx, 10));
-                }
-            } else {
-                // This was the last notification - clean up
-                console.log('[ApprovalModal] Notification flow complete');
-                sessionStorage.removeItem('came_from_notification');
-                sessionStorage.setItem('notifications_done', 'true');
-            }
-        }
-        // If not from notification flow (e.g., opened from "my notifications"), just close normally
     },
 
     /**
@@ -1137,23 +1126,19 @@ window.ApprovalModal = {
 };
 
 // Auto-init when script loads
+// NOTE: pendingApprovalId handling moved to login-notifications.js to avoid race conditions
+// Only handle direct URL parameter here (approval_id in URL)
 document.addEventListener('DOMContentLoaded', () => {
-    // Check URL for approval parameter
+    // Check URL for direct approval parameter only
     const urlParams = new URLSearchParams(window.location.search);
     const approvalId = urlParams.get('approval_id');
 
-    // Check if returning from settings with pending approval
-    const pendingApprovalId = sessionStorage.getItem('pendingApprovalId');
-
     if (approvalId) {
-        // Clear any pending approval since we have a direct one
+        // Direct URL access - show immediately
         sessionStorage.removeItem('pendingApprovalId');
         ApprovalModal.show(parseInt(approvalId));
-    } else if (pendingApprovalId) {
-        // Returning from settings - show the pending approval
-        sessionStorage.removeItem('pendingApprovalId');
-        ApprovalModal.show(parseInt(pendingApprovalId));
     }
+    // pendingApprovalId is handled by LoginNotificationsNav to avoid duplicate handling
 });
 
 // Listen for messages from service worker

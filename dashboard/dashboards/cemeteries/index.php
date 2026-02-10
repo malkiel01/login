@@ -657,10 +657,8 @@ $isAdminUser = isAdmin();
     <!-- Approval Modal for approval-type notifications -->
     <script src="/js/biometric-auth.js"></script>
     <script src="/js/approval-modal.js?v=20260201"></script>
-    <!-- Info Modal for regular notifications (info, warning, urgent) -->
-    <script src="/js/info-modal.js?v=20260210"></script>
 
-    <!-- Login Notifications - מערכת התראות מבוססת מודלים (v7.0) -->
-    <script src="/dashboard/dashboards/cemeteries/js/login-notifications.js?v=20260210_v7"></script>
+    <!-- Login Notifications - מערכת התראות מבוססת ניווט לדף נפרד -->
+    <script src="/dashboard/dashboards/cemeteries/js/login-notifications.js?v=20260206_v10"></script>
 </body>
 </html>

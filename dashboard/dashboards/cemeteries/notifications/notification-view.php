@@ -3,7 +3,10 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 6.0.0 - Real notifications from database (push_notifications table)
+ * @version 6.2.0 - Don't mark approval notifications as read
+ *
+ * Changes in v6.2:
+ * - Don't mark approval notifications as read until user responds
  *
  * Changes in v6.0:
  * - Replaced fake notifications with real data from push_notifications table
@@ -89,14 +92,17 @@ if ($totalNotifications === 0 || $index >= $totalNotifications) {
 $notification = $realNotifications[$index];
 
 // ========== MARK NOTIFICATION AS READ ==========
-// Mark this notification as read when viewing
-$markReadStmt = $pdo->prepare("
-    UPDATE push_notifications
-    SET is_read = 1
-    WHERE id = ?
-      AND user_id = ?
-");
-$markReadStmt->execute([$notification['id'], $userId]);
+// Only mark as read if it does NOT require approval
+// Approval notifications should stay unread until user responds (approve/reject)
+if (!$notification['requires_approval']) {
+    $markReadStmt = $pdo->prepare("
+        UPDATE push_notifications
+        SET is_read = 1
+        WHERE id = ?
+          AND user_id = ?
+    ");
+    $markReadStmt->execute([$notification['id'], $userId]);
+}
 $nextIndex = $index + 1;
 $counter = ($index + 1) . '/' . $totalNotifications;
 
@@ -383,7 +389,7 @@ $typeColor = $typeColors[$notification['notification_type']] ?? $typeColors['inf
         const totalNotifications = <?php echo $totalNotifications; ?>;
         const currentIndex = <?php echo $index; ?>;
         const PAGE_LOAD_TIME = Date.now();
-        const VERSION = '6.0';
+        const VERSION = '6.2';
 
         // ========== COMPREHENSIVE STATE SNAPSHOT ==========
         function getFullState() {

@@ -94,28 +94,30 @@ if ($totalNotifications === 0 || $index >= $totalNotifications) {
 
 $notification = $realNotifications[$index];
 
-// ========== v6.3: REDIRECT APPROVAL NOTIFICATIONS TO THEIR URL ==========
-// If this is an approval notification with a URL, redirect to that page instead
-// of showing the simple notification view. The approval page has the full details.
+// ========== v7.0: APPROVAL NOTIFICATIONS USE APPROVALMODAL ==========
+// Instead of navigating to a separate page, set flags and return to dashboard.
+// Dashboard will open ApprovalModal which provides consistent UX.
 if ($notification['requires_approval'] && !empty($notification['url'])) {
-    // Set session flags for the notification flow to continue after user responds
+    // Extract notification ID from URL (e.g., entity-approve.php?id=123)
+    preg_match('/id=(\d+)/', $notification['url'], $matches);
+    $approvalId = $matches[1] ?? $notification['scheduled_notification_id'];
+
     $nextIndexForApproval = $index + 1;
     $hasMore = ($nextIndexForApproval < $totalNotifications);
 
-    // Add fullscreen parameter to URL for proper display
-    $approvalUrl = $notification['url'];
-    $approvalUrl .= (strpos($approvalUrl, '?') !== false ? '&' : '?') . 'fullscreen=1';
-
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
     echo '<script>';
+    // Set the approval ID for ApprovalModal to pick up
+    echo 'sessionStorage.setItem("pendingApprovalId", "' . $approvalId . '");';
+    // Set notification flow flags
     echo 'sessionStorage.setItem("came_from_notification", "true");';
     if ($hasMore) {
         echo 'sessionStorage.setItem("notification_next_index", "' . $nextIndexForApproval . '");';
     } else {
         echo 'sessionStorage.removeItem("notification_next_index");';
     }
-    // Redirect to the approval page (use href, not replace, to keep history for back button)
-    echo 'location.href = "' . htmlspecialchars($approvalUrl, ENT_QUOTES) . '";';
+    // Go back to dashboard - ApprovalModal will auto-open
+    echo 'location.replace("/dashboard/dashboards/cemeteries/");';
     echo '</script>';
     echo '</head><body></body></html>';
     exit;

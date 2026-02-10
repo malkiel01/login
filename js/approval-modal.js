@@ -1029,6 +1029,28 @@ window.ApprovalModal = {
             this.onClose();
             this.onClose = null; // איפוס
         }
+
+        // ========== SMART NOTIFICATION FLOW HANDLING ==========
+        // If we came from the automatic notification flow, continue to the next notification
+        const fromNotificationFlow = sessionStorage.getItem('came_from_notification') === 'true';
+
+        if (fromNotificationFlow) {
+            const nextIdx = sessionStorage.getItem('notification_next_index');
+
+            if (nextIdx !== null) {
+                // There are more notifications - start timer for next one
+                console.log('[ApprovalModal] Continuing notification flow to index:', nextIdx);
+                if (window.LoginNotificationsNav) {
+                    window.LoginNotificationsNav.startTimer(parseInt(nextIdx, 10));
+                }
+            } else {
+                // This was the last notification - clean up
+                console.log('[ApprovalModal] Notification flow complete');
+                sessionStorage.removeItem('came_from_notification');
+                sessionStorage.setItem('notifications_done', 'true');
+            }
+        }
+        // If not from notification flow (e.g., opened from "my notifications"), just close normally
     },
 
     /**

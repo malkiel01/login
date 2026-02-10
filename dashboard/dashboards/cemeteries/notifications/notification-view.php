@@ -3,7 +3,10 @@
  * Notification View Page
  * Displays one notification at a time - designed for PWA back button flow
  *
- * @version 6.2.0 - Don't mark approval notifications as read
+ * @version 6.3.0 - Redirect approval notifications to their URL
+ *
+ * Changes in v6.3:
+ * - Approval notifications redirect to entity-approve.php instead of showing simple view
  *
  * Changes in v6.2:
  * - Don't mark approval notifications as read until user responds
@@ -90,6 +93,29 @@ if ($totalNotifications === 0 || $index >= $totalNotifications) {
 }
 
 $notification = $realNotifications[$index];
+
+// ========== v6.3: REDIRECT APPROVAL NOTIFICATIONS TO THEIR URL ==========
+// If this is an approval notification with a URL, redirect to that page instead
+// of showing the simple notification view. The approval page has the full details.
+if ($notification['requires_approval'] && !empty($notification['url'])) {
+    // Set session flags for the notification flow to continue after user responds
+    $nextIndexForApproval = $index + 1;
+    $hasMore = ($nextIndexForApproval < $totalNotifications);
+
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    echo '<script>';
+    echo 'sessionStorage.setItem("came_from_notification", "true");';
+    if ($hasMore) {
+        echo 'sessionStorage.setItem("notification_next_index", "' . $nextIndexForApproval . '");';
+    } else {
+        echo 'sessionStorage.removeItem("notification_next_index");';
+    }
+    // Redirect to the approval page
+    echo 'location.replace("' . htmlspecialchars($notification['url'], ENT_QUOTES) . '");';
+    echo '</script>';
+    echo '</head><body></body></html>';
+    exit;
+}
 
 // ========== MARK NOTIFICATION AS READ ==========
 // Only mark as read if it does NOT require approval

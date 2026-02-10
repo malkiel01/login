@@ -3,7 +3,11 @@
  * Entity Approval Page
  * Shows pending entity operation details and allows authorizers to approve/reject
  *
- * @version 1.0.0
+ * @version 2.0.0 - Integrate with notification flow
+ *
+ * Changes in v2.0:
+ * - After approve/reject, redirect to dashboard instead of reload
+ * - Continues the notification flow (came_from_notification flags)
  */
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -905,7 +909,10 @@ if (isset($_GET['embed'])) {
                 if (isEmbedMode) {
                     notifyParent(status);
                 } else {
-                    location.reload();
+                    // v2: Return to dashboard to continue notification flow
+                    // The session storage flags (came_from_notification, notification_next_index)
+                    // were already set by notification-view.php before redirecting here
+                    location.replace('/dashboard/dashboards/cemeteries/');
                 }
             }, 2500);
         }

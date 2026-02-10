@@ -362,33 +362,45 @@ window.ApprovalModal = {
      */
     async show(notificationId) {
         this.currentNotificationId = notificationId;
+        console.log('[ApprovalModal] show() called with notificationId:', notificationId);
 
         // Load notification data first to determine type
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/notifications/api/approval-api.php?action=get_notification&id=${notificationId}`, {
+            const url = `/dashboard/dashboards/cemeteries/notifications/api/approval-api.php?action=get_notification&id=${notificationId}`;
+            console.log('[ApprovalModal] Fetching:', url);
+
+            const response = await fetch(url, {
                 credentials: 'include'
             });
 
+            console.log('[ApprovalModal] Response status:', response.status, response.statusText);
+
             // Check if response is ok
             if (!response.ok) {
+                console.error('[ApprovalModal] Response not ok:', response.status);
                 throw new Error(`שגיאת שרת: ${response.status}`);
             }
 
             // Try to parse JSON, handle empty response
             const text = await response.text();
+            console.log('[ApprovalModal] Response text length:', text.length, 'Preview:', text.substring(0, 100));
+
             if (!text || text.trim() === '') {
+                console.error('[ApprovalModal] Empty response from server');
                 throw new Error('תגובה ריקה מהשרת');
             }
 
             let data;
             try {
                 data = JSON.parse(text);
+                console.log('[ApprovalModal] Parsed data:', data);
             } catch (parseError) {
                 console.error('[ApprovalModal] JSON parse error:', parseError, 'Response:', text.substring(0, 200));
                 throw new Error('תגובה לא תקינה מהשרת');
             }
 
             if (!data.success) {
+                console.error('[ApprovalModal] API returned error:', data.error);
                 throw new Error(data.error || 'שגיאה בטעינת ההתראה');
             }
 

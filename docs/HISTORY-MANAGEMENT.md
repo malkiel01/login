@@ -255,7 +255,7 @@ history.pushState({ modal: true }, '', url);
 | `/js/approval-modal.js` | A (flags) | OK | Main approval modal |
 | `/js/info-modal.js` | A (flags) | OK | Info/warning notifications |
 | `/notifications/templates/notification-templates.js` | B (buffer) | NEEDS_REVIEW | Complex pattern |
-| `/notifications/templates/approval-notification.js` | C (simple) | BUGGY | Missing cleanup |
+| `/notifications/templates/approval-notification.js` | A (flags) | OK | Fixed v1.0.1 |
 
 ### Detailed File Descriptions
 
@@ -289,8 +289,9 @@ history.pushState({ modal: true }, '', url);
 #### `/notifications/templates/approval-notification.js`
 
 - **Purpose**: Handles approval notification display in notification list
-- **History Pattern**: Simple Push (Pattern C) - NO cleanup!
-- **Status**: 🔴 BUGGY - Missing history.back() on close
+- **History Pattern**: Flags (Pattern A) - blocks back button, cleans up on close
+- **Key Flags**: `_hasHistoryState`, `_ignoreNextPopstate`
+- **Status**: ✅ Fixed in v1.0.1
 
 ---
 
@@ -746,3 +747,4 @@ close() {
 - 2026-02-11: Initial documentation created
 - 2026-02-11: Added @history-managed tags to files
 - 2026-02-11: Expanded documentation with flow diagrams and migration guide
+- 2026-02-11: Fixed approval-notification.js (added history.back() on close)

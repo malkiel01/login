@@ -9,10 +9,10 @@
  * - Approve button requires biometric authentication
  * - Reject button with optional reason
  *
- * @version 1.0.0
+ * @version 1.0.1
  * @history-managed Uses browser History API for back button handling
- * @history-pattern simple (pushState only, NO cleanup on close!)
- * @history-status BUGGY - Missing history.back() on close, causes accumulation
+ * @history-pattern flags (_hasHistoryState, _ignoreNextPopstate)
+ * @history-status OK - Fixed: now calls history.back() on close
  * @see /docs/HISTORY-MANAGEMENT.md
  */
 
@@ -36,6 +36,7 @@
 
         // Push history state to block back navigation
         history.pushState({ approvalModal: true }, '', window.location.href);
+        this._hasHistoryState = true;
 
         // Create overlay
         const overlay = document.createElement('div');
@@ -410,20 +411,39 @@
 
     /**
      * Handle popstate (back button)
+     * This modal BLOCKS back button - user must respond
      */
     NotificationTemplates.handlePopState = function(e) {
+        // Skip if we triggered this popstate ourselves
+        if (NotificationTemplates._ignoreNextPopstate) {
+            NotificationTemplates._ignoreNextPopstate = false;
+            return;
+        }
+
         if (NotificationTemplates.activeModal) {
+            // Re-push state to block back navigation
             history.pushState(null, '', window.location.href);
+            NotificationTemplates._hasHistoryState = true;
         }
     };
 
     /**
-     * Override close to clean up
+     * Override close to clean up history state
      */
     const originalClose = NotificationTemplates.close;
     NotificationTemplates.close = function() {
         window.removeEventListener('popstate', this.handlePopState);
         this.currentNotificationId = null;
+
+        // CRITICAL: Clean up history state to prevent accumulation
+        const hadHistoryState = this._hasHistoryState;
+        this._hasHistoryState = false;
+
+        if (hadHistoryState) {
+            this._ignoreNextPopstate = true;
+            history.back();
+        }
+
         originalClose.call(this);
     };
 

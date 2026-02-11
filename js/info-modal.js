@@ -220,13 +220,18 @@ window.InfoModal = {
         this._popstateHandler = (e) => {
             // Skip if we triggered this popstate ourselves (via history.back in close())
             if (this._ignoreNextPopstate) {
-                this._log('POPSTATE_IGNORED');
+                this._log('POPSTATE_IGNORED', { historyLength: history.length });
                 this._ignoreNextPopstate = false;
                 return;
             }
 
             const modalVisible = this.modalElement?.style.display !== 'none';
-            this._log('POPSTATE_FIRED', { modalVisible });
+            this._log('POPSTATE_FIRED', {
+                modalVisible: modalVisible,
+                historyLength: history.length,
+                hasHistoryStateFlag: this._hasHistoryState,
+                state: e.state
+            });
 
             if (this.modalElement && modalVisible) {
                 // Mark that we're closing via popstate (browser already went back)
@@ -272,11 +277,24 @@ window.InfoModal = {
                 date.toLocaleDateString('he-IL') + ' ' + date.toLocaleTimeString('he-IL', {hour: '2-digit', minute: '2-digit'});
         }
 
+        // ENHANCED DEBUG: Track history state before and after
+        const histLenBefore = history.length;
+        this._log('BEFORE_PUSH_STATE', {
+            notificationId: notification.id,
+            counter: counter,
+            historyLengthBefore: histLenBefore,
+            hasHistoryStateFlag: this._hasHistoryState
+        });
+
         // Push history state for back button
-        this._log('BEFORE_PUSH_STATE', { notificationId: notification.id });
         history.pushState({ infoModal: true, notificationId: notification.id }, '', window.location.href);
         this._hasHistoryState = true;
-        this._log('AFTER_PUSH_STATE', { notificationId: notification.id });
+
+        this._log('AFTER_PUSH_STATE', {
+            notificationId: notification.id,
+            historyLengthAfter: history.length,
+            delta: history.length - histLenBefore
+        });
 
         // Prevent page scroll
         document.body.style.overflow = 'hidden';
@@ -307,7 +325,12 @@ window.InfoModal = {
         this._closedViaPopstate = false;
         this._hasHistoryState = false;
 
-        this._log('CLOSE', { viaPopstate: closedViaPopstate, hadHistoryState: hadHistoryState });
+        this._log('CLOSE', {
+            viaPopstate: closedViaPopstate,
+            hadHistoryState: hadHistoryState,
+            historyLengthNow: history.length,
+            willGoBack: hadHistoryState && !closedViaPopstate
+        });
 
         // Mark as read
         if (this.currentNotification && this.currentNotification.id) {
@@ -325,8 +348,10 @@ window.InfoModal = {
             // We need to go back to remove the pushed state
             // But this will trigger popstate - set flag to ignore it
             this._ignoreNextPopstate = true;
-            this._log('GOING_BACK_IN_HISTORY');
+            const histLenBefore = history.length;
+            this._log('GOING_BACK_IN_HISTORY', { historyLengthBefore: histLenBefore });
             history.back();
+            // Note: history.length may not update immediately
         }
 
         // Call the callback

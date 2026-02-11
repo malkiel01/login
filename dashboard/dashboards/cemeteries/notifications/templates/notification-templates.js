@@ -37,12 +37,16 @@ window.NotificationTemplates = {
         this._popstateHandler = (e) => {
             // Skip if we triggered this popstate ourselves
             if (this._ignoreNextPopstate) {
-                this._log('POPSTATE_IGNORED');
+                this._log('POPSTATE_IGNORED', { historyLength: history.length });
                 this._ignoreNextPopstate = false;
                 return;
             }
 
-            this._log('POPSTATE_FIRED', { hasModal: !!this.activeModal });
+            this._log('POPSTATE_FIRED', {
+                hasModal: !!this.activeModal,
+                historyLength: history.length,
+                state: e.state
+            });
 
             if (this.activeModal) {
                 // Mark that we're closing via popstate (browser already went back)

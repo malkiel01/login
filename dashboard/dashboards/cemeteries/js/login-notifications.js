@@ -299,7 +299,11 @@ window.LoginNotificationsNav = {
 
         // Show the modal with a callback for when it closes
         window.InfoModal.show(notification, counter, function() {
-            self.log('INFO_MODAL_CLOSED', { id: notification.id });
+            self.log('INFO_MODAL_CLOSED', {
+                id: notification.id,
+                historyLength: history.length,
+                hasMore: hasMore
+            });
             self.state.modalOpen = false;
 
             // Check if skip all was clicked
@@ -309,7 +313,10 @@ window.LoginNotificationsNav = {
             }
 
             if (hasMore) {
-                self.log('WAIT_FOR_NEXT', { nextIndex: index + 1 });
+                self.log('WAIT_FOR_NEXT', {
+                    nextIndex: index + 1,
+                    historyLengthAfterClose: history.length
+                });
                 self.startTimer(index + 1);
             } else {
                 sessionStorage.setItem(self.config.sessionDoneKey, 'true');

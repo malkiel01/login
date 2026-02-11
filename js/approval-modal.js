@@ -895,8 +895,11 @@ window.ApprovalModal = {
         document.body.style.overflow = 'hidden';
 
         // Push history state - this creates a new "screen" that back button will close
+        const histLenBefore = history.length;
+        this._log('ENTITY_BEFORE_PUSH', { historyLengthBefore: histLenBefore, hasHistoryStateFlag: this._hasHistoryState });
         history.pushState({ entityApproval: true }, '', window.location.href);
         this._hasHistoryState = true;
+        this._log('ENTITY_AFTER_PUSH', { historyLengthAfter: history.length, delta: history.length - histLenBefore });
 
         // Allow back button to close this modal (unlike regular approval)
         this._allowBackClose = true;

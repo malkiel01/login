@@ -921,6 +921,18 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
 
             if (inIframe || hasEmbedParam) {
                 console.log('[EntityApprove] Embed mode detected, skipping history trap');
+                // Send beacon to verify this is working
+                navigator.sendBeacon && navigator.sendBeacon(
+                    '/dashboard/dashboards/cemeteries/api/debug-log.php',
+                    JSON.stringify({
+                        page: 'ENTITY_APPROVE',
+                        e: 'EMBED_MODE_SKIP_HISTORY',
+                        inIframe: inIframe,
+                        hasEmbedParam: hasEmbedParam,
+                        historyLength: history.length,
+                        ts: new Date().toISOString()
+                    })
+                );
                 return; // Don't push history state in iframe - parent modal handles it
             }
 
@@ -929,6 +941,16 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
 
             if (cameFromNotification) {
                 // Push a trap state so back button has somewhere to go
+                navigator.sendBeacon && navigator.sendBeacon(
+                    '/dashboard/dashboards/cemeteries/api/debug-log.php',
+                    JSON.stringify({
+                        page: 'ENTITY_APPROVE',
+                        e: 'PUSHING_HISTORY_TRAP',
+                        pendingId: pendingId,
+                        historyLengthBefore: history.length,
+                        ts: new Date().toISOString()
+                    })
+                );
                 history.pushState({ approvalTrap: true, pendingId: pendingId }, '', '#approval');
 
                 // Listen for back button

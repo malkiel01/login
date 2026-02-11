@@ -275,6 +275,7 @@ window.InfoModal = {
         // Push history state for back button
         this._log('BEFORE_PUSH_STATE', { notificationId: notification.id });
         history.pushState({ infoModal: true, notificationId: notification.id }, '', window.location.href);
+        this._hasHistoryState = true;
         this._log('AFTER_PUSH_STATE', { notificationId: notification.id });
 
         // Prevent page scroll
@@ -300,12 +301,13 @@ window.InfoModal = {
 
         document.body.style.overflow = '';
 
-        // If we're NOT closing via popstate (e.g., skip all button),
-        // we need to go back in history to clean up the pushed state
+        // Capture flags before reset - we need to know HOW we got here
         const closedViaPopstate = this._closedViaPopstate;
-        this._closedViaPopstate = false; // Reset flag
+        const hadHistoryState = this._hasHistoryState;
+        this._closedViaPopstate = false;
+        this._hasHistoryState = false;
 
-        this._log('CLOSE', { viaPopstate: closedViaPopstate });
+        this._log('CLOSE', { viaPopstate: closedViaPopstate, hadHistoryState: hadHistoryState });
 
         // Mark as read
         if (this.currentNotification && this.currentNotification.id) {
@@ -318,7 +320,8 @@ window.InfoModal = {
         this.currentNotification = null;
         this._isClosing = false;
 
-        if (!closedViaPopstate) {
+        // CRITICAL: History state cleanup to prevent accumulation
+        if (hadHistoryState && !closedViaPopstate) {
             // We need to go back to remove the pushed state
             // But this will trigger popstate - set flag to ignore it
             this._ignoreNextPopstate = true;

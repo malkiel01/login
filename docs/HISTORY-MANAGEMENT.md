@@ -254,7 +254,7 @@ history.pushState({ modal: true }, '', url);
 | ---- | ------- | ------ | ----- |
 | `/js/approval-modal.js` | A (flags) | OK | Main approval modal |
 | `/js/info-modal.js` | A (flags) | OK | Info/warning notifications |
-| `/notifications/templates/notification-templates.js` | B (buffer) | NEEDS_REVIEW | Complex pattern |
+| `/notifications/templates/notification-templates.js` | A (flags) | OK | Simplified v1.1.0 |
 | `/notifications/templates/approval-notification.js` | A (flags) | OK | Fixed v1.0.1 |
 
 ### Detailed File Descriptions
@@ -282,9 +282,9 @@ history.pushState({ modal: true }, '', url);
 #### `/notifications/templates/notification-templates.js`
 
 - **Purpose**: Template rendering and navigation control for notifications
-- **History Pattern**: Buffer (Pattern B) - uses #modal and #buffer hash states
-- **Complexity**: 200+ lines of history management code
-- **Status**: ⚠️ NEEDS_REVIEW - May have edge cases on Chrome Android
+- **History Pattern**: Flags (Pattern A) - simplified from buffer pattern
+- **Key Flags**: `_hasHistoryState`, `_closedViaPopstate`, `_ignoreNextPopstate`
+- **Status**: ✅ Fixed in v1.1.0 - simplified from complex buffer pattern
 
 #### `/notifications/templates/approval-notification.js`
 
@@ -748,3 +748,4 @@ close() {
 - 2026-02-11: Added @history-managed tags to files
 - 2026-02-11: Expanded documentation with flow diagrams and migration guide
 - 2026-02-11: Fixed approval-notification.js (added history.back() on close)
+- 2026-02-11: Simplified notification-templates.js (removed buffer pattern, added flags)

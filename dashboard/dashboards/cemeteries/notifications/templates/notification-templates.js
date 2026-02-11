@@ -7,10 +7,10 @@
  * 2. APPROVAL - Generic approval request (full screen with approve/reject)
  * 3. ENTITY_APPROVAL - Entity approval with full details (full screen with details + approve/reject)
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @history-managed Uses browser History API for back button handling
- * @history-pattern buffer (#modal + #buffer states, forward() reuse)
- * @history-status NEEDS_REVIEW - Complex pattern, may have accumulation issues
+ * @history-pattern flags (_hasHistoryState, _ignoreNextPopstate)
+ * @history-status OK - Simplified from buffer pattern to flags pattern
  * @see /docs/HISTORY-MANAGEMENT.md
  */
 
@@ -32,6 +32,26 @@ window.NotificationTemplates = {
     init() {
         // Add global styles
         this.addGlobalStyles();
+
+        // Handle back button
+        this._popstateHandler = (e) => {
+            // Skip if we triggered this popstate ourselves
+            if (this._ignoreNextPopstate) {
+                this._log('POPSTATE_IGNORED');
+                this._ignoreNextPopstate = false;
+                return;
+            }
+
+            this._log('POPSTATE_FIRED', { hasModal: !!this.activeModal });
+
+            if (this.activeModal) {
+                // Mark that we're closing via popstate (browser already went back)
+                this._closedViaPopstate = true;
+                this.close();
+            }
+        };
+        window.addEventListener('popstate', this._popstateHandler);
+
         console.log('[NotificationTemplates] Initialized');
         this._log('INIT', { message: 'NotificationTemplates initialized' });
     },
@@ -65,112 +85,18 @@ window.NotificationTemplates = {
         console.log('[NotificationTemplates] Showing notification type:', type);
         this._log('SHOW', { type: type, notificationId: notification.id, title: notification.title });
 
-        // v9: גישה חדשה למניעת Chrome back button abuse
-        // במקום pushState חדש בכל פעם, נשתמש ב-forward() אם יש entry קיים
+        // v1.1: Simplified history management - single pushState with cleanup on close
         try {
-            const modalState = {
-                modal: true,
+            this._log('BEFORE_PUSH_STATE', { notificationId: notification.id });
+            history.pushState({
+                notificationModal: true,
                 notificationId: notification.id,
-                openedAt: Date.now(),
-                isNotificationModal: true
-            };
-
-            const navIndex = window.navigation ? window.navigation.currentEntry.index : -1;
-            const canGoForward = window.navigation ? window.navigation.canGoForward : false;
-
-            if (canGoForward && navIndex === 1) {
-                // v21: יש entry קדימה - נלך אליו ונעדכן, ואז נוסיף buffer
-                this._log('HISTORY_FORWARD', {
-                    notificationId: notification.id,
-                    from: navIndex,
-                    reason: 'reusing existing entry'
-                });
-
-                // דגל למניעת handleBack על forward
-                window.isDoingProgrammaticForward = true;
-
-                // קודם נלך קדימה
-                history.forward();
-
-                // נמתין קצת ואז נעדכן את ה-state ונאפס את הדגל
-                setTimeout(() => {
-                    window.isDoingProgrammaticForward = false;
-                    history.replaceState(modalState, '', '#modal');
-                    this._log('HISTORY_REPLACE_AFTER_FORWARD', {
-                        notificationId: notification.id,
-                        navIndex: window.navigation ? window.navigation.currentEntry.index : -1
-                    });
-
-                    // v21: הוסף buffer גם כאן
-                    setTimeout(() => {
-                        const bufferState = {
-                            buffer: true,
-                            forNotification: notification.id,
-                            modalOpenedAt: modalState.openedAt
-                        };
-                        history.pushState(bufferState, '', '#buffer');
-                        this._log('HISTORY_PUSH_BUFFER_AFTER_FWD', {
-                            notificationId: notification.id,
-                            historyLength: history.length,
-                            navIndex: window.navigation ? window.navigation.currentEntry.index : -1
-                        });
-                    }, 100);
-                }, 50);
-
-            } else if (navIndex <= 1) {
-                // v21: Buffer Entry Pattern!
-                // הבעיה: Chrome Android מדלג על JS events כשהוא מחליט לסגור את האפליקציה
-                // הפתרון: הוספת entry נוסף (#buffer) אחרי #modal
-                // כך back הולך קודם ל-buffer, ואנחנו יכולים לטפל בזה
-
-                // שלב 1: push #modal
-                history.pushState(modalState, '', '#modal');
-                this._log('HISTORY_PUSH_MODAL', {
-                    notificationId: notification.id,
-                    historyLength: history.length,
-                    navIndex: window.navigation ? window.navigation.currentEntry.index : -1
-                });
-
-                // שלב 2: push #buffer (entry נוסף כ"כרית ביטחון")
-                setTimeout(() => {
-                    const bufferState = {
-                        buffer: true,
-                        forNotification: notification.id,
-                        modalOpenedAt: modalState.openedAt
-                    };
-                    history.pushState(bufferState, '', '#buffer');
-                    this._log('HISTORY_PUSH_BUFFER', {
-                        notificationId: notification.id,
-                        historyLength: history.length,
-                        navIndex: window.navigation ? window.navigation.currentEntry.index : -1
-                    });
-                }, 100);
-
-            } else {
-                // כבר ב-index 2 או יותר - רק נעדכן ונוסיף buffer
-                history.replaceState(modalState, '', '#modal');
-                this._log('HISTORY_REPLACE', {
-                    notificationId: notification.id,
-                    navIndex: navIndex
-                });
-
-                // גם כאן נוסיף buffer
-                setTimeout(() => {
-                    const bufferState = {
-                        buffer: true,
-                        forNotification: notification.id,
-                        modalOpenedAt: modalState.openedAt
-                    };
-                    history.pushState(bufferState, '', '#buffer');
-                    this._log('HISTORY_PUSH_BUFFER_AFTER_REPLACE', {
-                        notificationId: notification.id,
-                        historyLength: history.length,
-                        navIndex: window.navigation ? window.navigation.currentEntry.index : -1
-                    });
-                }, 100);
-            }
+                openedAt: Date.now()
+            }, '', window.location.href);
+            this._hasHistoryState = true;
+            this._log('AFTER_PUSH_STATE', { notificationId: notification.id, historyLength: history.length });
         } catch(e) {
-            console.warn('[NotificationTemplates] Failed to update history:', e);
+            console.warn('[NotificationTemplates] Failed to push history:', e);
             this._log('HISTORY_ERROR', { error: e.message });
         }
 
@@ -315,12 +241,24 @@ window.NotificationTemplates = {
 
     /**
      * Close any active modal
+     * Handles history cleanup to prevent accumulation
      */
     close() {
         const hadModal = !!this.activeModal;
         const modalClass = this.activeModal ? this.activeModal.className : null;
 
-        this._log('CLOSE_START', { hadModal: hadModal, modalClass: modalClass });
+        // Capture flags before reset
+        const closedViaPopstate = this._closedViaPopstate;
+        const hadHistoryState = this._hasHistoryState;
+        this._closedViaPopstate = false;
+        this._hasHistoryState = false;
+
+        this._log('CLOSE', {
+            hadModal: hadModal,
+            modalClass: modalClass,
+            viaPopstate: closedViaPopstate,
+            hadHistoryState: hadHistoryState
+        });
 
         if (this.activeModal) {
             this.activeModal.remove();
@@ -328,13 +266,18 @@ window.NotificationTemplates = {
         }
         document.body.style.overflow = '';
 
+        // CRITICAL: History state cleanup to prevent accumulation
+        if (hadHistoryState && !closedViaPopstate) {
+            this._log('GOING_BACK_IN_HISTORY');
+            this._ignoreNextPopstate = true;
+            history.back();
+        }
+
         // Fire close callback if exists
         if (this.callbacks.onClose) {
             this.callbacks.onClose();
             this.callbacks.onClose = null;
         }
-
-        this._log('CLOSE_DONE', { hadModal: hadModal, modalClass: modalClass });
     },
 
     /**

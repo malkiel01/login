@@ -938,6 +938,11 @@ window.ApprovalModal = {
 
             const iframe = document.createElement('iframe');
             iframe.id = 'entityApproveFrame';
+            // Sandbox prevents iframe from manipulating parent's history
+            // allow-scripts: needed for approval buttons
+            // allow-same-origin: needed for postMessage communication
+            // allow-forms: needed for form submissions
+            iframe.sandbox = 'allow-scripts allow-same-origin allow-forms';
             iframe.style.cssText = `
                 width: 100%;
                 height: 100%;

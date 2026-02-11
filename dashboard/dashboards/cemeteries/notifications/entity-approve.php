@@ -911,9 +911,19 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
     <script>
         const pendingId = <?= $pendingId ?>;
 
-        // ========== v2.1: HISTORY MANAGEMENT FOR BACK BUTTON ==========
+        // ========== v2.2: HISTORY MANAGEMENT FOR BACK BUTTON ==========
         // This prevents back button from closing the app
+        // v2.2: Skip when in embed mode (iframe) - parent handles history
         (function() {
+            // Check if running inside iframe (embed mode)
+            const inIframe = window.parent !== window;
+            const hasEmbedParam = new URLSearchParams(window.location.search).has('embed');
+
+            if (inIframe || hasEmbedParam) {
+                console.log('[EntityApprove] Embed mode detected, skipping history trap');
+                return; // Don't push history state in iframe - parent modal handles it
+            }
+
             // Check if we came from notification flow
             const cameFromNotification = sessionStorage.getItem('came_from_notification') === 'true';
 

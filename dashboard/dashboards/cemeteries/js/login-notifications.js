@@ -170,7 +170,10 @@ window.LoginNotificationsNav = {
         });
 
         this.state.timerId = setTimeout(() => {
-            this.log('TIMER_FIRED', { index: startFromIndex });
+            this.log('TIMER_FIRED', {
+                index: startFromIndex,
+                historyLength: history.length
+            });
             this.fetchAndShowNotifications(startFromIndex);
         }, this.config.delayMs);
     },
@@ -227,7 +230,8 @@ window.LoginNotificationsNav = {
             id: notification.id,
             title: notification.title,
             requiresApproval: notification.requires_approval,
-            hasMore: hasMore
+            hasMore: hasMore,
+            historyLengthBeforeShow: history.length
         });
 
         this.state.modalOpen = true;

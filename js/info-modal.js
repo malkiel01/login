@@ -3,6 +3,9 @@
  * For non-approval notifications (info, warning, urgent)
  *
  * @version 1.0.1
+ * @history-managed Uses browser History API for back button handling
+ * @history-pattern flags (_hasHistoryState, _closedViaPopstate, _ignoreNextPopstate)
+ * @see /docs/HISTORY-MANAGEMENT.md
  */
 
 console.log('[InfoModal] Script loaded');

@@ -10,6 +10,10 @@
  * - Reject button with optional reason
  *
  * @version 1.0.0
+ * @history-managed Uses browser History API for back button handling
+ * @history-pattern simple (pushState only, NO cleanup on close!)
+ * @history-status BUGGY - Missing history.back() on close, causes accumulation
+ * @see /docs/HISTORY-MANAGEMENT.md
  */
 
 (function() {

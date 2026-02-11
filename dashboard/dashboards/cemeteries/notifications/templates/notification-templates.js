@@ -8,6 +8,10 @@
  * 3. ENTITY_APPROVAL - Entity approval with full details (full screen with details + approve/reject)
  *
  * @version 1.0.0
+ * @history-managed Uses browser History API for back button handling
+ * @history-pattern buffer (#modal + #buffer states, forward() reuse)
+ * @history-status NEEDS_REVIEW - Complex pattern, may have accumulation issues
+ * @see /docs/HISTORY-MANAGEMENT.md
  */
 
 window.NotificationTemplates = {

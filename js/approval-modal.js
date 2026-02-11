@@ -3,6 +3,9 @@
  * Can be triggered from anywhere in the app
  *
  * @version 1.0.0
+ * @history-managed Uses browser History API for back button handling
+ * @history-pattern flags (_hasHistoryState, _closedViaPopstate, _ignoreNextPopstate)
+ * @see /docs/HISTORY-MANAGEMENT.md
  */
 
 window.ApprovalModal = {

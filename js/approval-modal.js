@@ -8,6 +8,29 @@
  * @see /docs/HISTORY-MANAGEMENT.md
  */
 
+// DEBUG: Monitor ALL pushState calls to find the source of extra history entries
+(function() {
+    const originalPushState = history.pushState.bind(history);
+    history.pushState = function(state, title, url) {
+        const stack = new Error().stack;
+        const caller = stack ? stack.split('\n')[2] : 'unknown';
+        navigator.sendBeacon && navigator.sendBeacon(
+            '/dashboard/dashboards/cemeteries/api/debug-log.php',
+            JSON.stringify({
+                page: 'HISTORY_MONITOR',
+                e: 'PUSH_STATE_CALLED',
+                historyLengthBefore: history.length,
+                state: state,
+                url: url,
+                caller: caller.substring(0, 200),
+                ts: new Date().toISOString()
+            })
+        );
+        return originalPushState(state, title, url);
+    };
+    console.log('[HistoryMonitor] pushState monitoring enabled');
+})();
+
 window.ApprovalModal = {
     modalElement: null,
     currentNotificationId: null,

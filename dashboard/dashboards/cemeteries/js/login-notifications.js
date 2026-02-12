@@ -274,7 +274,7 @@ window.LoginNotificationsNav = {
             alert('🟠 שלב 3: אחרי הוספת סימן דמה\nhistory.length = ' + history.length);
         } else {
             // For subsequent notifications - NO dummy pushState
-            alert('🔵 שלב 5: התראה ' + (index + 1) + ' (ללא סימן דמה)\nhistory.length = ' + history.length);
+            alert('🔵 שלב 6: התראה ' + (index + 1) + ' (ללא סימן דמה)\nhistory.length = ' + history.length);
             this._addedDummyState = false;
         }
 
@@ -292,7 +292,7 @@ window.LoginNotificationsNav = {
                 });
 
                 // DEBUG v8.6: Alert after modal closed
-                alert('🔴 שלב 4: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
+                alert('🔴 שלב 5: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
 
                 self.state.modalOpen = false;
 

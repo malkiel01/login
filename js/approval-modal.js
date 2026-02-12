@@ -1044,6 +1044,9 @@ window.ApprovalModal = {
                 expected: expectedHistoryLength,
                 iframeAddedHistory: iframeAddedHistory
             });
+
+            // DEBUG v8.6: Alert after iframe loaded
+            alert('⚪ שלב 4: אחרי טעינת iframe\nhistory.length = ' + actualLength + '\nצפוי היה: ' + expectedHistoryLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא'));
         };
 
         // Listen for messages from the iframe

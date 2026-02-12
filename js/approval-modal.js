@@ -1188,13 +1188,16 @@ window.ApprovalModal = {
         // Capture flags before reset - we need to know HOW we got here
         const closedViaPopstate = this._closedViaPopstate;  // Was back button pressed?
         const hadHistoryState = this._hasHistoryState;       // Did we push a state when opening?
+        const hasDummyState = this._hasDummyState;           // v8.8: Did login-notifications add a dummy?
         this._closedViaPopstate = false;
         this._hasHistoryState = false;
         this._iframeAddedHistory = false;
+        this._hasDummyState = false;  // v8.8: Reset dummy flag
 
         this._log('>>> CLOSE_ENTER', {
             viaPopstate: closedViaPopstate,
             hadHistoryState: hadHistoryState,
+            hasDummyState: hasDummyState,
             historyLength: history.length
         });
 
@@ -1257,26 +1260,39 @@ window.ApprovalModal = {
             hasCallback: hasCallback,
             closedViaPopstate: closedViaPopstate,
             hadHistoryState: hadHistoryState,
-            willCallHistoryBack: hadHistoryState && !closedViaPopstate
+            hasDummyState: hasDummyState,
+            willCallHistoryBack: (hadHistoryState && !closedViaPopstate) || (closedViaPopstate && hasDummyState)
         });
 
         // CRITICAL: History state cleanup to prevent accumulation
         // --------------------------------------------------------
         // Problem: Each notification pushes a state. If we don't clean up, history grows.
         //
-        // Simple rule:
-        //   - If NOT closed via popstate (button/autoClose) → we need to call history.back()
-        //   - If closed via popstate (user pressed back) → browser already went back, don't call again
+        // v8.8: New rules for entity approval modals with dummy state:
+        //   - login-notifications.js adds dummy pushState BEFORE showing modal
+        //   - iframe MAY add its own history entry
+        //   - When user presses back:
+        //     * If iframe added entry: back removes iframe entry, we need to remove dummy
+        //     * If iframe didn't add: back removes dummy, we're done
+        //   - hasDummyState flag tells us if we have a dummy to clean up
         //
-        // NOTE: iframeAddedHistory logic was removed because it caused double notification display.
-        // The cost is that iframe-based entity approvals require 2 back presses to close.
-        // This is acceptable until a better solution is found.
+        // Simple rules:
+        //   1. If NOT closed via popstate (button/autoClose) AND hadHistoryState → call history.back()
+        //   2. If closed via popstate AND hasDummyState → also call history.back() (remove dummy)
+        //
         if (hadHistoryState && !closedViaPopstate) {
             this._log('GOING_BACK_IN_HISTORY', { reason: 'normal cleanup', historyLengthBefore: history.length });
             // Set flag so the resulting popstate event is ignored (we triggered it, not the user)
             this._ignoreNextPopstate = true;
             history.back();
             this._log('AFTER_HISTORY_BACK', { historyLengthAfter: history.length });
+        } else if (closedViaPopstate && hasDummyState) {
+            // v8.8: User pressed back but we still have a dummy to clean up
+            // This happens when iframe added a history entry (Safari second+ notification)
+            this._log('GOING_BACK_FOR_DUMMY', { reason: 'cleanup dummy after iframe entry removed', historyLengthBefore: history.length });
+            this._ignoreNextPopstate = true;
+            history.back();
+            this._log('AFTER_DUMMY_BACK', { historyLengthAfter: history.length });
         }
 
         this._isClosing = false;

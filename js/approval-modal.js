@@ -1053,16 +1053,16 @@ window.ApprovalModal = {
                 return;
             }
 
+            // v8.7: All notifications now have a dummy, so visualization is the same pattern
             const notifIdx = this._debugNotificationIndex || 0;
+            const dummyLabel = notifIdx === 0 ? 'דמה' : 'דמה' + (notifIdx + 1);
+            const vis = iframeAddedHistory
+                ? '[...] → [דשבורד] → [' + dummyLabel + '] → [iframe] ← אתה כאן'
+                : '[...] → [דשבורד] → [' + dummyLabel + '] ← אתה כאן (iframe לא הוסיף)';
+
             if (notifIdx === 0) {
-                const vis = iframeAddedHistory
-                    ? '[...] → [דשבורד] → [דמה] → [iframe] ← אתה כאן'
-                    : '[...] → [דשבורד] → [דמה] ← אתה כאן (iframe לא הוסיף)';
                 alert('⚪ שלב 4: אחרי טעינת iframe (התראה 1)\nhistory.length = ' + actualLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא') + '\n\n' + vis);
             } else {
-                const vis = iframeAddedHistory
-                    ? '[...] → [דשבורד] → [iframe] ← אתה כאן'
-                    : '[...] → [דשבורד] ← אתה כאן (iframe לא הוסיף)';
                 alert('🟫 שלב 8: אחרי טעינת iframe (התראה ' + (notifIdx + 1) + ')\nhistory.length = ' + actualLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא') + '\n\n' + vis);
             }
         };

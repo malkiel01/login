@@ -263,19 +263,22 @@ window.LoginNotificationsNav = {
             sessionStorage.removeItem('notification_next_index');
         }
 
-        // DEBUG v8.6: Only add dummy pushState for FIRST notification
+        // v8.7: Add dummy pushState for ALL notifications (not just first)
+        // This ensures we always have a "cushion" for the back button
         if (index === 0) {
             alert('🟡 שלב 2: לפני הוספת סימן דמה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
+        } else {
+            alert('🔵 שלב 5.5: לפני הוספת סימן דמה להתראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
+        }
 
-            // Add dummy pushState for first notification only
-            history.pushState({ dummyForFirst: true }, '', window.location.href);
-            this._addedDummyState = true;
+        // Add dummy pushState for EVERY notification
+        history.pushState({ dummyForNotification: index }, '', window.location.href);
+        this._addedDummyState = true;
 
+        if (index === 0) {
             alert('🟠 שלב 3: אחרי הוספת סימן דמה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה] ← אתה כאן');
         } else {
-            // For subsequent notifications - NO dummy pushState
-            alert('🔵 שלב 6: התראה ' + (index + 1) + ' (ללא סימן דמה)\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן\n(לא הוספנו סימן דמה)');
-            this._addedDummyState = false;
+            alert('🟠 שלב 6: אחרי הוספת סימן דמה להתראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה' + (index + 1) + '] ← אתה כאן');
         }
 
         // Set up callback for when ApprovalModal closes
@@ -291,11 +294,11 @@ window.LoginNotificationsNav = {
                     timerId: self.state.timerId ? 'exists' : 'null'
                 });
 
-                // DEBUG v8.6: Alert after modal closed - different step for each notification
+                // DEBUG v8.7: Alert after modal closed
                 if (index === 0) {
-                    alert('🔴 שלב 5: אחרי סגירת התראה 1\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore + '\n\n[...] → [דשבורד] ← אתה כאן\n(iframe+דמה נמחקו)');
+                    alert('🔴 שלב 5: אחרי סגירת התראה 1\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore + '\n\n[...] → [דשבורד] ← אתה כאן\n(דמה נמחק)');
                 } else {
-                    alert('⬛ שלב 9: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore + '\n\n[...] → [דשבורד] ← אתה כאן\n(iframe נמחק)');
+                    alert('⬛ שלב 9: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore + '\n\n[...] → [דשבורד] ← אתה כאן\n(דמה' + (index + 1) + ' נמחק)');
                 }
 
                 self.state.modalOpen = false;
@@ -312,11 +315,11 @@ window.LoginNotificationsNav = {
                 self.log('<<< APPROVAL_ONCLOSE_EXIT', { historyLength: history.length });
             };
 
-            // DEBUG v8.6: Alert before showing modal - different step for each notification
+            // DEBUG v8.7: Alert before showing modal
             if (index === 0) {
-                alert('🟣 שלב 3.5: לפני הצגת iframe\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה] ← אתה כאן\n(עכשיו iframe יוסיף סימן)');
+                alert('🟣 שלב 3.5: לפני הצגת iframe\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה] ← אתה כאן');
             } else {
-                alert('🟤 שלב 7: לפני הצגת iframe להתראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן\n(עכשיו iframe יוסיף סימן)');
+                alert('🟤 שלב 7: לפני הצגת iframe להתראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה' + (index + 1) + '] ← אתה כאן');
             }
 
             // Pass notification index to ApprovalModal for debug alerts

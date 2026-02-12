@@ -275,11 +275,6 @@ window.LoginNotificationsNav = {
         history.pushState({ dummyForNotification: index }, '', window.location.href);
         this._addedDummyState = true;
 
-        // v8.8: Tell ApprovalModal that we added a dummy that needs cleanup
-        if (window.ApprovalModal) {
-            window.ApprovalModal._hasDummyState = true;
-        }
-
         if (index === 0) {
             alert('🟠 שלב 3: אחרי הוספת סימן דמה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה] ← אתה כאן');
         } else {

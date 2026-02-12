@@ -1010,7 +1010,20 @@ window.ApprovalModal = {
         // Load the entity approval page
         const iframe = document.getElementById('entityApproveFrame');
         const separator = url.includes('?') ? '&' : '?';
+
+        // DEBUG: Log history before setting iframe src
+        const histLenBeforeSrc = history.length;
+        this._log('BEFORE_IFRAME_SRC', { historyLength: histLenBeforeSrc, url: url });
+
         iframe.src = url + separator + 'embed=1'; // Add embed parameter to indicate iframe mode
+
+        // DEBUG: Log immediately after setting src
+        this._log('AFTER_IFRAME_SRC', { historyLength: history.length, delta: history.length - histLenBeforeSrc });
+
+        // DEBUG: Log when iframe finishes loading
+        iframe.onload = () => {
+            this._log('IFRAME_ONLOAD', { historyLength: history.length });
+        };
 
         // Listen for messages from the iframe
         const messageHandler = (event) => {

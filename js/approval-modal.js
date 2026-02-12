@@ -920,9 +920,27 @@ window.ApprovalModal = {
         // Push history state - this creates a new "screen" that back button will close
         const histLenBefore = history.length;
         this._log('ENTITY_BEFORE_PUSH', { historyLengthBefore: histLenBefore, hasHistoryStateFlag: this._hasHistoryState });
+
+        // First, do replaceState to ensure we have a proper state on current entry
+        // This fixes a Safari bug where the first pushState after page load doesn't work
+        history.replaceState({ dashboardBase: true }, '', window.location.href);
+
+        // Now push the modal state
         history.pushState({ entityApproval: true }, '', window.location.href);
         this._hasHistoryState = true;
-        this._log('ENTITY_AFTER_PUSH', { historyLengthAfter: history.length, delta: history.length - histLenBefore });
+
+        const delta = history.length - histLenBefore;
+        this._log('ENTITY_AFTER_PUSH', { historyLengthAfter: history.length, delta: delta });
+
+        // Verify the push worked
+        if (delta === 0) {
+            this._log('ENTITY_PUSH_FAILED', { message: 'pushState did not increment history, retrying...' });
+            // Try again with a slight delay
+            setTimeout(() => {
+                history.pushState({ entityApproval: true, retry: true }, '', window.location.href);
+                this._log('ENTITY_PUSH_RETRY', { historyLengthAfter: history.length });
+            }, 50);
+        }
 
         // Allow back button to close this modal (unlike regular approval)
         this._allowBackClose = true;

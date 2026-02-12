@@ -139,6 +139,9 @@ window.LoginNotificationsNav = {
                 return;
             }
 
+            // DEBUG v8.6: Show initial history state
+            alert('🟢 שלב 1: התחלה\nhistory.length = ' + history.length + '\n(דשבורד נטען)');
+
             // Start the 5 second timer
             this.log('STEP_START_TIMER', { delayMs: this.config.delayMs });
             this.startTimer();
@@ -247,6 +250,7 @@ window.LoginNotificationsNav = {
 
     /**
      * Show approval notification using ApprovalModal
+     * v8.6: Debug alerts + dummy pushState only for first notification
      */
     showApprovalNotification(notification, index, hasMore) {
         const notificationId = notification.scheduled_notification_id || notification.id;
@@ -257,6 +261,21 @@ window.LoginNotificationsNav = {
             sessionStorage.setItem('notification_next_index', (index + 1).toString());
         } else {
             sessionStorage.removeItem('notification_next_index');
+        }
+
+        // DEBUG v8.6: Only add dummy pushState for FIRST notification
+        if (index === 0) {
+            alert('🟡 שלב 2: לפני הוספת סימן דמה\nhistory.length = ' + history.length);
+
+            // Add dummy pushState for first notification only
+            history.pushState({ dummyForFirst: true }, '', window.location.href);
+            this._addedDummyState = true;
+
+            alert('🟠 שלב 3: אחרי הוספת סימן דמה\nhistory.length = ' + history.length);
+        } else {
+            // For subsequent notifications - NO dummy pushState
+            alert('🔵 שלב 5: התראה ' + (index + 1) + ' (ללא סימן דמה)\nhistory.length = ' + history.length);
+            this._addedDummyState = false;
         }
 
         // Set up callback for when ApprovalModal closes
@@ -272,6 +291,9 @@ window.LoginNotificationsNav = {
                     timerId: self.state.timerId ? 'exists' : 'null'
                 });
 
+                // DEBUG v8.6: Alert after modal closed
+                alert('🔴 שלב 4: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
+
                 self.state.modalOpen = false;
 
                 if (hasMore) {
@@ -285,6 +307,9 @@ window.LoginNotificationsNav = {
 
                 self.log('<<< APPROVAL_ONCLOSE_EXIT', { historyLength: history.length });
             };
+
+            // DEBUG v8.6: Alert before showing modal
+            alert('🟣 שלב 3.5: לפני הצגת iframe\nhistory.length = ' + history.length + '\nindex = ' + index);
 
             this.log('SHOWING_APPROVAL_MODAL', { notificationId: notificationId });
             window.ApprovalModal.show(notificationId);

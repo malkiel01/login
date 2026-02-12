@@ -1020,9 +1020,20 @@ window.ApprovalModal = {
         // DEBUG: Log immediately after setting src
         this._log('AFTER_IFRAME_SRC', { historyLength: history.length, delta: history.length - histLenBeforeSrc });
 
-        // DEBUG: Log when iframe finishes loading
+        // Track expected history length after our pushState
+        const expectedHistoryLength = history.length;
+
+        // DEBUG: Log when iframe finishes loading and detect if iframe added history
         iframe.onload = () => {
-            this._log('IFRAME_ONLOAD', { historyLength: history.length });
+            const actualLength = history.length;
+            const iframeAddedHistory = actualLength > expectedHistoryLength;
+            this._iframeAddedHistory = iframeAddedHistory;
+
+            this._log('IFRAME_ONLOAD', {
+                historyLength: actualLength,
+                expected: expectedHistoryLength,
+                iframeAddedHistory: iframeAddedHistory
+            });
         };
 
         // Listen for messages from the iframe
@@ -1143,10 +1154,16 @@ window.ApprovalModal = {
         // Capture flags before reset - we need to know HOW we got here
         const closedViaPopstate = this._closedViaPopstate;  // Was back button pressed?
         const hadHistoryState = this._hasHistoryState;       // Did we push a state when opening?
+        const iframeAddedHistory = this._iframeAddedHistory; // Did iframe add extra history entry?
         this._closedViaPopstate = false;
         this._hasHistoryState = false;
+        this._iframeAddedHistory = false;
 
-        this._log('CLOSE', { viaPopstate: closedViaPopstate, hadHistoryState: hadHistoryState });
+        this._log('CLOSE', {
+            viaPopstate: closedViaPopstate,
+            hadHistoryState: hadHistoryState,
+            iframeAddedHistory: iframeAddedHistory
+        });
 
         if (this.modalElement) {
             this.modalElement.style.display = 'none';
@@ -1204,15 +1221,20 @@ window.ApprovalModal = {
 
         // CRITICAL: History state cleanup to prevent accumulation
         // --------------------------------------------------------
-        // Problem: Each notification pushes a state. If we don't clean up, history grows:
-        //   Initial: 4 states
-        //   After 3 notifications without cleanup: 7 states = 3 extra back presses needed!
+        // Problem: Each notification pushes a state. If we don't clean up, history grows.
+        //
+        // Extra complication: iframe navigation adds ANOTHER history entry due to allow-same-origin.
+        // So when user presses back, they only remove the iframe's entry, not our pushState.
         //
         // Solution:
-        //   - closedViaPopstate=true → browser already went back → do nothing
-        //   - closedViaPopstate=false → browser didn't go back → we must call history.back()
-        if (hadHistoryState && !closedViaPopstate) {
-            this._log('GOING_BACK_IN_HISTORY');
+        //   Case 1: closedViaPopstate=false → browser didn't go back → call history.back()
+        //   Case 2: closedViaPopstate=true && !iframeAddedHistory → browser went back, we're clean
+        //   Case 3: closedViaPopstate=true && iframeAddedHistory → browser removed iframe's entry,
+        //           but OUR state is still there → we must call history.back()
+        const needsHistoryCleanup = hadHistoryState && (!closedViaPopstate || iframeAddedHistory);
+
+        if (needsHistoryCleanup) {
+            this._log('GOING_BACK_IN_HISTORY', { reason: iframeAddedHistory ? 'iframe added history' : 'normal cleanup' });
             // Set flag so the resulting popstate event is ignored (we triggered it, not the user)
             this._ignoreNextPopstate = true;
             history.back();

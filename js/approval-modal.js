@@ -927,18 +927,18 @@ window.ApprovalModal = {
         // Prevent page scroll
         document.body.style.overflow = 'hidden';
 
-        // Push history state - this creates a new "screen" that back button will close
+        // v8.5: Don't push history state for entity approval iframes
+        // The iframe itself adds a history entry when it loads (sandbox with allow-same-origin)
+        // So we rely on that entry instead of adding our own
+        // This fixes the issue where 2 back presses were needed (one for ours, one for iframe)
         const histLenBefore = history.length;
-        this._log('ENTITY_BEFORE_PUSH', { historyLengthBefore: histLenBefore });
-
-        // Simple pushState - let the monitor track what happens
-        history.pushState({ entityApproval: true }, '', window.location.href);
-        this._hasHistoryState = true;
-
-        this._log('ENTITY_AFTER_PUSH', {
-            historyLengthAfter: history.length,
-            delta: history.length - histLenBefore
+        this._log('ENTITY_NO_PUSH', {
+            historyLengthBefore: histLenBefore,
+            reason: 'iframe adds its own entry'
         });
+
+        // Don't set _hasHistoryState - we didn't push, iframe will
+        this._hasHistoryState = false;
 
         // Allow back button to close this modal (unlike regular approval)
         this._allowBackClose = true;

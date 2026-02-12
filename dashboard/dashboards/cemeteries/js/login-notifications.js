@@ -263,17 +263,27 @@ window.LoginNotificationsNav = {
         if (window.ApprovalModal) {
             const self = this;
             window.ApprovalModal.onClose = function() {
-                self.log('APPROVAL_MODAL_CLOSED', { notificationId: notificationId });
+                self.log('>>> APPROVAL_ONCLOSE_ENTER', {
+                    notificationId: notificationId,
+                    index: index,
+                    hasMore: hasMore,
+                    historyLength: history.length,
+                    modalOpen: self.state.modalOpen,
+                    timerId: self.state.timerId ? 'exists' : 'null'
+                });
+
                 self.state.modalOpen = false;
 
                 if (hasMore) {
-                    self.log('WAIT_FOR_NEXT', { nextIndex: index + 1 });
+                    self.log('STARTING_NEXT_TIMER', { nextIndex: index + 1, historyLength: history.length });
                     self.startTimer(index + 1);
                 } else {
                     sessionStorage.setItem(self.config.sessionDoneKey, 'true');
                     sessionStorage.removeItem('came_from_notification');
-                    self.log('ALL_NOTIFICATIONS_DONE', {});
+                    self.log('ALL_NOTIFICATIONS_DONE', { historyLength: history.length });
                 }
+
+                self.log('<<< APPROVAL_ONCLOSE_EXIT', { historyLength: history.length });
             };
 
             this.log('SHOWING_APPROVAL_MODAL', { notificationId: notificationId });

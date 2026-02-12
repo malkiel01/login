@@ -394,19 +394,29 @@ window.ApprovalModal = {
             // Skip if we triggered this popstate ourselves (via history.back() in close())
             // Without this, we'd re-enter close() when cleaning up history
             if (this._ignoreNextPopstate) {
-                this._log('POPSTATE_IGNORED');
+                this._log('POPSTATE_IGNORED', {
+                    historyLength: history.length,
+                    state: e.state
+                });
                 this._ignoreNextPopstate = false;
                 return;
             }
 
             const modalVisible = this.modalElement && this.modalElement.style.display !== 'none';
-            this._log('POPSTATE_FIRED', { modalVisible, allowBackClose: this._allowBackClose });
+            this._log('>>> POPSTATE_FIRED', {
+                modalVisible: modalVisible,
+                allowBackClose: this._allowBackClose,
+                historyLength: history.length,
+                state: e.state,
+                isClosing: this._isClosing,
+                hasHistoryState: this._hasHistoryState
+            });
 
             if (modalVisible) {
                 if (this._allowBackClose) {
                     // Entity approval mode - back button CLOSES the modal
                     // Mark that we're closing via popstate so close() knows not to call history.back()
-                    this._log('POPSTATE_CLOSING');
+                    this._log('POPSTATE_CLOSING', { historyLength: history.length });
                     this._closedViaPopstate = true;
                     this.close();
                 } else {
@@ -1148,21 +1158,23 @@ window.ApprovalModal = {
      */
     close() {
         // Prevent re-entry (close() can be called multiple times from different triggers)
-        if (this._isClosing) return;
+        if (this._isClosing) {
+            this._log('CLOSE_SKIPPED_REENTRY', { historyLength: history.length });
+            return;
+        }
         this._isClosing = true;
 
         // Capture flags before reset - we need to know HOW we got here
         const closedViaPopstate = this._closedViaPopstate;  // Was back button pressed?
         const hadHistoryState = this._hasHistoryState;       // Did we push a state when opening?
-        const iframeAddedHistory = this._iframeAddedHistory; // Did iframe add extra history entry?
         this._closedViaPopstate = false;
         this._hasHistoryState = false;
         this._iframeAddedHistory = false;
 
-        this._log('CLOSE', {
+        this._log('>>> CLOSE_ENTER', {
             viaPopstate: closedViaPopstate,
             hadHistoryState: hadHistoryState,
-            iframeAddedHistory: iframeAddedHistory
+            historyLength: history.length
         });
 
         if (this.modalElement) {
@@ -1217,27 +1229,33 @@ window.ApprovalModal = {
 
         // Save callback before cleanup
         const callback = this.onClose;
+        const hasCallback = typeof callback === 'function';
         this.onClose = null;
+
+        this._log('BEFORE_HISTORY_CLEANUP', {
+            hasCallback: hasCallback,
+            closedViaPopstate: closedViaPopstate,
+            hadHistoryState: hadHistoryState,
+            willCallHistoryBack: hadHistoryState && !closedViaPopstate
+        });
 
         // CRITICAL: History state cleanup to prevent accumulation
         // --------------------------------------------------------
         // Problem: Each notification pushes a state. If we don't clean up, history grows.
         //
-        // Extra complication: iframe navigation adds ANOTHER history entry due to allow-same-origin.
-        // So when user presses back, they only remove the iframe's entry, not our pushState.
+        // Simple rule:
+        //   - If NOT closed via popstate (button/autoClose) → we need to call history.back()
+        //   - If closed via popstate (user pressed back) → browser already went back, don't call again
         //
-        // Solution:
-        //   Case 1: closedViaPopstate=false → browser didn't go back → call history.back()
-        //   Case 2: closedViaPopstate=true && !iframeAddedHistory → browser went back, we're clean
-        //   Case 3: closedViaPopstate=true && iframeAddedHistory → browser removed iframe's entry,
-        //           but OUR state is still there → we must call history.back()
-        const needsHistoryCleanup = hadHistoryState && (!closedViaPopstate || iframeAddedHistory);
-
-        if (needsHistoryCleanup) {
-            this._log('GOING_BACK_IN_HISTORY', { reason: iframeAddedHistory ? 'iframe added history' : 'normal cleanup' });
+        // NOTE: iframeAddedHistory logic was removed because it caused double notification display.
+        // The cost is that iframe-based entity approvals require 2 back presses to close.
+        // This is acceptable until a better solution is found.
+        if (hadHistoryState && !closedViaPopstate) {
+            this._log('GOING_BACK_IN_HISTORY', { reason: 'normal cleanup', historyLengthBefore: history.length });
             // Set flag so the resulting popstate event is ignored (we triggered it, not the user)
             this._ignoreNextPopstate = true;
             history.back();
+            this._log('AFTER_HISTORY_BACK', { historyLengthAfter: history.length });
         }
 
         this._isClosing = false;
@@ -1246,7 +1264,9 @@ window.ApprovalModal = {
         // NOTE: onClose callback handles notification flow continuation (set by login-notifications.js)
         // Do NOT add additional flow handling here to avoid double-processing
         if (typeof callback === 'function') {
+            this._log('BEFORE_CALLBACK', { historyLength: history.length });
             callback();
+            this._log('AFTER_CALLBACK', { historyLength: history.length });
         }
     },
 

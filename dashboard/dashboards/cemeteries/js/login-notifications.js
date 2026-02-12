@@ -139,8 +139,33 @@ window.LoginNotificationsNav = {
                 return;
             }
 
+            // v8.9: Check if we returned from history reset (no pendingApprovalId, but have nextIndex)
+            if (cameFromNotification && nextIndex && !pendingApprovalId) {
+                const idx = parseInt(nextIndex, 10);
+                this.log('HISTORY_RESET_CONTINUE', {
+                    nextIndex: idx,
+                    historyLength: history.length
+                });
+
+                alert('🔄 חזרנו מאיפוס היסטוריה!\nhistory.length = ' + history.length + '\nממשיכים להתראה ' + (idx + 1));
+
+                // Clear the flags
+                sessionStorage.removeItem('came_from_notification');
+                sessionStorage.removeItem('notification_next_index');
+
+                // Save new base history length
+                this._baseHistoryLength = history.length;
+
+                // Continue to next notification (no delay)
+                this.fetchAndShowNotifications(idx);
+                return;
+            }
+
             // DEBUG v8.6: Show initial history state
             alert('🟢 שלב 1: התחלה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
+
+            // v8.9: Save base history length for reset
+            this._baseHistoryLength = history.length;
 
             // Start the 5 second timer
             this.log('STEP_START_TIMER', { delayMs: this.config.delayMs });
@@ -268,7 +293,23 @@ window.LoginNotificationsNav = {
         if (index === 0) {
             alert('🟡 שלב 2: לפני הוספת סימן דמה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
         } else {
-            alert('🔵 שלב 5.5: לפני הוספת סימן דמה להתראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
+            // v8.9: Reset history to base before showing next notification
+            const currentLen = history.length;
+            const baseLen = this._baseHistoryLength || 2;
+            const delta = currentLen - baseLen;
+
+            alert('🔵 שלב 5.5: לפני איפוס היסטוריה\nhistory.length = ' + currentLen + '\nbase = ' + baseLen + '\ndelta = ' + delta + '\n\n[...] → [דשבורד] → [+' + delta + ' entries] ← אתה כאן');
+
+            if (delta > 0) {
+                // Reset history back to base
+                alert('🔄 מאפס היסטוריה: history.go(-' + delta + ')');
+                history.go(-delta);
+                // Note: This is async - the page may reload from bfcache
+                // The flow will continue via sessionStorage (came_from_notification, notification_next_index)
+                return; // Stop here - flow continues after history reset
+            }
+
+            alert('🔵 שלב 5.5: אחרי איפוס (או לא היה צורך)\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
         }
 
         // Add dummy pushState for EVERY notification

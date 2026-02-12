@@ -1046,6 +1046,13 @@ window.ApprovalModal = {
             });
 
             // DEBUG v8.6: Alert after iframe loaded - different step for each notification
+            // Only show alert if modal is still visible (avoid late onload after close)
+            const modalStillVisible = this.modalElement && this.modalElement.style.display !== 'none';
+            if (!modalStillVisible) {
+                this._log('IFRAME_ONLOAD_SKIPPED_MODAL_CLOSED', { historyLength: actualLength });
+                return;
+            }
+
             const notifIdx = this._debugNotificationIndex || 0;
             if (notifIdx === 0) {
                 const vis = iframeAddedHistory

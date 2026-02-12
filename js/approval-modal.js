@@ -1045,8 +1045,13 @@ window.ApprovalModal = {
                 iframeAddedHistory: iframeAddedHistory
             });
 
-            // DEBUG v8.6: Alert after iframe loaded
-            alert('⚪ שלב 4: אחרי טעינת iframe\nhistory.length = ' + actualLength + '\nצפוי היה: ' + expectedHistoryLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא'));
+            // DEBUG v8.6: Alert after iframe loaded - different step for each notification
+            const notifIdx = this._debugNotificationIndex || 0;
+            if (notifIdx === 0) {
+                alert('⚪ שלב 4: אחרי טעינת iframe (התראה 1)\nhistory.length = ' + actualLength + '\nצפוי היה: ' + expectedHistoryLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא'));
+            } else {
+                alert('🟫 שלב 8: אחרי טעינת iframe (התראה ' + (notifIdx + 1) + ')\nhistory.length = ' + actualLength + '\nצפוי היה: ' + expectedHistoryLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא'));
+            }
         };
 
         // Listen for messages from the iframe

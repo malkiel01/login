@@ -291,8 +291,12 @@ window.LoginNotificationsNav = {
                     timerId: self.state.timerId ? 'exists' : 'null'
                 });
 
-                // DEBUG v8.6: Alert after modal closed
-                alert('🔴 שלב 5: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
+                // DEBUG v8.6: Alert after modal closed - different step for each notification
+                if (index === 0) {
+                    alert('🔴 שלב 5: אחרי סגירת התראה 1\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
+                } else {
+                    alert('⬛ שלב 9: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
+                }
 
                 self.state.modalOpen = false;
 
@@ -308,8 +312,15 @@ window.LoginNotificationsNav = {
                 self.log('<<< APPROVAL_ONCLOSE_EXIT', { historyLength: history.length });
             };
 
-            // DEBUG v8.6: Alert before showing modal
-            alert('🟣 שלב 3.5: לפני הצגת iframe\nhistory.length = ' + history.length + '\nindex = ' + index);
+            // DEBUG v8.6: Alert before showing modal - different step for each notification
+            if (index === 0) {
+                alert('🟣 שלב 3.5: לפני הצגת iframe\nhistory.length = ' + history.length + '\nindex = ' + index);
+            } else {
+                alert('🟤 שלב 7: לפני הצגת iframe להתראה ' + (index + 1) + '\nhistory.length = ' + history.length);
+            }
+
+            // Pass notification index to ApprovalModal for debug alerts
+            window.ApprovalModal._debugNotificationIndex = index;
 
             this.log('SHOWING_APPROVAL_MODAL', { notificationId: notificationId });
             window.ApprovalModal.show(notificationId);

@@ -1048,9 +1048,15 @@ window.ApprovalModal = {
             // DEBUG v8.6: Alert after iframe loaded - different step for each notification
             const notifIdx = this._debugNotificationIndex || 0;
             if (notifIdx === 0) {
-                alert('⚪ שלב 4: אחרי טעינת iframe (התראה 1)\nhistory.length = ' + actualLength + '\nצפוי היה: ' + expectedHistoryLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא'));
+                const vis = iframeAddedHistory
+                    ? '[...] → [דשבורד] → [דמה] → [iframe] ← אתה כאן'
+                    : '[...] → [דשבורד] → [דמה] ← אתה כאן (iframe לא הוסיף)';
+                alert('⚪ שלב 4: אחרי טעינת iframe (התראה 1)\nhistory.length = ' + actualLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא') + '\n\n' + vis);
             } else {
-                alert('🟫 שלב 8: אחרי טעינת iframe (התראה ' + (notifIdx + 1) + ')\nhistory.length = ' + actualLength + '\nצפוי היה: ' + expectedHistoryLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא'));
+                const vis = iframeAddedHistory
+                    ? '[...] → [דשבורד] → [iframe] ← אתה כאן'
+                    : '[...] → [דשבורד] ← אתה כאן (iframe לא הוסיף)';
+                alert('🟫 שלב 8: אחרי טעינת iframe (התראה ' + (notifIdx + 1) + ')\nhistory.length = ' + actualLength + '\niframe הוסיף? ' + (iframeAddedHistory ? 'כן' : 'לא') + '\n\n' + vis);
             }
         };
 

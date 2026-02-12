@@ -140,7 +140,7 @@ window.LoginNotificationsNav = {
             }
 
             // DEBUG v8.6: Show initial history state
-            alert('🟢 שלב 1: התחלה\nhistory.length = ' + history.length + '\n(דשבורד נטען)');
+            alert('🟢 שלב 1: התחלה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
 
             // Start the 5 second timer
             this.log('STEP_START_TIMER', { delayMs: this.config.delayMs });
@@ -265,16 +265,16 @@ window.LoginNotificationsNav = {
 
         // DEBUG v8.6: Only add dummy pushState for FIRST notification
         if (index === 0) {
-            alert('🟡 שלב 2: לפני הוספת סימן דמה\nhistory.length = ' + history.length);
+            alert('🟡 שלב 2: לפני הוספת סימן דמה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן');
 
             // Add dummy pushState for first notification only
             history.pushState({ dummyForFirst: true }, '', window.location.href);
             this._addedDummyState = true;
 
-            alert('🟠 שלב 3: אחרי הוספת סימן דמה\nhistory.length = ' + history.length);
+            alert('🟠 שלב 3: אחרי הוספת סימן דמה\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה] ← אתה כאן');
         } else {
             // For subsequent notifications - NO dummy pushState
-            alert('🔵 שלב 6: התראה ' + (index + 1) + ' (ללא סימן דמה)\nhistory.length = ' + history.length);
+            alert('🔵 שלב 6: התראה ' + (index + 1) + ' (ללא סימן דמה)\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן\n(לא הוספנו סימן דמה)');
             this._addedDummyState = false;
         }
 
@@ -293,9 +293,9 @@ window.LoginNotificationsNav = {
 
                 // DEBUG v8.6: Alert after modal closed - different step for each notification
                 if (index === 0) {
-                    alert('🔴 שלב 5: אחרי סגירת התראה 1\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
+                    alert('🔴 שלב 5: אחרי סגירת התראה 1\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore + '\n\n[...] → [דשבורד] ← אתה כאן\n(iframe+דמה נמחקו)');
                 } else {
-                    alert('⬛ שלב 9: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore);
+                    alert('⬛ שלב 9: אחרי סגירת התראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\nhasMore = ' + hasMore + '\n\n[...] → [דשבורד] ← אתה כאן\n(iframe נמחק)');
                 }
 
                 self.state.modalOpen = false;
@@ -314,9 +314,9 @@ window.LoginNotificationsNav = {
 
             // DEBUG v8.6: Alert before showing modal - different step for each notification
             if (index === 0) {
-                alert('🟣 שלב 3.5: לפני הצגת iframe\nhistory.length = ' + history.length + '\nindex = ' + index);
+                alert('🟣 שלב 3.5: לפני הצגת iframe\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] → [דמה] ← אתה כאן\n(עכשיו iframe יוסיף סימן)');
             } else {
-                alert('🟤 שלב 7: לפני הצגת iframe להתראה ' + (index + 1) + '\nhistory.length = ' + history.length);
+                alert('🟤 שלב 7: לפני הצגת iframe להתראה ' + (index + 1) + '\nhistory.length = ' + history.length + '\n\n[...] → [דשבורד] ← אתה כאן\n(עכשיו iframe יוסיף סימן)');
             }
 
             // Pass notification index to ApprovalModal for debug alerts

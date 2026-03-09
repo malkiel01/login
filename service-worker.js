@@ -337,47 +337,37 @@ self.addEventListener('notificationclick', event => {
             });
 
             // בדוק אם יש חלון פתוח
+            // Navigate to the dedicated notification page
+            const notificationPageUrl = isApproval
+                ? '/dashboard/dashboards/cemeteries/notifications/notification-action.php?id=' + notificationId
+                : '/dashboard/dashboards/cemeteries/notifications/notification-info.php?id=' + notificationId;
+
             for (let client of windowClients) {
                 if (client.url.includes(self.location.origin)) {
-                    // אם המשתמש בדף login
+                    // אם המשתמש בדף login - שמור redirect לאחר התחברות
                     if (client.url.includes('/auth/login.php')) {
                         await client.focus();
-                        // שמור מידע לפתיחת מודל אחרי התחברות
                         client.postMessage({
                             type: 'REDIRECT_AFTER_LOGIN',
-                            url: '/dashboard/dashboards/cemeteries/?show_notification=' + notificationId +
-                                 '&notification_title=' + encodeURIComponent(notificationTitle) +
-                                 '&notification_body=' + encodeURIComponent(notificationBody) +
-                                 '&notification_url=' + encodeURIComponent(notificationUrl) +
-                                 '&is_approval=' + (isApproval ? '1' : '0')
+                            url: notificationPageUrl
                         });
                         return;
                     } else {
-                        // המשתמש מחובר - שלח הודעה להצגת מסך ייעודי
+                        // המשתמש מחובר - הפנה ישירות לדף ההתראה
                         await client.focus();
-                        await new Promise(resolve => setTimeout(resolve, 300));
                         client.postMessage({
-                            type: 'SHOW_NOTIFICATION_MODAL',
-                            notificationId: notificationId,
-                            title: notificationTitle,
-                            body: notificationBody,
-                            url: notificationUrl,
-                            isApproval: isApproval
+                            type: 'NAVIGATE_TO_NOTIFICATION',
+                            url: notificationPageUrl
                         });
-                        console.log('[SW] Sent SHOW_NOTIFICATION_MODAL message for notification:', notificationId);
+                        console.log('[SW] Navigating to notification page:', notificationPageUrl);
                         return;
                     }
                 }
             }
 
-            // אם אין חלון פתוח - פתח את האפליקציה עם פרמטרים להצגת המודל
+            // אם אין חלון פתוח - פתח את דף ההתראה
             if (clients.openWindow) {
-                const modalUrl = '/dashboard/dashboards/cemeteries/?show_notification=' + notificationId +
-                                 '&notification_title=' + encodeURIComponent(notificationTitle) +
-                                 '&notification_body=' + encodeURIComponent(notificationBody) +
-                                 '&notification_url=' + encodeURIComponent(notificationUrl) +
-                                 '&is_approval=' + (isApproval ? '1' : '0');
-                return clients.openWindow(modalUrl);
+                return clients.openWindow(notificationPageUrl);
             }
         })()
     );

@@ -1,7 +1,7 @@
 /**
  * Entity Pending Operations Helper
  * Handles pending approval badges and status display
- * @version 1.1.0 - Use ApprovalModal for unified UX
+ * @version 1.2.0 - Uses PopupManager for approval display
  */
 
 const EntityPending = {
@@ -129,25 +129,13 @@ const EntityPending = {
     },
 
     /**
-     * Open approval page - uses ApprovalModal for unified UX
+     * Open approval page
      * @param {number} pendingId - The pending_entity_operations.id
      */
     openApproval(pendingId) {
         const url = `/dashboard/dashboards/cemeteries/notifications/entity-approve.php?id=${pendingId}`;
 
-        // Use ApprovalModal for unified UX (same as notification flow)
-        if (typeof ApprovalModal !== 'undefined') {
-            ApprovalModal.init();
-            ApprovalModal.onClose = () => {
-                this.cache.clear();
-                if (typeof refreshData === 'function') {
-                    refreshData();
-                } else if (typeof loadData === 'function') {
-                    loadData();
-                }
-            };
-            ApprovalModal.showEntityApprovalIframe(url);
-        } else if (typeof PopupManager !== 'undefined') {
+        if (typeof PopupManager !== 'undefined') {
             PopupManager.create({
                 id: 'entity-approval-popup-' + pendingId,
                 type: 'iframe',

@@ -650,17 +650,7 @@ $isAdminUser = isAdmin();
     <script src="/push/listener.js"></script>
     <!-- Web Push Subscription Manager -->
     <script src="/push/push-subscribe.js"></script>
-    <!-- Notification Modal - Dedicated screen for all notifications -->
-    <script src="/js/notification-modal.js"></script>
-    <!-- Notification Templates - Different display types for notifications -->
-    <script src="/dashboard/dashboards/cemeteries/notifications/templates/load-templates.js"></script>
-    <!-- Approval Modal for approval-type notifications -->
+    <!-- Biometric Auth -->
     <script src="/js/biometric-auth.js"></script>
-    <script src="/js/approval-modal.js?v=20260201"></script>
-    <!-- Info Modal for regular notifications (info, warning, urgent) -->
-    <script src="/js/info-modal.js?v=20260210"></script>
-
-    <!-- Login Notifications - מערכת התראות מבוססת מודלים (v7.0) -->
-    <script src="/dashboard/dashboards/cemeteries/js/login-notifications.js?v=20260210_v7"></script>
 </body>
 </html>

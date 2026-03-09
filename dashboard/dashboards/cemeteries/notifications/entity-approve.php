@@ -936,32 +936,8 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
                 return; // Don't push history state in iframe - parent modal handles it
             }
 
-            // Check if we came from notification flow
-            const cameFromNotification = sessionStorage.getItem('came_from_notification') === 'true';
-
-            if (cameFromNotification) {
-                // Push a trap state so back button has somewhere to go
-                navigator.sendBeacon && navigator.sendBeacon(
-                    '/dashboard/dashboards/cemeteries/api/debug-log.php',
-                    JSON.stringify({
-                        page: 'ENTITY_APPROVE',
-                        e: 'PUSHING_HISTORY_TRAP',
-                        pendingId: pendingId,
-                        historyLengthBefore: history.length,
-                        ts: new Date().toISOString()
-                    })
-                );
-                history.pushState({ approvalTrap: true, pendingId: pendingId }, '', '#approval');
-
-                // Listen for back button
-                window.addEventListener('popstate', function(e) {
-                    // User pressed back - go to dashboard
-                    // Keep the session flags so notification flow continues
-                    location.replace('/dashboard/dashboards/cemeteries/');
-                });
-
-                console.log('[EntityApprove] History trap set for notification flow');
-            }
+            // No special history management needed -
+            // back button naturally returns to previous page
         })();
         // ========== END HISTORY MANAGEMENT ==========
 
@@ -1010,10 +986,8 @@ if (isset($_GET['embed']) || isset($_GET['fullscreen']) || isset($_GET['from_not
                 if (isEmbedMode) {
                     notifyParent(status);
                 } else {
-                    // v2: Return to dashboard to continue notification flow
-                    // The session storage flags (came_from_notification, notification_next_index)
-                    // were already set by notification-view.php before redirecting here
-                    location.replace('/dashboard/dashboards/cemeteries/');
+                    // Return to previous page (dashboard or notification page)
+                    history.back();
                 }
             }, 2500);
         }

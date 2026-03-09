@@ -60,9 +60,6 @@ if (!$isDarkMode) {
     <!-- Page CSS -->
     <link rel="stylesheet" href="css/my-notifications.css">
 
-    <!-- Approval Modal -->
-    <script src="/js/approval-modal.js"></script>
-
     <style>
         :root {
             --base-font-size: <?= $fontSize ?>px;

@@ -57,6 +57,18 @@ try {
             markAllAsRead($conn, $userId);
             break;
 
+        case 'dismiss':
+            $notificationId = $_POST['notification_id'] ?? null;
+            dismissNotification($conn, $userId, $notificationId);
+            break;
+
+        case 'respond':
+            $notificationId = $_POST['notification_id'] ?? null;
+            $scheduledId = $_POST['scheduled_notification_id'] ?? null;
+            $status = $_POST['status'] ?? null;
+            respondToNotification($conn, $userId, $notificationId, $scheduledId, $status);
+            break;
+
         default:
             echo json_encode(['success' => false, 'error' => 'Invalid action']);
     }
@@ -242,4 +254,81 @@ function markAllAsRead($conn, $userId) {
         'success' => true,
         'updated' => $stmt->rowCount()
     ]);
+}
+
+/**
+ * סימון התראה כנדחתה (המשתמש לחץ חזרה / התעלם)
+ * ההתראה תוצג שוב לאחר 5 שעות
+ */
+function dismissNotification($conn, $userId, $notificationId) {
+    if (!$notificationId) {
+        echo json_encode(['success' => false, 'error' => 'Missing notification_id']);
+        return;
+    }
+
+    $sql = "
+        UPDATE push_notifications
+        SET dismissed_at = NOW()
+        WHERE id = ? AND user_id = ? AND is_read = 0
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([(int)$notificationId, (int)$userId]);
+
+    echo json_encode([
+        'success' => true,
+        'updated' => $stmt->rowCount()
+    ]);
+}
+
+/**
+ * מענה להתראה (אישור/דחייה)
+ * מסמן כנקראה + מעדכן notification_approvals
+ */
+function respondToNotification($conn, $userId, $notificationId, $scheduledId, $status) {
+    if (!$notificationId || !$status) {
+        echo json_encode(['success' => false, 'error' => 'Missing required fields']);
+        return;
+    }
+
+    $validStatuses = ['approved', 'rejected'];
+    if (!in_array($status, $validStatuses)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid status']);
+        return;
+    }
+
+    $conn->beginTransaction();
+    try {
+        // סימון ההתראה כנקראה
+        $sql = "UPDATE push_notifications SET is_read = 1 WHERE id = ? AND user_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([(int)$notificationId, (int)$userId]);
+
+        // עדכון notification_approvals אם יש scheduled_notification_id
+        if ($scheduledId) {
+            $sql = "
+                INSERT INTO notification_approvals (notification_id, user_id, status, responded_at, ip_address, user_agent)
+                VALUES (?, ?, ?, NOW(), ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    status = VALUES(status),
+                    responded_at = NOW(),
+                    ip_address = VALUES(ip_address),
+                    user_agent = VALUES(user_agent)
+            ";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([
+                (int)$scheduledId,
+                (int)$userId,
+                $status,
+                $_SERVER['REMOTE_ADDR'] ?? '',
+                $_SERVER['HTTP_USER_AGENT'] ?? ''
+            ]);
+        }
+
+        $conn->commit();
+        echo json_encode(['success' => true, 'status' => $status]);
+    } catch (Exception $e) {
+        $conn->rollBack();
+        throw $e;
+    }
 }

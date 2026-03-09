@@ -37,8 +37,14 @@ header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
 // חשוב: משתמשים ב-location.replace() כדי לא להוסיף את login להיסטוריה!
 // זה פותר את הבעיה של back → login → redirect → dashboard loop
 if (isset($_SESSION['user_id'])) {
+    // אם יש redirect parameter (למשל מ-push notification) - הפנה לשם
+    $redirect = $_GET['redirect'] ?? '/dashboard/dashboards/cemeteries/';
+    // Validate redirect is internal
+    if (strpos($redirect, '/') !== 0) {
+        $redirect = '/dashboard/dashboards/cemeteries/';
+    }
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    echo '<script>location.replace("/dashboard/dashboards/cemeteries/");</script>';
+    echo '<script>location.replace(' . json_encode($redirect) . ');</script>';
     echo '</head><body></body></html>';
     exit;
 }

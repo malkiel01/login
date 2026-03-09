@@ -4,9 +4,11 @@
  * טיפול בהפניות אחרי לחיצה על התראות
  */
 
-// בדיקה אם יש redirect_to בפרמטרים
+// בדיקה אם יש redirect בפרמטרים (מדפי התראות ו-push notifications)
 if (isset($_GET['redirect_to'])) {
     $_SESSION['redirect_after_login'] = $_GET['redirect_to'];
+} elseif (isset($_GET['redirect'])) {
+    $_SESSION['redirect_after_login'] = $_GET['redirect'];
 }
 
 // פונקציה לטיפול בהפניה אחרי התחברות מוצלחת

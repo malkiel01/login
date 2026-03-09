@@ -652,5 +652,24 @@ $isAdminUser = isAdmin();
     <script src="/push/push-subscribe.js"></script>
     <!-- Biometric Auth -->
     <script src="/js/biometric-auth.js"></script>
+
+    <?php
+    // מוקד התראות חכם - בדיקה והפניה אחרי 5 שניות
+    require_once __DIR__ . '/notifications/NotificationCenter.php';
+    $notificationCenter = new NotificationCenter($userId);
+    echo $notificationCenter->getDashboardScript();
+    ?>
+
+    <!-- Handle push notification navigation -->
+    <script>
+    navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'NAVIGATE_TO_NOTIFICATION') {
+            window.location.href = event.data.url;
+        }
+        if (event.data && event.data.type === 'REDIRECT_AFTER_LOGIN') {
+            sessionStorage.setItem('redirect_after_login', event.data.url);
+        }
+    });
+    </script>
 </body>
 </html>
